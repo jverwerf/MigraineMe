@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3852 entries.
+ * 3855 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -301,9 +301,9 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "About Triggers" to "Über Auslöser",
     "About What Changed" to "Über Veränderungen",
     "About What Happened" to "Über den Verlauf",
+    "About What Strengthens You" to "Über was dich stärkt",
     "About What Were You Doing" to "Über deine Aktivitäten",
     "About What Worked" to "Über was half",
-    "About What Strengthens You" to "Über was dich stärkt",
     "About You & Your Migraines" to "Du & deine Migränen",
     "About devices" to "Über Geräte",
     "About the same" to "Etwa gleich",
@@ -837,6 +837,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Connect your wearable and Health Connect." to "Verbinde dein Wearable und Health Connect.",
     "Connected" to "Verbunden",
     "Connected Services" to "Verbindungen",
+    "Connecting apps & devices" to "Apps & Geräte verbinden",
     "Connections" to "Verbindungen",
     "Consistent HRV" to "Gleichmäßige HRV",
     "Consistent bedtime" to "Gleichmäßige Schlafenszeit",
@@ -850,6 +851,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Consistent stress" to "Gleichmäßiges Stresslevel",
     "Consistent wake time" to "Gleichmäßige Aufwachzeit",
     "Constipation" to "Verstopfung",
+    "Contact us" to "Kontakt",
     "Content under review" to "Wird geprüft",
     "Continue" to "Weiter",
     "Continue with %1\$s companion%2\$s" to "Weiter mit %1\$s Begleiter%2\$s",
@@ -2390,6 +2392,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Protein low" to "Protein niedrig",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds." to "Holt Essen in Sekunden aus MyFitnessPal, Cronometer oder per Barcode-Scan.",
     "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Fragen, Feedback oder etwas funktioniert nicht? Schreib uns eine E-Mail, ein echter Mensch antwortet.",
     "Queued changes:" to "In Warteschlange:",
     "Quick %s" to "Schnell %s",
     "Quick Log" to "Schnell",
@@ -3419,6 +3422,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "What Drives It" to "Was es treibt",
     "What Happened" to "Was geschah",
     "What Our AI Found" to "Was die KI fand",
+    "What Strengthens You" to "Was dich stärkt",
     "What These Triggers Do to You" to "Was diese Auslöser bewirken",
     "What Were You Doing" to "Was du gerade tatest",
     "What Worked" to "Was half",
@@ -3448,6 +3452,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "What lingered after the attack? Tap one to rate it." to "Was blieb nach der Attacke? Tippe zum Bewerten.",
     "What makes those habits happen" to "Was diese Gewohnheiten trägt",
     "What medicines do you take?" to "Welche Medikamente nimmst du?",
+    "What strengthens you" to "Was dich stärkt",
     "What symptoms do you experience?" to "Welche Symptome hast du?",
     "What tends to run worse" to "Was meist schlimmer verläuft",
     "What the icons mean" to "Was die Symbole heißen",
@@ -3477,8 +3482,6 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "What you were doing, and missed" to "Was du getan und was du verpasst hast",
     "What your aura has been doing across your attacks" to "Was deine Aura über deine Attacken hinweg gemacht hat",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Was dein Schmerz in den Stunden nach einer Dosis gemacht hat, im selben Anfall. Setzt Schmerzwerte über die Zeit voraus.",
-    "What Strengthens You" to "Was dich stärkt",
-    "What strengthens you" to "Was dich stärkt",
     "What's on your mind?" to "Was beschäftigt dich?",
     "When" to "Wann",
     "When I haven't exercised" to "Ohne Training",

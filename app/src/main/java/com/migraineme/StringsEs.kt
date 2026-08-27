@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3852 entries.
+ * 3855 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -301,9 +301,9 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "About Triggers" to "Sobre factores",
     "About What Changed" to "Sobre los cambios",
     "About What Happened" to "Sobre lo ocurrido",
+    "About What Strengthens You" to "Sobre lo que te fortalece",
     "About What Were You Doing" to "Sobre tu actividad",
     "About What Worked" to "Sobre lo que sirvió",
-    "About What Strengthens You" to "Sobre lo que te fortalece",
     "About You & Your Migraines" to "Sobre ti y tus migrañas",
     "About devices" to "Sobre aparatos",
     "About the same" to "Más o menos igual",
@@ -837,6 +837,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Connect your wearable and Health Connect." to "Conecta tu dispositivo y Health Connect.",
     "Connected" to "Conectado",
     "Connected Services" to "Conexiones",
+    "Connecting apps & devices" to "Conectar apps y dispositivos",
     "Connections" to "Conexiones",
     "Consistent HRV" to "VFC constante",
     "Consistent bedtime" to "Hora de acostarse constante",
@@ -850,6 +851,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Consistent stress" to "Estrés constante",
     "Consistent wake time" to "Hora de despertar constante",
     "Constipation" to "Estreñimiento",
+    "Contact us" to "Contáctanos",
     "Content under review" to "En revisión",
     "Continue" to "Seguir",
     "Continue with %1\$s companion%2\$s" to "Seguir con %1\$s compañero%2\$s",
@@ -2390,6 +2392,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Protein low" to "Proteína baja",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds." to "Trae tu comida de MyFitnessPal, Cronometer o del escáner de códigos en segundos.",
     "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "¿Preguntas, comentarios o algo no funciona? Escríbenos un correo y te responderá una persona real.",
     "Queued changes:" to "En cola:",
     "Quick %s" to "%s ágil",
     "Quick Log" to "Rápido",
@@ -3419,6 +3422,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "What Drives It" to "Qué lo mueve",
     "What Happened" to "Qué pasó",
     "What Our AI Found" to "Lo que vio la IA",
+    "What Strengthens You" to "Lo que te fortalece",
     "What These Triggers Do to You" to "Qué te hacen estos factores",
     "What Were You Doing" to "Qué hacías",
     "What Worked" to "Qué sirvió",
@@ -3448,6 +3452,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "What lingered after the attack? Tap one to rate it." to "¿Qué persistió tras el ataque? Toca uno para valorarlo.",
     "What makes those habits happen" to "Qué hace posibles esos hábitos",
     "What medicines do you take?" to "¿Qué medicinas tomas?",
+    "What strengthens you" to "Lo que te fortalece",
     "What symptoms do you experience?" to "¿Qué síntomas tienes?",
     "What tends to run worse" to "Lo que suele ir peor",
     "What the icons mean" to "Qué significan",
@@ -3477,8 +3482,6 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "What you were doing, and missed" to "Lo que hacías y lo que te perdiste",
     "What your aura has been doing across your attacks" to "Qué ha hecho tu aura a lo largo de tus ataques",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Qué hizo tu dolor en las horas siguientes a una dosis, dentro del mismo ataque. Necesita dolor registrado a lo largo del tiempo.",
-    "What Strengthens You" to "Lo que te fortalece",
-    "What strengthens you" to "Lo que te fortalece",
     "What's on your mind?" to "¿Qué te ronda?",
     "When" to "Cuándo",
     "When I haven't exercised" to "Cuando no hago ejercicio",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3852 entries.
+ * 3855 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -301,9 +301,9 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "About Triggers" to "Sur les facteurs",
     "About What Changed" to "Sur les changements",
     "About What Happened" to "Sur le déroulé",
+    "About What Strengthens You" to "Sur ce qui te renforce",
     "About What Were You Doing" to "Sur ton activité",
     "About What Worked" to "Sur ce qui a aidé",
-    "About What Strengthens You" to "Sur ce qui te renforce",
     "About You & Your Migraines" to "Toi et tes migraines",
     "About devices" to "Sur appareils",
     "About the same" to "À peu près pareil",
@@ -837,6 +837,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Connect your wearable and Health Connect." to "Connecte ton bracelet et Health Connect.",
     "Connected" to "Connecté",
     "Connected Services" to "Connexions",
+    "Connecting apps & devices" to "Connecter apps et appareils",
     "Connections" to "Connexions",
     "Consistent HRV" to "VFC régulière",
     "Consistent bedtime" to "Heure de coucher régulière",
@@ -850,6 +851,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Consistent stress" to "Stress régulier",
     "Consistent wake time" to "Heure de réveil régulière",
     "Constipation" to "Constipation",
+    "Contact us" to "Nous contacter",
     "Content under review" to "En vérification",
     "Continue" to "Continuer",
     "Continue with %1\$s companion%2\$s" to "Continuer avec %1\$s compagnon%2\$s",
@@ -2390,6 +2392,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Protein low" to "Protéines faibles",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds." to "Récupère tes repas depuis MyFitnessPal, Cronometer ou un scan de code-barres en quelques secondes.",
     "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Des questions, des retours ou quelque chose ne fonctionne pas ? Écrivez-nous, une vraie personne vous répondra.",
     "Queued changes:" to "En attente :",
     "Quick %s" to "%s rapide",
     "Quick Log" to "Rapide",
@@ -3419,6 +3422,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "What Drives It" to "Ce qui le pousse",
     "What Happened" to "Le déroulé",
     "What Our AI Found" to "Ce que l'IA a vu",
+    "What Strengthens You" to "Ce qui te renforce",
     "What These Triggers Do to You" to "Ce que ces facteurs te font",
     "What Were You Doing" to "Ce que tu faisais",
     "What Worked" to "Ce qui a aidé",
@@ -3448,6 +3452,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "What lingered after the attack? Tap one to rate it." to "Qu'est-ce qui a persisté après la crise ? Touchez pour évaluer.",
     "What makes those habits happen" to "Ce qui rend ces habitudes possibles",
     "What medicines do you take?" to "Quels médicaments prends-tu ?",
+    "What strengthens you" to "Ce qui te renforce",
     "What symptoms do you experience?" to "Quels symptômes as-tu ?",
     "What tends to run worse" to "Ce qui va souvent plus mal",
     "What the icons mean" to "Le sens des icônes",
@@ -3477,8 +3482,6 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "What you were doing, and missed" to "Ce que tu faisais, et ce qui a sauté",
     "What your aura has been doing across your attacks" to "Ce que ton aura a fait au fil de tes crises",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Ce qu'a fait ta douleur dans les heures suivant une prise, au sein de la même crise. Nécessite une douleur notée dans le temps.",
-    "What Strengthens You" to "Ce qui te renforce",
-    "What strengthens you" to "Ce qui te renforce",
     "What's on your mind?" to "À quoi penses-tu ?",
     "When" to "Quand",
     "When I haven't exercised" to "Quand je n'ai pas bougé",

@@ -308,19 +308,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:332",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:335",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:367",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:370",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:401",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:404",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:435",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:438",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -568,43 +568,43 @@
     "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1006",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1014",
     "line": "                        if (granted.isEmpty()) t(\"Share your data\") else t(\"%1\\$s shared\", granted.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:134",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:135",
     "line": "            else -> t(\"%1\\$s days ago\", days)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1409",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1417",
     "line": "        title = { Text(t(\"Ask %1\\$s for an intro call\", practitionerName.substringBefore(' '))) },"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:340",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:364",
     "line": "            title = { Text(t(\"Stop sharing with %1\\$s?\", name)) },"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:431",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:455",
     "line": "                    t(\"Last looked %1\\$s\", agoText(lastViewedIso)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:479",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:503",
     "line": "        title = { Text(if (isFirstAnswer) t(\"Share your diary?\") else t(\"What %1\\$s can see\", practitionerName)) },"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:488",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:512",
     "line": "                            t(\"%1\\$s is a %2\\$s. They have asked to see:\", practitionerName, role.lowercase())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:489",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:513",
     "line": "                        else t(\"%1\\$s has asked to see:\", practitionerName),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:620",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:644",
     "line": "                            if (some) t(\"%1\\$s of %2\\$s shared\", on, inGroup.size) else \"\""
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:621",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:645",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {

@@ -8,6 +8,8 @@
 package com.migraineme
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,9 +19,34 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.AltRoute
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Watch
+import androidx.compose.material.icons.outlined.WaterDrop
+import androidx.compose.material.icons.outlined.WbSunny
+import androidx.compose.material.icons.outlined.WorkspacePremium
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -285,42 +312,171 @@ fun HelpScreen(
             }
             else -> {
                 val cats = vm.visibleCategories()
+                val sections = buildHelpSections(cats) { vm.articlesIn(it) }
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 40.dp, top = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    items(cats, key = { it.slug }) { cat ->
-                        val arts = vm.articlesIn(cat)
-                        Column {
-                            Text(
-                                text = cat.name.uppercase(),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White.copy(alpha = 0.55f),
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    items(sections, key = { it.slug }) { section ->
+                        HelpSectionCard(section = section, onOpenArticle = onOpenArticle)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Section cards
+// ─────────────────────────────────────────────────────────────────────
+
+const val HELP_SUPPORT_EMAIL = "help@migraineme.app"
+
+/** One rendered card: a category, or the merged "Connecting apps & devices"
+ *  group that folds all the apps-and-devices-* categories into subsections. */
+data class HelpSection(
+    val slug: String,
+    val name: String,
+    val isConnectGroup: Boolean,
+    /** subheader (null for plain categories) to articles */
+    val subsections: List<Pair<String?, List<HelpArticle>>>
+)
+
+fun buildHelpSections(
+    cats: List<HelpCategory>,
+    articlesIn: (HelpCategory) -> List<HelpArticle>
+): List<HelpSection> {
+    val out = mutableListOf<HelpSection>()
+    var connectDone = false
+    for (cat in cats) {
+        if (cat.slug.startsWith("apps-and-devices-")) {
+            if (connectDone) continue
+            connectDone = true
+            val subs = cats
+                .filter { it.slug.startsWith("apps-and-devices-") }
+                .map { c -> c.name.substringAfter("—", c.name).trim() to articlesIn(c) }
+                .filter { it.second.isNotEmpty() }
+            out += HelpSection("connect-group", "Connecting apps & devices", true, subs)
+        } else {
+            out += HelpSection(cat.slug, cat.name, false, listOf(null to articlesIn(cat)))
+        }
+    }
+    return out
+}
+
+fun helpSectionIcon(slug: String) = when (slug) {
+    "contact-and-feedback" -> Icons.Outlined.Email
+    "getting-started" -> Icons.Outlined.RocketLaunch
+    "understanding-the-app" -> Icons.Outlined.Lightbulb
+    "the-home-screen" -> Icons.Outlined.Home
+    "logging-the-basics" -> Icons.Outlined.Edit
+    "the-migraine-wizard-step-by-step" -> Icons.Outlined.Checklist
+    "setup" -> Icons.Outlined.Tune
+    "recalibration" -> Icons.Outlined.Refresh
+    "insights-and-reports" -> Icons.Outlined.Insights
+    "calendar" -> Icons.Outlined.CalendarMonth
+    "menstrual-cycle" -> Icons.Outlined.WaterDrop
+    "food-and-nutrition" -> Icons.Outlined.Restaurant
+    "weather" -> Icons.Outlined.WbSunny
+    "sleep" -> Icons.Outlined.Bedtime
+    "heart-stress-and-activity" -> Icons.Outlined.MonitorHeart
+    "notifications" -> Icons.Outlined.Notifications
+    "community" -> Icons.Outlined.Groups
+    "the-watch-apps" -> Icons.Outlined.Watch
+    "connect-group" -> Icons.Outlined.Link
+    "customising-the-app" -> Icons.Outlined.Palette
+    "special-situations" -> Icons.Outlined.AltRoute
+    "premium-and-subscriptions" -> Icons.Outlined.WorkspacePremium
+    "privacy-and-your-data" -> Icons.Outlined.Lock
+    "about-migraine" -> Icons.Outlined.Psychology
+    "troubleshooting" -> Icons.Outlined.Build
+    else -> Icons.Outlined.HelpOutline
+}
+
+@Composable
+fun HelpSectionCard(section: HelpSection, onOpenArticle: (HelpArticle) -> Unit) {
+    val ctx = LocalContext.current
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(bottom = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                helpSectionIcon(section.slug), null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                if (section.isConnectGroup) t("Connecting apps & devices") else t(section.name),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
+            )
+        }
+
+        if (section.slug == "contact-and-feedback") {
+            Text(
+                t("Questions, feedback or something not working? Email us and a real person will reply."),
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        runCatching {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$HELP_SUPPORT_EMAIL"))
                             )
-                            Column(
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(Color.White.copy(alpha = 0.04f))
-                            ) {
-                                arts.forEach { article ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onOpenArticle(article) }
-                                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(article.title, color = Color.White, modifier = Modifier.weight(1f))
-                                        Text("›", color = Color.White.copy(alpha = 0.5f))
-                                    }
-                                }
-                            }
                         }
                     }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    HELP_SUPPORT_EMAIL,
+                    color = AppTheme.AccentPurple,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("›", color = Color.White.copy(alpha = 0.5f))
+            }
+        }
+
+        section.subsections.forEach { (sub, arts) ->
+            if (sub != null) {
+                Text(
+                    sub.uppercase(),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 2.dp)
+                )
+            }
+            arts.forEach { article ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenArticle(article) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        article.title,
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.92f),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text("›", color = Color.White.copy(alpha = 0.5f))
                 }
             }
         }
@@ -374,12 +530,28 @@ fun HelpArticleDetailScreen(article: HelpArticle, onBack: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
             }
-            items(parseMarkdown(article.bodyMarkdown)) { block ->
+            items(parseMarkdown(stripDuplicateTitle(article.bodyMarkdown, article.title))) { block ->
                 MarkdownBlockView(block)
             }
             item { Spacer(Modifier.height(40.dp)) }
         }
     }
+}
+
+/**
+ * Article bodies are authored with a leading "# Title" heading that repeats the
+ * article title. The screen already renders the title itself, so drop that
+ * heading (iOS does the same) rather than showing the title twice.
+ */
+fun stripDuplicateTitle(body: String, title: String): String {
+    val lines = body.lines()
+    val first = lines.firstOrNull()?.trim() ?: return body
+    if (first.startsWith("# ") &&
+        first.removePrefix("# ").trim().equals(title.trim(), ignoreCase = true)
+    ) {
+        return lines.drop(1).joinToString("\n").trim()
+    }
+    return body
 }
 
 // ─────────────────────────────────────────────────────────────────────

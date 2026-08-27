@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3852 entries.
+ * 3855 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -301,9 +301,9 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "About Triggers" to "Sui fattori",
     "About What Changed" to "Sui cambiamenti",
     "About What Happened" to "Su cosa è successo",
+    "About What Strengthens You" to "Su ciò che ti rafforza",
     "About What Were You Doing" to "Sulla tua attività",
     "About What Worked" to "Su cosa ha aiutato",
-    "About What Strengthens You" to "Su ciò che ti rafforza",
     "About You & Your Migraines" to "Su di te e le emicranie",
     "About devices" to "Sui dispositivi",
     "About the same" to "Più o meno uguale",
@@ -837,6 +837,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Connect your wearable and Health Connect." to "Collega il tuo dispositivo e Health Connect.",
     "Connected" to "Collegato",
     "Connected Services" to "Collegamenti",
+    "Connecting apps & devices" to "Collegare app e dispositivi",
     "Connections" to "Collegamenti",
     "Consistent HRV" to "HRV costante",
     "Consistent bedtime" to "Orario di coricarsi costante",
@@ -850,6 +851,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Consistent stress" to "Stress costante",
     "Consistent wake time" to "Orario di risveglio costante",
     "Constipation" to "Stitichezza",
+    "Contact us" to "Contattaci",
     "Content under review" to "In verifica",
     "Continue" to "Continua",
     "Continue with %1\$s companion%2\$s" to "Vai con %1\$s compagni",
@@ -2390,6 +2392,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Protein low" to "Proteine basse",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds." to "Importa il cibo da MyFitnessPal, Cronometer o codice a barre in pochi secondi.",
     "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Domande, feedback o qualcosa non funziona? Scrivici una mail, ti risponderà una persona vera.",
     "Queued changes:" to "In coda:",
     "Quick %s" to "%s rapido",
     "Quick Log" to "Rapido",
@@ -3419,6 +3422,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "What Drives It" to "Cosa lo spinge",
     "What Happened" to "Cos'è successo",
     "What Our AI Found" to "Cosa ha visto l'IA",
+    "What Strengthens You" to "Ciò che ti rafforza",
     "What These Triggers Do to You" to "Cosa ti fanno questi fattori",
     "What Were You Doing" to "Cosa facevi",
     "What Worked" to "Cosa ha aiut.",
@@ -3448,6 +3452,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "What lingered after the attack? Tap one to rate it." to "Cosa è rimasto dopo l'attacco? Tocca per valutare.",
     "What makes those habits happen" to "Cosa rende possibili quelle abitudini",
     "What medicines do you take?" to "Che farmaci prendi?",
+    "What strengthens you" to "Ciò che ti rafforza",
     "What symptoms do you experience?" to "Che sintomi hai?",
     "What tends to run worse" to "Cosa tende ad andare peggio",
     "What the icons mean" to "Cosa dicono le icone",
@@ -3477,8 +3482,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "What you were doing, and missed" to "Cosa facevi e cosa hai perso",
     "What your aura has been doing across your attacks" to "Cosa ha fatto la tua aura nel corso dei tuoi attacchi",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Che cosa ha fatto il dolore nelle ore dopo una dose, nello stesso attacco. Servono valori del dolore nel tempo.",
-    "What Strengthens You" to "Ciò che ti rafforza",
-    "What strengthens you" to "Ciò che ti rafforza",
     "What's on your mind?" to "A cosa pensi?",
     "When" to "Quando",
     "When I haven't exercised" to "Quando non ho fatto sport",

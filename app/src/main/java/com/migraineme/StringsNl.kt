@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3852 entries.
+ * 3855 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -301,9 +301,9 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "About Triggers" to "Over triggers",
     "About What Changed" to "Over wat veranderde",
     "About What Happened" to "Over wat er gebeurde",
+    "About What Strengthens You" to "Over wat je sterker maakt",
     "About What Were You Doing" to "Over wat je deed",
     "About What Worked" to "Over wat hielp",
-    "About What Strengthens You" to "Over wat je sterker maakt",
     "About You & Your Migraines" to "Over jou en je migraine",
     "About devices" to "Over apparaten",
     "About the same" to "Ongeveer gelijk",
@@ -837,6 +837,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Connect your wearable and Health Connect." to "Koppel je wearable en Health Connect.",
     "Connected" to "Gekoppeld",
     "Connected Services" to "Koppelingen",
+    "Connecting apps & devices" to "Apps & apparaten koppelen",
     "Connections" to "Koppelingen",
     "Consistent HRV" to "Consistente HRV",
     "Consistent bedtime" to "Consistente bedtijd",
@@ -850,6 +851,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Consistent stress" to "Consistente stress",
     "Consistent wake time" to "Consistente wektijd",
     "Constipation" to "Verstopping",
+    "Contact us" to "Contact",
     "Content under review" to "In beoordeling",
     "Continue" to "Verder",
     "Continue with %1\$s companion%2\$s" to "Verder met %1\$s companion%2\$s",
@@ -2390,6 +2392,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Protein low" to "Eiwit laag",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds." to "Haalt eten in seconden uit MyFitnessPal, Cronometer of een barcodescan.",
     "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Vragen, feedback of werkt er iets niet? Stuur ons een e-mail, een echt persoon antwoordt.",
     "Queued changes:" to "In de wachtrij:",
     "Quick %s" to "Snel %s",
     "Quick Log" to "Snel",
@@ -3419,6 +3422,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What Drives It" to "Wat het stuurt",
     "What Happened" to "Wat er gebeurde",
     "What Our AI Found" to "Wat de AI vond",
+    "What Strengthens You" to "Wat je sterker maakt",
     "What These Triggers Do to You" to "Wat deze triggers met je doen",
     "What Were You Doing" to "Wat je deed",
     "What Worked" to "Wat hielp",
@@ -3448,6 +3452,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What lingered after the attack? Tap one to rate it." to "Wat bleef na de aanval? Tik om te beoordelen.",
     "What makes those habits happen" to "Wat die gewoonten mogelijk maakt",
     "What medicines do you take?" to "Welke medicijnen neem je?",
+    "What strengthens you" to "Wat je sterker maakt",
     "What symptoms do you experience?" to "Welke klachten heb je?",
     "What tends to run worse" to "Wat meestal erger verloopt",
     "What the icons mean" to "Wat de iconen zeggen",
@@ -3477,8 +3482,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What you were doing, and missed" to "Wat je deed, en wat je miste",
     "What your aura has been doing across your attacks" to "Wat je aura over je aanvallen heen heeft gedaan",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Wat je pijn deed in de uren na een dosis, binnen dezelfde aanval. Vereist pijn die je in de tijd bijhoudt.",
-    "What Strengthens You" to "Wat je sterker maakt",
-    "What strengthens you" to "Wat je sterker maakt",
     "What's on your mind?" to "Wat houdt je bezig?",
     "When" to "Wanneer",
     "When I haven't exercised" to "Als ik niet gesport heb",

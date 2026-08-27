@@ -217,7 +217,7 @@
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:647",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1470",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1236",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1887",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1890",
       "... 9 more"
     ],
     "max_len": 14,
@@ -341,7 +341,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:568",
       "app/src/main/java/com/migraineme/DataSettingsScreen.kt:247",
-      "app/src/main/java/com/migraineme/HelpScreen.kt:249",
+      "app/src/main/java/com/migraineme/HelpScreen.kt:276",
       "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:396",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1383",
       "... 6 more"
@@ -536,7 +536,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/Healthconnectrationaleactivity.kt:159",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2856",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2859",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:377",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:462",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:544",
@@ -622,7 +622,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:293",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:452",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:2822",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2359",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2362",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:169",
       "... 2 more"
     ],
@@ -635,7 +635,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1488",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1239",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2173",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2176",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:142",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:233",
       "... 2 more"
@@ -1402,7 +1402,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/JournalScreen.kt:1241",
       "app/src/main/java/com/migraineme/LocationsScreen.kt:126",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2262",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2265",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:151"
     ],
     "max_len": 14,
@@ -1425,7 +1425,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ArticleDetailScreen.kt:114",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:491",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:493",
       "app/src/main/java/com/migraineme/ForumScreen.kt:168",
       "app/src/main/java/com/migraineme/ForumScreen.kt:446"
     ],
@@ -1571,7 +1571,7 @@
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2561",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2170",
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:684",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:76"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:77"
     ],
     "max_len": 15,
     "count": 4
@@ -1583,7 +1583,7 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:392",
       "app/src/main/java/com/migraineme/DataSettingsSections.kt:29",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:679",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:79"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:80"
     ],
     "max_len": 14,
     "count": 4
@@ -1607,7 +1607,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:272",
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:230",
       "app/src/main/java/com/migraineme/ReviewLogScreen.kt:77",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:67"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:68"
     ],
     "max_len": 14,
     "count": 4
@@ -1641,7 +1641,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ArticleDetailScreen.kt:114",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:491",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:493",
       "app/src/main/java/com/migraineme/ForumScreen.kt:168",
       "app/src/main/java/com/migraineme/ForumScreen.kt:446"
     ],
@@ -1655,7 +1655,7 @@
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:349",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:515",
       "app/src/main/java/com/migraineme/TriggersScreen.kt:507",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:133"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:134"
     ],
     "max_len": 14,
     "count": 4
@@ -1885,8 +1885,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CommunityEngagement.kt:76",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1213",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1216"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1216",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1219"
     ],
     "max_len": 14,
     "count": 3
@@ -2062,7 +2062,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:485",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1482",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:784"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:792"
     ],
     "max_len": 14,
     "count": 3
@@ -2326,7 +2326,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/LocationPermissionBanner.kt:237",
       "app/src/main/java/com/migraineme/PaywallScreen.kt:566",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:548"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:572"
     ],
     "max_len": 14,
     "count": 3
@@ -2654,7 +2654,7 @@
     "en": "What did you miss?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2360",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2363",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:170",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:191"
     ],
@@ -2666,7 +2666,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:209",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2311",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2314",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:161"
     ],
     "max_len": 23,
@@ -2677,7 +2677,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LocationsScreen.kt:97",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2263",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2266",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:152"
     ],
     "max_len": 18,
@@ -2700,7 +2700,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/NotesScreen.kt:142",
       "app/src/main/java/com/migraineme/ProfileScreen.kt:719",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:71"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:72"
     ],
     "max_len": 14,
     "count": 3
@@ -3204,6 +3204,16 @@
     "count": 2
   },
   {
+    "en": "About What Strengthens You",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1109",
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1093"
+    ],
+    "max_len": 29,
+    "count": 2
+  },
+  {
     "en": "About What Were You Doing",
     "class": "hard",
     "sites": [
@@ -3221,16 +3231,6 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1036"
     ],
     "max_len": 20,
-    "count": 2
-  },
-  {
-    "en": "About What Strengthens You",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:1109",
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:1093"
-    ],
-    "max_len": 23,
     "count": 2
   },
   {
@@ -3398,7 +3398,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ArticleDetailScreen.kt:57",
-      "app/src/main/java/com/migraineme/HelpScreen.kt:354"
+      "app/src/main/java/com/migraineme/HelpScreen.kt:510"
     ],
     "max_len": 20,
     "count": 2
@@ -3537,8 +3537,8 @@
     "en": "Book an intro call",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:994",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1254"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1002",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1262"
     ],
     "max_len": 21,
     "count": 2
@@ -3588,7 +3588,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/BlogScreen.kt:58",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:336"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:338"
     ],
     "max_len": 19,
     "count": 2
@@ -4297,8 +4297,8 @@
     "en": "Practitioner",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1055",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:378"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1063",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:402"
     ],
     "max_len": 15,
     "count": 2
@@ -4397,7 +4397,7 @@
     "en": "Report post",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:361",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:363",
       "app/src/main/java/com/migraineme/ForumScreen.kt:373"
     ],
     "max_len": 14,
@@ -4527,8 +4527,8 @@
     "en": "Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:814",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1178"
+      "app/src/main/java/com/migraineme/MainActivity.kt:817",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1181"
     ],
     "max_len": 14,
     "count": 2
@@ -4557,8 +4557,8 @@
     "en": "Share your data",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1006",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1263"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1014",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1271"
     ],
     "max_len": 18,
     "count": 2
@@ -4657,8 +4657,8 @@
     "en": "Stop sharing",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:353",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:439"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:377",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:463"
     ],
     "max_len": 15,
     "count": 2
@@ -4677,7 +4677,7 @@
     "en": "Symptoms you flag as caused by your treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2409",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2412",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:179"
     ],
     "max_len": 50,
@@ -4787,7 +4787,7 @@
     "en": "Treatment side effects",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2408",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2411",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178"
     ],
     "max_len": 25,
@@ -4848,7 +4848,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/MissedWhySheet.kt:141",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:68"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:69"
     ],
     "max_len": 16,
     "count": 2
@@ -4874,6 +4874,16 @@
     "count": 2
   },
   {
+    "en": "What Strengthens You",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:915",
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1077"
+    ],
+    "max_len": 23,
+    "count": 2
+  },
+  {
     "en": "What Worked",
     "class": "hard",
     "sites": [
@@ -4881,16 +4891,6 @@
       "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:387"
     ],
     "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "What Strengthens You",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:915",
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:1077"
-    ],
-    "max_len": 17,
     "count": 2
   },
   {
@@ -5057,8 +5057,8 @@
     "en": "never",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:128",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:136"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:129",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:137"
     ],
     "max_len": 14,
     "count": 2
@@ -5282,7 +5282,7 @@
     "en": "%1$s has asked to see:",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:489"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:513"
     ],
     "max_len": 32,
     "count": 1
@@ -5291,7 +5291,7 @@
     "en": "%1$s is a %2$s. They have asked to see:",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:488"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:512"
     ],
     "max_len": 56,
     "count": 1
@@ -5345,7 +5345,7 @@
     "en": "%1$s shared",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1006"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1014"
     ],
     "max_len": 14,
     "count": 1
@@ -5957,7 +5957,7 @@
     "en": "%sd ago",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:925"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:927"
     ],
     "max_len": 14,
     "count": 1
@@ -5966,7 +5966,7 @@
     "en": "%sw ago",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:926"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:928"
     ],
     "max_len": 14,
     "count": 1
@@ -6416,7 +6416,7 @@
     "en": "A first conversation, free and with no obligation. They will see your note and either accept or decline. Nothing is booked, and none of your diary is shared by asking.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1413"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1421"
     ],
     "max_len": 242,
     "count": 1
@@ -7046,7 +7046,7 @@
     "en": "Add, star, or remove medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:1985"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1988"
     ],
     "max_len": 33,
     "count": 1
@@ -7055,7 +7055,7 @@
     "en": "Add, star, or remove reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2077"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2080"
     ],
     "max_len": 31,
     "count": 1
@@ -7064,7 +7064,7 @@
     "en": "Add, star, or remove triggers",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:1888"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1891"
     ],
     "max_len": 32,
     "count": 1
@@ -7676,7 +7676,7 @@
     "en": "Anything you reported as a side effect.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:105"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:106"
     ],
     "max_len": 56,
     "count": 1
@@ -7694,7 +7694,7 @@
     "en": "Anything you typed in your own words.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:100"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:101"
     ],
     "max_len": 53,
     "count": 1
@@ -7784,7 +7784,7 @@
     "en": "Appointments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1136"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1144"
     ],
     "max_len": 15,
     "count": 1
@@ -7883,7 +7883,7 @@
     "en": "Ask %1$s for an intro call",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1409"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1417"
     ],
     "max_len": 37,
     "count": 1
@@ -8000,7 +8000,7 @@
     "en": "Attacks",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:66"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:67"
     ],
     "max_len": 14,
     "count": 1
@@ -8054,7 +8054,7 @@
     "en": "Attacks, symptoms, warning signs, pain, aura, your notes",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:561"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:585"
     ],
     "max_len": 81,
     "count": 1
@@ -9170,7 +9170,7 @@
     "en": "Change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:438"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:462"
     ],
     "max_len": 14,
     "count": 1
@@ -9215,7 +9215,7 @@
     "en": "Change what they see",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1264"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1272"
     ],
     "max_len": 23,
     "count": 1
@@ -9377,7 +9377,7 @@
     "en": "Choose what to share",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:534"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:558"
     ],
     "max_len": 23,
     "count": 1
@@ -9815,6 +9815,15 @@
     "count": 1
   },
   {
+    "en": "Connecting apps & devices",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/HelpScreen.kt:418"
+    ],
+    "max_len": 36,
+    "count": 1
+  },
+  {
     "en": "Consistent risk scoring",
     "class": "soft",
     "sites": [
@@ -9980,7 +9989,7 @@
     "en": "Correlations, symptom profile and recommendations.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:117"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:118"
     ],
     "max_len": 72,
     "count": 1
@@ -10358,7 +10367,7 @@
     "en": "Daily risk score",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:90"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:91"
     ],
     "max_len": 19,
     "count": 1
@@ -11249,7 +11258,7 @@
     "en": "Early warning signs before a migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2174"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2177"
     ],
     "max_len": 40,
     "count": 1
@@ -11924,7 +11933,7 @@
     "en": "Everything you logged as a possible trigger",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:562"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:586"
     ],
     "max_len": 62,
     "count": 1
@@ -11933,7 +11942,7 @@
     "en": "Everything you logged as a possible trigger.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:102"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:103"
     ],
     "max_len": 63,
     "count": 1
@@ -12437,7 +12446,7 @@
     "en": "Food and drink",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:74"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:75"
     ],
     "max_len": 17,
     "count": 1
@@ -12833,7 +12842,7 @@
     "en": "Garmin callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:443"
+      "app/src/main/java/com/migraineme/MainActivity.kt:446"
     ],
     "max_len": 33,
     "count": 1
@@ -13121,7 +13130,7 @@
     "en": "Guidance",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:739"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:753"
     ],
     "max_len": 14,
     "count": 1
@@ -13310,7 +13319,7 @@
     "en": "Heart rate, HRV and breathing",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:80"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:81"
     ],
     "max_len": 42,
     "count": 1
@@ -13319,7 +13328,7 @@
     "en": "Heart, movement and body measurements",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:567"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:591"
     ],
     "max_len": 53,
     "count": 1
@@ -13382,7 +13391,7 @@
     "en": "Her own site",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1188"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1196"
     ],
     "max_len": 15,
     "count": 1
@@ -13562,7 +13571,7 @@
     "en": "Hours, score, efficiency and disturbances",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:566"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:590"
     ],
     "max_len": 59,
     "count": 1
@@ -13571,7 +13580,7 @@
     "en": "Hours, score, efficiency and disturbances.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:108"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:109"
     ],
     "max_len": 60,
     "count": 1
@@ -14156,7 +14165,7 @@
     "en": "In her words",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1102"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1110"
     ],
     "max_len": 15,
     "count": 1
@@ -14165,7 +14174,7 @@
     "en": "In person",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1137"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1145"
     ],
     "max_len": 14,
     "count": 1
@@ -14174,7 +14183,7 @@
     "en": "In person and online",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1139"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1147"
     ],
     "max_len": 23,
     "count": 1
@@ -14237,7 +14246,7 @@
     "en": "Intro call",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:788"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:796"
     ],
     "max_len": 14,
     "count": 1
@@ -14462,7 +14471,7 @@
     "en": "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2892"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2895"
     ],
     "max_len": 137,
     "count": 1
@@ -14480,7 +14489,7 @@
     "en": "Languages",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1131"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1139"
     ],
     "max_len": 14,
     "count": 1
@@ -14579,7 +14588,7 @@
     "en": "Last looked %1$s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:431"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:455"
     ],
     "max_len": 19,
     "count": 1
@@ -14768,7 +14777,7 @@
     "en": "Length",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:786"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:794"
     ],
     "max_len": 14,
     "count": 1
@@ -14984,7 +14993,7 @@
     "en": "Loading articles…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:275"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:277"
     ],
     "max_len": 20,
     "count": 1
@@ -15002,7 +15011,7 @@
     "en": "Loading discussions…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:382"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:384"
     ],
     "max_len": 23,
     "count": 1
@@ -15713,7 +15722,7 @@
     "en": "Meals, caffeine, alcohol and flagged ingredients",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:563"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:587"
     ],
     "max_len": 69,
     "count": 1
@@ -15722,7 +15731,7 @@
     "en": "Meals, caffeine, alcohol and flagged ingredients.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:103"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:104"
     ],
     "max_len": 71,
     "count": 1
@@ -15794,7 +15803,7 @@
     "en": "Medicines and reliefs, and how much they helped.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:104"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:105"
     ],
     "max_len": 69,
     "count": 1
@@ -15848,7 +15857,7 @@
     "en": "Menstrual cycle",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:87"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:88"
     ],
     "max_len": 18,
     "count": 1
@@ -16568,7 +16577,7 @@
     "en": "Nausea, light sensitivity and the rest.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:96"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:97"
     ],
     "max_len": 56,
     "count": 1
@@ -16712,7 +16721,7 @@
     "en": "New discussion",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:161"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:163"
     ],
     "max_len": 24,
     "count": 1
@@ -16919,7 +16928,7 @@
     "en": "No articles yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:334"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:336"
     ],
     "max_len": 18,
     "count": 1
@@ -17081,7 +17090,7 @@
     "en": "No discussions yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:393"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:395"
     ],
     "max_len": 21,
     "count": 1
@@ -17144,7 +17153,7 @@
     "en": "No help articles yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HelpScreen.kt:283"
+      "app/src/main/java/com/migraineme/HelpScreen.kt:310"
     ],
     "max_len": 23,
     "count": 1
@@ -17441,7 +17450,7 @@
     "en": "No saved articles yet",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:303"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:305"
     ],
     "max_len": 31,
     "count": 1
@@ -18035,7 +18044,7 @@
     "en": "Ongoing treatment",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:77"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:78"
     ],
     "max_len": 20,
     "count": 1
@@ -18044,7 +18053,7 @@
     "en": "Ongoing treatment and your treatment story",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:565"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:589"
     ],
     "max_len": 60,
     "count": 1
@@ -18053,7 +18062,7 @@
     "en": "Online",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1138"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1146"
     ],
     "max_len": 14,
     "count": 1
@@ -18071,7 +18080,7 @@
     "en": "Open",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:636"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:660"
     ],
     "max_len": 14,
     "count": 1
@@ -18143,7 +18152,7 @@
     "en": "Oura callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:375"
+      "app/src/main/java/com/migraineme/MainActivity.kt:378"
     ],
     "max_len": 31,
     "count": 1
@@ -18512,7 +18521,7 @@
     "en": "Patterns the app found",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:88"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:89"
     ],
     "max_len": 32,
     "count": 1
@@ -18521,7 +18530,7 @@
     "en": "Patterns the app found, and your setup answers",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:572"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:596"
     ],
     "max_len": 66,
     "count": 1
@@ -18656,7 +18665,7 @@
     "en": "Period dates and cycle settings",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:570"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:594"
     ],
     "max_len": 44,
     "count": 1
@@ -18665,7 +18674,7 @@
     "en": "Period dates and cycle settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:116"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:117"
     ],
     "max_len": 46,
     "count": 1
@@ -18980,7 +18989,7 @@
     "en": "Polar callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:409"
+      "app/src/main/java/com/migraineme/MainActivity.kt:412"
     ],
     "max_len": 32,
     "count": 1
@@ -19007,7 +19016,7 @@
     "en": "Pollen and air quality",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:86"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:87"
     ],
     "max_len": 32,
     "count": 1
@@ -19016,7 +19025,7 @@
     "en": "Pollen counts and air pollution.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:115"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:116"
     ],
     "max_len": 46,
     "count": 1
@@ -19124,7 +19133,7 @@
     "en": "Practitioners",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:225"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:256"
     ],
     "max_len": 16,
     "count": 1
@@ -19133,7 +19142,7 @@
     "en": "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1226"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1234"
     ],
     "max_len": 175,
     "count": 1
@@ -19304,7 +19313,7 @@
     "en": "Pressure, temperature and humidity where you were.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:114"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:115"
     ],
     "max_len": 72,
     "count": 1
@@ -19313,7 +19322,7 @@
     "en": "Preventives and ongoing treatment, with doses.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:106"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:107"
     ],
     "max_len": 66,
     "count": 1
@@ -19451,6 +19460,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Questions, feedback or something not working? Email us and a real person will reply.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/HelpScreen.kt:427"
+    ],
+    "max_len": 121,
     "count": 1
   },
   {
@@ -19844,7 +19862,7 @@
     "en": "Registered with",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1142"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1150"
     ],
     "max_len": 18,
     "count": 1
@@ -20186,7 +20204,7 @@
     "en": "Resting heart rate, HRV, oxygen, breathing rate.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:109"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:110"
     ],
     "max_len": 69,
     "count": 1
@@ -20213,7 +20231,7 @@
     "en": "Returning from Garmin...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:439"
+      "app/src/main/java/com/migraineme/MainActivity.kt:442"
     ],
     "max_len": 34,
     "count": 1
@@ -20222,7 +20240,7 @@
     "en": "Returning from Oura...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:371"
+      "app/src/main/java/com/migraineme/MainActivity.kt:374"
     ],
     "max_len": 32,
     "count": 1
@@ -20231,7 +20249,7 @@
     "en": "Returning from Polar...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:405"
+      "app/src/main/java/com/migraineme/MainActivity.kt:408"
     ],
     "max_len": 33,
     "count": 1
@@ -20240,7 +20258,7 @@
     "en": "Returning from WHOOP...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:336"
+      "app/src/main/java/com/migraineme/MainActivity.kt:339"
     ],
     "max_len": 33,
     "count": 1
@@ -20249,7 +20267,7 @@
     "en": "Returning from sign-in...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:460"
+      "app/src/main/java/com/migraineme/MainActivity.kt:463"
     ],
     "max_len": 36,
     "count": 1
@@ -20681,7 +20699,7 @@
     "en": "Screen time and phone use",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:84"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:85"
     ],
     "max_len": 36,
     "count": 1
@@ -20735,7 +20753,7 @@
     "en": "Screen time, unlocks, brightness and volume.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:113"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:114"
     ],
     "max_len": 63,
     "count": 1
@@ -20789,7 +20807,7 @@
     "en": "Search help…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HelpScreen.kt:244"
+      "app/src/main/java/com/migraineme/HelpScreen.kt:271"
     ],
     "max_len": 15,
     "count": 1
@@ -21122,7 +21140,7 @@
     "en": "Send request",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1437"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1445"
     ],
     "max_len": 15,
     "count": 1
@@ -21266,7 +21284,7 @@
     "en": "Setting up your personalised migraine predictions",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2838"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2841"
     ],
     "max_len": 71,
     "count": 1
@@ -21365,7 +21383,7 @@
     "en": "Share all of it",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:545"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:569"
     ],
     "max_len": 18,
     "count": 1
@@ -21374,7 +21392,7 @@
     "en": "Share nothing",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:542"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:566"
     ],
     "max_len": 16,
     "count": 1
@@ -21392,7 +21410,7 @@
     "en": "Share your diary?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:479"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:503"
     ],
     "max_len": 20,
     "count": 1
@@ -21410,7 +21428,7 @@
     "en": "Sharing nothing",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:405"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:429"
     ],
     "max_len": 18,
     "count": 1
@@ -21419,7 +21437,7 @@
     "en": "Sharing with",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:210"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:241"
     ],
     "max_len": 15,
     "count": 1
@@ -22112,7 +22130,7 @@
     "en": "Speaks",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:841"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:849"
     ],
     "max_len": 14,
     "count": 1
@@ -22328,7 +22346,7 @@
     "en": "Steps, strain and recovery",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:81"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:82"
     ],
     "max_len": 37,
     "count": 1
@@ -22337,7 +22355,7 @@
     "en": "Steps, strain, recovery and time in high heart rate.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:110"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:111"
     ],
     "max_len": 75,
     "count": 1
@@ -22400,7 +22418,7 @@
     "en": "Stop sharing with %1$s?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:340"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:364"
     ],
     "max_len": 33,
     "count": 1
@@ -22436,7 +22454,7 @@
     "en": "Stress",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:83"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:84"
     ],
     "max_len": 14,
     "count": 1
@@ -22499,7 +22517,7 @@
     "en": "Stress, screen time and phone use",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:568"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:592"
     ],
     "max_len": 47,
     "count": 1
@@ -22895,7 +22913,7 @@
     "en": "Tap + to start the conversation!",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:395"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:397"
     ],
     "max_len": 46,
     "count": 1
@@ -23084,7 +23102,7 @@
     "en": "Tap the heart on any article to save it",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:305"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:307"
     ],
     "max_len": 56,
     "count": 1
@@ -23399,7 +23417,7 @@
     "en": "The daily risk score the app showed you",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:571"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:595"
     ],
     "max_len": 56,
     "count": 1
@@ -23444,7 +23462,7 @@
     "en": "The head diagram, and how the pain moved.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:98"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:99"
     ],
     "max_len": 59,
     "count": 1
@@ -23480,7 +23498,7 @@
     "en": "The risk percentage the app showed you each day.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:119"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:120"
     ],
     "max_len": 69,
     "count": 1
@@ -23498,7 +23516,7 @@
     "en": "The stress index built from your heart data.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:112"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:113"
     ],
     "max_len": 63,
     "count": 1
@@ -23534,7 +23552,7 @@
     "en": "The written summary of how treatment has gone.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:107"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:108"
     ],
     "max_len": 66,
     "count": 1
@@ -23597,7 +23615,7 @@
     "en": "They will not be able to see any of your diary from now on. Anything they already wrote down stays with them.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:342"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:366"
     ],
     "max_len": 158,
     "count": 1
@@ -23723,7 +23741,7 @@
     "en": "This practitioner",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:249"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:278"
     ],
     "max_len": 20,
     "count": 1
@@ -24904,7 +24922,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1071"
     ],
-    "max_len": 31,
+    "max_len": 39,
     "count": 1
   },
   {
@@ -25604,7 +25622,7 @@
     "en": "WHOOP callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:340"
+      "app/src/main/java/com/migraineme/MainActivity.kt:343"
     ],
     "max_len": 32,
     "count": 1
@@ -25766,7 +25784,7 @@
     "en": "Ways of working together",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1121"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1129"
     ],
     "max_len": 34,
     "count": 1
@@ -25973,7 +25991,7 @@
     "en": "Weather where you were",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:85"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:86"
     ],
     "max_len": 32,
     "count": 1
@@ -25991,7 +26009,7 @@
     "en": "Weather, pollen and air quality where you were",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:569"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:593"
     ],
     "max_len": 66,
     "count": 1
@@ -26063,7 +26081,7 @@
     "en": "Weight, body fat, skin temperature, blood glucose.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:111"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:112"
     ],
     "max_len": 72,
     "count": 1
@@ -26072,7 +26090,7 @@
     "en": "Weight, temperature and glucose",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:82"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:83"
     ],
     "max_len": 44,
     "count": 1
@@ -26117,7 +26135,7 @@
     "en": "What %1$s can see",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:479"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:503"
     ],
     "max_len": 20,
     "count": 1
@@ -26360,7 +26378,7 @@
     "en": "What it is about",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1420"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1428"
     ],
     "max_len": 19,
     "count": 1
@@ -26390,6 +26408,15 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:638"
     ],
     "max_len": 39,
+    "count": 1
+  },
+  {
+    "en": "What strengthens you",
+    "class": "soft",
+    "sites": [
+      "build-report-html/render.ts"
+    ],
+    "max_len": 27,
     "count": 1
   },
   {
@@ -26549,7 +26576,7 @@
     "en": "What you noticed before one started.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:97"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:98"
     ],
     "max_len": 52,
     "count": 1
@@ -26558,7 +26585,7 @@
     "en": "What you said at setup",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:89"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:90"
     ],
     "max_len": 32,
     "count": 1
@@ -26576,7 +26603,7 @@
     "en": "What you took, and whether it helped",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:75"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:76"
     ],
     "max_len": 52,
     "count": 1
@@ -26585,7 +26612,7 @@
     "en": "What you took, whether it helped, side effects",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:564"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:588"
     ],
     "max_len": 66,
     "count": 1
@@ -26612,7 +26639,7 @@
     "en": "What you were doing, and missed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:72"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:73"
     ],
     "max_len": 44,
     "count": 1
@@ -26633,15 +26660,6 @@
       "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:572"
     ],
     "max_len": 142,
-    "count": 1
-  },
-  {
-    "en": "What strengthens you",
-    "class": "soft",
-    "sites": [
-      "build-report-html/render.ts"
-    ],
-    "max_len": 27,
     "count": 1
   },
   {
@@ -26783,7 +26801,7 @@
     "en": "When they happened, how severe, how long.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:95"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:96"
     ],
     "max_len": 59,
     "count": 1
@@ -26801,7 +26819,7 @@
     "en": "Where",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1134"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1142"
     ],
     "max_len": 14,
     "count": 1
@@ -26837,7 +26855,7 @@
     "en": "Where the pain sat",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:69"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:70"
     ],
     "max_len": 21,
     "count": 1
@@ -26846,7 +26864,7 @@
     "en": "Where you were, what you were doing, what you had to miss.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:101"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:102"
     ],
     "max_len": 84,
     "count": 1
@@ -26927,7 +26945,7 @@
     "en": "Which parts of your vision, and for how long.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:99"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:100"
     ],
     "max_len": 65,
     "count": 1
@@ -27422,7 +27440,7 @@
     "en": "Your account and app preferences",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:820"
+      "app/src/main/java/com/migraineme/MainActivity.kt:823"
     ],
     "max_len": 46,
     "count": 1
@@ -27431,7 +27449,7 @@
     "en": "Your answers when you first set the app up.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:118"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:119"
     ],
     "max_len": 62,
     "count": 1
@@ -27449,7 +27467,7 @@
     "en": "Your data is still being processed.\nThis will complete in the background.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2837"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2840"
     ],
     "max_len": 105,
     "count": 1
@@ -27494,7 +27512,7 @@
     "en": "Your free trial just ended",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2891"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2894"
     ],
     "max_len": 37,
     "count": 1
@@ -27701,7 +27719,7 @@
     "en": "Your treatment story",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:78"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:79"
     ],
     "max_len": 23,
     "count": 1
@@ -27926,7 +27944,7 @@
     "en": "ask",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:789"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:797"
     ],
     "max_len": 14,
     "count": 1
@@ -28106,7 +28124,7 @@
     "en": "dietitian",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:685"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:709"
     ],
     "max_len": 14,
     "count": 1
@@ -28313,7 +28331,7 @@
     "en": "homeopath",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:684"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:708"
     ],
     "max_len": 14,
     "count": 1
@@ -28403,7 +28421,7 @@
     "en": "migraine coach",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:687"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:711"
     ],
     "max_len": 17,
     "count": 1
@@ -28439,7 +28457,7 @@
     "en": "naturopath",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:683"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:707"
     ],
     "max_len": 14,
     "count": 1
@@ -28448,7 +28466,7 @@
     "en": "neurologist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:686"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:710"
     ],
     "max_len": 14,
     "count": 1
@@ -28493,7 +28511,7 @@
     "en": "nutritional therapist",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:679"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:703"
     ],
     "max_len": 31,
     "count": 1
@@ -28529,7 +28547,7 @@
     "en": "osteopath",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:682"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:706"
     ],
     "max_len": 14,
     "count": 1
@@ -28556,7 +28574,7 @@
     "en": "physiotherapist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:681"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:705"
     ],
     "max_len": 18,
     "count": 1
@@ -28574,7 +28592,7 @@
     "en": "psychologist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:680"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:704"
     ],
     "max_len": 15,
     "count": 1
@@ -28691,7 +28709,7 @@
     "en": "this practitioner",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:334"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:358"
     ],
     "max_len": 20,
     "count": 1
@@ -28709,7 +28727,7 @@
     "en": "today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:132"
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:133"
     ],
     "max_len": 14,
     "count": 1
