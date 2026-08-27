@@ -107,18 +107,77 @@ serve(async (req)=>{
   }
   const incomingKeys = Object.keys(body);
   console.log("[garmin-webhook] Received keys:", incomingKeys.join(", "));
+  // ── Acknowledge Garmin FIRST, then do the database work ────────────────
+  // On 2026-08-13 at 04:00 UTC the database went down mid-request: 65 pushes
+  // were received that hour and only 51 completed. Garmin got no acknowledgement
+  // for the other 14, so it re-queued them — and Garmin retries come back
+  // BATCHED, up to 100 summaries in one request. A 100-summary batch costs this
+  // function 55-70s of sequential per-summary queries, far beyond Garmin's
+  // webhook timeout, so the retry goes unacknowledged too and the queue jams on
+  // the same few days forever. Everyone behind that batch stopped receiving
+  // steps, sleep and stress: 90+ users, eight days and counting. It cannot
+  // drain on its own, because every retry re-enters the same trap.
+  //
+  // Garmin only needs the 200; it never reads the body. So reply immediately
+  // and let the writes finish in the background. If the runtime does not expose
+  // waitUntil we still await the work, so this can never silently degrade into
+  // fire-and-forget-and-lose-the-data.
+  const work = (async () => {
   const results = [];
   // ── Audit: record incoming payload shape ──
   const counts = {};
   for (const k of incomingKeys) {
     counts[k] = Array.isArray(body[k]) ? body[k].length : 1;
   }
+  // Batch contents, for diagnosing the 2026-08-13 stall. Garmin now sends
+  // batches of up to 100 summaries and the daily tables stopped filling while
+  // push volume held steady. Two causes look identical from outside:
+  //   (a) Garmin is replaying old calendar days, or
+  //   (b) the right days arrive but WITHOUT the fields we read — every write
+  //       is guarded by `if (val != null)`, so a summary carrying no `steps`
+  //       writes nothing and still reports status ok.
+  // Wrapped so that a malformed payload can never affect ingestion; on any
+  // error this stays {} and the webhook proceeds exactly as before.
+  let spans: Record<string, any> = {};
+  try {
+    for (const k of ["dailies", "sleeps", "stressDetails"]) {
+      const arr = body[k];
+      if (!Array.isArray(arr) || arr.length === 0) continue;
+      const dates = [];
+      const users = new Set();
+      for (const it of arr) {
+        const d = getCalendarDate(it);
+        if (d) dates.push(d);
+        const u = it?.userId || it?.userAccessToken;
+        if (u) users.add(u);
+      }
+      dates.sort();
+      spans[k] = {
+        n: arr.length,
+        users: users.size,
+        from: dates[0] ?? null,
+        to: dates[dates.length - 1] ?? null
+      };
+      if (k === "dailies") {
+        let steps = 0, rhr = 0, stress = 0, kcal = 0;
+        for (const it of arr) {
+          if (intOrNull(it?.steps) != null) steps++;
+          if (intOrNull(it?.restingHeartRateInBeatsPerMinute) != null) rhr++;
+          if (intOrNull(it?.averageStressLevel) != null) stress++;
+          if (numOrNull(it?.activeKilocalories) != null) kcal++;
+        }
+        spans[k].has = { steps, rhr, stress, kcal };
+      }
+    }
+  } catch (e) {
+    spans = { error: String((e as Error)?.message ?? e).slice(0, 120) };
+  }
   try {
     await supabase.from("edge_audit").insert({
       fn: "garmin-webhook",
       stage: "received",
       ok: true,
-      message: JSON.stringify({ keys: incomingKeys, counts }).slice(0, 500)
+      message: JSON.stringify({ keys: incomingKeys, counts, spans }).slice(0, 800)
     });
   } catch (_) {}
   // ════════════════════════════════════════════════════════════════════
@@ -978,10 +1037,22 @@ serve(async (req)=>{
       message: JSON.stringify({ processed: results.length, summary }).slice(0, 500)
     });
   } catch (_) {}
+  console.log(`[garmin-webhook] background work finished, processed ${results.length}`);
+  return results.length;
+  })();
+
+  // A background failure must never be silent.
+  work.catch((e)=>console.error("[garmin-webhook] background work failed", e?.message ?? e));
+
+  const rt = (globalThis as any).EdgeRuntime;
+  if (rt && typeof rt.waitUntil === "function") {
+    rt.waitUntil(work);
+  } else {
+    await work;
+  }
   // Garmin expects HTTP 200 — anything else triggers retries
   return jsonResponse({
     ok: true,
-    processed: results.length,
-    results
+    accepted: incomingKeys.length
   });
 });

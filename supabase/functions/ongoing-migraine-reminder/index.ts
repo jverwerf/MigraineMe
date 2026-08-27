@@ -192,10 +192,39 @@ serve(async (req) => {
 
         if (markErr) { skipped++; continue; }
 
+        const finalReminder = nextCount >= MAX_REMINDERS;
+        // Opening + closing as separate sentence keys, joined after
+        // translation — the same keys and the same split the app uses
+        // on-device, so the push reads identically in every language the app
+        // already ships.
+        const reminderBodyParts = [
+          daysOpen === 1
+            ? { key: "You logged a migraine 1 day ago and it's still open." }
+            : {
+              key: "You logged a migraine {0} days ago and it's still open.",
+              args: [String(daysOpen)],
+            },
+          {
+            key: finalReminder
+              ? "Tap to add how it ended. We won't ask about this one again."
+              : "Tap to add how it ended.",
+          },
+        ];
+
+        // Copy travels with the push so iOS can render a real aps.alert (it cannot
+        // build its own from a silent data payload). `ios_alert` keeps the FCM
+        // message data-only at the top level, so Android still gets
+        // onMessageReceived and renders its own copy exactly as before.
+        // user_ids (not tokens) is what lets send-fcm-push translate per recipient.
         await supabase.functions.invoke("send-fcm-push", {
           body: {
             type: "ongoing_migraine",
-            tokens: [token],
+            user_ids: [c.user_id],
+            ios_alert: true,
+            notification_key: {
+              title: "Is your migraine over?",
+              body_parts: reminderBodyParts,
+            },
             // FCM data values must be strings.
             data: {
               migraine_id: c.id,

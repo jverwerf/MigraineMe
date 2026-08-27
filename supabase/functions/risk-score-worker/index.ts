@@ -225,10 +225,39 @@ async function maybeSendGaugeAlert(
 
     if (markErr) return `mark_failed:${markErr.message}`;
 
+    // Only LOW/MILD/HIGH can reach this line (rank 0 returned "zone_none" above).
+    // These three words are themselves translation keys on the device.
+    // TODO: send-fcm-push does not translate notification_key args, so the zone
+    // word stays English in the iOS alert until it can. Resolving the recipient's
+    // lang here would cost an extra query per alert, which is not worth it.
+    const zoneLabel = zone === "HIGH" ? "High" : zone === "MILD" ? "Mild" : "Low";
+    const topTriggerName = topTriggers?.[0]?.name ?? "";
+    const escalated = alreadyRank > 0;
+
+    // Copy travels with the push so iOS can render a real aps.alert (it cannot
+    // build its own from a silent data payload). `ios_alert` keeps the FCM
+    // message data-only at the top level, so Android still gets
+    // onMessageReceived and renders its own copy exactly as before.
+    // user_ids (not tokens) is what lets send-fcm-push translate per recipient.
     await supabase.functions.invoke("send-fcm-push", {
       body: {
         type: "daily_gauge",
-        tokens: [prof.fcm_token],
+        user_ids: [job.user_id],
+        ios_alert: true,
+        notification_key: {
+          title: escalated ? "Risk just went up: {0}" : "Today's risk: {0}",
+          title_args: [zoneLabel],
+          // Whole sentences, joined after translation — the same keys and the
+          // same split the app uses on-device, so the push reads identically
+          // in every language the app already ships.
+          body_parts: [
+            { key: "Your gauge is at {0}.", args: [`${percent}%`] },
+            ...(topTriggerName
+              ? [{ key: "Biggest factor: {0}.", args: [topTriggerName] }]
+              : []),
+            { key: "Tap to see what's driving it." },
+          ],
+        },
         // FCM data values must be strings.
         data: {
           zone,
