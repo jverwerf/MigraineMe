@@ -82,6 +82,16 @@ fun ShopScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+            Spacer(Modifier.height(6.dp))
+            // The affiliate programmes require the commission disclosure BEFORE
+            // the reader meets a link, so it sits in the hero and is not
+            // dismissible. The fuller disclaimer at the foot of the page stays.
+            Text(
+                t("Some links here earn us a commission."),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
 
         Spacer(Modifier.height(20.dp))

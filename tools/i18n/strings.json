@@ -3728,7 +3728,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1339",
-      "app/src/main/java/com/migraineme/ShopScreen.kt:364"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:374"
     ],
     "max_len": 28,
     "count": 2
@@ -5750,7 +5750,7 @@
     "en": "%s product photo",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:198"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:208"
     ],
     "max_len": 26,
     "count": 1
@@ -8873,7 +8873,7 @@
     "en": "Buy %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:295"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:305"
     ],
     "max_len": 14,
     "count": 1
@@ -16163,7 +16163,7 @@
     "en": "MigraineMe is not a medical device and does not recommend treatments. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:348"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:358"
     ],
     "max_len": 101,
     "count": 1
@@ -17819,7 +17819,7 @@
     "en": "Nothing to show here yet. Check back once you have a connection.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:100"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:110"
     ],
     "max_len": 92,
     "count": 1
@@ -19232,7 +19232,7 @@
     "en": "Prescription devices need a conversation with your doctor. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:349"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:359"
     ],
     "max_len": 85,
     "count": 1
@@ -19241,7 +19241,7 @@
     "en": "Prescription only",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:186"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:196"
     ],
     "max_len": 20,
     "count": 1
@@ -22025,6 +22025,15 @@
       "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:269"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Some links here earn us a commission.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ShopScreen.kt:90"
+    ],
+    "max_len": 53,
     "count": 1
   },
   {
@@ -25595,7 +25604,7 @@
     "en": "WHAT PEOPLE REPORT",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:230"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:240"
     ],
     "max_len": 21,
     "count": 1
@@ -25838,7 +25847,7 @@
     "en": "We earn a commission on links to devices.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:350"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:360"
     ],
     "max_len": 59,
     "count": 1

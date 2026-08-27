@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3855 entries.
+ * 3856 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -2803,6 +2803,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Soft" to "Suave",
     "Some effect" to "Algo de efecto",
     "Some help" to "Ayuda algo",
+    "Some links here earn us a commission." to "Ganamos comisión por algunos de estos enlaces.",
     "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you." to "Algunas medidas piden un wearable, Health Connect o permisos del móvil; la fila te guía.",
     "Some of this came straight from what you told us. The rest are things worth watching, picked because they fit your profile — we can only spot a pattern in what you track. Go through the next pages and adjust anything that doesn't fit. Everything can be changed later in Settings." to "Parte viene de lo que nos contaste. El resto merece vigilarse, elegido porque encaja con tu perfil: solo vemos patrones en lo que registras. Repasa las páginas siguientes y cambia lo que no encaje. Todo se puede cambiar luego en Ajustes.",
     "Some relief" to "Algo",
