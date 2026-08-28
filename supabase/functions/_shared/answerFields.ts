@@ -40,8 +40,12 @@ export interface AnswerField {
 
 export const CERTAINTY = ["EVERY_TIME", "OFTEN", "SOMETIMES", "RARELY", "NO"] as const;
 
+// iOS chip labels, per DeterministicMapper.swift certaintyForLabel: "High" is
+// the top level (EVERY_TIME), not OFTEN. Android's certaintyToSeverity agrees
+// (EVERY_TIME→HIGH, OFTEN→MILD, SOMETIMES→LOW), so this is the only reading
+// under which both apps score the same answer the same way.
 const IOS_CERTAINTY: Record<string, string> = {
-  high: "OFTEN", mild: "SOMETIMES", low: "RARELY", none: "NO",
+  high: "EVERY_TIME", mild: "OFTEN", low: "SOMETIMES", none: "NO",
 };
 
 /** Folds either app's certainty vocabulary onto the Android enum. Unknown → null. */
