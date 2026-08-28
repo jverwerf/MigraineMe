@@ -433,6 +433,8 @@ private fun ChangeRow(p: JsonObject) {
         "clinical_assessment" -> Triple(t("Your assessment"), null, t("rewritten"))
         "medicine", "relief", "symptom", "activity", "missed_activity" ->
             Triple(t(label), null, if (to == "favorite") t("quick-log") else t("removed from quick-log"))
+        // A corrected answer: the label is the field key ("seasonal_pattern").
+        "answer", "profile" -> Triple(humanField(label), from?.let { t(it) }, to?.let { t(it) })
         else -> Triple(t(label), from, to)
     }
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -677,6 +679,10 @@ private fun JsonObject.pickCertMap(snake: String, camel: String): Shown? {
     return Shown(null, items.map { (k, c) -> Strings.tSync(k) to certTone(c) })
 }
 
+private fun humanField(field: String): String =
+    field.replace('_', ' ').replace(Regex("([a-z])([A-Z])"), "$1 $2").lowercase()
+        .replaceFirstChar { it.uppercase() }
+
 private fun sevWord(v: String): String = when (v.uppercase()) {
     "HIGH" -> Strings.tSync("Definitely"); "MILD" -> Strings.tSync("Maybe"); "LOW" -> Strings.tSync("A little"); "NONE" -> Strings.tSync("Off"); else -> v
 }
@@ -729,7 +735,9 @@ private suspend fun loadBasis(ctx: android.content.Context): BasisData? {
         BasisData(
             row = row,
             answers = row?.get("answers") as? JsonObject,
-            acceptedProposals = accepted.await().mapNotNull { it as? JsonObject },
+            // Warnings are advice, not changes; the _meta row is bookkeeping.
+            acceptedProposals = accepted.await().mapNotNull { it as? JsonObject }
+                .filter { it.str("type") !in setOf("data_warning", "summary") },
             runCount = history.await().size,
             liveTriggers = sevMap(triggers.await()),
             liveProdromes = sevMap(prodromes.await()),
