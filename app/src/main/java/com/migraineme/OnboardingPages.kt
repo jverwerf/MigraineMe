@@ -98,109 +98,69 @@ fun WelcomePage(
 
         Spacer(Modifier.height(12.dp))
 
-        // Acute-attack escape hatch: sits above everything and is itself
-        // the shortcut to the app — mid-attack users shouldn't have to read
-        // two cards to find the exit.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(AppTheme.AccentPink.copy(alpha = 0.14f))
-                .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
-                .clickable { onGoToApp() }
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
-            Text(
-                t("In an acute attack right now? Go straight to the app"),
-                color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
-        }
+        // Three ways in, fastest first. Each card says what it costs in
+        // minutes. The acute-attack strip that used to sit above the cards is
+        // now the badge on the first card: same destination, one control.
+        // The tour stays the recommended one and keeps the only filled button.
+        StartCard(
+            poseRes = R.drawable.brainy_gardener_small,
+            title = t("Just start"),
+            kicker = t("0 minutes"),
+            badge = t("In an attack? This one"),
+            onBadgeClick = onGoToApp,
+            points = listOf(
+                t("Straight into the app. Nothing to fill in, nothing to connect."),
+                t("Log your attacks as they happen. That is the only thing you have to do."),
+                t("The AI reads what you log and proposes your profile every Monday.") + " · " + t("Premium"),
+                t("Connecting your wearable and turning on which data you would like to collect is yours to do, in Settings."),
+            ),
+            note = t("The AI needs about five logged attacks before it has anything to say."),
+            buttonLabel = t("Start now"),
+            buttonIcon = Icons.AutoMirrored.Filled.ArrowForward,
+            filled = false,
+            onClick = onGoToApp
+        )
 
         Spacer(Modifier.height(10.dp))
 
-        HeroCard {
-            Column(Modifier.padding(16.dp)) {
-                Box(
-                    Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(AppTheme.AccentPink.copy(alpha = 0.14f))
-                        .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(50))
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        t("RECOMMENDED"),
-                        color = AppTheme.AccentPink,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                NumberedPoint(1, t("See every screen already filled with example data, so nothing is empty or abstract."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(2, t("Learn what the risk gauge, insights and auto-tracking actually do for you."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(3, t("Takes about 5 minutes. You can leave the tour at any point."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(4, t("Ends with setting up your profile — easier once you've seen what everything does."))
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = onTakeFullTour,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) {
-                    Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("Take the Full Tour"), fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
+        StartCard(
+            poseRes = R.drawable.brainy_ask_small,
+            title = t("Give the AI a head start"),
+            kicker = t("About 3 minutes"),
+            points = listOf(
+                t("Answer a short set of questions about your attacks."),
+                t("Connect a wearable and Health Connect, if you have them."),
+                t("Your risk gauge is personal from day one instead of week five."),
+            ),
+            buttonLabel = t("Answer a few questions"),
+            buttonIcon = Icons.Outlined.Tune,
+            filled = false,
+            onClick = onSetUpProfile
+        )
 
         Spacer(Modifier.height(10.dp))
 
-        HeroCard {
-            Column(Modifier.padding(16.dp)) {
-                NumberedPoint(1, t("Connect your wearable and Health Connect."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(2, t("Choose which data to track."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(3, t("Tell us about yourself and answer some questions."))
-                Spacer(Modifier.height(6.dp))
-                NumberedPoint(4, t("AI personalises your risk model from your answers."))
-                Spacer(Modifier.height(12.dp))
-                OutlinedButton(
-                    onClick = onSetUpProfile,
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) {
-                    Icon(Icons.Outlined.Tune, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("Set Up My Profile"), fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
+        StartCard(
+            poseRes = R.drawable.brainy_briefcase_small,
+            title = t("Show me the app first"),
+            kicker = t("About 5 minutes"),
+            badge = t("RECOMMENDED"),
+            lead = true,
+            points = listOf(
+                t("Every screen filled with example data, so nothing is empty."),
+                t("See what the risk gauge, insights and auto-tracking actually do."),
+                t("Ends with the questions above. Leave at any point."),
+            ),
+            buttonLabel = t("Take the full tour"),
+            buttonIcon = Icons.Outlined.AutoAwesome,
+            filled = true,
+            onClick = onTakeFullTour
+        )
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(10.dp))
 
-        TextButton(onClick = onGoToApp, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text(
-                t("Go to the app"),
-                color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    textDecoration = TextDecoration.Underline
-                )
-            )
-        }
         Text(
-            t("Empty Home screen for now. Rerun setup anytime from Profile."),
+            t("You can run setup, or rerun it, anytime from Profile."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
@@ -208,6 +168,102 @@ fun WelcomePage(
         )
 
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+/// One of the three start cards on the welcome page. `lead` gives the card
+/// the pink ring the old tour card had; `badge` is the pill top-right and,
+/// when `onBadgeClick` is set, is itself a shortcut (the acute-attack strip
+/// lives there now).
+@Composable
+private fun StartCard(
+    poseRes: Int,
+    title: String,
+    kicker: String,
+    points: List<String>,
+    buttonLabel: String,
+    buttonIcon: ImageVector,
+    filled: Boolean,
+    onClick: () -> Unit,
+    badge: String? = null,
+    onBadgeClick: (() -> Unit)? = null,
+    lead: Boolean = false,
+    note: String? = null,
+) {
+    val ring = if (lead) AppTheme.AccentPink.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.08f)
+    HeroCard(
+        modifier = Modifier.border(1.dp, ring, AppTheme.HeroCardShape)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            // Badge on its own line: next to the title it forced "Show me the
+            // app first" onto two lines on a Pixel-width screen.
+            if (badge != null) {
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(AppTheme.AccentPink.copy(alpha = 0.14f))
+                        .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(50))
+                        .then(if (onBadgeClick != null) Modifier.clickable { onBadgeClick() } else Modifier)
+                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        badge.uppercase(),
+                        color = AppTheme.AccentPink,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Image(
+                    painter = painterResource(id = poseRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(42.dp)
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        kicker.uppercase(),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            points.forEachIndexed { i, p ->
+                if (i > 0) Spacer(Modifier.height(6.dp))
+                NumberedPoint(i + 1, p)
+            }
+            if (note != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(note, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(Modifier.height(12.dp))
+            if (filled) {
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Icon(buttonIcon, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(buttonLabel, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                OutlinedButton(
+                    onClick = onClick,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Icon(buttonIcon, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(buttonLabel, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
     }
 }
 

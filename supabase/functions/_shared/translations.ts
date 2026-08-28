@@ -185,7 +185,7 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Right eye": "Auge rechts",
     "Sat": "Sa",
     "Saturated fat": "Gesättigtes Fett",
-    "Seasonal pattern": "Jahreszeitliches Muster",
+    "Seasonal pattern": "Saisonales Muster",
     "Seasons with no bar were not covered by this record": "Jahreszeiten ohne Balken sind von diesem Zeitraum nicht abgedeckt",
     "Seen in this period": "In diesem Zeitraum gesehen",
     "Set up on population defaults for now. Log a few days, then re-assess your profile to have these tuned to you.": "Vorerst auf Populationsstandard eingerichtet. Logge ein paar Tage und nutze dann Profil neu prüfen, damit alles auf dich abgestimmt wird.",

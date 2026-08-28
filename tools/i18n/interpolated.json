@@ -16,15 +16,19 @@
     "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Failed to add: %1\\$s\", e.message ?: tSync(\"error\"))) }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:540",
-    "line": "                Text(t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:679",
+    "line": "                    if (editMode) t(\"Edit — %1\\$s\", AiSetupEntry.title(startPage ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:558",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:680",
+    "line": "                    else t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:700",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:559",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:701",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
@@ -308,19 +312,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:335",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:341",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:370",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:376",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:404",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:410",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:438",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:444",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -612,27 +616,75 @@
     "line": "            t(\"You have %1\\$s migraines, %2\\$s triggers, and %3\\$s treatments logged.\", migraineCount, triggerCount, treatmentCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:755",
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:185",
+    "line": "                Text(if (setupDate != null) t(\"%1\\$s. It does not rewrite itself.\", setupDate) else t(\"It does not rewrite itself.\"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:205",
+    "line": "        if (setupDate != null) t(\"Your answers from %1\\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup.\", setupDate)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:339",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", d.enabledMetrics, d.totalMetrics), color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:386",
+    "line": "            Text(if (d != null) t(\"Last rewritten %1\\$s by a weekly check-in\", d) else t(\"Rewritten by weekly check-ins\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:398",
+    "line": "            if (d.runCount > 0) t(\"%1\\$s check-ins so far\", d.runCount) else t(\"No check-ins yet\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:408",
+    "line": "                Text(t(\"and %1\\$s more\", accepted.size - 8), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 6.dp))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:412",
+    "line": "                (if (latest != null) t(\"Latest %1\\$s. \", latest) else \"\") + t(\"Everything here is a change you accepted — nothing moves without you.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:430",
+    "line": "        \"gauge_threshold\" -> Triple(t(\"%1\\$s starts at\", sevWord(label)), from, to)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:431",
+    "line": "        \"gauge_decay\" -> Triple(t(\"%1\\$s day curve\", sevWord(label)), null, t(\"changed\"))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:516",
+    "line": "        SectionHeader(icon, title, t(\"Page %1\\$s of setup\", page), \"$answered / ${rows.size}\", warn = answered < rows.size, onEdit = { onEditSection(entryKey) })"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:546",
+    "line": "        Text(if (n == 0) t(\"none\") else t(\"%1\\$s added\", n), color = if (n == 0) AppTheme.SubtleTextColor.copy(alpha = 0.55f) else Color.White,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:743",
+    "line": "                        if (answers == null) t(\"Not answered yet\") else t(\"%1\\$s answers from your setup\", answered),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:776",
     "line": "                    t(\"What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:756",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:777",
     "line": "                    t(\"Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:757",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:778",
     "line": "                    t(\"The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The weekly AI Calibration card in Insights nudges those values over time as the app learns from your data.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:932",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:953",
     "line": "                    t(\"Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:933",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:954",
     "line": "                    t(\"Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and weekly AI Calibration of your gauge.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:934",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:955",
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {
