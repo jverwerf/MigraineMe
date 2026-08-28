@@ -72,7 +72,11 @@ object AiSetupProfileStore {
         }
 
         try {
-            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_setup_profiles"
+            // on_conflict=user_id: without it PostgREST resolves duplicates on the
+            // primary key only, and every SECOND save (redo, edit) died with 409
+            // "ai_setup_profiles_user_id_unique" — silently, because the caller
+            // treats this save as non-blocking. iOS always passed it.
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_setup_profiles?on_conflict=user_id"
             val response = client.post(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $accessToken")

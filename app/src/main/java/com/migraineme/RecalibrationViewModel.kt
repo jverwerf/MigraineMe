@@ -134,9 +134,13 @@ class RecalibrationViewModel : ViewModel() {
                             else -> JSONObject()
                         }
                     } catch (_: Exception) { JSONObject() }
-                    call1Summary = meta.optString("call1_summary", "")
-                    call2Summary = meta.optString("call2_summary", "")
-                    calibrationNotes = meta.optString("calibration_notes", "")
+                    // optString turns a JSON null into the string "null", which then
+                    // rendered as a card saying "null" after a profile-only run
+                    // (no Call 2, so call2_summary / calibration_notes are null).
+                    fun metaText(key: String) = meta.optString(key, "").takeIf { it != "null" } ?: ""
+                    call1Summary = metaText("call1_summary")
+                    call2Summary = metaText("call2_summary")
+                    calibrationNotes = metaText("calibration_notes")
                     continue
                 }
 
