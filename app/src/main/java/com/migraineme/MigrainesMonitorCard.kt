@@ -25,8 +25,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MigrainesMonitorCard(onClick: () -> Unit) {
@@ -38,11 +42,30 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     val thisMonth by vm.freeDaysThisMonth.collectAsState()
     var showInfo by remember { mutableStateOf(false) }
 
+    // Open attacks drive the "in an attack" row. Kept local to the card so the
+    // Monitor hub doesn't have to know about migraine rows.
+    val db = remember { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) }
+    var openAttacks by remember { mutableStateOf<List<SupabaseDbService.MigraineRow>>(emptyList()) }
+    // Ticks the elapsed clock. A minute is the smallest unit shown, so half a
+    // minute is fine and costs nothing while no attack is open.
+    var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
+
     // Trigger load if we have an access token; mirrors InsightsScreen pattern.
     LaunchedEffect(Unit) {
         val token = SessionStore.getValidAccessToken(ctx)
         if (!token.isNullOrBlank()) {
             vm.load(ctx, token)
+            openAttacks = withContext(Dispatchers.IO) {
+                runCatching { db.getOpenMigraines(token) }.getOrDefault(emptyList())
+            }
+        }
+    }
+
+    LaunchedEffect(openAttacks.isEmpty()) {
+        if (openAttacks.isEmpty()) return@LaunchedEffect
+        while (true) {
+            nowMs = System.currentTimeMillis()
+            delay(30_000L)
         }
     }
 
@@ -59,6 +82,46 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
                 Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            // Live "in an attack" row. Present only while a migraine is open;
+            // shows how long it has been running so far (mm counted from
+            // start_at). Mirrors the Home in-progress card's attack red.
+            longestOpenAttack(openAttacks)?.let { open ->
+                val elapsed = attackElapsedLabel(open.startAt, nowMs)
+                if (elapsed != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(AttackRed.copy(alpha = 0.14f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .border(1.dp, AttackRed.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            t("In an attack").uppercase(appLocale()),
+                            color = AttackRed,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold, letterSpacing = 0.09.em
+                            )
+                        )
+                        Text(
+                            elapsed,
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (openAttacks.size > 1) {
+                            Text(
+                                t("%s open", openAttacks.size),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
             }
 
             val wsValue = ws
@@ -203,4 +266,27 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             containerColor = Color(0xFF1E0A2E)
         )
     }
+}
+/** Attack red, the same value the Home in-progress card uses. */
+private val AttackRed = Color(0xFFE57373)
+
+/** Longest-running open attack — the one the card counts. Several can be open
+ *  at once; the oldest is the one the user is most likely asking about. */
+private fun longestOpenAttack(
+    open: List<SupabaseDbService.MigraineRow>
+): SupabaseDbService.MigraineRow? = open.minByOrNull { it.startAt }
+
+/** "04:12" under a day, "1d 04:12" past it. Null when start_at can't be parsed
+ *  or lies in the future, so the row simply isn't drawn. */
+internal fun attackElapsedLabel(startIso: String, nowMs: Long): String? {
+    val startMs = runCatching {
+        java.time.ZonedDateTime.parse(startIso).toInstant().toEpochMilli()
+    }.getOrNull() ?: return null
+    val totalMinutes = (nowMs - startMs) / 60_000L
+    if (totalMinutes < 0) return null
+    val days = totalMinutes / 1440L
+    val hours = (totalMinutes % 1440L) / 60L
+    val minutes = totalMinutes % 60L
+    val hm = String.format("%02d:%02d", hours, minutes)
+    return if (days > 0) "${days}d $hm" else hm
 }

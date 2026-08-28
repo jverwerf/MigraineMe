@@ -30350,5 +30350,23 @@
     ],
     "max_len": 17,
     "count": 1
+  },
+  {
+    "en": "In an attack",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:104"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "%s open",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:118"
+    ],
+    "max_len": 14,
+    "count": 1
   }
 ]
