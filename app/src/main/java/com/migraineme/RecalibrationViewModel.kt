@@ -39,7 +39,21 @@ class RecalibrationViewModel : ViewModel() {
         val shouldFavorite: Boolean,
         val reasoning: String?,
         var accepted: Boolean = true,   // default: accept all
-    )
+        /** Row metadata as stored; for type "answer": entry, question, options, kind. */
+        val metadata: JSONObject = JSONObject(),
+        /**
+         * type "answer" only: the value the user picked instead of the suggested
+         * one (null = take `toValue` as proposed). Sent as {id, to_value}.
+         */
+        val chosenValue: String? = null,
+    ) {
+        val options: List<String>
+            get() = metadata.optJSONArray("options")?.let { a -> (0 until a.length()).map { a.optString(it) } } ?: emptyList()
+        val question: String? get() = metadata.optString("question", "").takeIf { it.isNotBlank() }
+        val kind: String get() = metadata.optString("kind", "single")
+        /** What apply will write if accepted. */
+        val effectiveValue: String? get() = chosenValue ?: toValue
+    }
 
     data class RecalibrationState(
         val loading: Boolean = true,
@@ -126,6 +140,13 @@ class RecalibrationViewModel : ViewModel() {
                     continue
                 }
 
+                val rowMeta = try {
+                    when (val raw = obj.opt("metadata")) {
+                        is JSONObject -> raw
+                        is String -> JSONObject(raw)
+                        else -> JSONObject()
+                    }
+                } catch (_: Exception) { JSONObject() }
                 proposals.add(Proposal(
                     id = obj.getString("id"),
                     type = type,
@@ -134,6 +155,7 @@ class RecalibrationViewModel : ViewModel() {
                     toValue = obj.optString("to_value", null)?.takeIf { it != "null" },
                     shouldFavorite = obj.optBoolean("should_favorite", false),
                     reasoning = obj.optString("reasoning", null)?.takeIf { it != "null" },
+                    metadata = rowMeta,
                 ))
             }
 
@@ -151,6 +173,16 @@ class RecalibrationViewModel : ViewModel() {
     // ═══════════════════════════════════════════════════════════════
     // Toggle individual proposals
     // ═══════════════════════════════════════════════════════════════
+
+    /** type "answer": pick a value other than the suggested one; picking also accepts. */
+    fun chooseAnswer(proposalId: String, value: String) {
+        val current = _state.value
+        _state.value = current.copy(
+            proposals = current.proposals.map {
+                if (it.id == proposalId) it.copy(chosenValue = value, accepted = true) else it
+            }
+        )
+    }
 
     fun toggleProposal(proposalId: String) {
         val current = _state.value
@@ -193,8 +225,15 @@ class RecalibrationViewModel : ViewModel() {
         val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
             ?: throw Exception("Not authenticated")
 
+        // An "answer" the user adjusted goes as {id, to_value}; apply validates the
+        // override against the options and writes it back onto the proposal row.
         val body = JSONObject().apply {
-            put("accepted", JSONArray(proposals.filter { it.accepted }.map { it.id }))
+            put("accepted", JSONArray(proposals.filter { it.accepted }.map { p ->
+                val chosen = p.chosenValue
+                if (p.type == "answer" && chosen != null && chosen != p.toValue)
+                    JSONObject().put("id", p.id).put("to_value", chosen)
+                else p.id
+            }))
             put("rejected", JSONArray(proposals.filter { !it.accepted }.map { it.id }))
         }
 

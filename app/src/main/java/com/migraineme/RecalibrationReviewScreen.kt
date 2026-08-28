@@ -2,6 +2,7 @@ package com.migraineme
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -199,6 +200,7 @@ fun RecalibrationReviewScreen(
             val grouped = state.proposals.groupBy { it.type }
             val displayOrder = listOf(
                 "clinical_assessment" to "Updated clinical profile",
+                "answer" to "Your answers",
                 "profile" to "Profile updates",
                 "trigger" to "Trigger adjustments",
                 "prodrome" to "Prodrome adjustments",
@@ -222,7 +224,14 @@ fun RecalibrationReviewScreen(
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
-                    if (type != "data_warning") {
+                    if (type == "answer") {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            t("From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is."),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    } else if (type != "data_warning") {
                         Spacer(Modifier.height(2.dp))
                         Text(
                             t("Keep checked to accept, untap to reject."),
@@ -235,6 +244,12 @@ fun RecalibrationReviewScreen(
                     for (proposal in proposals) {
                         if (type == "data_warning") {
                             WarningRow(proposal)
+                        } else if (type == "answer") {
+                            AnswerProposalRow(
+                                proposal = proposal,
+                                onToggle = { vm.toggleProposal(proposal.id) },
+                                onChoose = { value -> vm.chooseAnswer(proposal.id, value) },
+                            )
                         } else {
                             ProposalRow(
                                 proposal = proposal,
@@ -402,6 +417,97 @@ private fun ProposalRow(
             }
         }
     }
+}
+
+/**
+ * A proposed correction to one of the setup answers (type "answer"): the
+ * question as asked, what the user said, what the data suggests, and every
+ * allowed value as a chip so a third value can be picked. Tapping a chip
+ * also ticks the row; untick to keep the original answer.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun AnswerProposalRow(
+    proposal: RecalibrationViewModel.Proposal,
+    onToggle: () -> Unit,
+    onChoose: (String) -> Unit,
+) {
+    val bgColor by animateColorAsState(
+        if (proposal.accepted) Color(0xFF2D2D3D) else Color(0xFF1A1A24),
+        label = "answerBg",
+    )
+    val isCertainty = proposal.kind == "certainty"
+    fun show(v: String?): String = when {
+        v == null -> Strings.tSync("Not answered")
+        isCertainty -> certaintyWord(v)
+        else -> Strings.tSync(v)
+    }
+    val effective = proposal.effectiveValue
+
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(bgColor).padding(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Checkbox(
+            checked = proposal.accepted,
+            onCheckedChange = { onToggle() },
+            colors = CheckboxDefaults.colors(checkedColor = AppTheme.AccentPurple, uncheckedColor = AppTheme.SubtleTextColor),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                proposal.question?.let { t(it) } ?: t(proposal.label),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(t("You said"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.width(6.dp))
+                Text(show(proposal.fromValue), color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough))
+                Text("  →  ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(show(effective), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                if (proposal.chosenValue != null && proposal.chosenValue != proposal.toValue) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(t("(your pick)"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            if (!proposal.reasoning.isNullOrBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(proposal.reasoning, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+            if (proposal.options.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    proposal.options.forEach { opt ->
+                        val selected = proposal.accepted && opt == effective
+                        val suggested = opt == proposal.toValue
+                        Text(
+                            show(opt),
+                            color = if (selected) Color.White else AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) AppTheme.AccentPurple.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.07f))
+                                .border(1.dp, if (suggested) AppTheme.AccentPurple.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(8.dp))
+                                .clickable { onChoose(opt) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun certaintyWord(v: String): String = when (v.uppercase()) {
+    "EVERY_TIME" -> Strings.tSync("Every time")
+    "OFTEN" -> Strings.tSync("Often")
+    "SOMETIMES" -> Strings.tSync("Sometimes")
+    "RARELY" -> Strings.tSync("Rarely")
+    "NO" -> Strings.tSync("No")
+    else -> v
 }
 
 @Composable
