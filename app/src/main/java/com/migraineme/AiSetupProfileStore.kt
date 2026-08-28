@@ -97,6 +97,143 @@ object AiSetupProfileStore {
         }
     }
 
+    // ── Read back ────────────────────────────────────────────────────────
+
+    /** The saved row, or null when the user has never finished setup. */
+    data class SavedProfile(
+        val row: JsonObject,
+        /** `answers` — null when the row was created by an accepted proposal, not by setup. */
+        val answers: JsonObject?,
+    )
+
+    suspend fun load(context: Context): SavedProfile? = withContext(Dispatchers.IO) {
+        val appCtx = context.applicationContext
+        val accessToken = SessionStore.getValidAccessToken(appCtx) ?: return@withContext null
+        val userId = SessionStore.readUserId(appCtx) ?: return@withContext null
+        val client = HttpClient(io.ktor.client.engine.android.Android)
+        try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_setup_profiles" +
+                "?user_id=eq.$userId&select=*&limit=1"
+            val response = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+            if (response.status.value !in 200..299) return@withContext null
+            val arr = json.parseToJsonElement(response.bodyAsText()).jsonArray
+            val row = arr.firstOrNull()?.jsonObject ?: return@withContext null
+            val answers = (row["answers"] as? JsonObject)
+            SavedProfile(row = row, answers = answers)
+        } catch (e: Exception) {
+            Log.w(TAG, "load failed: ${e.message}")
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Turns a saved `answers` object back into the questionnaire's pre-fill
+     * shape so the flow opens with the user's own answers in place.
+     *
+     * The same column holds two spellings: this file writes snake_case
+     * (`age_range`), iOS AiSetupFlow.saveAiSetupProfile writes camelCase
+     * (`ageRange`) — and a user can have set up on either. Every read below
+     * tries both, the way recalibrate/index.ts does with
+     * `answers.avg_duration ?? answers.avgDuration`.
+     */
+    fun preFillFromAnswers(a: JsonObject): OnboardingPreFill {
+        fun el(snake: String, camel: String): JsonElement? =
+            (a[snake] ?: a[camel])?.takeIf { it !is JsonNull }
+        fun str(snake: String, camel: String): String? =
+            (el(snake, camel) as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
+        fun cert(raw: String?): DeterministicMapper.Certainty? {
+            val v = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            val c = runCatching { DeterministicMapper.Certainty.valueOf(v.uppercase()) }.getOrNull()
+                ?: CertaintyWords.fromLocalisedWord(v) ?: return null
+            // NO is the questionnaire's unanswered state — leaving it null keeps
+            // the chip untouched rather than pinning an explicit "No".
+            return c.takeIf { it != DeterministicMapper.Certainty.NO }
+        }
+        fun certOf(snake: String, camel: String) = cert(str(snake, camel))
+        fun strSet(snake: String, camel: String): Set<String> =
+            (el(snake, camel) as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }?.toSet()
+                ?: emptySet()
+        fun certMap(snake: String, camel: String): Map<String, DeterministicMapper.Certainty> {
+            val obj = el(snake, camel) as? JsonObject ?: return emptyMap()
+            return obj.entries.mapNotNull { (k, v) ->
+                cert((v as? JsonPrimitive)?.contentOrNull)?.let { k to it }
+            }.toMap()
+        }
+
+        return OnboardingPreFill(
+            gender = str("gender", "gender"),
+            ageRange = str("age_range", "ageRange"),
+            frequency = str("frequency", "frequency"),
+            duration = str("duration", "duration"),
+            experience = str("experience", "experience"),
+            trajectory = str("trajectory", "trajectory"),
+            warningBefore = str("warning_signs_before", "warningBefore"),
+            triggerDelay = str("trigger_delay", "triggerDelay"),
+            dailyRoutine = str("daily_routine", "dailyRoutine"),
+            seasonalPattern = str("seasonal_pattern", "seasonalPattern"),
+            sleepHours = str("sleep_hours", "sleepHours"),
+            sleepQuality = str("sleep_quality", "sleepQuality"),
+            poorQualityTriggers = certOf("poor_sleep_quality_triggers", "poorQualityTriggers"),
+            tooLittleSleepTriggers = certOf("too_little_sleep_triggers", "tooLittleSleepTriggers"),
+            oversleepTriggers = certOf("oversleep_triggers", "oversleepTriggers"),
+            sleepIssues = strSet("sleep_issues", "sleepIssues"),
+            stressLevel = str("stress_level", "stressLevel"),
+            stressChangeTriggers = certOf("stress_change_triggers", "stressChangeTriggers"),
+            emotionalPatterns = certMap("emotional_patterns", "emotionalPatterns"),
+            screenTimeDaily = str("screen_time_daily", "screenTimeDaily"),
+            screenTimeTriggers = certOf("screen_time_triggers", "screenTimeTriggers"),
+            lateScreenTriggers = certOf("late_screen_triggers", "lateScreenTriggers"),
+            caffeineIntake = str("caffeine_intake", "caffeineIntake"),
+            caffeineDirection = str("caffeine_direction", "caffeineDirection"),
+            caffeineCertainty = certOf("caffeine_certainty", "caffeineCertainty"),
+            alcoholFrequency = str("alcohol_frequency", "alcoholFrequency"),
+            alcoholTriggers = certOf("alcohol_triggers", "alcoholTriggers"),
+            specificDrinks = strSet("specific_drinks", "specificDrinks"),
+            tyramineFoods = certMap("tyramine_foods", "tyramineFoods"),
+            histamineFoods = certMap("histamine_foods", "histamineFoods"),
+            glutenSensitivity = str("gluten_sensitivity", "glutenSensitivity"),
+            glutenTriggers = certOf("gluten_triggers", "glutenTriggers"),
+            eatingPatterns = certMap("eating_patterns", "eatingPatterns"),
+            waterIntake = str("water_intake", "waterIntake"),
+            tracksNutrition = str("tracks_nutrition", "tracksNutrition"),
+            weatherTriggers = certOf("weather_triggers", "weatherTriggers"),
+            specificWeather = certMap("specific_weather", "specificWeather"),
+            environmentSensitivities = certMap("environment_sensitivities", "environmentSensitivities"),
+            physicalFactors = certMap("physical_factors", "physicalFactors"),
+            exerciseFrequency = str("exercise_frequency", "exerciseFrequency"),
+            exerciseTriggers = certOf("exercise_triggers", "exerciseTriggers"),
+            exercisePattern = strSet("exercise_pattern", "exercisePattern"),
+            tracksCycle = str("tracks_cycle", "tracksCycle"),
+            cyclePatterns = certMap("cycle_patterns", "cyclePatterns"),
+            cycleLength = str("cycle_length", "cycleLength"),
+            cycleMigraineTiming = strSet("cycle_migraine_timing", "cycleMigraineTiming"),
+            lastPeriodDate = str("last_period_date", "lastPeriodDate"),
+            usesContraception = str("uses_contraception", "usesContraception"),
+            contraceptionEffect = str("contraception_effect", "contraceptionEffect"),
+            physicalProdromes = certMap("physical_prodromes", "physicalProdromes"),
+            moodProdromes = certMap("mood_prodromes", "moodProdromes"),
+            sensoryProdromes = certMap("sensory_prodromes", "sensoryProdromes"),
+            matchedTriggers = strSet("selected_triggers", "selectedTriggers"),
+            matchedProdromes = strSet("selected_prodromes", "selectedProdromes"),
+            matchedSymptoms = strSet("selected_symptoms", "selectedSymptoms"),
+            matchedMedicines = strSet("selected_medicines", "selectedMedicines"),
+            matchedReliefs = strSet("selected_reliefs", "selectedReliefs"),
+            matchedActivities = strSet("selected_activities", "selectedActivities"),
+            matchedMissedActivities = strSet("selected_missed_activities", "selectedMissedActivities"),
+            matchedLocations = strSet("selected_locations", "selectedLocations"),
+            matchedPostdromes = strSet("selected_postdromes", "selectedPostdromes"),
+        )
+    }
+
+    /** `answers.free_text` — the one key both platforms already spell the same way. */
+    fun freeText(a: JsonObject?): String? =
+        (a?.get("free_text") as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+
     // ── Build a JSON representation of all questionnaire answers ──
 
     private fun buildAnswersJson(a: DeterministicMapper.QuestionnaireAnswers): String {
@@ -156,6 +293,13 @@ object AiSetupProfileStore {
             put("exercise_pattern", JsonArray(a.exercisePattern.map { JsonPrimitive(it) }))
             put("tracks_cycle", a.tracksCycle)
             put("cycle_patterns", certaintyMapToJson(a.cyclePatterns))
+            // cycle_length / last_period_date / cycle_migraine_timing and the
+            // trigger / prodrome / location / postdrome picks below were
+            // collected, sent to the AI and then never written, so an
+            // edit-from-Profile round trip lost them. iOS always kept them.
+            put("cycle_length", a.cycleLength)
+            put("last_period_date", a.lastPeriodDate)
+            put("cycle_migraine_timing", JsonArray(a.cycleMigraineTiming.map { JsonPrimitive(it) }))
             put("uses_contraception", a.usesContraception)
             put("contraception_effect", a.contraceptionEffect)
 
@@ -165,11 +309,15 @@ object AiSetupProfileStore {
             put("sensory_prodromes", certaintyMapToJson(a.sensoryProdromes))
 
             // Page 8
+            put("selected_triggers", JsonArray(a.selectedTriggers.map { JsonPrimitive(it) }))
+            put("selected_prodromes", JsonArray(a.selectedProdromes.map { JsonPrimitive(it) }))
             put("selected_symptoms", JsonArray(a.selectedSymptoms.map { JsonPrimitive(it) }))
             put("selected_medicines", JsonArray(a.selectedMedicines.map { JsonPrimitive(it) }))
             put("selected_reliefs", JsonArray(a.selectedReliefs.map { JsonPrimitive(it) }))
             put("selected_activities", JsonArray(a.selectedActivities.map { JsonPrimitive(it) }))
             put("selected_missed_activities", JsonArray(a.selectedMissedActivities.map { JsonPrimitive(it) }))
+            put("selected_locations", JsonArray(a.selectedLocations.map { JsonPrimitive(it) }))
+            put("selected_postdromes", JsonArray(a.selectedPostdromes.map { JsonPrimitive(it) }))
             put("free_text", a.freeText)
         }
         return obj.toString()

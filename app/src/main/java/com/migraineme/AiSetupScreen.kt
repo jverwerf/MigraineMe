@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -35,16 +36,112 @@ private enum class AiPage {
     PROCESSING, RESULTS, COMPANIONS
 }
 
+/**
+ * Pages the setup flow can be opened AT, by key. This is the contract shared
+ * with the Profile "What this is based on" page (per-section edit) and the
+ * start screen's head-start card (`ABOUT`, the first questionnaire page).
+ * Keys are stable strings because they travel through the nav route
+ * (`Routes.aiSetup(start, single)`), and iOS / RN use the same keys.
+ */
+object AiSetupEntry {
+    const val ABOUT = "about"
+    const val SLEEP = "sleep"
+    const val STRESS = "stress"
+    const val DIET = "diet"
+    const val WEATHER = "weather"
+    const val EXERCISE = "exercise"
+    const val WARNING_SIGNS = "warning_signs"
+    const val TRIGGERS = "triggers"
+    const val PRODROMES = "prodromes"
+    const val SYMPTOMS = "symptoms"
+    const val POSTDROMES = "postdromes"
+    const val LOCATIONS = "locations"
+    const val MEDICINES = "medicines"
+    const val RELIEFS = "reliefs"
+    const val ACTIVITIES = "activities"
+    const val MISSED_ACTIVITIES = "missed_activities"
+    const val NOTES = "notes"
+
+    /** Display title per key, for the header in single-page mode. */
+    fun title(key: String): String = when (key) {
+        ABOUT -> Strings.tSync("About you")
+        SLEEP -> Strings.tSync("Sleep")
+        STRESS -> Strings.tSync("Stress & screens")
+        DIET -> Strings.tSync("Food & drink")
+        WEATHER -> Strings.tSync("Weather & surroundings")
+        EXERCISE -> Strings.tSync("Exercise & cycle")
+        WARNING_SIGNS -> Strings.tSync("Warning signs")
+        TRIGGERS -> Strings.tSync("Your triggers")
+        PRODROMES -> Strings.tSync("Warning signs you log")
+        SYMPTOMS -> Strings.tSync("Symptoms")
+        POSTDROMES -> Strings.tSync("After the attack")
+        LOCATIONS -> Strings.tSync("Places")
+        MEDICINES -> Strings.tSync("Medicines")
+        RELIEFS -> Strings.tSync("Reliefs")
+        ACTIVITIES -> Strings.tSync("Activities")
+        MISSED_ACTIVITIES -> Strings.tSync("Activities you miss")
+        NOTES -> Strings.tSync("Your notes")
+        else -> Strings.tSync("Setup")
+    }
+}
+
+private fun pageForEntry(key: String?): AiPage? = when (key) {
+    AiSetupEntry.ABOUT -> AiPage.Q1
+    AiSetupEntry.SLEEP -> AiPage.Q2
+    AiSetupEntry.STRESS -> AiPage.Q3
+    AiSetupEntry.DIET -> AiPage.Q4
+    AiSetupEntry.WEATHER -> AiPage.Q5
+    AiSetupEntry.EXERCISE -> AiPage.Q6
+    AiSetupEntry.WARNING_SIGNS -> AiPage.Q7
+    AiSetupEntry.TRIGGERS -> AiPage.TRIGGERS
+    AiSetupEntry.PRODROMES -> AiPage.PRODROMES
+    AiSetupEntry.SYMPTOMS -> AiPage.SYMPTOMS
+    AiSetupEntry.POSTDROMES -> AiPage.POSTDROMES
+    AiSetupEntry.LOCATIONS -> AiPage.LOCATIONS
+    AiSetupEntry.MEDICINES -> AiPage.MEDICINES
+    AiSetupEntry.RELIEFS -> AiPage.RELIEFS
+    AiSetupEntry.ACTIVITIES -> AiPage.ACTIVITIES
+    AiSetupEntry.MISSED_ACTIVITIES -> AiPage.MISSED_ACTIVITIES
+    AiSetupEntry.NOTES -> AiPage.NOTES
+    else -> null
+}
+
+/** What the single-page save did after the answers were applied, for the caller to route on. */
+sealed class AiSetupEditOutcome {
+    /** recalibrate returned proposals — send the user to the review screen. */
+    object ProposalsReady : AiSetupEditOutcome()
+    /** Saved, but no immediate re-check happened; `message` says why (cooldown, free plan, too few logs). */
+    data class SavedOnly(val message: String) : AiSetupEditOutcome()
+}
+
+/**
+ * @param startPage  an [AiSetupEntry] key to open at, skipping the story page;
+ *                   null = the full flow from the story page (first setup / Redo).
+ * @param singlePage true = show only [startPage]; Next becomes "Save & re-check",
+ *                   which applies the config, re-runs recalibrate and calls
+ *                   [onEditDone] instead of going on to the companions page.
+ *                   Back on the single page cancels via [onSkip].
+ *
+ * On open, whatever the user saved before (ai_setup_profiles.answers, either
+ * platform's spelling) is pre-filled, so a redo or an edit starts from their
+ * own answers rather than a blank form.
+ */
 @Composable
 fun AiSetupScreen(
     onComplete: () -> Unit,
     onSkip: () -> Unit,
+    startPage: String? = null,
+    singlePage: Boolean = false,
+    onEditDone: (AiSetupEditOutcome) -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
     val scope = rememberCoroutineScope()
 
-    var currentPage by remember { mutableStateOf(AiPage.STORY) }
+    val entryPage = remember(startPage) { pageForEntry(startPage) }
+    var currentPage by remember { mutableStateOf(entryPage ?: AiPage.STORY) }
+    // Edit mode: only this one page, then the AI pass, then back to the caller.
+    val editMode = singlePage && entryPage != null
 
     // ── Load pool items + data context on launch ──
     var availableItems by remember { mutableStateOf<AiSetupService.AvailableItems?>(null) }
@@ -169,7 +266,13 @@ fun AiSetupScreen(
     var suggestedShownActivities by remember { mutableStateOf(setOf<String>()) }
     var suggestedShownLocations by remember { mutableStateOf(setOf<String>()) }
     // One-shot flags so unticking a suggestion isn't re-applied on revisit.
-    var suggestionsApplied by remember { mutableStateOf(setOf<String>()) }
+    // In edit mode every pool counts as already done: the user is revisiting
+    // picks they made, and re-offering the suggestion tier would re-tick
+    // things they had deliberately unticked.
+    var suggestionsApplied by remember {
+        mutableStateOf(if (editMode) setOf("triggers", "symptoms", "reliefs", "activities", "locations") else setOf<String>())
+    }
+    var savedAnswersLoaded by remember { mutableStateOf(false) }
     var additionalNotes by remember { mutableStateOf<String?>(null) }
 
     // AI state
@@ -314,6 +417,21 @@ fun AiSetupScreen(
         preFilledFields = filled
     }
 
+    // Pre-fill from what the user saved last time (redo / edit-from-Profile).
+    // Runs before anything else can be tapped; a first-time user has no row
+    // and this is a no-op. Not routed through the parse-summary banner: these
+    // are the user's own answers, not something the AI inferred.
+    LaunchedEffect(Unit) {
+        val saved = AiSetupProfileStore.load(appCtx)
+        val answers = saved?.answers
+        if (answers != null) {
+            applyPreFill(AiSetupProfileStore.preFillFromAnswers(answers))
+            AiSetupProfileStore.freeText(answers)?.let { additionalNotes = it }
+            preFilledFields = emptySet()
+        }
+        savedAnswersLoaded = true
+    }
+
     fun parseStory() {
         if (storyText.isBlank()) { storyParsed = true; currentPage = AiPage.Q1; return }
         storyLoading = true
@@ -424,29 +542,49 @@ fun AiSetupScreen(
         }
     }
 
+    // Edit mode only: the answers are applied and saved, then the weekly
+    // learning pass runs straight away rather than waiting for Monday. The
+    // three ways recalibrate declines are each said out loud, never swallowed:
+    // once-a-day cooldown, free plan (403), fewer than 5 logged attacks.
+    suspend fun recheckNow(): AiSetupEditOutcome {
+        val result = withContext(Dispatchers.IO) { runRecalibration(appCtx) }
+        return when (result.first) {
+            "ok" -> AiSetupEditOutcome.ProposalsReady
+            "cooldown" -> AiSetupEditOutcome.SavedOnly(
+                Strings.tSync("Your answers are saved. The AI already re-checked your profile today, so the next re-check is on %1\$s.", result.second))
+            "insufficient_data" -> AiSetupEditOutcome.SavedOnly(
+                Strings.tSync("Your answers are saved. The AI needs at least 5 logged migraines before it can re-check your profile — you have %1\$s so far.", result.second))
+            "premium_required" -> AiSetupEditOutcome.SavedOnly(
+                Strings.tSync("Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan."))
+            "no_material_changes" -> AiSetupEditOutcome.SavedOnly(
+                Strings.tSync("Your answers are saved. The AI re-checked your profile and found nothing worth changing."))
+            else -> AiSetupEditOutcome.SavedOnly(
+                Strings.tSync("Your answers are saved, but the re-check did not run: %1\$s", result.second))
+        }
+    }
+
     fun applyConfig(modifiedConfig: AiSetupService.AiConfig? = null) {
         val config = modifiedConfig ?: aiConfig ?: return
         aiConfig = config  // store the (possibly modified) config
         isApplying = true
         scope.launch {
-            AiSetupApplier.applyConfig(appCtx, config, buildAnswers()) { progress -> applyProgress = progress }.fold(
-                onSuccess = {
-                    // Save answers + AI config to Supabase for community features
-                    launch(Dispatchers.IO) {
-                        runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
-                            .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
-                    }
-                    isApplying = false; currentPage = AiPage.COMPANIONS
-                },
-                onFailure = {
-                    // Still try to save even if apply partially failed
-                    launch(Dispatchers.IO) {
-                        runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
-                            .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
-                    }
-                    isApplying = false; currentPage = AiPage.COMPANIONS
-                }
-            )
+            val applied = AiSetupApplier.applyConfig(appCtx, config, buildAnswers()) { progress -> applyProgress = progress }
+            if (applied.isFailure) Log.w("AiSetup", "applyConfig partially failed, saving profile anyway", applied.exceptionOrNull())
+            // Save answers + AI config to Supabase for community features.
+            // Awaited (not fire-and-forget) in edit mode so the recheck that
+            // follows reads the row this edit just wrote.
+            val save = async(Dispatchers.IO) {
+                runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
+                    .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
+            }
+            if (editMode) {
+                save.await()
+                val outcome = recheckNow()
+                isApplying = false
+                onEditDone(outcome)
+            } else {
+                isApplying = false; currentPage = AiPage.COMPANIONS
+            }
         }
     }
 
@@ -537,7 +675,11 @@ fun AiSetupScreen(
             )
             Row(Modifier.padding(horizontal = 28.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPink, modifier = Modifier.size(14.dp))
-                Text(t("MigraineMe Setup — %1\$s of %2\$s", pageNum, totalPages), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    if (editMode) t("Edit — %1\$s", AiSetupEntry.title(startPage ?: ""))
+                    else t("MigraineMe Setup — %1\$s of %2\$s", pageNum, totalPages),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
+                )
             }
             Spacer(Modifier.height(8.dp))
 
@@ -695,7 +837,14 @@ fun AiSetupScreen(
             }
 
             // Bottom navigation
-            if (currentPage != AiPage.STORY && currentPage != AiPage.PROCESSING && currentPage != AiPage.RESULTS && currentPage != AiPage.COMPANIONS) {
+            if (editMode && currentPage != AiPage.PROCESSING && currentPage != AiPage.RESULTS) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onSkip) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
+                    Button(onClick = { currentPage = AiPage.PROCESSING }, enabled = savedAnswersLoaded, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(12.dp)) {
+                        Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t("Save & re-check"))
+                    }
+                }
+            } else if (!editMode && currentPage != AiPage.STORY && currentPage != AiPage.PROCESSING && currentPage != AiPage.RESULTS && currentPage != AiPage.COMPANIONS) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     if (currentPage == AiPage.Q1) {
                         TextButton(onClick = { currentPage = AiPage.STORY }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
@@ -729,8 +878,8 @@ fun AiSetupScreen(
             }
             if (currentPage == AiPage.PROCESSING && !isProcessing && aiError != null) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { currentPage = AiPage.NOTES }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
-                    TextButton(onClick = onSkip) { Text(t("Skip Setup"), color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = { currentPage = if (editMode) (entryPage ?: AiPage.NOTES) else AiPage.NOTES }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = onSkip) { Text(if (editMode) t("Cancel") else t("Skip Setup"), color = AppTheme.SubtleTextColor) }
                 }
             }
         }

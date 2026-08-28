@@ -265,6 +265,12 @@ object Routes {
     const val TESTING = "testing"
     const val ONBOARDING = "onboarding"
     const val AI_SETUP = "ai_setup"
+    /** AI setup with optional entry args — see [AiSetupEntry] and [aiSetup]. */
+    const val AI_SETUP_PATTERN = "ai_setup?start={start}&single={single}"
+    fun aiSetup(start: String? = null, single: Boolean = false): String =
+        if (start == null) AI_SETUP else "ai_setup?start=$start&single=$single"
+    /** Profile → "What this is based on": every setup answer, per-section edit. */
+    const val PROFILE_BASIS = "profile_basis"
     const val CUSTOMIZE_TRIGGERS = "customize_triggers"
     const val EVENING_CHECKIN = "evening_checkin"
     const val RECALIBRATION_REVIEW = "recalibration_review"
@@ -628,7 +634,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         if (token.isNullOrBlank()) return@LaunchedEffect
         val preAppRoutes = setOf(
             Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
-            Routes.ONBOARDING, "${Routes.ONBOARDING}/setup", Routes.AI_SETUP,
+            Routes.ONBOARDING, "${Routes.ONBOARDING}/setup", Routes.AI_SETUP, Routes.AI_SETUP_PATTERN,
             "backfill_loading", "subscribe", Routes.PAYWALL, "paywall_trial_ended"
         )
         kotlinx.coroutines.flow.combine(
@@ -1001,7 +1007,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
-            Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
+            Routes.ONBOARDING, Routes.AI_SETUP, Routes.AI_SETUP_PATTERN, "${Routes.ONBOARDING}/setup",
             Routes.EVENING_CHECKIN, "backfill_loading", "subscribe",
             Routes.PAYWALL, "paywall_trial_ended", Routes.CHAT_ASSISTANT
         )
@@ -1141,6 +1147,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MANAGE_CALENDAR_SKIPS -> "Calendar Skips"
                                     Routes.TRIGGERS_SETTINGS -> "Triggers Settings"
                                     Routes.RECALIBRATION_REVIEW -> "Recalibration"
+                                    Routes.PROFILE_BASIS -> "What this is based on"
                                     Routes.PAYWALL -> "Upgrade"
                                     Routes.CHAT_ASSISTANT -> "Assistant"
                                     else -> when {
@@ -2515,6 +2522,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
+                            onNavigateProfileBasis = { nav.navigate(Routes.PROFILE_BASIS) },
                             onNavigateOnboardingNoSeed = {
                                 // "Redo Onboarding": jump straight to the Data Settings
                                 // coach step → AI Setup, skipping welcome/tour entirely.
@@ -2537,6 +2545,22 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.CHANGE_PASSWORD) {
                         ChangePasswordScreen(authVm = authVm, onDone = { nav.popBackStack() })
+                    }
+
+                    composable(Routes.PROFILE_BASIS) {
+                        ProfileBasisScreen(
+                            onEditSection = { key -> nav.navigate(Routes.aiSetup(start = key, single = true)) },
+                            onRedoSetup = {
+                                OnboardingMode.noSeed = true
+                                onboardingTransitioning.value = true
+                                nav.navigate(Routes.DATA) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                                TourManager.startSetupAtDataSettings()
+                            },
+                            onReviewProposals = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
+                        )
                     }
 
                     composable("companions_manage") {
@@ -2692,14 +2716,53 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         )
                     }
 
-                    composable(Routes.AI_SETUP) {
+                    composable(
+                        Routes.AI_SETUP_PATTERN,
+                        arguments = listOf(
+                            navArgument("start") { type = NavType.StringType; nullable = true; defaultValue = null },
+                            navArgument("single") { type = NavType.BoolType; defaultValue = false },
+                        )
+                    ) { backStack ->
+                        val start = backStack.arguments?.getString("start")
+                        val single = backStack.arguments?.getBoolean("single") ?: false
+                        if (start != null && single) {
+                            // Edit one section from Profile → "What this is based on".
+                            // Every exit lands back on that page (fresh instance so it
+                            // reloads), or on the review screen when the immediate
+                            // re-check produced proposals.
+                            fun backToBasis() = nav.navigate(Routes.PROFILE_BASIS) {
+                                popUpTo(Routes.PROFILE_BASIS) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                            AiSetupScreen(
+                                startPage = start,
+                                singlePage = true,
+                                onComplete = { backToBasis() },
+                                onSkip = { backToBasis() },
+                                onEditDone = { outcome ->
+                                    when (outcome) {
+                                        is AiSetupEditOutcome.ProposalsReady -> {
+                                            ProfileBasisNotice.message = Strings.tSync("Your answers are saved and the AI has re-checked your profile.")
+                                            nav.navigate(Routes.RECALIBRATION_REVIEW) {
+                                                popUpTo(Routes.PROFILE_BASIS) { inclusive = false }
+                                            }
+                                        }
+                                        is AiSetupEditOutcome.SavedOnly -> {
+                                            ProfileBasisNotice.message = outcome.message
+                                            backToBasis()
+                                        }
+                                    }
+                                },
+                            )
+                        } else {
                         AiSetupScreen(
+                            startPage = start,
                             onComplete = {
                                 scope.launch(Dispatchers.IO) {
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
                                     kotlinx.coroutines.withContext(Dispatchers.Main) {
                                         nav.navigate("backfill_loading") {
-                                            popUpTo(Routes.AI_SETUP) { inclusive = true }
+                                            popUpTo(Routes.AI_SETUP_PATTERN) { inclusive = true }
                                             launchSingleTop = true
                                         }
                                     }
@@ -2710,11 +2773,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
                                 }
                                 nav.navigate("subscribe") {
-                                    popUpTo(Routes.AI_SETUP) { inclusive = true }
+                                    popUpTo(Routes.AI_SETUP_PATTERN) { inclusive = true }
                                     launchSingleTop = true
                                 }
                             }
                         )
+                        }
                     }
 
                     // â”€â”€ Backfill loading: polls edge_audit until backfill-all completes (max 60s) â”€â”€

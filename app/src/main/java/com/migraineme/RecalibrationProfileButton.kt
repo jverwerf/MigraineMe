@@ -123,7 +123,12 @@ fun RecalibrationProfileButton(
     }
 }
 
-private suspend fun runRecalibration(context: android.content.Context): Pair<String, String> {
+/**
+ * Calls recalibrate as the user (profile_only = Call 1). Returns status to detail:
+ * "ok" / "no_material_changes" / "cooldown" (date) / "insufficient_data" (count) /
+ * "premium_required" / "error" (message). Shared with AiSetupScreen's edit mode.
+ */
+internal suspend fun runRecalibration(context: android.content.Context): Pair<String, String> {
     val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
         ?: return "error" to "Not authenticated"
 
@@ -155,7 +160,9 @@ private suspend fun runRecalibration(context: android.content.Context): Pair<Str
                 "error" to body
             }
         } else {
-            "error" to "Error ${response.code}: $body"
+            val code = runCatching { JSONObject(body).optString("error", "") }.getOrDefault("")
+            if (response.code == 403 || code == "premium_required") "premium_required" to body
+            else "error" to "Error ${response.code}: $body"
         }
     }
 }

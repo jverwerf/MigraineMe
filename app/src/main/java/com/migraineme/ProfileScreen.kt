@@ -59,6 +59,7 @@ fun ProfileScreen(
     onNavigateChangePassword: () -> Unit,
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
+    onNavigateProfileBasis: () -> Unit = {},
     onNavigateOnboardingNoSeed: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
@@ -392,7 +393,13 @@ fun ProfileScreen(
         }
 
         if (aiProfile != null) {
-            AiMigraineProfileCard(aiProfile!!)
+            AiMigraineProfileCard(aiProfile!!, onNavigateProfileBasis)
+        } else if (!aiProfileLoading) {
+            // No row yet — the AI still learns from what is logged; the page
+            // behind this row explains that and offers the questionnaire.
+            BaseCard {
+                ProfileBasisEntryRow(t("Not answered yet"), onNavigateProfileBasis)
+            }
         }
 
         // ── Change Password (card style, matches iOS) ──
@@ -585,7 +592,7 @@ fun ProfileScreen(
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-private fun AiMigraineProfileCard(data: JsonObject) {
+private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -> Unit = {}) {
     val summary = data["summary"]?.jsonPrimitive?.contentOrNull
     val clinicalAssessment = data["clinical_assessment"]?.jsonPrimitive?.contentOrNull
     val frequency = data["frequency"]?.jsonPrimitive?.contentOrNull
@@ -722,6 +729,20 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                             Text(freeText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
+
+                    // What all of the above is based on — every answer, editable per section
+                    val answered = answers?.entries?.count { (_, v) ->
+                        when (v) {
+                            is JsonNull -> false
+                            is JsonPrimitive -> !v.contentOrNull.isNullOrBlank() && v.contentOrNull != "NO"
+                            is JsonArray -> v.isNotEmpty()
+                            is JsonObject -> v.isNotEmpty()
+                        }
+                    } ?: 0
+                    ProfileBasisEntryRow(
+                        if (answers == null) t("Not answered yet") else t("%1\$s answers from your setup", answered),
+                        onNavigateProfileBasis
+                    )
                 }
             }
         }
@@ -937,6 +958,31 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
             },
             confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
+    }
+}
+
+@Composable
+private fun ProfileBasisEntryRow(subtitle: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.07f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            Modifier.size(26.dp)
+                .background(Brush.linearGradient(listOf(AppTheme.AccentPink.copy(alpha = 0.3f), AppTheme.AccentPurple.copy(alpha = 0.2f))), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) { Icon(Icons.Outlined.ListAlt, null, tint = Color.White, modifier = Modifier.size(15.dp)) }
+        Column(Modifier.weight(1f)) {
+            Text(t("What this is based on"), color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        }
+        Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
     }
 }
 
