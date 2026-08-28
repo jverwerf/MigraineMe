@@ -114,6 +114,7 @@ fun WelcomePage(
                 t("The AI reads what you log and proposes your profile every Monday.") + " · " + t("Premium"),
                 t("Connecting your wearable and turning on which data you would like to collect is yours to do, in Settings."),
             ),
+            pinkPoints = setOf(3),
             note = t("The AI needs about five logged attacks before it has anything to say."),
             buttonLabel = t("Start now"),
             buttonIcon = Icons.AutoMirrored.Filled.ArrowForward,
@@ -127,6 +128,7 @@ fun WelcomePage(
             poseRes = R.drawable.brainy_ask_small,
             title = t("Give the AI a head start"),
             kicker = t("About 3 minutes"),
+            badge = t("Minimal setup for the app to work"),
             points = listOf(
                 t("Answer a short set of questions about your attacks."),
                 t("Connect a wearable and Health Connect, if you have them."),
@@ -185,6 +187,8 @@ private fun StartCard(
     buttonIcon: ImageVector,
     filled: Boolean,
     onClick: () -> Unit,
+    // Points the user must act on themselves get the pink number.
+    pinkPoints: Set<Int> = emptySet(),
     badge: String? = null,
     onBadgeClick: (() -> Unit)? = null,
     lead: Boolean = false,
@@ -232,7 +236,7 @@ private fun StartCard(
             Spacer(Modifier.height(10.dp))
             points.forEachIndexed { i, p ->
                 if (i > 0) Spacer(Modifier.height(6.dp))
-                NumberedPoint(i + 1, p)
+                NumberedPoint(i + 1, p, accent = if (i in pinkPoints) AppTheme.AccentPink else AppTheme.AccentPurple)
             }
             if (note != null) {
                 Spacer(Modifier.height(8.dp))
@@ -268,16 +272,16 @@ private fun StartCard(
 }
 
 @Composable
-private fun NumberedPoint(n: Int, text: String) {
+private fun NumberedPoint(n: Int, text: String, accent: Color = AppTheme.AccentPurple) {
     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(AppTheme.AccentPurple.copy(alpha = 0.15f)),
+                .background(accent.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Text("$n", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            Text("$n", color = accent, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
         }
         Text(text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
     }

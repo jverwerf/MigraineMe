@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3881 entries.
+ * 3882 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -1889,6 +1889,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Min" to "Mín",
     "Min: %s" to "Mín: %s",
     "Mindfulness" to "Mindfulness",
+    "Minimal setup for the app to work" to "Configuración mínima para que la app funcione",
     "Minimize" to "Reducir",
     "Minimum score to enter each risk zone. Tap to edit." to "Valor mínimo para entrar en cada zona. Toca para editar.",
     "Minutes" to "Minutos",
