@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ANSWER_COLUMN_FIELDS, answerField, answerKeyFor, normalizeCertainty } from "../_shared/answerFields.ts";
 import { getLang, t, type Lang } from "../_shared/i18n.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -46,7 +47,19 @@ serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const accepted: string[] = body.accepted ?? [];
+    // `accepted` is a list of proposal ids, or of {id, to_value} where the
+    // user picked a different value than proposed (answer proposals let them
+    // choose any option on the review screen). Both shapes are accepted so
+    // older clients keep working.
+    const overrides = new Map<string, string>();
+    const accepted: string[] = [];
+    for (const item of (body.accepted ?? []) as unknown[]) {
+      if (typeof item === "string") { accepted.push(item); continue; }
+      if (item && typeof item === "object" && typeof (item as any).id === "string") {
+        accepted.push((item as any).id);
+        if ((item as any).to_value != null) overrides.set((item as any).id, String((item as any).to_value));
+      }
+    }
     const rejected: string[] = body.rejected ?? [];
 
     if (accepted.length === 0 && rejected.length === 0) {
@@ -82,7 +95,15 @@ serve(async (req: Request) => {
       if (!accepted.includes(p.id)) continue;
 
       try {
-        const applied = await applyProposal(supabase, userId, p);
+        // An override replaces the proposed value; it is written back onto the
+        // proposal row too, so history shows what was actually applied.
+        const override = overrides.get(p.id);
+        const effective = override != null && override !== p.to_value ? { ...p, to_value: override } : p;
+        const applied = await applyProposal(supabase, userId, effective);
+        if (effective !== p) {
+          check(await supabase.from("recalibration_proposals")
+            .update({ to_value: override }).eq("id", p.id), "record override");
+        }
         appliedIds.push(p.id);
         if (applied) changeCount++;
       } catch (e) {
@@ -433,8 +454,16 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
       // an update on a missing row reports success while writing nothing.
       check(await supabase
         .from("ai_setup_profiles")
-        .upsert({ user_id: userId, clinical_assessment: p.to_value },
-          { onConflict: "user_id" }), "upsert ai_setup_profiles");
+        .upsert({
+          user_id: userId,
+          clinical_assessment: p.to_value,
+          // ai_setup_profiles.summary was written once at setup and never
+          // again, so it kept describing thresholds the gauge had long left.
+          // The run's own summary rides in `reasoning`; the fallback string
+          // there is not a summary, so it must not overwrite one.
+          ...(p.reasoning && p.reasoning !== "Updated clinical profile based on your real data."
+            ? { summary: p.reasoning } : {}),
+        }, { onConflict: "user_id" }), "upsert ai_setup_profiles");
 
       return true;
     }
@@ -444,6 +473,35 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
     // it acknowledges it. `summary` is the run's own bookkeeping row. Both are
     // listed rather than left to fall through, so a type nobody handled cannot
     // be reported as applied.
+    // ── Questionnaire answer correction ──
+    // Merged into ai_setup_profiles.answers under the casing the row already
+    // uses (Android snake_case / iOS camelCase), and mirrored into the
+    // matching column for the few answers that also live as one. Upsert, so a
+    // user who skipped setup gets their row created by the first accept.
+    case "answer": {
+      const a = answerField(String(p.label ?? ""));
+      if (!a) throw new Error(`unknown answer field ${JSON.stringify(p.label)}`);
+      let value = String(p.to_value ?? "").trim();
+      if (a.kind === "certainty") value = normalizeCertainty(value) ?? "";
+      if (!a.options.includes(value)) throw new Error(`${a.field}: ${JSON.stringify(p.to_value)} is not an allowed value`);
+
+      const { data: row, error: rowErr } = await supabase
+        .from("ai_setup_profiles")
+        .select("answers")
+        .eq("user_id", userId)
+        .maybeSingle();
+      check({ error: rowErr }, "read ai_setup_profiles");
+      const answers: Record<string, unknown> = { ...((row?.answers as Record<string, unknown> | null) ?? {}) };
+      answers[answerKeyFor(answers, a)] = value;
+      const patch: Record<string, unknown> = { user_id: userId, answers };
+      if (ANSWER_COLUMN_FIELDS.has(a.field)) patch[a.field] = value;
+      check(await supabase
+        .from("ai_setup_profiles")
+        .upsert(patch, { onConflict: "user_id" }), "upsert ai_setup_profiles answers");
+
+      return true;
+    }
+
     case "data_warning":
     case "summary":
       return false;

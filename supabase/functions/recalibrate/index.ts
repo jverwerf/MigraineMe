@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { formatAnswersBlock, formatProposableFields, validateAnswerUpdate } from "../_shared/answerFields.ts";
 import { getLang, languageDirective, t, type Lang } from "../_shared/i18n.ts";
 import { exposureRank } from "../_shared/exposureScale.ts";
 
@@ -868,7 +869,7 @@ serve(async (req: Request) => {
       symSeverityByLabel, auraSummary, corrLines, treatmentLines, bedtimeStats,
     ) + rejectionBlock;
 
-    const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT + modelLanguageDirective(lang), call1UserMessage);
+    const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT + CALL1_ANSWER_STEP + modelLanguageDirective(lang), call1UserMessage);
 
     // ══════════════════════════════════════════════════════════════
     // CALL 2 — The Statistician (skip for profile_only mode)
@@ -1026,6 +1027,23 @@ serve(async (req: Request) => {
         to_value: fav.should_favorite ? "favorite" : "not_favorite",
         should_favorite: fav.should_favorite,
         reasoning: fav.reasoning, status: "pending",
+      });
+    }
+
+    // Questionnaire answer corrections. Validated against the shared registry
+    // (field proposable, value in its option set, actually different), so a
+    // proposal the user could accept but apply could not write never exists.
+    for (const upd of call1Result.answer_updates ?? []) {
+      const v = validateAnswerUpdate(upd ?? {}, profile.answers ?? {}, "migraines", "migraine");
+      if (!v.ok) {
+        console.warn(`recalibrate: dropping answer_update: ${v.reason}`);
+        continue;
+      }
+      proposals.push({
+        user_id: userId, type: "answer", label: v.label,
+        from_value: v.from_value, to_value: v.to_value,
+        reasoning: upd.reasoning ?? "", status: "pending",
+        metadata: v.metadata,
       });
     }
 
@@ -1196,6 +1214,16 @@ serve(async (req: Request) => {
 // CALL 1 — The Neurologist (recalibration version)
 // ══════════════════════════════════════════════════════════════════════
 
+const CALL1_ANSWER_STEP = `
+
+STEP — QUESTIONNAIRE ANSWER CORRECTIONS:
+The ORIGINAL QUESTIONNAIRE ANSWERS were the patient's estimate at setup. Their logs and connected data now show the reality. Where the data clearly contradicts an answer, propose the corrected answer. Use ONLY the fields and option strings in PROPOSABLE ANSWER FIELDS; "current_value" is the answer exactly as listed (or null if unanswered); "suggested_value" must differ from it. Map data onto the buckets literally (an average of 6.4 sleep hours is "6-7h"; 4.2 episodes a month is "Weekly"; ~200 mg caffeine a day is about "1-2 cups"; a stress index that sits high most days is "High"). Certainty fields take the data's linked share: EVERY_TIME when nearly every episode has it, OFTEN for a majority, SOMETIMES for a minority, RARELY for a handful, NO when it never appears. Only propose when the data actually speaks to the field and clearly disagrees; an unanswered field with strong data support may be filled in. Leave every other answer alone. The patient reviews each one and can accept, reject, or pick a different value.
+
+Add this key to the JSON:
+  "answer_updates": [
+    {"field": "<field name from PROPOSABLE ANSWER FIELDS>", "current_value": "<listed answer or null>", "suggested_value": "<one exact option>", "reasoning": "one sentence citing the numbers"}
+  ]`;
+
 const CALL1_SYSTEM_PROMPT = `You are a neurologist who previously assessed this migraine patient during onboarding based on their questionnaire answers. Now you're reviewing how their REAL DATA compares to what they told you.
 
 You will receive:
@@ -1260,6 +1288,9 @@ Respond with ONLY valid JSON (no markdown fences):
 {
   "clinical_assessment": "Six-section narrative using the exact === Section === headers from STEP 1, in order, separated by blank lines.",
   "summary": "2-3 sentence summary of key findings",
+  "answer_updates": [
+    {"field": "<from PROPOSABLE ANSWER FIELDS>", "current_value": "<listed answer or null>", "suggested_value": "<one exact option>", "reasoning": "cite actual numbers"}
+  ],
   "trigger_adjustments": [
     {"label": "exact label", "from": "CURRENT", "to": "NONE|LOW|MILD|HIGH (one notch from CURRENT)", "should_favorite": true/false, "reasoning": "gentle explanation referencing data"}
   ],
@@ -1298,42 +1329,13 @@ function buildCall1Message(
 
   // ── Original questionnaire answers (THE FOUNDATION) ──
   L.push("=== ORIGINAL QUESTIONNAIRE ANSWERS (the patient's own words) ===");
-  const answers = profile.answers ?? {};
-  L.push("MIGRAINE BASICS:");
-  if (answers.frequency) L.push(`- Frequency: ${answers.frequency}`);
-  if (answers.avg_duration ?? answers.avgDuration) L.push(`- Average duration: ${answers.avg_duration ?? answers.avgDuration}`);
-  if (answers.avg_severity ?? answers.avgSeverity) L.push(`- Average severity: ${answers.avg_severity ?? answers.avgSeverity}`);
-  if (answers.usual_timing ?? answers.usualTiming) L.push(`- Usual timing: ${answers.usual_timing ?? answers.usualTiming}`);
-  if (answers.warning_before ?? answers.warningBefore) L.push(`- Gets warning signs: ${answers.warning_before ?? answers.warningBefore}`);
-  if (answers.family_history ?? answers.familyHistory) L.push(`- Family history: ${answers.family_history ?? answers.familyHistory}`);
+  // Built from the shared answer registry so every answered field reaches the
+  // model under its real key (Android snake_case or iOS camelCase). The
+  // hand-written list this replaced read keys the apps never wrote.
+  for (const line of formatAnswersBlock(profile.answers ?? {}, "migraines", "migraine")) L.push(line);
   L.push("");
-  L.push("TRIGGERS & LIFESTYLE:");
-  if (answers.known_trigger_areas ?? answers.knownTriggerAreas) L.push(`- Known trigger areas: ${answers.known_trigger_areas ?? answers.knownTriggerAreas}`);
-  if (answers.known_specific_triggers ?? answers.knownSpecificTriggers) L.push(`- Specific triggers: ${answers.known_specific_triggers ?? answers.knownSpecificTriggers}`);
-  if (answers.warning_signs_experienced ?? answers.warningSignsExperienced) L.push(`- Warning signs: ${answers.warning_signs_experienced ?? answers.warningSignsExperienced}`);
-  if (answers.typical_sleep_hours ?? answers.typicalSleepHours) L.push(`- Typical sleep: ${answers.typical_sleep_hours ?? answers.typicalSleepHours} hours`);
-  if (answers.sleep_quality ?? answers.sleepQuality) L.push(`- Sleep quality: ${answers.sleep_quality ?? answers.sleepQuality}`);
-  if (answers.screen_time_daily ?? answers.screenTimeDaily) L.push(`- Screen time: ${answers.screen_time_daily ?? answers.screenTimeDaily}`);
-  if (answers.caffeine_intake ?? answers.caffeineIntake) L.push(`- Caffeine: ${answers.caffeine_intake ?? answers.caffeineIntake}`);
-  if (answers.alcohol_intake ?? answers.alcoholIntake) L.push(`- Alcohol: ${answers.alcohol_intake ?? answers.alcoholIntake}`);
-  if (answers.exercise_frequency ?? answers.exerciseFrequency) L.push(`- Exercise: ${answers.exercise_frequency ?? answers.exerciseFrequency}`);
-  if (answers.stress_level ?? answers.stressLevel) L.push(`- Stress level: ${answers.stress_level ?? answers.stressLevel}`);
-  if (answers.water_intake ?? answers.waterIntake) L.push(`- Water intake: ${answers.water_intake ?? answers.waterIntake}`);
-  if (answers.track_cycle ?? answers.trackCycle) L.push(`- Tracks cycle: ${answers.track_cycle ?? answers.trackCycle}`);
-  if (answers.cycle_related ?? answers.cycleRelated) L.push(`- Migraines cycle-related: ${answers.cycle_related ?? answers.cycleRelated}`);
-  L.push("");
-  L.push("MEDICINES & MANAGEMENT:");
-  if (answers.selected_symptoms ?? answers.selectedSymptoms) L.push(`- Symptoms: ${answers.selected_symptoms ?? answers.selectedSymptoms}`);
-  if (answers.current_medicines ?? answers.currentMedicines) L.push(`- Current medicines: ${answers.current_medicines ?? answers.currentMedicines}`);
-  if (answers.preventive_medicines ?? answers.preventiveMedicines) L.push(`- Preventive medicines: ${answers.preventive_medicines ?? answers.preventiveMedicines}`);
-  if (answers.helpful_reliefs ?? answers.helpfulReliefs) L.push(`- What helps: ${answers.helpful_reliefs ?? answers.helpfulReliefs}`);
-  if (answers.activities_during_migraine ?? answers.activitiesDuringMigraine) L.push(`- Activities during migraine: ${answers.activities_during_migraine ?? answers.activitiesDuringMigraine}`);
-  if (answers.missed_activities ?? answers.missedActivities) L.push(`- Missed activities: ${answers.missed_activities ?? answers.missedActivities}`);
-  const freeText = answers.free_text ?? answers.additional_notes ?? answers.additionalNotes;
-  if (freeText) {
-    L.push("");
-    L.push(`Patient notes: ${freeText}`);
-  }
+  L.push("=== PROPOSABLE ANSWER FIELDS (for answer_updates; exact option strings) ===");
+  for (const line of formatProposableFields("migraines", "migraine")) L.push(line);
   L.push("");
 
   // ── Demographics ──
