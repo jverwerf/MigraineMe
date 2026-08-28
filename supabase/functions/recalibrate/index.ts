@@ -182,13 +182,18 @@ serve(async (req: Request) => {
     // ══════════════════════════════════════════════════════════════
 
     // 1. Onboarding profile (includes questionnaire answers + original assessment)
-    const { data: profile } = await supabase
+    // A user who skipped onboarding has no row here. That is not a reason to
+    // stop: every read below already falls back to "unknown" / "Not available"
+    // / {}, so the overlay simply compares the data against an empty baseline
+    // and the proposals come from what they logged. The weekly cron has been
+    // dispatching these users for months and this line was quietly discarding
+    // every one of them.
+    const { data: profileRow } = await supabase
       .from("ai_setup_profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
-
-    if (!profile) return json({ status: "no_profile" });
+      .maybeSingle();
+    const profile: any = profileRow ?? {};
 
     // Recently rejected proposals — fed to every AI call so a weekly run
     // doesn't re-propose something the user said no to a week ago.

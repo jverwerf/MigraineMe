@@ -429,10 +429,12 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
 
     // ── Clinical assessment update ──
     case "clinical_assessment": {
+      // Upsert, not update: a user who skipped onboarding has no row yet, and
+      // an update on a missing row reports success while writing nothing.
       check(await supabase
         .from("ai_setup_profiles")
-        .update({ clinical_assessment: p.to_value })
-        .eq("user_id", userId), "update ai_setup_profiles");
+        .upsert({ user_id: userId, clinical_assessment: p.to_value },
+          { onConflict: "user_id" }), "upsert ai_setup_profiles");
 
       return true;
     }
