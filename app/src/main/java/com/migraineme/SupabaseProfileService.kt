@@ -42,6 +42,8 @@ object SupabaseProfileService {
     private val client = HttpClient(Android) {
         install(ContentNegotiation) { json(json) }
     }
+    /** Shared client for other one-off REST writes (see InstallAttribution). */
+    internal val httpClient get() = client
 
     // ---- Public models (what the app uses) ----
 

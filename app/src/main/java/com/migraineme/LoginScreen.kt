@@ -154,6 +154,8 @@ fun LoginScreen(
             // exists, so a choice made here has had nowhere to go until now.
             // Runs after ensureProfile so there is a row to write to.
             withContext(Dispatchers.IO) { LangPrefs.syncAfterSignIn(appCtx) }
+            // First moment the install's ad/organic origin can be tied to an account.
+            withContext(Dispatchers.IO) { InstallAttribution.syncAfterSignIn(appCtx) }
 
             MetricsSyncManager.onLogin(appCtx, token, snackbarHostState)
 

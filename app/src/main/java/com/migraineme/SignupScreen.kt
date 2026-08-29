@@ -256,6 +256,7 @@ fun SignupScreen(
                                         // exists, so this is the first moment
                                         // the choice can reach the server.
                                         LangPrefs.syncAfterSignIn(appCtx)
+                                        InstallAttribution.syncAfterSignIn(appCtx)
                                         onSignedUpAndLoggedIn()
                                     } else {
                                         // Email confirmation is enabled — show confirmation screen

@@ -13,5 +13,7 @@ class MigraineMeApp : Application() {
         // Same contract for display language: canonical data stays English,
         // we translate at the render boundary. See LangPrefs.
         LangPrefs.init(this)
+        // Ask Play once whether an ad brought this install here. See InstallAttribution.
+        InstallAttribution.captureOnce(this)
     }
 }
