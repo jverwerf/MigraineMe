@@ -1208,6 +1208,33 @@ function severitySpread(d: ReportData, pageNo: number): string {
  *  sleep. Metric rows get their own wording. */
 const isMetricRow = (s: CorrelationStat): boolean => s.factor_type === "metric";
 
+/** Day-level rows the engine tags when at least one long or still-open attack
+ *  was expanded into its flare days: `sample_size` and every hit count then
+ *  count attack DAYS, so the wording says "flare days", not "attacks". */
+const isChronic = (s: CorrelationStat): boolean => s.lag_details?.["chronic"] === true;
+
+/** A trigger and where the pain usually started with it. The engine writes
+ *  these as factor_type "location_trigger" (factor_b = pain-location id, the
+ *  counts in lag_details); they are never printed as a generic row, only as
+ *  the extra line under a trigger and the Linked-triggers list on the pain
+ *  map. Sorted best p first, so callers picking "the one" take index 0. */
+type LocationLink = { trigger: string; location: string; hits: number; total: number; p: number };
+function locationLinks(d: ReportData): LocationLink[] {
+  const out: LocationLink[] = [];
+  for (const s of d.correlations) {
+    if (s.factor_type !== "location_trigger" || !s.factor_b) continue;
+    const l = s.lag_details ?? {};
+    const hits = Number(l["with_hits"]), total = Number(l["with_total"]);
+    if (!Number.isFinite(hits) || !Number.isFinite(total) || total <= 0) continue;
+    out.push({ trigger: s.factor_name, location: s.factor_b, hits, total, p: s.p_value ?? 1 });
+  }
+  return out.sort((a, b) => a.p - b.p);
+}
+const sameName = (a: string, b: string): boolean =>
+  a.trim().replace(/\s+/g, " ").toLowerCase() === b.trim().replace(/\s+/g, " ").toLowerCase();
+/** Head-map label for a pain-location id, the same map the pain pages use. */
+const locationLabel = (id: string): string => rt(PAIN_LABELS[id] ?? pretty(id));
+
 function contextLine(s: CorrelationStat): string {
   const lag = (s.best_lag_days ?? 0) > 0 ? rt("{0} days before", s.best_lag_days) : rt("same day");
   if (isMetricRow(s)) {
@@ -1217,7 +1244,10 @@ function contextLine(s: CorrelationStat): string {
       : "";
     return `${cmp}${lag}`;
   }
-  const pct = s.pct_migraine_windows != null ? `${rt("{0}% of migraines", Math.round(s.pct_migraine_windows))} · ` : "";
+  const share = s.pct_migraine_windows != null ? Math.round(s.pct_migraine_windows) : null;
+  const pct = share == null ? ""
+    : isChronic(s) ? `${rt("{0}% of flare days", share)} · `
+    : `${rt("{0}% of migraines", share)} · `;
   return `${pct}${lag}`;
 }
 
@@ -1227,7 +1257,7 @@ function contextLine(s: CorrelationStat): string {
  *  clamped, because a stored percentage above 100 would otherwise print more
  *  hits than attacks. Rows that carry no usable share fall back to the sample
  *  size rather than to a ratio. */
-function statRow(s: CorrelationStat, color: string, name: string): string {
+function statRow(s: CorrelationStat, color: string, name: string, extra = ""): string {
   const size = s.sample_size;
   const pct = s.pct_migraine_windows;
   const hits = size != null && size > 0 && pct != null && !isMetricRow(s)
@@ -1239,6 +1269,7 @@ function statRow(s: CorrelationStat, color: string, name: string): string {
     <div class="grow">
       <div class="name">${name}</div>
       <div class="meta">${esc(contextLine(s))}</div>
+      ${extra ? `<div class="meta">${extra}</div>` : ""}
     </div>
     ${dots(color, s.p_value)}
     ${hits ? badge(color, hits) : ""}
@@ -1334,15 +1365,26 @@ function whatHappened(d: ReportData, pageNo: number): string {
   // Only links that actually moved the needle. A 0.9x row is noise dressed
   // as a finding, and printing dozens of them buried the real ones.
   const profiles = d.correlations
-    .filter((s) => s.symptom_outcome && s.lift_ratio >= 1.2 && (s.p_value ?? 1) <= 0.1)
+    .filter((s) => s.factor_type !== "location_trigger" && s.symptom_outcome && s.lift_ratio >= 1.2 && (s.p_value ?? 1) <= 0.1)
     .sort((a, b) => b.lift_ratio - a.lift_ratio).slice(0, 8);
-  const dropped = d.correlations.filter((s) => s.symptom_outcome).length - profiles.length;
+  const dropped = d.correlations.filter((s) => s.factor_type !== "location_trigger" && s.symptom_outcome).length - profiles.length;
 
   if (!patterns.length && !combos.length && !profiles.length) return "";
 
+  // Trigger rows get one extra line when the engine found where the pain
+  // usually started with that trigger: lowest p wins when there are several.
+  const links = locationLinks(d);
+  const usuallyStarts = (s: CorrelationStat): string => {
+    if (s.factor_type !== "trigger") return "";
+    const link = links.find((l) => sameName(l.trigger, s.factor_name));
+    return link
+      ? esc(rt("Usually starts: {0} ({1} of {2})", locationLabel(link.location), link.hits, link.total))
+      : "";
+  };
+
   const lists = (pat: CorrelationStat[], com: CorrelationStat[], pro: CorrelationStat[]) => `
     ${pat.length ? sub(C.accent, rt("Patterns")) : ""}
-    ${pat.map((s) => statRow(s, C.accent, esc(pretty(s.factor_name)))).join("")}
+    ${pat.map((s) => statRow(s, C.accent, esc(pretty(s.factor_name)), usuallyStarts(s))).join("")}
 
     ${com.length ? sub(C.red, rt("Combinations")) : ""}
     ${com.map((s) => statRow(s, C.red,
@@ -1475,6 +1517,9 @@ type TreatRow = {
   name: string;
   stat: CorrelationStat | null;
   uses: number;
+  /** `uses` came from a chronic engine row's sample_size, so it counts flare
+   *  days rather than logged attacks. */
+  usesAreDays: boolean;
   avgRelief: number | null;
   nRated: number;
 };
@@ -1507,6 +1552,7 @@ function treatmentRows(d: ReportData): TreatRow[] {
       name: e.label,
       stat,
       uses: e.uses.size || stat?.sample_size || 0,
+      usesAreDays: !e.uses.size && !!stat && isChronic(stat),
       avgRelief: e.scores.length ? e.scores.reduce((a, b) => a + b, 0) / e.scores.length : null,
       nRated: e.scores.length,
     });
@@ -1515,7 +1561,7 @@ function treatmentRows(d: ReportData): TreatRow[] {
   // run on the whole history, so these are real findings about this patient.
   for (const [key, s] of stats) {
     if (seen.has(key)) continue;
-    rows.push({ name: s.factor_name, stat: s, uses: s.sample_size ?? 0, avgRelief: null, nRated: 0 });
+    rows.push({ name: s.factor_name, stat: s, uses: s.sample_size ?? 0, usesAreDays: isChronic(s), avgRelief: null, nRated: 0 });
   }
   return rows;
 }
@@ -1539,6 +1585,8 @@ function treatmentEvidence(r: TreatRow): Evidence {
   const avg = asNum(ratingBlock?.["avg_relief_0_3"]) ?? (r.nRated > 0 ? r.avgRelief : null) ?? legacyAvg;
   const nRated = asNum(ratingBlock?.["n_rated"]) ?? r.nRated;
   const uses = asNum(ratingBlock?.["n_uses"]) ?? r.uses;
+  const flareDays = asNum(ratingBlock?.["n_uses"]) == null && r.usesAreDays;
+  const usedIn = (n: number): string => flareDays ? rt("Used in {0} flare days", n) : rt("Used in {0} attacks", n);
 
   // The fallback for rating-tier rows, for pre-v2 rows whose stored severity is
   // a rescaled relief rating rather than a measurement, and for treatments with
@@ -1548,13 +1596,17 @@ function treatmentEvidence(r: TreatRow): Evidence {
       ? {
         verdict: "thin",
         line: rt("No relief rated for this."),
-        counts: uses > 0 ? rt("Used in {0} attacks", uses) : "",
+        counts: uses > 0 ? usedIn(uses) : "",
         dots: dotCount, usesBetween: false,
       }
       : {
         verdict: avg >= 2.5 ? "works" : avg >= 1.5 ? "some" : "none",
         line: rt("Patient's own rating: {0}.", reliefWord(avg)),
-        counts: nRated > 0 ? rt("{0} doses rated, used in {1} attacks", nRated, uses) : rt("Used in {0} attacks", uses),
+        counts: nRated > 0
+          ? (flareDays
+            ? rt("{0} doses rated, used in {1} flare days", nRated, uses)
+            : rt("{0} doses rated, used in {1} attacks", nRated, uses))
+          : usedIn(uses),
         dots: dotCount, usesBetween: false,
       };
 
@@ -1789,7 +1841,9 @@ function whatWorked(d: ReportData, pageNo: number): string {
       <div class="grow">
         <div class="name">${esc(pretty(s.factor_name))}
           <span style="color:${C.green};font-weight:700">+</span> ${esc(pretty(s.factor_b))}</div>
-        <div class="meta">${esc(rt("Logged together in about {0} of {1} attacks", together, n))}</div>
+        <div class="meta">${esc(isChronic(s)
+          ? rt("Logged together in about {0} of {1} flare days", together, n)
+          : rt("Logged together in about {0} of {1} attacks", together, n))}</div>
       </div>
       ${dots(VERDICT_COLOR.thin, null, 1)}
       ${badge(VERDICT_COLOR.thin, VERDICT_LABEL.thin())}
@@ -2178,6 +2232,20 @@ function impact(d: ReportData, pageNo: number): string {
   const peakText = peak == null ? null
     : peak < 90 ? rt("{0} minutes", peak) : rt("{0} hours", (peak / 60).toFixed(1).replace(/\.0$/, ""));
 
+  // Triggers the engine tied to where the pain started: one static line per
+  // location (best p first, at most three locations, at most three triggers
+  // each), under the pain map. Nothing prints when there are no such rows.
+  const byLocation = new Map<string, LocationLink[]>();
+  for (const l of locationLinks(d)) {
+    const list = byLocation.get(l.location) ?? [];
+    if (list.length < 3) list.push(l);
+    byLocation.set(l.location, list);
+  }
+  const linkedTriggers = [...byLocation.entries()].slice(0, 3).map(([id, ls]) =>
+    `<div class="meta">${esc(locationLabel(id))} · ${esc(rt("Linked triggers: {0}",
+      ls.map((l) => `${pretty(l.trigger)} (${rt("{0} of {1}", l.hits, l.total)})`).join(", ")))}</div>`
+  ).join("");
+
   return page(C.purple, `
     ${header(C.purple, ICON.pin, rt("How Did It Impact You"),
       rt("Severity, where the pain sat, and what it cost"))}
@@ -2202,6 +2270,7 @@ function impact(d: ReportData, pageNo: number): string {
             <td class="v">${bar(C.red, (n / total) * 100)}</td></tr>`).join("")}
         </table>
       </div>
+      ${linkedTriggers}
     </div>
 
     ${pm ? sub(C.purple, rt("How the pain moves")) : ""}

@@ -3257,6 +3257,78 @@
         "it": "{0} pt",
         "pt": "{0} pts"
       }
+    },
+    {
+      "en": "{0}% of flare days",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "{0}% der Schubtage",
+        "es": "{0}% de los días de brote",
+        "nl": "{0}% van de opflakkeringsdagen",
+        "fr": "{0}% des jours de poussée",
+        "it": "{0}% dei giorni di riacutizzazione",
+        "pt": "{0}% dos dias de surto"
+      }
+    },
+    {
+      "en": "Usually starts: {0} ({1} of {2})",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "Beginnt meist: {0} ({1} von {2})",
+        "es": "Suele empezar: {0} ({1} de {2})",
+        "nl": "Begint meestal: {0} ({1} van {2})",
+        "fr": "Commence souvent : {0} ({1} sur {2})",
+        "it": "Di solito inizia: {0} ({1} su {2})",
+        "pt": "Costuma começar: {0} ({1} de {2})"
+      }
+    },
+    {
+      "en": "Linked triggers: {0}",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "Verknüpfte Auslöser: {0}",
+        "es": "Factores vinculados: {0}",
+        "nl": "Gekoppelde triggers: {0}",
+        "fr": "Facteurs liés : {0}",
+        "it": "Fattori collegati: {0}",
+        "pt": "Fatores associados: {0}"
+      }
+    },
+    {
+      "en": "Used in {0} flare days",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "An {0} Schubtagen eingesetzt",
+        "es": "Usado en {0} días de brote",
+        "nl": "Gebruikt op {0} opflakkeringsdagen",
+        "fr": "Utilisé sur {0} jours de poussée",
+        "it": "Usato in {0} giorni di riacutizzazione",
+        "pt": "Usado em {0} dias de surto"
+      }
+    },
+    {
+      "en": "{0} doses rated, used in {1} flare days",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "{0} Dosen bewertet, an {1} Schubtagen eingesetzt",
+        "es": "{0} dosis valoradas, usado en {1} días de brote",
+        "nl": "{0} doses beoordeeld, gebruikt op {1} opflakkeringsdagen",
+        "fr": "{0} prises évaluées, utilisé sur {1} jours de poussée",
+        "it": "{0} dosi valutate, usato in {1} giorni di riacutizzazione",
+        "pt": "{0} doses avaliadas, usado em {1} dias de surto"
+      }
+    },
+    {
+      "en": "Logged together in about {0} of {1} flare days",
+      "why": "report Insights: chronic flare-day wording and trigger→pain-location lines, server-only copy",
+      "value": {
+        "de": "An etwa {0} von {1} Schubtagen zusammen erfasst",
+        "es": "Registrados juntos en unos {0} de {1} días de brote",
+        "nl": "Samen genoteerd op ongeveer {0} van {1} opflakkeringsdagen",
+        "fr": "Notés ensemble sur environ {0} jours de poussée sur {1}",
+        "it": "Registrati insieme in circa {0} giorni di riacutizzazione su {1}",
+        "pt": "Registados juntos em cerca de {0} de {1} dias de surto"
+      }
     }
   ]
 }
