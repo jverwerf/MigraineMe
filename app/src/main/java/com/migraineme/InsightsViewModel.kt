@@ -238,7 +238,12 @@ class InsightsViewModel : ViewModel() {
     // ======= Correlation & Gauge flows =======
 
     private val _correlationStats = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
+    /** Day-level rows only. location_trigger rows are split off into [locationTriggerStats]
+     *  before anything reads this, so no existing list can render one as a generic pattern. */
     val correlationStats: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _correlationStats
+    private val _locationTriggerStats = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
+    /** Trigger → pain-location rows (factor_type = location_trigger): factor_name = trigger, factor_b = head-map id. */
+    val locationTriggerStats: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _locationTriggerStats
 
     // ── Symptom analytics outputs ──
     private val _symptomStats = MutableStateFlow<List<EdgeFunctionsService.SymptomStat>>(emptyList())
@@ -2250,7 +2255,9 @@ class InsightsViewModel : ViewModel() {
                 val edge = EdgeFunctionsService()
                 // 80 (was 50): room for Well Done layer rows without crowding treatments
                 val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context) }
-                _correlationStats.value = stats
+                val (locationRows, dayRows) = stats.partition { it.isLocationTrigger }
+                _correlationStats.value = dayRows
+                _locationTriggerStats.value = locationRows
 
                 val accuracy = withContext(Dispatchers.IO) { edge.getGaugeAccuracy(context) }
                 _gaugeAccuracy.value = accuracy
@@ -2271,6 +2278,7 @@ class InsightsViewModel : ViewModel() {
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadCorrelationData failed: ${e.message}")
                 _correlationStats.value = emptyList()
+                _locationTriggerStats.value = emptyList()
                 _gaugeAccuracy.value = null
                 _gaugeProposals.value = emptyList()
                 _symptomStats.value = emptyList()

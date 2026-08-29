@@ -683,7 +683,9 @@ fun UsedTogetherCard(
                         maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(6.dp))
-                Text(t("Used together in %1\$s of your %2\$s attacks", together, stat.sampleSize),
+                Text(
+                    if (stat.isChronic) t("Used together in %1\$s of your %2\$s flare days", together, stat.sampleSize)
+                    else t("Used together in %1\$s of your %2\$s attacks", together, stat.sampleSize),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.height(5.dp))
                 TreatmentConfidenceRow(stat.confidenceDots)

@@ -2022,6 +2022,34 @@ class EdgeFunctionsService {
         /** Number of attacks this factor appeared in (for prevalence display). */
         val attackHits: Int get() = Math.round(pctMigraineWindows / 100f * sampleSize)
 
+        /**
+         * True when the engine expanded at least one long / ongoing attack into
+         * its flare days (lag_details.chronic = true). sample_size and every
+         * "in N of …" count on this row then count attack DAYS, not attacks, so
+         * the copy must say "flare days". Absent on older rows → false.
+         */
+        val isChronic: Boolean get() =
+            (lagDetails?.get("chronic") as? kotlinx.serialization.json.JsonPrimitive)?.content == "true"
+
+        /** Noun for the unit sample_size counts on this row. English key; translate at the display site. */
+        val countNoun: String get() = if (isChronic) "flare days" else "attacks"
+
+        /**
+         * Trigger → pain-location rows. factor_name is the trigger label,
+         * factor_b the head-map location id (temple_left, …). They are NOT
+         * day-level correlations and must never render as a generic pattern
+         * row: every list filters by factor_type, and the viewmodel keeps them
+         * in their own flow.
+         */
+        val isLocationTrigger: Boolean get() = factorType == LOCATION_TRIGGER
+
+        private fun lagInt(key: String): Int? =
+            (lagDetails?.get(key) as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull()
+
+        /** location_trigger rows: attacks WITH the trigger that started at factor_b, and their total. */
+        val withHits: Int get() = lagInt("with_hits") ?: 0
+        val withTotal: Int get() = lagInt("with_total") ?: 0
+
         /** True when the engine's 3-step gate tagged this row (new engine) — show it directly
          *  instead of re-filtering by p. */
         val hasGateMode: Boolean get() = lagDetails?.get("mode") is kotlinx.serialization.json.JsonPrimitive
@@ -2031,12 +2059,12 @@ class EdgeFunctionsService {
             "trigger" -> {
                 if (mode == "prevalence") {
                     // No fair normal-day comparison — honest count, no multiplier.
-                    "${factorName} appeared in $attackHits of your $sampleSize attacks. " +
+                    "${factorName} appeared in $attackHits of your $sampleSize $countNoun. " +
                         "Not enough day-to-day data yet to say how much it changes your risk."
                 } else {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
-                val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
+                val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your ${if (isChronic) "flare days" else "migraines"} ($lagText). " +
                     "That's about ${trimLift(liftRatio)} times as likely as on your normal days."
                 val parts = mutableListOf(base)
                 val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
@@ -2072,11 +2100,11 @@ class EdgeFunctionsService {
             }
             "interaction" -> {
                 if (mode == "prevalence") {
-                    "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize attacks. " +
+                    "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun. " +
                         "Not enough day-to-day data yet to say how much they change your risk."
                 } else {
                     "${factorName} + ${factorB ?: "?"} together preceded " +
-                        "${pctMigraineWindows.toInt()}% of your migraines — " +
+                        "${pctMigraineWindows.toInt()}% of your ${if (isChronic) "flare days" else "migraines"} — " +
                         "about ${trimLift(liftRatio)} times as likely as either alone."
                 }
             }
@@ -2084,13 +2112,13 @@ class EdgeFunctionsService {
             // computed the old way and says nothing a reader can act on, so the
             // sentence reports how often the pair was actually used and stops.
             "treatment_interaction" ->
-                "${factorName} + ${factorB ?: "?"} used together in $sampleSize of your attacks."
+                "${factorName} + ${factorB ?: "?"} used together in $sampleSize of your $countNoun."
             // The treatment sentence is built by TreatmentEffectiveness.kt, which
             // owns the whole vocabulary (verdict word, evidence line, timing line)
             // so the hub, the page and the report cannot drift apart. This is the
             // fallback for anywhere still calling the generic sentence builder.
             "treatment" ->
-                "${factorName} was logged in $sampleSize of your attacks."
+                "${factorName} was logged in $sampleSize of your $countNoun."
             else -> "${factorName} turns up about ${trimLift(liftRatio)} times as often around your attacks."
         }
 
@@ -2105,6 +2133,9 @@ class EdgeFunctionsService {
         }
 
         companion object {
+            /** factor_type of the trigger → pain-location rows. */
+            const val LOCATION_TRIGGER = "location_trigger"
+
             fun fmtThreshold(value: Float, metricLabel: String): String {
                 val lower = metricLabel.lowercase()
                 return when {

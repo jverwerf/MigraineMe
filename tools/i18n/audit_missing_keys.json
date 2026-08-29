@@ -1558,5 +1558,50 @@
    "(t() call site)"
   ],
   "source": "audit"
+ },
+ {
+  "en": "%1$s · %2$s%% of flare days",
+  "class": "soft",
+  "max_len": 40,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-08-29-chronic-location"
+ },
+ {
+  "en": "in %1$s of %2$s flare days (%3$s%%)",
+  "class": "soft",
+  "max_len": 50,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-08-29-chronic-location"
+ },
+ {
+  "en": "%1$s of %2$s flare days (%3$s%%)",
+  "class": "soft",
+  "max_len": 50,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-08-29-chronic-location"
+ },
+ {
+  "en": "%1$s of %2$s attacks (%3$s%%)",
+  "class": "soft",
+  "max_len": 50,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-08-29-chronic-location"
+ },
+ {
+  "en": "Usually starts: %1$s (%2$s of %3$s)",
+  "class": "soft",
+  "max_len": 50,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-08-29-chronic-location"
  }
 ]

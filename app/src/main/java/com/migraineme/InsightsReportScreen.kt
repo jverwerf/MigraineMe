@@ -197,6 +197,7 @@ fun InsightsReportScreen(
 
     // Data for comprehensive doctor report
     val correlationStats by vm.correlationStats.collectAsState()
+    val locationTriggerStats by vm.locationTriggerStats.collectAsState()
     val gaugeAccuracy by vm.gaugeAccuracy.collectAsState()
     val medEffectiveness by vm.medicineEffectiveness.collectAsState()
     val reliefEffectiveness by vm.reliefEffectiveness.collectAsState()
@@ -810,6 +811,7 @@ fun InsightsReportScreen(
                     PatternsPreviewCard(
                         patterns = previewTriggers,
                         interactions = previewInteractions,
+                        locationTriggers = locationTriggerStats,
                         onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
                     )
                     Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),

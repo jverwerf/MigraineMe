@@ -562,11 +562,16 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         // Risk, not treatment: how much more often this turns up
                         // around an attack than on a normal day. Prevalence-mode
                         // rows have no fair comparison, so they only say how often.
+                        // A chronic row (long attacks expanded into flare days)
+                        // counts days, not attacks, and says so.
                         val stat = if (it.mode == "prevalence")
-                            tSync("in %s%% of attacks", it.pctMigraineWindows.toInt())
+                            (if (it.isChronic) tSync("in %s%% of flare days", it.pctMigraineWindows.toInt())
+                             else tSync("in %s%% of attacks", it.pctMigraineWindows.toInt()))
                         else
-                            tSync("%1\$s · %2\$s%% of attacks",
-                                liftTimesText(it.liftRatio), it.pctMigraineWindows.toInt())
+                            (if (it.isChronic) tSync("%1\$s · %2\$s%% of flare days",
+                                    liftTimesText(it.liftRatio), it.pctMigraineWindows.toInt())
+                             else tSync("%1\$s · %2\$s%% of attacks",
+                                    liftTimesText(it.liftRatio), it.pctMigraineWindows.toInt()))
                         CardPreviewEntry(it.factorName, stat)
                     },
                     totalCount = pool.size + interactionCorrelations.size
@@ -1612,7 +1617,11 @@ internal fun LiftBadge(lift: Float) {
 @Composable
 internal fun PatternBadge(stat: EdgeFunctionsService.CorrelationStat) {
     val pct = stat.pctMigraineWindows.toInt()
-    val countLabel = "in ${stat.attackHits} of ${stat.sampleSize} ($pct%)"
+    // Chronic rows count flare days inside long attacks, so the unit is named;
+    // plain rows keep the bare "in N of M" the badge has always shown.
+    val countLabel = if (stat.isChronic)
+        t("in %1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, pct)
+    else "in ${stat.attackHits} of ${stat.sampleSize} ($pct%)"
     if (stat.mode == "prevalence") {
         Text(countLabel, color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
@@ -1837,9 +1846,33 @@ internal fun IntradayResponseCard(
     }
 }
 
+/**
+ * "Usually starts: Left Temple (5 of 5)" for a trigger row, or null when no
+ * location_trigger row exists for that trigger. Several locations for one
+ * trigger → the one with the lowest p. Label comes from the head map's own
+ * table so the line names the same place the silhouette plots.
+ */
+@Composable
+internal fun usuallyStartsLine(
+    stat: EdgeFunctionsService.CorrelationStat,
+    locationRows: List<EdgeFunctionsService.CorrelationStat>,
+): String? {
+    if (stat.factorType != "trigger" || locationRows.isEmpty()) return null
+    val name = stat.factorName.trim().lowercase()
+    val best = locationRows
+        .filter { it.isLocationTrigger && it.factorName.trim().lowercase() == name && it.factorB != null }
+        .minByOrNull { it.pValue ?: 1f } ?: return null
+    val id = canonicalPainLocationId(best.factorB!!)
+    val label = ALL_PAIN_POINTS_MAP[id] ?: prettyLabel(id)
+    return t("Usually starts: %1\$s (%2\$s of %3\$s)", t(label), best.withHits, best.withTotal)
+}
+
 /** Compact correlation row — name + lag + lift only, no insight text */
 @Composable
-private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
+private fun CorrelationRowCompact(
+    stat: EdgeFunctionsService.CorrelationStat,
+    locationRows: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+) {
     // Tightened vertical padding so rows are denser (was 6.dp + 2.dp/4.dp
     // internal gaps — looked airy compared to iOS). Labels also run through
     // prettyLabel so snake_case from older logs renders cleanly.
@@ -1899,6 +1932,13 @@ private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
                     }
                 }
             }
+            // Where attacks with this trigger tend to start (location_trigger row).
+            usuallyStartsLine(stat, locationRows)?.let { line ->
+                Spacer(Modifier.height(1.dp))
+                Text(line, color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
         PatternBadge(stat)
     }
@@ -1912,6 +1952,7 @@ internal fun TopPatternsCard(
     metrics: List<EdgeFunctionsService.CorrelationStat>,
     interactions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     iconKeys: Map<String, String> = emptyMap(),
+    locationTriggers: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     watermarkOnLast: Boolean = false,
     showBlob: Boolean = true,
 ) {
@@ -1979,7 +2020,7 @@ internal fun TopPatternsCard(
                 Spacer(Modifier.height(6.dp))
                 visiblePatterns.forEach { stat ->
                     PatternTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
-                        dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
+                        dimmed = keyOf(stat) in hiddenKeys, locationRows = locationTriggers) { toggleHidden(stat) }
                     Spacer(Modifier.height(6.dp))
                 }
                 Spacer(Modifier.height(2.dp))
@@ -2073,6 +2114,7 @@ private fun PatternTile(
     icon: Int? = null,
     iconB: Int? = null,
     dimmed: Boolean = false,
+    locationRows: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onToggleHide: (() -> Unit)? = null,
 ) {
     val lagText = when (stat.bestLagDays) {
@@ -2080,7 +2122,11 @@ private fun PatternTile(
         1 -> "1 day before"
         else -> "${stat.bestLagDays} days before"
     }
-    val occText = "${stat.attackHits} of ${stat.sampleSize} attacks (${stat.pctMigraineWindows.toInt()}%)"
+    // Chronic rows count flare days inside long attacks, not attack rows.
+    val occText = if (stat.isChronic)
+        t("%1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
+    else
+        t("%1\$s of %2\$s attacks (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
     val isCombo = stat.factorType == "interaction"
     val metaColor = Color(0xFF9C8BB0)
     val tileShape = RoundedCornerShape(18.dp)
@@ -2130,6 +2176,8 @@ private fun PatternTile(
             Spacer(Modifier.width(10.dp))
             val headlineStat = if (stat.mode != "prevalence") {
                 liftTimesText(stat.liftRatio)
+            } else if (stat.isChronic) {
+                tSync("in %s%% of flare days", stat.pctMigraineWindows.toInt())
             } else {
                 tSync("in %s%% of attacks", stat.pctMigraineWindows.toInt())
             }
@@ -2151,6 +2199,11 @@ private fun PatternTile(
         }
         Spacer(Modifier.height(6.dp))
         Text("$lagText  \u00b7  $occText", color = metaColor, style = MaterialTheme.typography.labelSmall)
+        // Where attacks with this trigger tend to start (location_trigger row, best p).
+        usuallyStartsLine(stat, locationRows)?.let { line ->
+            Spacer(Modifier.height(2.dp))
+            Text(line, color = metaColor, style = MaterialTheme.typography.labelSmall)
+        }
         Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(t("confidence"), color = metaColor, style = MaterialTheme.typography.labelSmall)
@@ -2179,6 +2232,7 @@ internal fun PatternsPreviewCard(
     patterns: List<EdgeFunctionsService.CorrelationStat>,
     interactions: List<EdgeFunctionsService.CorrelationStat>,
     symptomOutcomes: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+    locationTriggers: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onShowAll: () -> Unit
 ) {
     BrainyWatermarkCard(modifier = Modifier.clickable { onShowAll() }) {
@@ -2196,7 +2250,7 @@ internal fun PatternsPreviewCard(
             Text(t("Patterns"), color = Color(0xFFCE93D8),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             patterns.forEach { stat ->
-                CorrelationRowCompact(stat)
+                CorrelationRowCompact(stat, locationRows = locationTriggers)
             }
         }
 
@@ -3434,7 +3488,7 @@ object AccuracyInfoCopy {
 }
 
 object WhatHappenedInfoCopy {
-    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"about 2 times as likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
+    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"about 2 times as likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nWhen a finding says \"flare days\", a long attack was counted day by day, so the numbers are attack days rather than attacks.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
 }
 
 object WhatWorkedInfoCopy {

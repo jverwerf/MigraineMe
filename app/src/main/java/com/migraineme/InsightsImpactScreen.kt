@@ -32,6 +32,7 @@ fun InsightsImpactScreen(
     val anticipatedItems by vm.anticipatedItems.collectAsState()
     val anticipatedByMonth by vm.anticipatedByMonth.collectAsState()
     val painLocationCounts by vm.painLocationCounts.collectAsState()
+    val locationTriggerStats by vm.locationTriggerStats.collectAsState()
     val severityCounts by vm.severityCounts.collectAsState()
     val totalMigraineCount by vm.totalMigraineCount.collectAsState()
     val migraineSpans by vm.migraines.collectAsState()
@@ -188,6 +189,32 @@ fun InsightsImpactScreen(
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text("$pct%", color = pctColor,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+
+                        // Trigger → starting location (location_trigger rows), best p
+                        // first, max three, nothing at all when the engine wrote none.
+                        // The heat map has no per-location tap, so this sits as a
+                        // static list at the foot of the same card.
+                        val linkedTriggers = remember(locationTriggerStats) {
+                            locationTriggerStats
+                                .filter { it.isLocationTrigger && it.factorB != null && it.withTotal > 0 }
+                                .sortedBy { it.pValue ?: 1f }
+                                .take(3)
+                        }
+                        if (linkedTriggers.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            linkedTriggers.forEach { row ->
+                                val locId = canonicalPainLocationId(row.factorB!!)
+                                val locLabel = ALL_PAIN_POINTS_MAP[locId] ?: prettyLabel(locId)
+                                Text(
+                                    t("%1\$s \u2192 %2\$s (%3\$s of %4\$s)",
+                                        t(row.factorName), t(locLabel), row.withHits, row.withTotal),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(vertical = 2.dp),
+                                )
                             }
                         }
                     }

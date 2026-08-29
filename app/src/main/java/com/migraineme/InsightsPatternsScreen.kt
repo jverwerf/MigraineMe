@@ -27,6 +27,7 @@ fun InsightsPatternsScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val correlationStats by vm.correlationStats.collectAsState()
+    val locationTriggerStats by vm.locationTriggerStats.collectAsState()
     val triggerIconKeys by vm.triggerIconKeys.collectAsState()
     val correlationsLoading by vm.correlationsLoading.collectAsState()
     val symptomOutcomes by vm.symptomOutcomes.collectAsState()
@@ -87,6 +88,7 @@ fun InsightsPatternsScreen(
                     when (sectionId) {
                         InsightsSections.PATTERNS_TOP -> {
                             TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations, triggerIconKeys,
+                                locationTriggers = locationTriggerStats,
                                 watermarkOnLast = sectionId == lastSection,
                                 showBlob = sectionId == firstSection)
                         }
