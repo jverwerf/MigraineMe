@@ -50,7 +50,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun DataSettingsScreen(
     onBack: () -> Unit = {},
-    onOpenMenstruationSettings: () -> Unit
+    onOpenMenstruationSettings: () -> Unit,
+    onNavigateToPaywall: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
@@ -87,7 +88,13 @@ fun DataSettingsScreen(
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
+        // Calendar sync is premium: every event costs a model call server-side
+        // and the edge function 403s free users, so a free user must land on
+        // the paywall rather than an enabled toggle that silently never syncs.
+        if (granted && PremiumManager.state.value.access == PremiumAccess.NOT_ENTITLED) {
+            onNavigateToPaywall()
+            refreshTick++
+        } else if (granted) {
             scope.launch {
                 DataSettingsToggleHandler.toggleMetric(
                     context = appContext,
@@ -297,10 +304,14 @@ fun DataSettingsScreen(
             CalendarCard(
                 metricSettings = metricSettings,
                 onRequestCalendarPermission = {
-                    calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+                    if (PremiumManager.state.value.access == PremiumAccess.NOT_ENTITLED) onNavigateToPaywall()
+                    else calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
                 },
                 onToggleData = { enabled ->
-                    scope.launch {
+                    if (enabled && PremiumManager.state.value.access == PremiumAccess.NOT_ENTITLED) {
+                        onNavigateToPaywall()
+                        refreshTick++
+                    } else scope.launch {
                         DataSettingsToggleHandler.toggleMetric(
                             context = appContext,
                             metric = "calendar_events",

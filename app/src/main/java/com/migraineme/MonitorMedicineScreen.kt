@@ -544,38 +544,44 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                     }
 
                     // 3. 14-day stacked histogram with chip selector (chips below graph)
-                    BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.FULL_GRAPH_MEDICINES) }) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(t("14-Day Medicines History"), color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                                modifier = Modifier.weight(1f))
-                            Text(t("History →"), color = AppTheme.AccentPurple,
-                                style = MaterialTheme.typography.labelSmall)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        val merged = s.dailyByMedicine + s.dailyByCategory
-                        val medNames = s.all.map { it.name }
-                        val catNames = s.categories.map { it.category }
-                        MedicineStackedBarGraph(
-                            chartSelected.toList(), merged, Modifier.fillMaxWidth().height(160.dp),
-                            colorForName = { stableMedicineColor(it, medNames, catNames) }
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        if (s.all.isNotEmpty()) {
-                            Text(t("Medicines"), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                s.all.forEach { m -> ChartChip(m.name, stableMedicineColor(m.name, medNames, catNames), chartSelected) }
+                    PremiumGate(
+                        message = t("Unlock Treatments"),
+                        subtitle = t("Track your health metrics over time"),
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                    ) {
+                        BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.FULL_GRAPH_MEDICINES) }) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(t("14-Day Medicines History"), color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    modifier = Modifier.weight(1f))
+                                Text(t("History →"), color = AppTheme.AccentPurple,
+                                    style = MaterialTheme.typography.labelSmall)
                             }
-                        }
-                        if (s.categories.isNotEmpty()) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(t("Categories"), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                s.categories.forEach { c -> ChartChip(c.category, stableMedicineColor(c.category, medNames, catNames), chartSelected) }
+                            Spacer(Modifier.height(8.dp))
+                            val merged = s.dailyByMedicine + s.dailyByCategory
+                            val medNames = s.all.map { it.name }
+                            val catNames = s.categories.map { it.category }
+                            MedicineStackedBarGraph(
+                                chartSelected.toList(), merged, Modifier.fillMaxWidth().height(160.dp),
+                                colorForName = { stableMedicineColor(it, medNames, catNames) }
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            if (s.all.isNotEmpty()) {
+                                Text(t("Medicines"), color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    s.all.forEach { m -> ChartChip(m.name, stableMedicineColor(m.name, medNames, catNames), chartSelected) }
+                                }
+                            }
+                            if (s.categories.isNotEmpty()) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(t("Categories"), color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    s.categories.forEach { c -> ChartChip(c.category, stableMedicineColor(c.category, medNames, catNames), chartSelected) }
+                                }
                             }
                         }
                     }

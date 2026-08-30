@@ -50,6 +50,13 @@ class CalendarDailySyncWorker(
                 return@withContext Result.success()
             }
 
+            // Premium feature. LOADING passes through (the edge function is the
+            // authority and 403s free users); a resolved free tier skips the read.
+            if (PremiumManager.state.value.access == PremiumAccess.NOT_ENTITLED) {
+                Log.d(TAG, "free tier – calendar sync is premium, skip")
+                return@withContext Result.success()
+            }
+
             if (!CalendarService.hasReadPermission(applicationContext)) {
                 Log.d(TAG, "READ_CALENDAR not granted – skip")
                 return@withContext Result.success()

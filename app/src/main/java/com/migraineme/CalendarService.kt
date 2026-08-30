@@ -189,6 +189,11 @@ object CalendarService {
                 contentType(ContentType.Application.Json)
                 setBody(SyncRequest(events))
             }
+            if (res.status.value == 403) {
+                // premium_required: the account is not entitled. Nothing to retry.
+                Log.d(TAG, "sync-calendar-events 403 premium_required – skip")
+                return emptyList()
+            }
             if (!res.status.isSuccess()) {
                 Log.e(TAG, "sync-calendar-events ${res.status}: ${res.bodyAsText().take(300)}")
                 return emptyList()

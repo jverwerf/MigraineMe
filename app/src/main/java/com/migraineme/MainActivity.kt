@@ -1348,19 +1348,25 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_DETAIL) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsExploreScreen(navController = nav, vm = insightsVm)
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsExploreScreen(navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.INSIGHTS_RECOMMENDATIONS) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        RecommendationsDetailScreen(navController = nav, vm = insightsVm)
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            RecommendationsDetailScreen(navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.INSIGHTS_TIMELINE) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsDetailScreen(navController = nav, vm = insightsVm)
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsDetailScreen(navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.INSIGHTS_REPORT) {
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
@@ -1370,10 +1376,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
                     composable("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { backStack ->
-                        val logType = backStack.arguments?.getString("logType") ?: "Triggers"
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                            val logType = backStack.arguments?.getString("logType") ?: "Triggers"
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.INSIGHTS_PATTERNS) {
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
@@ -1425,9 +1433,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
                     composable(Routes.FREQUENCY_TRENDS) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        FrequencyTrendsScreen(onBack = { nav.popBackStack() }, vm = insightsVm)
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            FrequencyTrendsScreen(onBack = { nav.popBackStack() }, vm = insightsVm)
+                        }
                     }
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
@@ -2586,7 +2596,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.DATA) {
-                        DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
+                        DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) }, onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) })
                     }
 
                     composable(Routes.PRACTITIONERS) {
@@ -2635,9 +2645,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.RECALIBRATION_REVIEW) {
-                        RecalibrationReviewScreen(
-                            onBack = { nav.popBackStack() }
-                        )
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                            RecalibrationReviewScreen(
+                                onBack = { nav.popBackStack() }
+                            )
+                        }
                     }
 
                     composable(Routes.ONBOARDING) {
