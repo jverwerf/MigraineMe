@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,6 +82,18 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                 Text(t("Migraines"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
+                // Insights explore is premium: show the padlock next to the arrow for
+                // free users, same treatment as the Monitor "History" labels.
+                val premiumAccess by PremiumManager.state.collectAsState()
+                if (premiumAccess.access == PremiumAccess.NOT_ENTITLED) {
+                    Icon(
+                        Icons.Outlined.Lock,
+                        contentDescription = t("Premium"),
+                        tint = AppTheme.AccentPurple,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
                 Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             }
 
