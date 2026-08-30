@@ -1348,21 +1348,21 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_DETAIL) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS_DETAIL) { inclusive = true } } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsExploreScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_RECOMMENDATIONS) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS_RECOMMENDATIONS) { inclusive = true } } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             RecommendationsDetailScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_TIMELINE) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS_TIMELINE) { inclusive = true } } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsDetailScreen(navController = nav, vm = insightsVm)
@@ -1376,7 +1376,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
                     composable("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { backStack ->
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { inclusive = true } } }) {
                             val logType = backStack.arguments?.getString("logType") ?: "Triggers"
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
@@ -1433,7 +1433,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
                     composable(Routes.FREQUENCY_TRENDS) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.FREQUENCY_TRENDS) { inclusive = true } } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             FrequencyTrendsScreen(onBack = { nav.popBackStack() }, vm = insightsVm)
@@ -2645,7 +2645,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.RECALIBRATION_REVIEW) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.RECALIBRATION_REVIEW) { inclusive = true } } }) {
                             RecalibrationReviewScreen(
                                 onBack = { nav.popBackStack() }
                             )

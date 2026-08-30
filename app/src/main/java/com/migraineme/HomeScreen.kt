@@ -473,17 +473,22 @@ fun HomeScreenRoot(
                 }
 
                 // ── Active triggers — blurred for free users ──
-                PremiumGate(
-                    message = t("Unlock trigger breakdown"),
-                    subtitle = t("See what\u2019s driving your risk score"),
-                    onUpgrade = onNavigateToPaywall
-                ) {
-                    ActiveTriggersCard(
-                        triggers = displayTriggers.take(3),
-                        gaugeMax = state.gaugeMaxScore,
-                        onTap = onNavigateToRiskDetail,
-                        watermark = watermarkOn == "contributors"
-                    )
+                // Only when there is something to blur: ActiveTriggersCard renders
+                // nothing for an empty list, and a gate around nothing collapses to
+                // the width of its own upsell text (iOS hides the gate the same way).
+                if (displayTriggers.isNotEmpty()) {
+                    PremiumGate(
+                        message = t("Unlock trigger breakdown"),
+                        subtitle = t("See what\u2019s driving your risk score"),
+                        onUpgrade = onNavigateToPaywall
+                    ) {
+                        ActiveTriggersCard(
+                            triggers = displayTriggers.take(3),
+                            gaugeMax = state.gaugeMaxScore,
+                            onTap = onNavigateToRiskDetail,
+                            watermark = watermarkOn == "contributors"
+                        )
+                    }
                 }
 
                 // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
