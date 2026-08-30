@@ -463,16 +463,13 @@ private fun periodLabel(r: SupabaseDbService.TreatmentRegimenRow): String {
 // ════════════════════════════════════════════════════════════════════════════
 
 @Composable
-fun TreatmentsMonitorCard(onClick: () -> Unit) {
+fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
     val context = LocalContext.current
-    val pState by PremiumManager.state.collectAsState()
-    val isPremium = pState.isPremium
     var loading by remember { mutableStateOf(true) }
     var rows by remember { mutableStateOf<List<SupabaseDbService.TreatmentLeaderboardRow>>(emptyList()) }
     var activeCount by remember { mutableStateOf(0) }
     var showInfo by remember { mutableStateOf(false) }
-    LaunchedEffect(isPremium) {
-        if (!isPremium) { loading = false; return@LaunchedEffect }
+    LaunchedEffect(Unit) {
         loading = true
         val data = withContext(Dispatchers.IO) {
             try {
@@ -494,6 +491,11 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
         loading = false
     }
     Box(modifier = Modifier.fillMaxWidth()) {
+        PremiumGate(
+            message = t("Unlock Treatments"),
+            subtitle = t("See how well each drug, device, or lifestyle change reduces your migraine days"),
+            onUpgrade = onUpgrade
+        ) {
         Box(
             modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
@@ -519,22 +521,10 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
                 Spacer(Modifier.width(10.dp))
                 Text(t("Treatments"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.weight(1f))
-                // The "Premium ·" tag and the upgrade pitch below are claims
-                // about this user's tier, so neither may be drawn until the
-                // tier is actually known.
-                if (isPremium || pState.access == PremiumAccess.LOADING) {
-                    Text("→", color = Color(0xFFB388FF), style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    Text(t("Premium · →"), color = Color(0xFFB97BFF), style = MaterialTheme.typography.labelSmall)
-                }
+                Text("→", color = Color(0xFFB388FF), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(6.dp))
-            if (pState.access == PremiumAccess.LOADING) {
-                CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
-            } else if (!isPremium) {
-                Text(t("Track how well each drug, device, or lifestyle change reduces your migraine days. Upgrade to unlock."),
-                    color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
-            } else if (loading) {
+            if (loading) {
                 CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
             } else if (rows.isEmpty()) {
                 Text(t("Add a drug, device, or lifestyle change to track effectiveness."),
@@ -546,6 +536,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
                 }
             }
             }
+        }
         }
         IconButton(
             onClick = { showInfo = true },

@@ -418,7 +418,8 @@ fun MonitorScreen(
                         }
                         MonitorCardConfig.CARD_TREATMENTS -> {
                             TreatmentsMonitorCard(
-                                onClick = { navController.navigate(Routes.MONITOR_TREATMENTS) }
+                                onClick = { navController.navigate(Routes.MONITOR_TREATMENTS) },
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
                             )
                         }
                         MonitorCardConfig.CARD_PHYSICAL -> {

@@ -481,6 +481,13 @@ fun MonitorNutritionScreen(
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
+            // Food logging and today's log are premium: one gate over the lot.
+            PremiumGate(
+                message = t("Unlock Food Risk Analysis"),
+                subtitle = t("Log meals and see tyramine, alcohol and gluten risk"),
+                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Search
             BaseCard {
                 Text(t("Add Food"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -687,6 +694,9 @@ fun MonitorNutritionScreen(
                 }
             }
             
+            }
+            }
+
             // History Graph — premium only
             PremiumGate(
                 message = t("Unlock Diet Trends"),

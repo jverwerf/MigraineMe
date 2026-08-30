@@ -126,8 +126,8 @@ fun PremiumGate(
         PremiumAccess.NOT_ENTITLED -> Unit // falls through to the blurred upsell
     }
 
-    // FREE tier: render content blurred, overlay inside card bounds
-    Box(modifier = modifier) {
+    // FREE tier: render content blurred, overlay inside card bounds.
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         // Blurred content — defines the card size/shape
         if (showTeaser) {
             Box(modifier = Modifier.blur(blurRadius)) {
@@ -135,14 +135,21 @@ fun PremiumGate(
             }
         }
 
-        // Overlay clipped to card shape, sitting inside the card bounds
+        // Scrim clipped to card shape, sitting inside the card bounds
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .padding(1.dp)
                 .clip(RoundedCornerShape(17.dp))
                 .background(Color.Black.copy(alpha = 0.45f))
-                .clickable(onClick = onUpgrade),
+                .clickable(onClick = onUpgrade)
+        )
+
+        // Kept OUT of the scrim so it is measured, not clipped: a card shorter
+        // than the upsell (Treatments is three rows) used to cut the Upgrade
+        // button down to a few pixels of glyph.
+        Box(
+            modifier = Modifier.clickable(onClick = onUpgrade),
             contentAlignment = Alignment.Center
         ) {
             Column(
