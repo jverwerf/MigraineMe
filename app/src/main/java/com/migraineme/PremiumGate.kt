@@ -109,6 +109,10 @@ fun PremiumGate(
     subtitle: String? = null,
     blurRadius: Dp = 10.dp,
     showTeaser: Boolean = true,
+    /** Single-row upsell (lock + [message], no subtitle, no Upgrade button) for
+     *  small controls such as a button, where the full card upsell would tower
+     *  over the thing it covers. The whole area taps through to [onUpgrade]. */
+    compact: Boolean = false,
     onUpgrade: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -144,6 +148,27 @@ fun PremiumGate(
                 .background(Color.Black.copy(alpha = 0.45f))
                 .clickable(onClick = onUpgrade)
         )
+
+        if (compact) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.clickable(onClick = onUpgrade).padding(8.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Lock,
+                    contentDescription = t("Locked"),
+                    tint = Color.White.copy(alpha = 0.9f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = message,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+            return
+        }
 
         // Kept OUT of the scrim so it is measured, not clipped: a card shorter
         // than the upsell (Treatments is three rows) used to cut the Upgrade

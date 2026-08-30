@@ -1003,18 +1003,22 @@ fun PractitionerCard(
 
                 // Tapping the card already opens her page, so a button that
                 // does the same is one decision too many.
-                if (showActions) OutlinedButton(
-                    onClick = onShareData,
-                    modifier = Modifier.fillMaxWidth().height(38.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFF3E1D55)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
-                ) {
-                    Text(
-                        if (granted.isEmpty()) t("Share your data") else t("%1\$s shared", granted.size),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                // Sharing is premium: free users see the button blurred under a
+                // lock; the tap still lands on the paywall via onShareData.
+                if (showActions) PremiumGate(compact = true, message = t("Premium"), onUpgrade = onShareData) {
+                    OutlinedButton(
+                        onClick = onShareData,
+                        modifier = Modifier.fillMaxWidth().height(38.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
+                    ) {
+                        Text(
+                            if (granted.isEmpty()) t("Share your data") else t("%1\$s shared", granted.size),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
 
 }
@@ -1260,19 +1264,21 @@ fun PractitionerDetailSheet(
                             contentColor = Color(0xFF20062F),
                         ),
                     ) { Text(t("Book an intro call"), fontWeight = FontWeight.Bold) }
-                    OutlinedButton(
-                        onClick = onShareData,
-                        modifier = Modifier.fillMaxWidth().height(40.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFF3E1D55)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
-                    ) {
-                        Text(
-                            if (link?.granted.isNullOrEmpty()) t("Share your data")
-                            else t("Change what they see"),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                        )
+                    PremiumGate(compact = true, message = t("Premium"), onUpgrade = onShareData) {
+                        OutlinedButton(
+                            onClick = onShareData,
+                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
+                        ) {
+                            Text(
+                                if (link?.granted.isNullOrEmpty()) t("Share your data")
+                                else t("Change what they see"),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                            )
+                        }
                     }
                 }
             }
