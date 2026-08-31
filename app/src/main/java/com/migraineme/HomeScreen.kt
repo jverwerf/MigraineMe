@@ -456,6 +456,16 @@ fun HomeScreenRoot(
                     if (!aiRegenerating) {
                         state.positives.firstOrNull()?.let { praise ->
                             WellDoneCard(text = praise)
+                            // Rating ask rides the one purely-positive moment, and
+                            // never within 24h of a logged migraine.
+                            val attackRecently = state.recentLogs.any {
+                                it.time.isAfter(Instant.now().minusSeconds(24 * 60 * 60))
+                            }
+                            if (!attackRecently) {
+                                LaunchedEffect(Unit) {
+                                    (ctx as? android.app.Activity)?.let { RatingPrompt.maybeAsk(it) }
+                                }
+                            }
                         }
                     }
 
