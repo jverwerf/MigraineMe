@@ -738,6 +738,25 @@ fun MigraineInProgressCard(
     var index by remember(open.size) { mutableStateOf(0) }
     val row = open.getOrNull(index.coerceIn(0, open.lastIndex)) ?: return
 
+    // Mid-attack forecast (similar-attacks edge fn): a red pill in the header
+    // shows the one-line read and opens the full AttackForecastSheet on tap.
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var forecast by remember { mutableStateOf<EdgeFunctionsService.SimilarAttacksResponse?>(null) }
+    var showForecast by remember { mutableStateOf(false) }
+    LaunchedEffect(open.firstOrNull()?.id) {
+        forecast = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { EdgeFunctionsService().getSimilarAttacks(ctx) }.getOrNull()
+        }
+    }
+    val fc = forecast
+    if (showForecast && fc != null) {
+        AttackForecastSheet(
+            forecast = fc,
+            nowMs = System.currentTimeMillis(),
+            onDismiss = { showForecast = false },
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
@@ -778,6 +797,29 @@ fun MigraineInProgressCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     PagerArrow("›") { index = (index + 1) % open.size }
+                }
+                forecast?.let { f ->
+                    forecastPillLabel(f)?.let { pill ->
+                        Spacer(Modifier.width(8.dp))
+                        Row(
+                            Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(MigraineCardRed.copy(alpha = 0.16f))
+                                .border(1.dp, MigraineCardRed.copy(alpha = 0.34f), RoundedCornerShape(999.dp))
+                                .clickable { showForecast = true }
+                                .padding(horizontal = 9.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                pill,
+                                color = MigraineCardRed,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                maxLines = 1,
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text("›", color = MigraineCardRed, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
             }
 

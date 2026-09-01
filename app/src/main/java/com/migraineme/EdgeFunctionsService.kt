@@ -2655,4 +2655,82 @@ class EdgeFunctionsService {
             client.close()
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Similar-attacks forecast: mid-attack end / severity estimate, read as a
+    // similarity-weighted middle of the user's own past attacks. Numbers only;
+    // all sentences are built client-side (AttackForecastSheet).
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class SimilarAttacksDuration(
+        val p25: Float? = null, val median: Float? = null,
+        val p75: Float? = null, val longest: Float? = null,
+    )
+
+    @Serializable
+    data class SimilarAttacksSeverity(val median: Float? = null, val worst: Float? = null)
+
+    @Serializable
+    data class SimilarAttacksFactor(
+        val kind: String, val name: String, val band: String? = null,
+        val count: Int = 0, val of: Int = 0,
+        val significant: Boolean = false, val usable: Boolean = true,
+    )
+
+    @Serializable
+    data class SimilarAttacksHelped(
+        val kind: String, val name: String,
+        val takenThisTime: Boolean = false, val atBand: String? = null,
+        // Severity-band-matched duration effect: took vs not compared only
+        // inside the same severity band, so mild med-free attacks can't skew it.
+        val deltaDurationH: Float? = null,
+        val clear: Boolean = false,
+        // The user's own relief ratings from matched attacks where it was taken.
+        val reliefHigh: Int = 0, val reliefSome: Int = 0,
+        val reliefNone: Int = 0, val reliefRated: Int = 0,
+        val tookCount: Int = 0, val notCount: Int = 0,
+    )
+
+    @Serializable
+    data class SimilarAttacksResponse(
+        val ok: Boolean = false,
+        val status: String? = null,
+        val attackId: String? = null,
+        val startAt: String? = null,
+        val elapsedHours: Float? = null,
+        val matchedCount: Int = 0,
+        val matchStrength: Float? = null,
+        val duration: SimilarAttacksDuration? = null,
+        val severity: SimilarAttacksSeverity? = null,
+        val sharedFactors: List<SimilarAttacksFactor> = emptyList(),
+        val helped: List<SimilarAttacksHelped> = emptyList(),
+        val helpedOverall: List<SimilarAttacksHelped> = emptyList(),
+    )
+
+    suspend fun getSimilarAttacks(context: Context): SimilarAttacksResponse? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/similar-attacks"
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+            if (res.status.value in 200..299) {
+                res.body<SimilarAttacksResponse>()
+            } else {
+                Log.e("EdgeFunctionsService", "getSimilarAttacks failed: ${res.status.value}")
+                null
+            }
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "getSimilarAttacks exception", t)
+            null
+        } finally {
+            client.close()
+        }
+    }
 }

@@ -20,11 +20,13 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.lifecycle.ViewModelStoreOwner
@@ -47,6 +49,11 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     // Monitor hub doesn't have to know about migraine rows.
     val db = remember { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) }
     var openAttacks by remember { mutableStateOf<List<SupabaseDbService.MigraineRow>>(emptyList()) }
+    // Mid-attack forecast (similar-attacks edge fn). Loaded once an open
+    // attack is known; the red row shows its one-line read and opens the
+    // full AttackForecastSheet on tap.
+    var forecast by remember { mutableStateOf<EdgeFunctionsService.SimilarAttacksResponse?>(null) }
+    var showForecast by remember { mutableStateOf(false) }
     // Ticks the elapsed clock. A minute is the smallest unit shown, so half a
     // minute is fine and costs nothing while no attack is open.
     var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -59,6 +66,11 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             openAttacks = withContext(Dispatchers.IO) {
                 runCatching { db.getOpenMigraines(token) }.getOrDefault(emptyList())
             }
+            if (openAttacks.isNotEmpty()) {
+                forecast = withContext(Dispatchers.IO) {
+                    runCatching { EdgeFunctionsService().getSimilarAttacks(ctx) }.getOrNull()
+                }
+            }
         }
     }
 
@@ -68,6 +80,11 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             nowMs = System.currentTimeMillis()
             delay(30_000L)
         }
+    }
+
+    val fc = forecast
+    if (showForecast && fc != null) {
+        AttackForecastSheet(forecast = fc, nowMs = nowMs, onDismiss = { showForecast = false })
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -104,34 +121,55 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                 val elapsed = attackElapsedLabel(open.startAt, nowMs)
                 if (elapsed != null) {
                     Spacer(Modifier.height(8.dp))
-                    Row(
+                    val inline = forecast?.let { forecastInlineLabel(it) }
+                    Column(
                         Modifier
                             .fillMaxWidth()
-                            .background(AttackRed.copy(alpha = 0.14f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .background(AttackRed.copy(alpha = 0.14f))
                             .border(1.dp, AttackRed.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .clickable { if (forecast != null) showForecast = true }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        Text(
-                            t("In an attack").uppercase(appLocale()),
-                            color = AttackRed,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold, letterSpacing = 0.09.em
-                            )
-                        )
-                        Text(
-                            elapsed,
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (openAttacks.size > 1) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(
-                                t("%s open", openAttacks.size),
-                                color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall
+                                t("In an attack").uppercase(appLocale()),
+                                color = AttackRed,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold, letterSpacing = 0.09.em
+                                )
                             )
+                            Text(
+                                elapsed,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (openAttacks.size > 1) {
+                                Text(
+                                    t("%s open", openAttacks.size),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+                        if (inline != null) {
+                            Spacer(Modifier.height(5.dp))
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(AttackRed.copy(alpha = 0.22f)))
+                            Spacer(Modifier.height(5.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    inline,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text("\u203a", color = AttackRed, style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     }
                 }
