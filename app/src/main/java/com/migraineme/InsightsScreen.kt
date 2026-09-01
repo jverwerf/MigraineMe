@@ -199,8 +199,13 @@ internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalC
                 }
             }
             Spacer(Modifier.width(8.dp))
+            // Bounded share. An unweighted stat measures first and takes whatever
+            // width it wants, which starved the label column to a single character
+            // on long lift strings ("about 5 times as likely · 46% of attacks").
+            // 0.8 against the label's 1f caps the stat at ~44% of the row.
             Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium,
-                textAlign = TextAlign.End)
+                textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(0.8f))
         }
     }
     val extra = totalCount - shown.size
@@ -2140,6 +2145,16 @@ private fun PatternTile(
             .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
             .padding(horizontal = 16.dp, vertical = 13.dp)
     ) {
+        val titleIsPair = stat.factorB != null
+        val headlineStat = if (stat.mode != "prevalence") {
+            liftTimesText(stat.liftRatio)
+        } else if (stat.isChronic) {
+            tSync("in %s%% of flare days", stat.pctMigraineWindows.toInt())
+        } else {
+            tSync("in %s%% of attacks", stat.pctMigraineWindows.toInt())
+        }
+        val headlineColor = if (isCombo) Color(0xFFE8A0A0) else Color(0xFFC9A9E8)
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             val title = androidx.compose.ui.text.buildAnnotatedString {
                 if (icon != null) { appendInlineContent("iconA", "\u2b1c"); append(" ") }
@@ -2173,20 +2188,19 @@ private fun PatternTile(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.width(10.dp))
-            val headlineStat = if (stat.mode != "prevalence") {
-                liftTimesText(stat.liftRatio)
-            } else if (stat.isChronic) {
-                tSync("in %s%% of flare days", stat.pctMigraineWindows.toInt())
-            } else {
-                tSync("in %s%% of attacks", stat.pctMigraineWindows.toInt())
+            // A pair title ("A  +  B") needs the whole row: sharing it with the
+            // headline stat truncated the second factor away, which is the half
+            // that makes it a combination. Pairs move the stat to the meta line.
+            if (!titleIsPair) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    headlineStat,
+                    color = headlineColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(0.8f)
+                )
             }
-            Text(
-                headlineStat,
-                color = if (isCombo) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                textAlign = TextAlign.End
-            )
             onToggleHide?.let { toggle ->
                 Spacer(Modifier.width(8.dp))
                 Icon(
@@ -2198,7 +2212,20 @@ private fun PatternTile(
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text("$lagText  \u00b7  $occText", color = metaColor, style = MaterialTheme.typography.labelSmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("$lagText  \u00b7  $occText", color = metaColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.weight(1f))
+            if (titleIsPair) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    headlineStat,
+                    color = headlineColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.End
+                )
+            }
+        }
         // Where attacks with this trigger tend to start (location_trigger row, best p).
         usuallyStartsLine(stat, locationRows)?.let { line ->
             Spacer(Modifier.height(2.dp))
@@ -2275,7 +2302,9 @@ internal fun PatternsPreviewCard(
                     Text(t("%1\$s%% of days vs %2\$s%% usually",
                         stat.pctMigraineWindows.toInt(), stat.pctControlWindows.toInt()),
                         color = if (stat.pctMigraineWindows >= stat.pctControlWindows * 2f) Color(0xFFE57373) else AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(0.8f))
                 }
             }
         }
@@ -2431,9 +2460,12 @@ private fun ThresholdPreviewCard(
                     Spacer(Modifier.height(2.dp))
                     ConfidenceDots(stat.pValue)
                 }
-                Text(fmtCurrent, color = Color(0xFFFFB74D), style = MaterialTheme.typography.bodySmall)
-                Text(" \u2192 ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Text(fmtSuggested, color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall)
+                Row(Modifier.weight(0.8f), horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(fmtCurrent, color = Color(0xFFFFB74D), style = MaterialTheme.typography.bodySmall)
+                    Text(" \u2192 ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(fmtSuggested, color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall)
+                }
                 Spacer(Modifier.width(8.dp))
                 val statAdjusting = stat.id in adjustingIds
                 Text(
@@ -2701,7 +2733,8 @@ internal fun ContextCard(
                         Text(t("%1\$s migraines (%2\$s%%)", item.count, item.pctOfMigraines.toInt()),
                             color = cyan,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            textAlign = TextAlign.End)
+                            textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.8f))
                         if (onClick == null) {
                             Spacer(Modifier.width(8.dp))
                             Icon(
@@ -2854,7 +2887,9 @@ internal fun ImpactCard(
                         style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                     Text(t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), timed),
                         color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(0.8f))
                 }
             }
             // Server-computed findings — the patterns, not just the counts.
@@ -2890,7 +2925,9 @@ internal fun ImpactCard(
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     Text(t("%s times", item.totalMissed), color = Color(0xFFE57373),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(0.8f))
                 }
             }
         }

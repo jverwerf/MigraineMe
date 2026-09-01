@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -461,7 +462,9 @@ fun RecommendationsCard(
                             tint = section.color, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
                         Text(t(section.title), color = section.color,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.8f))
                     }
                     Spacer(Modifier.height(3.dp))
                     Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium,

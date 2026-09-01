@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -193,7 +194,9 @@ private fun TriggerSymptomProfileCard(
                         // and the rates say the same thing without the arithmetic.
                         Text(t("%1\$s%% of days vs %2\$s%% usually", condPct.toInt(), baselinePct.toInt()),
                             color = if (condPct >= baselinePct * 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.8f))
                     }
                 }
             }

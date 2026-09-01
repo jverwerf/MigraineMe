@@ -287,7 +287,10 @@ fun InsightsImpactScreen(
                                 Text(
                                     t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), count),
                                     color = AppTheme.AccentPurple,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    textAlign = TextAlign.End, maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.8f)
                                 )
                             }
                         }
@@ -410,7 +413,9 @@ fun InsightsImpactScreen(
                                     overflow = TextOverflow.Ellipsis, maxLines = 1, modifier = Modifier.weight(1f))
                                 Text(t("%1\$s%% · %2\$s attacks", pct, s.totalCount),
                                     color = Color(0xFFCE93D8),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.8f))
                             }
                             Spacer(Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -507,7 +512,9 @@ fun InsightsImpactScreen(
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                 Text(t("%s\u00D7 missed", item.totalMissed), color = Color(0xFFE8A0A0),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.8f))
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(t("missed during %s%% of migraines", item.pctOfMigraines.toInt()),
