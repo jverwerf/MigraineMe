@@ -192,12 +192,15 @@ class HealthConnectPushWorker(
 
     /**
      * Fold all SLEEP upsert items in `batch` that share a date into one representative
-     * item whose payload sums duration, sums stage minutes, takes the earliest start time
-     * and the latest end time. Non-representative sleep items are added to `successIds`
-     * (their data is already counted in the representative).
+     * item. Sessions whose time windows overlap describe the SAME sleep reported by
+     * different Health Connect writers (watch + phone + third-party app), so summing
+     * them counts the night once per writer — each overlap cluster contributes its
+     * best single session instead (stage data preferred, then longest). Disjoint
+     * sessions (night + nap) still sum. Non-representative sleep items are added to
+     * `successIds` (their data is covered by the representative).
      *
-     * Without this, a date with multiple sessions (night + nap) would get one row per
-     * session, and only the last upsert would survive because the row is keyed by
+     * Without the fold, a date with multiple sessions would get one row per session,
+     * and only the last upsert would survive because the row is keyed by
      * (user, date, source).
      */
     private fun aggregateSleepByDate(
@@ -216,6 +219,41 @@ class HealthConnectPushWorker(
         for ((_, items) in groups) {
             if (items.size < 2) continue
 
+            data class Session(val p: JsonObject, val start: String, val end: String)
+            val parsed = items.mapNotNull { item ->
+                val p = try { json.decodeFromString<JsonObject>(item.payload) } catch (_: Exception) { null }
+                p?.let {
+                    Session(
+                        p = it,
+                        start = it["start_time"]?.jsonPrimitive?.content ?: "",
+                        end = it["end_time"]?.jsonPrimitive?.content ?: ""
+                    )
+                }
+            }
+            if (parsed.isEmpty()) continue
+
+            // Cluster sessions whose windows overlap (ISO-UTC strings compare
+            // chronologically). A session without times can't be overlap-checked,
+            // so it stands alone and keeps the old night+nap summing behaviour.
+            val clusters = mutableListOf<MutableList<Session>>()
+            var clusterMaxEnd: String? = null
+            for (s in parsed.sortedBy { it.start }) {
+                val overlaps = clusterMaxEnd != null &&
+                    s.start.isNotEmpty() && s.end.isNotEmpty() && s.start < clusterMaxEnd!!
+                if (overlaps) {
+                    clusters.last().add(s)
+                    if (s.end > clusterMaxEnd!!) clusterMaxEnd = s.end
+                } else {
+                    clusters.add(mutableListOf(s))
+                    clusterMaxEnd = s.end.ifEmpty { null }
+                }
+            }
+
+            fun stageMinutes(p: JsonObject): Long =
+                (p["rem_minutes"]?.jsonPrimitive?.long ?: 0) +
+                    (p["deep_minutes"]?.jsonPrimitive?.long ?: 0) +
+                    (p["light_minutes"]?.jsonPrimitive?.long ?: 0)
+
             var totalDuration = 0L
             var totalRem = 0L
             var totalDeep = 0L
@@ -225,19 +263,19 @@ class HealthConnectPushWorker(
             var earliestStart: String? = null
             var latestEnd: String? = null
 
-            for (item in items) {
-                val p = try { json.decodeFromString<JsonObject>(item.payload) } catch (_: Exception) { null }
-                if (p == null) continue
+            for (cluster in clusters) {
+                val best = cluster.maxWithOrNull(
+                    compareBy({ stageMinutes(it.p) > 0 }, { it.p["duration_minutes"]?.jsonPrimitive?.long ?: 0 })
+                ) ?: continue
+                val p = best.p
                 totalDuration += p["duration_minutes"]?.jsonPrimitive?.long ?: 0
                 totalRem += p["rem_minutes"]?.jsonPrimitive?.long ?: 0
                 totalDeep += p["deep_minutes"]?.jsonPrimitive?.long ?: 0
                 totalLight += p["light_minutes"]?.jsonPrimitive?.long ?: 0
                 totalAwake += p["awake_minutes"]?.jsonPrimitive?.long ?: 0
                 totalAwakeCount += p["awake_count"]?.jsonPrimitive?.long ?: 0
-                val s = p["start_time"]?.jsonPrimitive?.content ?: ""
-                val e = p["end_time"]?.jsonPrimitive?.content ?: ""
-                if (s.isNotEmpty() && (earliestStart == null || s < earliestStart!!)) earliestStart = s
-                if (e.isNotEmpty() && (latestEnd == null || e > latestEnd!!)) latestEnd = e
+                if (best.start.isNotEmpty() && (earliestStart == null || best.start < earliestStart!!)) earliestStart = best.start
+                if (best.end.isNotEmpty() && (latestEnd == null || best.end > latestEnd!!)) latestEnd = best.end
             }
 
             val rep = items.first()
