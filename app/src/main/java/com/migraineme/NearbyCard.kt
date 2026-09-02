@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 /**
  * A practice we found near the patient.
@@ -95,12 +97,23 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
                         .border(2.dp, Color(0xFF220C33), RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
+                    // Initials underneath, their own share image on top when
+                    // the site had one. A broken or slow image leaves the
+                    // initials showing rather than an empty box.
                     Text(
                         place.initials,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.AccentPurple,
                     )
+                    if (!place.image_url.isNullOrBlank()) {
+                        AsyncImage(
+                            model = place.image_url,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
                 Column(Modifier.weight(1f).padding(bottom = 6.dp)) {
                     Text(

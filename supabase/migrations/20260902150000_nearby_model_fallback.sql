@@ -15,3 +15,8 @@ alter table public.nearby_api_usage
 
 create index if not exists nearby_places_enrich_idx
   on public.nearby_places (enriched_at nulls first) where delisted_at is null;
+
+-- The practice's own share image (og:image), read off the same page the model
+-- verifies. Free, theirs, permanent. Google's photos are paid and may not be
+-- stored, so they are never used.
+alter table public.nearby_places add column if not exists image_url text;

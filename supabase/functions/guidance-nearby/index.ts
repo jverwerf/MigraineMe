@@ -273,7 +273,23 @@ function firstJson(text: string): unknown {
   return null;
 }
 
-/** A page as plain text, capped, or null when it cannot be read. */
+/** The image a site chose to represent itself with when shared, absolute. */
+function shareImage(html: string, base: string): string | null {
+  const m = html.match(/<meta[^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image)["'][^>]+content=["']([^"']+)["']/i)
+    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image)["']/i);
+  if (!m) return null;
+  try {
+    const u = new URL(m[1].trim(), base);
+    return u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+const lastImage = new Map<string, string | null>();
+
+/** A page as plain text, capped, or null when it cannot be read. Remembers
+ *  the page's share image by url for verifyPlace to pick up. */
 async function pageText(url: string): Promise<string | null> {
   try {
     const res = await fetchWithTimeout(url, {
@@ -284,6 +300,7 @@ async function pageText(url: string): Promise<string | null> {
     const type = res.headers.get("content-type") ?? "";
     if (!type.includes("html") && !type.includes("text")) return null;
     const html = await res.text();
+    lastImage.set(url, shareImage(html, res.url || url));
     return html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -422,6 +439,8 @@ async function verifyPlace(db: SupabaseClient, p: PlaceRow) {
 
   patch.treats_migraine = v.treats_migraine;
   patch.migraine_note = v.migraine_note;
+  const img = website ? lastImage.get(website) : null;
+  if (img) patch.image_url = img;
   patch.description = v.description;
   patch.description_source = "site";
   patch.description_fetched_at = now;
@@ -702,7 +721,7 @@ async function placesAround(db: SupabaseClient, lat: number, lng: number) {
 
   const { data } = await db
     .from("nearby_places")
-    .select("place_id,source,name,disciplines,types,address,city,lat,lng,phone,website,description,migraine_note,business_status")
+    .select("place_id,source,name,disciplines,types,address,city,lat,lng,phone,website,description,migraine_note,business_status,image_url")
     .is("delisted_at", null)
     .eq("treats_migraine", true)
     .gte("lat", lat - dLat).lte("lat", lat + dLat)

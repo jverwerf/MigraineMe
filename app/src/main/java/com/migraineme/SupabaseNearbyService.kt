@@ -57,6 +57,7 @@ object SupabaseNearbyService {
         val website: String? = null,
         val description: String? = null,
         val business_status: String? = null,
+        val image_url: String? = null,
         val distance_km: Double? = null,
     ) {
         /** Two capitals for the tile that stands in for a photo until a
