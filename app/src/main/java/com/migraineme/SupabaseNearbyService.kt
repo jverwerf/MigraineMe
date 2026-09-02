@@ -43,6 +43,9 @@ object SupabaseNearbyService {
     @Serializable
     data class Place(
         val place_id: String,
+        /** "google" or "model". A model-found listing has no Google id, so the
+         *  Directions button searches by name and address instead. */
+        val source: String = "google",
         val name: String,
         val disciplines: List<String> = emptyList(),
         val types: List<String> = emptyList(),

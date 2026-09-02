@@ -81,14 +81,20 @@ create table if not exists public.nearby_disciplines (
   enabled  boolean not null default true
 );
 
+-- Migraine-led on purpose: Google matches the query against listing names,
+-- categories and, loosely, reviews, so the direct migraine queries come first
+-- and every discipline carries the word. Google narrows; the practice's own
+-- website, read by the model, is what decides whether a listing is shown.
 insert into public.nearby_disciplines (key, query, label, sort) values
-  ('neurologist',   'neurologist',            'Neurologist',           10),
-  ('headache',      'headache clinic',        'Headache clinic',       20),
-  ('physio',        'physiotherapist',        'Physiotherapist',       30),
-  ('osteopath',     'osteopath',              'Osteopath',             40),
-  ('nutrition',     'nutritional therapist',  'Nutritional therapist', 50),
-  ('psychologist',  'psychologist',           'Psychologist',          60),
-  ('acupuncture',   'acupuncturist',          'Acupuncturist',         70)
+  ('migraine',      'migraine clinic',                       'Migraine clinic',       10),
+  ('specialist',    'migraine specialist',                   'Migraine specialist',   20),
+  ('headache',      'headache clinic',                       'Headache clinic',       30),
+  ('neurologist',   'neurologist migraine headache',         'Neurologist',           40),
+  ('physio',        'physiotherapist migraine headache',     'Physiotherapist',       50),
+  ('osteopath',     'osteopath migraine headache',           'Osteopath',             60),
+  ('nutrition',     'nutritional therapist migraine',        'Nutritional therapist', 70),
+  ('psychologist',  'psychologist migraine',                 'Psychologist',          80),
+  ('acupuncture',   'acupuncturist migraine',                'Acupuncturist',         90)
 on conflict (key) do nothing;
 
 -- The free-tier counter. Google bills a whole request at the highest tier any

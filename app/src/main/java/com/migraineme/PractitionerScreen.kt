@@ -162,6 +162,7 @@ fun PractitionerPanel(
     var links by remember { mutableStateOf<List<SupabasePractitionerService.LinkRow>>(emptyList()) }
     var directory by remember { mutableStateOf<List<SupabasePractitionerService.PractitionerRow>>(emptyList()) }
     var nearby by remember { mutableStateOf<List<SupabaseNearbyService.Place>>(emptyList()) }
+    var nearbyLoading by remember { mutableStateOf(false) }
     var lastViewed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -215,12 +216,15 @@ fun PractitionerPanel(
             }
         }.onSuccess { (l, v, d) -> links = l; lastViewed = v; directory = d }
             .onFailure { error = it.message }
-        // Practices near the patient are part of the same list, so they are
-        // fetched in the same pass and painted with it. Awaited after the
-        // directory on purpose: our own cards must never wait on a lookup that
-        // can be slow the first time anyone opens Guidance in a new town.
-        nearby = SupabaseNearbyService.near(token)
         loading = false
+        // Practices near the patient are part of the same list and load in the
+        // same pass, but our own cards never wait on them: the first person
+        // ever to open Guidance in a town pays for the search and the site
+        // checks, which can take half a minute. Everyone after reads a cache
+        // and both halves land together.
+        nearbyLoading = true
+        nearby = SupabaseNearbyService.near(token)
+        nearbyLoading = false
     }
 
     val active = links.filter { it.isActive }
@@ -278,6 +282,13 @@ fun PractitionerPanel(
             // Same list, continued. Ours are above whatever the distance,
             // because most of them work online and a kilometre count means
             // nothing for a video call.
+            if (nearbyLoading && nearby.isEmpty()) {
+                SectionLabel(t("Near you"))
+                Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center) {
+                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                }
+            }
+
             if (nearby.isNotEmpty()) {
                 SectionLabel(t("Near you"))
                 Text(

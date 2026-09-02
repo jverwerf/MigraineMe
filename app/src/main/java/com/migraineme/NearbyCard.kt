@@ -174,11 +174,15 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
                     NearbyAction(t("Directions"), Modifier.weight(1f)) {
                         // The Google listing, by id, which is the one field
                         // their terms let us keep. Hours, photos and reviews
-                        // are all there, so we never have to buy them.
+                        // are all there, so we never have to buy them. A
+                        // listing the model found has no id, so it goes by
+                        // name and address.
+                        val query = Uri.encode(listOfNotNull(place.name, place.address).joinToString(", "))
+                        val byId = if (place.source == "google") "&query_place_id=${place.place_id}" else ""
                         context.startActivity(
                             Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(place.name)}&query_place_id=${place.place_id}")
+                                Uri.parse("https://www.google.com/maps/search/?api=1&query=$query$byId")
                             )
                         )
                     }
