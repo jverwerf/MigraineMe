@@ -25,6 +25,12 @@
 //
 // A person opening Guidance somewhere new ALWAYS gets a search. Budget rules
 // only ever apply to the nightly refresh.
+//
+// One function, every app on the platform. The client sends app_id (MigraineMe
+// sends nothing and gets 'migraine'); the condition it searches and verifies
+// for comes from CONDITIONS below, the disciplines from nearby_disciplines
+// scoped by app_id, and every row it writes carries app_id. This file is kept
+// byte-identical between the MigraineMe and MeSeries repos.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
@@ -60,6 +66,40 @@ const REFRESH_VERIFY_LIMIT = 80;
 const REVERIFY_DAYS = 90;
 
 const OPENAI_MODEL = "gpt-4.1-mini";
+
+/** What "treats it" means, per app. `terms` is what a site must talk about
+ *  to be listed; `counts` are the related conditions that also pass. */
+const CONDITIONS: Record<string, { name: string; terms: string; counts: string }> = {
+  migraine: {
+    name: "migraine or headache",
+    terms: "migraine or headache",
+    counts: "cervicogenic headache, tension headache and vestibular migraine all count",
+  },
+  vertigo: {
+    name: "vertigo, dizziness or balance problems",
+    terms: "vertigo, dizziness, balance disorders or vestibular conditions",
+    counts: "BPPV, vestibular neuritis, Ménière's, vestibular migraine and vestibular rehabilitation all count",
+  },
+  tinnitus: {
+    name: "tinnitus",
+    terms: "tinnitus or hyperacusis",
+    counts: "tinnitus retraining, sound therapy, CBT for tinnitus and hearing care that names tinnitus all count",
+  },
+  epilepsy: {
+    name: "epilepsy or seizures",
+    terms: "epilepsy or seizures",
+    counts: "epilepsy nursing, seizure clinics and neurology that names epilepsy all count",
+  },
+  meseries: {
+    name: "chronic neurological or pain conditions",
+    terms: "chronic neurological conditions, chronic pain or long-term illness",
+    counts: "neurology, pain management and chronic illness support all count",
+  },
+};
+
+function conditionFor(appId: string) {
+  return CONDITIONS[appId] ?? CONDITIONS.meseries;
+}
 const NOMINATIM_UA = "MigraineMe guidance-nearby (help@migraineme.app)";
 
 // Google's own category types, kept because they are what the card's chips
@@ -346,14 +386,15 @@ type Verdict = {
  * is accepted only if its digits literally appear in the page. The model may
  * summarise; it may not invent a number a person will dial.
  */
-async function judgeSite(db: SupabaseClient, name: string, text: string): Promise<Verdict | null> {
+async function judgeSite(db: SupabaseClient, appId: string, name: string, text: string): Promise<Verdict | null> {
+  const c = conditionFor(appId);
   const prompt =
 `You are reading the website of "${name}", a health practice. Below is the page text.
 
 Answer in JSON only, with exactly these keys:
 {
-  "treats_migraine": true or false. True ONLY if the page itself says they treat, help with, or specialise in migraine or headache (cervicogenic headache, tension headache, vestibular migraine all count). A general physio or psychology page that never mentions headache is false.
-  "migraine_note": if true, one plain sentence in the practice's own terms on what they do for migraine or headache, under 160 characters. Else null.
+  "treats_migraine": true or false. True ONLY if the page itself says they treat, help with, or specialise in ${c.terms} (${c.counts}). A general physio or psychology page that never mentions ${c.name} is false.
+  "migraine_note": if true, one plain sentence in the practice's own terms on what they do for ${c.name}, under 160 characters. Else null.
   "phone": the main phone number, copied EXACTLY as it appears on the page, or null if none appears. Never guess.
   "description": one neutral sentence, under 160 characters, on what the practice is. No marketing adjectives.
 }
@@ -401,7 +442,7 @@ type PlaceRow = {
  * records the verdict, and keeps whatever it learned: phone and website found
  * here are ours, not Google's, so they never expire.
  */
-async function verifyPlace(db: SupabaseClient, p: PlaceRow) {
+async function verifyPlace(db: SupabaseClient, appId: string, p: PlaceRow) {
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = { enriched_at: now };
 
@@ -427,13 +468,13 @@ async function verifyPlace(db: SupabaseClient, p: PlaceRow) {
     // Nothing to read means nothing to verify. Not shown, and not asked
     // about again for a while.
     patch.treats_migraine = null;
-    await db.from("nearby_places").update(patch).eq("place_id", p.place_id);
+    await db.from("nearby_places").update(patch).eq("app_id", appId).eq("place_id", p.place_id);
     return;
   }
 
-  const v = await judgeSite(db, p.name, text);
+  const v = await judgeSite(db, appId, p.name, text);
   if (!v) {
-    await db.from("nearby_places").update(patch).eq("place_id", p.place_id);
+    await db.from("nearby_places").update(patch).eq("app_id", appId).eq("place_id", p.place_id);
     return;
   }
 
@@ -455,12 +496,12 @@ async function verifyPlace(db: SupabaseClient, p: PlaceRow) {
     patch.website_source = "site";
     patch.website_fetched_at = now;
   }
-  await db.from("nearby_places").update(patch).eq("place_id", p.place_id);
+  await db.from("nearby_places").update(patch).eq("app_id", appId).eq("place_id", p.place_id);
 }
 
 /** Verify what is unverified around a point. Live requests pass a deadline
  *  and get back what finished; the caller sends the rest to the background. */
-async function verifyAround(db: SupabaseClient, lat: number, lng: number, limit: number, deadline: number): Promise<{ done: number; remaining: number }> {
+async function verifyAround(db: SupabaseClient, appId: string, lat: number, lng: number, limit: number, deadline: number): Promise<{ done: number; remaining: number }> {
   const dLat = SERVE_RADIUS_KM / 111;
   const dLng = SERVE_RADIUS_KM / (111 * Math.max(Math.cos(lat * Math.PI / 180), 0.1));
   const retryBefore = new Date(Date.now() - REVERIFY_DAYS * 86400000).toISOString();
@@ -468,6 +509,7 @@ async function verifyAround(db: SupabaseClient, lat: number, lng: number, limit:
   const { data } = await db
     .from("nearby_places")
     .select("place_id,name,address,website,website_source,phone,lat,lng")
+    .eq("app_id", appId)
     .is("delisted_at", null)
     .or(`enriched_at.is.null,enriched_at.lt.${retryBefore}`)
     .gte("lat", lat - dLat).lte("lat", lat + dLat)
@@ -478,7 +520,7 @@ async function verifyAround(db: SupabaseClient, lat: number, lng: number, limit:
     .map((r) => ({ ...r, km: haversineKm(lat, lng, r.lat, r.lng) }))
     .sort((a, b) => a.km - b.km);
 
-  const done = await pool(rows, VERIFY_CONCURRENCY, deadline, (r) => verifyPlace(db, r));
+  const done = await pool(rows, VERIFY_CONCURRENCY, deadline, (r) => verifyPlace(db, appId, r));
   return { done, remaining: rows.length - done };
 }
 
@@ -510,7 +552,8 @@ async function townFor(lat: number, lng: number): Promise<string | null> {
  * when both Google allowances are gone. Every entry still goes through
  * verifyPlace before anyone sees it.
  */
-async function modelDiscover(db: SupabaseClient, key: string, lat: number, lng: number, disciplines: { key: string; query: string }[]): Promise<Map<string, Record<string, unknown>>> {
+async function modelDiscover(db: SupabaseClient, appId: string, key: string, lat: number, lng: number, disciplines: { key: string; query: string }[]): Promise<Map<string, Record<string, unknown>>> {
+  const c = conditionFor(appId);
   const town = await townFor(lat, lng);
   const found = new Map<string, Record<string, unknown>>();
   if (!town) return found;
@@ -519,7 +562,7 @@ async function modelDiscover(db: SupabaseClient, key: string, lat: number, lng: 
     let reply = "";
     try {
       reply = await askModel(db,
-`List up to ${PER_QUERY_RESULTS} real, currently operating practices matching "${d.query}" within 25 km of ${town}, that treat migraine or headache.
+`List up to ${PER_QUERY_RESULTS} real, currently operating practices matching "${d.query}" within 25 km of ${town}, that treat ${c.name}.
 Reply with JSON only: an array of {"name": "...", "address": "street, town, postcode", "website": "https://..." or null}.
 Only include practices you actually found on the web. No hospitals' general switchboards, no directories.`, true);
     } catch (e) {
@@ -552,6 +595,7 @@ Only include practices you actually found on the web. No hospitals' general swit
 
       const website = typeof item?.website === "string" && /^https?:\/\//i.test(item.website) ? item.website.trim() : null;
       found.set(id, {
+        app_id: appId,
         place_id: id,
         source: "model",
         discovered_in_cell: key,
@@ -582,10 +626,11 @@ Only include practices you actually found on the web. No hospitals' general swit
  *        is the feature not working, and no budget rule is worth that. Only
  *        the nightly refresh yields, and only to keep room for people.
  */
-async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: number, lng: number, forUser: boolean) {
+async function searchCell(db: SupabaseClient, apiKey: string, appId: string, key: string, lat: number, lng: number, forUser: boolean) {
   const { data: disciplines } = await db
     .from("nearby_disciplines")
     .select("key, query")
+    .eq("app_id", appId)
     .eq("enabled", true)
     .order("sort");
   if (!disciplines?.length) return;
@@ -632,6 +677,7 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
 
     for (const { place, disciplines: ds } of seen.values()) {
       const row: Record<string, unknown> = {
+        app_id: appId,
         place_id: place.id,
         source: "google",
         discovered_in_cell: key,
@@ -666,7 +712,7 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
     }
   } else {
     // Both Google allowances spent this month. Step 3.
-    const found = await modelDiscover(db, key, lat, lng, disciplines);
+    const found = await modelDiscover(db, appId, key, lat, lng, disciplines);
     for (const [id, row] of found) rowsById.set(id, row);
     succeeded = found.size > 0 ? disciplines.length : 0;
   }
@@ -688,6 +734,7 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
   const { data: existing } = await db
     .from("nearby_places")
     .select("place_id, miss_count, phone_source, website_source")
+    .eq("app_id", appId)
     .eq("discovered_in_cell", key);
   const previous = new Map((existing ?? []).map((r) => [r.place_id as string, r]));
 
@@ -699,7 +746,7 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
   }
 
   if (rowsById.size) {
-    const { error } = await db.from("nearby_places").upsert([...rowsById.values()], { onConflict: "place_id" });
+    const { error } = await db.from("nearby_places").upsert([...rowsById.values()], { onConflict: "app_id,place_id" });
     if (error) console.error(`[guidance-nearby] upsert ${key}: ${error.message}`);
   }
 
@@ -707,21 +754,22 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
   const missing = complete ? [...previous.keys()].filter((id) => !rowsById.has(id)) : [];
   for (const id of missing) {
     const misses = ((previous.get(id)?.miss_count as number) ?? 0) + 1;
-    await db.from("nearby_places").update({ miss_count: misses, delisted_at: misses >= 2 ? now : null }).eq("place_id", id);
+    await db.from("nearby_places").update({ miss_count: misses, delisted_at: misses >= 2 ? now : null }).eq("app_id", appId).eq("place_id", id);
   }
 
-  await db.from("nearby_areas").update({ last_searched_at: now }).eq("cell_key", key);
+  await db.from("nearby_areas").update({ last_searched_at: now }).eq("app_id", appId).eq("cell_key", key);
 }
 
 // ── Serving a patient ───────────────────────────────────────────────────────
 
-async function placesAround(db: SupabaseClient, lat: number, lng: number) {
+async function placesAround(db: SupabaseClient, appId: string, lat: number, lng: number) {
   const dLat = SERVE_RADIUS_KM / 111;
   const dLng = SERVE_RADIUS_KM / (111 * Math.max(Math.cos(lat * Math.PI / 180), 0.1));
 
   const { data } = await db
     .from("nearby_places")
     .select("place_id,source,name,disciplines,types,address,city,lat,lng,phone,website,description,migraine_note,business_status,image_url")
+    .eq("app_id", appId)
     .is("delisted_at", null)
     .eq("treats_migraine", true)
     .gte("lat", lat - dLat).lte("lat", lat + dLat)
@@ -771,38 +819,40 @@ async function handlePatient(db: SupabaseClient, apiKey: string, req: Request, b
     lng = loc.longitude as number;
   }
 
+  const appId = typeof body.app_id === "string" && body.app_id ? body.app_id : "migraine";
   const key = cellKey(lat, lng);
-  const { data: area } = await db.from("nearby_areas").select("*").eq("cell_key", key).maybeSingle();
+  const { data: area } = await db.from("nearby_areas").select("*").eq("app_id", appId).eq("cell_key", key).maybeSingle();
 
   await db.from("nearby_areas").upsert({
+    app_id: appId,
     cell_key: key,
     lat: cellCentre(key).lat,
     lng: cellCentre(key).lng,
     last_requested_at: new Date().toISOString(),
     request_count: (area?.request_count ?? 0) + 1,
-  }, { onConflict: "cell_key" });
+  }, { onConflict: "app_id,cell_key" });
 
   const age = daysSince(area?.last_searched_at ?? null);
 
   if (age >= HARD_EXPIRY_DAYS) {
     // Never searched, or everything on it has passed the retention limit.
     // Worth the wait: this is the first person ever to open Guidance here.
-    await searchCell(db, apiKey, key, lat, lng, true);
+    await searchCell(db, apiKey, appId, key, lat, lng, true);
   } else if (age >= STALE_DAYS) {
     // Serve now, refresh behind them.
-    EdgeRuntime.waitUntil(searchCell(db, apiKey, key, lat, lng, true));
+    EdgeRuntime.waitUntil(searchCell(db, apiKey, appId, key, lat, lng, true));
   }
 
   // Verify whatever is still unverified nearby, for as long as this request
   // can afford, then hand the rest to the background. The list paints with
   // what passed; the next open has the rest.
   const deadline = started + INLINE_VERIFY_BUDGET_MS;
-  const { remaining } = await verifyAround(db, lat, lng, 60, deadline);
+  const { remaining } = await verifyAround(db, appId, lat, lng, 60, deadline);
   if (remaining > 0) {
-    EdgeRuntime.waitUntil(verifyAround(db, lat, lng, 60, Date.now() + 120000));
+    EdgeRuntime.waitUntil(verifyAround(db, appId, lat, lng, 60, Date.now() + 120000));
   }
 
-  return json({ places: await placesAround(db, lat, lng), pending: remaining });
+  return json({ places: await placesAround(db, appId, lat, lng), pending: remaining });
 }
 
 // ── The nightly refresh ─────────────────────────────────────────────────────
@@ -839,7 +889,7 @@ async function handleRefresh(db: SupabaseClient, apiKey: string, limit: number) 
 
   const { data: due } = await db
     .from("nearby_areas")
-    .select("cell_key, lat, lng, last_searched_at")
+    .select("app_id, cell_key, lat, lng, last_searched_at")
     .gte("last_requested_at", cutoff)
     .or(`last_searched_at.is.null,last_searched_at.lt.${staleBefore}`)
     .order("last_searched_at", { ascending: true, nullsFirst: true })
@@ -848,11 +898,11 @@ async function handleRefresh(db: SupabaseClient, apiKey: string, limit: number) 
   let searched = 0;
   let verified = 0;
   for (const area of due ?? []) {
-    await searchCell(db, apiKey, area.cell_key, area.lat, area.lng, false);
+    await searchCell(db, apiKey, area.app_id, area.cell_key, area.lat, area.lng, false);
     searched++;
     // New candidates from tonight's search, and anything a live request left
     // for the background that never finished.
-    const { done } = await verifyAround(db, area.lat, area.lng, REFRESH_VERIFY_LIMIT, Date.now() + 90000);
+    const { done } = await verifyAround(db, area.app_id, area.lat, area.lng, REFRESH_VERIFY_LIMIT, Date.now() + 90000);
     verified += done;
   }
   return json({ refreshed: searched, verified });
