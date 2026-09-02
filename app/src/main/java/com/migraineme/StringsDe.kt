@@ -3947,4 +3947,13 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Mikrofon",
     "📍 Location" to "📍 Standort",
     "📱 Usage Access" to "📱 Nutzungszugriff",
+    "Near you" to "In deiner Nähe",
+    "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praxen, die wir in deiner Nähe gefunden haben. Sie gehören nicht zu MigraineMe und können dein Tagebuch nicht sehen.",
+    "Listings from Google. Powered by Google." to "Einträge von Google. Powered by Google.",
+    "Call" to "Anrufen",
+    "Website" to "Website",
+    "Directions" to "Route",
+    "%1\$s km" to "%1\$s km",
+    "headache clinic" to "Kopfschmerzzentrum",
+    "acupuncturist" to "Akupunkteur",
 )

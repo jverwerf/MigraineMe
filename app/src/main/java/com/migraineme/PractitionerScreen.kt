@@ -161,6 +161,7 @@ fun PractitionerPanel(
 
     var links by remember { mutableStateOf<List<SupabasePractitionerService.LinkRow>>(emptyList()) }
     var directory by remember { mutableStateOf<List<SupabasePractitionerService.PractitionerRow>>(emptyList()) }
+    var nearby by remember { mutableStateOf<List<SupabaseNearbyService.Place>>(emptyList()) }
     var lastViewed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -214,6 +215,11 @@ fun PractitionerPanel(
             }
         }.onSuccess { (l, v, d) -> links = l; lastViewed = v; directory = d }
             .onFailure { error = it.message }
+        // Practices near the patient are part of the same list, so they are
+        // fetched in the same pass and painted with it. Awaited after the
+        // directory on purpose: our own cards must never wait on a lookup that
+        // can be slow the first time anyone opens Guidance in a new town.
+        nearby = SupabaseNearbyService.near(token)
         loading = false
     }
 
@@ -269,6 +275,24 @@ fun PractitionerPanel(
                 }
             }
 
+            // Same list, continued. Ours are above whatever the distance,
+            // because most of them work online and a kilometre count means
+            // nothing for a video call.
+            if (nearby.isNotEmpty()) {
+                SectionLabel(t("Near you"))
+                Text(
+                    t("Practices we found near you. Not part of MigraineMe, and they cannot see your diary."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AppTheme.SubtleTextColor,
+                    modifier = Modifier.padding(bottom = 2.dp),
+                )
+                nearby.forEach { NearbyCard(it) }
+                Text(
+                    t("Listings from Google. Powered by Google."),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AppTheme.SubtleTextColor,
+                )
+            }
 
         Spacer(Modifier.height(28.dp))
     }

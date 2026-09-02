@@ -3947,4 +3947,13 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Micro",
     "📍 Location" to "📍 Position",
     "📱 Usage Access" to "📱 Accès à l'usage",
+    "Near you" to "Près de chez toi",
+    "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Des cabinets trouvés près de chez toi. Ils ne font pas partie de MigraineMe et ne voient pas ton journal.",
+    "Listings from Google. Powered by Google." to "Fiches issues de Google. Powered by Google.",
+    "Call" to "Appeler",
+    "Website" to "Site web",
+    "Directions" to "Itinéraire",
+    "%1\$s km" to "%1\$s km",
+    "headache clinic" to "centre céphalées",
+    "acupuncturist" to "acupuncteur",
 )

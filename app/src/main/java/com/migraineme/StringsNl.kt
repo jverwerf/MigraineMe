@@ -3947,4 +3947,13 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfoon",
     "📍 Location" to "📍 Locatie",
     "📱 Usage Access" to "📱 Gebruikstoegang",
+    "Near you" to "Bij jou in de buurt",
+    "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praktijken die we bij jou in de buurt vonden. Ze horen niet bij MigraineMe en kunnen je dagboek niet zien.",
+    "Listings from Google. Powered by Google." to "Vermeldingen van Google. Powered by Google.",
+    "Call" to "Bellen",
+    "Website" to "Website",
+    "Directions" to "Route",
+    "%1\$s km" to "%1\$s km",
+    "headache clinic" to "hoofdpijncentrum",
+    "acupuncturist" to "acupuncturist",
 )
