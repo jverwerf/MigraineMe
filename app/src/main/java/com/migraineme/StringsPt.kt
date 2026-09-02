@@ -3956,4 +3956,6 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "%1\$s km" to "%1\$s km",
     "headache clinic" to "clínica de cefaleias",
     "acupuncturist" to "acupuntor",
+    "migraine clinic" to "clínica de enxaqueca",
+    "migraine specialist" to "especialista em enxaqueca",
 )

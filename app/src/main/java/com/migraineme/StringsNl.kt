@@ -3956,4 +3956,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "%1\$s km" to "%1\$s km",
     "headache clinic" to "hoofdpijncentrum",
     "acupuncturist" to "acupuncturist",
+    "migraine clinic" to "migrainekliniek",
+    "migraine specialist" to "migrainespecialist",
 )

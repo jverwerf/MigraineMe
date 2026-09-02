@@ -3956,4 +3956,6 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "%1\$s km" to "%1\$s km",
     "headache clinic" to "clínica de cefaleas",
     "acupuncturist" to "acupuntor",
+    "migraine clinic" to "clínica de migraña",
+    "migraine specialist" to "especialista en migraña",
 )

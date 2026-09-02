@@ -3956,4 +3956,6 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "%1\$s km" to "%1\$s km",
     "headache clinic" to "Kopfschmerzzentrum",
     "acupuncturist" to "Akupunkteur",
+    "migraine clinic" to "Migräneklinik",
+    "migraine specialist" to "Migränespezialist",
 )

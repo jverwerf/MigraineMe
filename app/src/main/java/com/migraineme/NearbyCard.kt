@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -37,6 +38,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 private fun disciplineChipLabel(key: String): String {
     val word = when (key) {
+        "migraine" -> t("migraine clinic")
+        "specialist" -> t("migraine specialist")
         "neurologist" -> t("neurologist")
         "headache" -> t("headache clinic")
         "physio" -> t("physiotherapist")
@@ -49,6 +52,7 @@ private fun disciplineChipLabel(key: String): String {
     return word.replaceFirstChar { it.uppercase() }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NearbyCard(place: SupabaseNearbyService.Place) {
     val context = LocalContext.current
@@ -151,7 +155,7 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
 
                 val meta = listOfNotNull(place.address, place.phone)
                 if (meta.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         meta.forEach {
                             Text(it, fontSize = 11.5.sp, color = Color(0xFFA991C4), lineHeight = 15.sp)
                         }
