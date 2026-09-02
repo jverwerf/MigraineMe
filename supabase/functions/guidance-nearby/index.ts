@@ -210,11 +210,13 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
 
   const now = new Date().toISOString();
   const seen = new Map<string, { place: GooglePlace; disciplines: Set<string> }>();
+  let succeeded = 0;
 
   for (const d of disciplines) {
     let places: GooglePlace[] = [];
     try {
       places = await textSearch(apiKey, d.query, lat, lng, withContact);
+      succeeded++;
     } catch (e) {
       console.error(`[guidance-nearby] ${key} ${d.key}: ${e instanceof Error ? e.message : e}`);
       continue;
@@ -227,7 +229,16 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
     }
   }
 
-  await recordCalls(db, usage.month, withContact ? needed : 0, withContact ? 0 : needed);
+  // A key that has been revoked, a quota wall, an outage: every query fails and
+  // nothing comes back. Reconciling that would read as "every practice in this
+  // town has closed" and, two runs later, empty the area. Nothing found is only
+  // meaningful when the search actually ran.
+  if (succeeded === 0) {
+    console.error(`[guidance-nearby] ${key}: every query failed, leaving the area untouched`);
+    return;
+  }
+
+  await recordCalls(db, usage.month, withContact ? succeeded : 0, withContact ? 0 : succeeded);
 
   // What this cell held before, so we can tell a listing that has gone from one
   // that simply was not in this run's results.
