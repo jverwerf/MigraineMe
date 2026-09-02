@@ -22,6 +22,10 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 const CELL_DEGREES = 0.25;        // ~28km of latitude. Bigger cells, fewer searches.
 const SEARCH_RADIUS_M = 25000;
 const SERVE_RADIUS_KM = 30;
+// locationBias is a hint, not a fence: a "headache clinic" search around
+// Bristol happily returns London. Storing those means holding rows no serve
+// query can ever reach, so they are dropped on the way in.
+const KEEP_RADIUS_KM = 35;
 const RESULT_LIMIT = 30;
 const PER_QUERY_RESULTS = 10;
 
@@ -35,9 +39,11 @@ const PRO_FREE_CALLS = 5000;
 
 // Google's own category types, kept because they are what the card's chips
 // show. Anything matching none of these is a shop, not a practice.
+// Deliberately excludes point_of_interest and establishment: Google puts those
+// on everything, so allowing them turns the filter off.
 const HEALTH_TYPES = new Set([
-  "doctor", "physiotherapist", "chiropractor", "hospital", "medical_lab",
-  "dental_clinic", "wellness_center", "spa", "health", "point_of_interest",
+  "doctor", "physiotherapist", "chiropractor", "hospital", "medical_clinic",
+  "medical_lab", "dental_clinic", "wellness_center", "health",
 ]);
 
 const NAME_BLOCKLIST = [
@@ -161,8 +167,13 @@ function cityFromAddress(address: string | undefined): string | null {
   const parts = address.split(",").map((s) => s.trim()).filter(Boolean);
   if (parts.length < 2) return null;
   const candidate = parts[parts.length - 2];
-  // Strip a trailing postcode, which most locales append to the town.
-  return candidate.replace(/\s+[A-Z0-9]{2,4}\s*[A-Z0-9]{2,3}$/i, "").trim() || null;
+  // Strip a trailing postcode, which most locales append to the town. Two
+  // passes: a full code ("Bristol BS6 6UP"), then a bare outcode ("Bristol
+  // BS6"), which Google returns on its own often enough to matter.
+  return candidate
+    .replace(/\s+[A-Z0-9]{2,4}\s+[A-Z0-9]{2,3}$/i, "")
+    .replace(/\s+(?=[A-Z0-9]*\d)[A-Z0-9]{2,5}$/i, "")
+    .trim() || null;
 }
 
 // ── Budget ──────────────────────────────────────────────────────────────────
@@ -223,6 +234,8 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
     }
     for (const p of places) {
       if (!keepPlace(p)) continue;
+      const km = haversineKm(lat, lng, p.location!.latitude, p.location!.longitude);
+      if (km > KEEP_RADIUS_KM) continue;
       const entry = seen.get(p.id) ?? { place: p, disciplines: new Set<string>() };
       entry.disciplines.add(d.key);
       seen.set(p.id, entry);
@@ -237,6 +250,12 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
     console.error(`[guidance-nearby] ${key}: every query failed, leaving the area untouched`);
     return;
   }
+
+  // The same argument at discipline granularity. If the acupuncture query
+  // failed, every acupuncturist is missing from `seen` through no fault of
+  // their own, and two such runs would delist the lot. Upsert what did come
+  // back, but only reconcile when the whole sweep ran.
+  const complete = succeeded === disciplines.length;
 
   await recordCalls(db, usage.month, withContact ? succeeded : 0, withContact ? 0 : succeeded);
 
@@ -283,7 +302,7 @@ async function searchCell(db: SupabaseClient, apiKey: string, key: string, lat: 
   }
 
   // A single missing result is Google flapping. Two in a row is a closure.
-  const missing = [...previous.keys()].filter((id) => !seen.has(id));
+  const missing = complete ? [...previous.keys()].filter((id) => !seen.has(id)) : [];
   for (const id of missing) {
     const misses = (previous.get(id) ?? 0) + 1;
     await db.from("nearby_places").update({
@@ -373,7 +392,38 @@ async function handlePatient(db: SupabaseClient, apiKey: string, req: Request, b
 
 // ── The daily refresh ───────────────────────────────────────────────────────
 
+/**
+ * Drop Google-sourced contact details that have reached their retention limit.
+ *
+ * Google lets us keep a place_id forever and nothing else past 30 days. A row
+ * whose area stopped being refreshed, because nobody opens Guidance there any
+ * more, would otherwise sit on a phone number we are no longer allowed to
+ * hold. The listing itself stays; only the bought fields go.
+ */
+async function expireGoogleFields(db: SupabaseClient) {
+  const cutoff = new Date(Date.now() - HARD_EXPIRY_DAYS * 86400000).toISOString();
+
+  const { error: phoneError } = await db
+    .from("nearby_places")
+    .update({ phone: null, phone_source: null, phone_fetched_at: null })
+    .eq("phone_source", "google")
+    .lt("phone_fetched_at", cutoff);
+  if (phoneError) console.error(`[guidance-nearby] phone expiry: ${phoneError.message}`);
+
+  const { error: siteError } = await db
+    .from("nearby_places")
+    .update({ website: null, website_source: null, website_fetched_at: null })
+    .eq("website_source", "google")
+    .lt("website_fetched_at", cutoff);
+  if (siteError) console.error(`[guidance-nearby] website expiry: ${siteError.message}`);
+}
+
 async function handleRefresh(db: SupabaseClient, apiKey: string, limit: number) {
+  // First, before anything else can fail: the retention limit is a licence
+  // term, not a nicety, so it is honoured even on a day when every search
+  // errors.
+  await expireGoogleFields(db);
+
   const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
   const staleBefore = new Date(Date.now() - STALE_DAYS * 86400000).toISOString();
 
