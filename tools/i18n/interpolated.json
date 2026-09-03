@@ -792,15 +792,15 @@
     "line": "                        t(\"You'll be taken to Settings where you can grant this permission.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:358",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:365",
     "line": "            t(\"MigraineMe is not a medical device and does not recommend treatments. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:359",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:366",
     "line": "                t(\"Prescription devices need a conversation with your doctor. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:360",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:367",
     "line": "                t(\"We earn a commission on links to devices.\"),"
   },
   {

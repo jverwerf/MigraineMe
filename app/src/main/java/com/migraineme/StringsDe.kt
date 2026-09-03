@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4061 entries.
+ * 4062 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -278,6 +278,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." to "Ein schlichtes Vorher-Nachher deiner Einträge: für jeden Auslöser, jedes Prodrom, jedes Medikament und jede Linderung, wie oft es bei den Attacken der letzten 30 Tage vorkam, verglichen mit den 30 Tagen davor.\n\nDas ist eine Zählung, keine Zusammenhangsanalyse. Gezählt wird nur, was mit einer Attacke verknüpft ist, und verglichen werden nur die zwei Zeitfenster — nichts wird gefiltert oder gewichtet. Ein Eintrag erscheint hier, sobald sich seine Zahl zwischen beiden Zeiträumen bewegt hat.\n\nDie Farben geben den Blick auf einen Schlag: Steigt etwas Unerwünschtes (Auslöser, Prodrom, Medikament), wird es rot, geht es zurück, grün. Bei Linderung ist es umgekehrt: mehr davon wird grün.\n\nSteigt deine Zahl an Akutmedikamenten schnell, weist ein kurzer Hinweis darauf hin. Kopfschmerz durch Medikamentenübergebrauch gibt es wirklich, und genau dafür ist diese Karte da: den Trend früh zu sehen.\n\nDie Vorschau zeigt die vier größten Bewegungen. Tippe hinein für die ganze Liste, passend zur Seite Änderungen im PDF-Bericht.",
     "A taller, warmer bar means more of that compound in this food." to "Ein höherer, wärmerer Balken heißt mehr davon in diesem Essen.",
     "A to Z" to "A bis Z",
+    "AI Calibration" to "KI-Kalibrierung",
     "AI Calibration — How the App Learns You" to "KI-Kalibrierung — so lernt dich die App kennen",
     "AI Companions" to "KI-Begleiter",
     "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed." to "KI-Begleiter sind Kuratoren, die passende Artikel für dein Migräneprofil markieren. Abonniere die passenden, dann landet Nützliches direkt in deinem Feed.",

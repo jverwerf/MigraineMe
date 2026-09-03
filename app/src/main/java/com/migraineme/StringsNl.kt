@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4061 entries.
+ * 4062 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -278,6 +278,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." to "Een recht-voor-zijn-raap voor-en-na van wat je noteert: van elke trigger, elk prodroom, elk medicijn en elke verlichting, hoe vaak het voorkwam bij de aanvallen van de laatste 30 dagen tegenover de 30 dagen daarvoor.\n\nDit is een telling, geen verbandanalyse. Alleen wat aan een aanval hangt telt mee, en alleen de twee periodes worden vergeleken — er wordt niets gefilterd of gewogen. Een item komt hier zodra zijn aantal tussen beide periodes bewoog.\n\nDe kleuren geven het in één oogopslag: iets ongewenst (trigger, prodroom, medicijn) dat stijgt wordt rood, dat daalt wordt groen. Bij verlichting is het andersom: meer gebruiken wordt groen.\n\nStijgt je aantal acute medicijnen snel, dan wijst een korte notitie erop. Hoofdpijn door overgebruik van medicatie bestaat echt, en de trend vroeg zien is precies waar deze kaart voor is.\n\nDe voorvertoning toont de vier grootste bewegingen. Tik erop voor de hele lijst, gelijk aan de pagina Wat veranderde in het PDF-rapport.",
     "A taller, warmer bar means more of that compound in this food." to "Een hogere, warmere balk betekent meer van die stof.",
     "A to Z" to "A-Z",
+    "AI Calibration" to "AI-kalibratie",
     "AI Calibration — How the App Learns You" to "AI-ijking — hoe de app je leert kennen",
     "AI Companions" to "AI-gidsen",
     "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed." to "AI-gidsen markeren artikelen die bij jouw migraineprofiel passen. Volg de gidsen die bij je passen en nuttige stukken komen vanzelf in je feed.",

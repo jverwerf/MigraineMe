@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4061 entries.
+ * 4062 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -278,6 +278,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." to "Un avant-après tout simple de ce que tu saisis : pour chaque facteur, prodrome, médicament et soulagement, combien de fois il est apparu sur les crises des 30 derniers jours comparé aux 30 jours d'avant.\n\nC'est un comptage, pas une analyse de liens. Seul ce qui est lié à une crise est compté, et seules les deux fenêtres de dates sont comparées — rien n'est filtré ni pondéré. Un élément apparaît ici dès que son compte a bougé entre les deux périodes.\n\nLes couleurs donnent la lecture d'un coup d'œil : un élément non souhaité (facteur, prodrome, médicament) qui monte passe en rouge, qui baisse passe en vert. Pour les soulagements c'est l'inverse : en utiliser plus passe en vert.\n\nSi ton compte de traitements de crise monte vite, une petite note le signale. La céphalée par abus de médicaments existe vraiment, et voir la tendance tôt est exactement le rôle de cette carte.\n\nL'aperçu montre les quatre plus gros mouvements. Entre pour la liste complète, comme la page Ce qui a changé du rapport PDF.",
     "A taller, warmer bar means more of that compound in this food." to "Une barre plus haute et chaude signifie plus de ce composé.",
     "A to Z" to "A-Z",
+    "AI Calibration" to "Calibration IA",
     "AI Calibration — How the App Learns You" to "Calibrage IA — comment l'app t'apprend",
     "AI Companions" to "Guides IA",
     "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed." to "Les guides IA repèrent les articles qui collent à ton profil. Abonne-toi à ceux qui te correspondent et le contenu utile arrive dans ton fil.",

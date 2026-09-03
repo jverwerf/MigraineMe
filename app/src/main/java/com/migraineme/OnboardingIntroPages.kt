@@ -131,15 +131,15 @@ fun ObHowItWorksPage(onDone: () -> Unit, onSkip: () -> Unit) {
                             contentScale = ContentScale.FillWidth,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(top = h * 0.479f)
+                                .padding(top = h * 0.50f)
                                 .width(w * 0.815f)
                                 .offset(x = w * 0.083f)
                         )
                         val tiles = listOf(
-                            Triple(R.drawable.brainy_trig_stress, 0.111f, 0.358f),
-                            Triple(R.drawable.brainy_trig_storm, 0.306f, 0.400f),
-                            Triple(R.drawable.brainy_trig_caffeine, 0.102f, 0.4625f),
-                            Triple(R.drawable.brainy_act_screen_time, 0.324f, 0.5125f),
+                            Triple(R.drawable.brainy_trig_stress, 0.111f, 0.395f),
+                            Triple(R.drawable.brainy_trig_storm, 0.306f, 0.437f),
+                            Triple(R.drawable.brainy_trig_caffeine, 0.102f, 0.500f),
+                            Triple(R.drawable.brainy_act_screen_time, 0.324f, 0.550f),
                         )
                         tiles.forEach { (icon, fx, fy) ->
                             Box(

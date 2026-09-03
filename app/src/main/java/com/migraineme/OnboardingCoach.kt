@@ -736,23 +736,23 @@ fun CoachOverlay(
                                 Spacer(Modifier.height(24.dp))
                                 Text(t("THE TOUR"), style = ObStyle.label(14.sp).copy(letterSpacing = 1.5.sp))
                                 Spacer(Modifier.height(14.dp))
-                                ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 40.sp)
-                                Spacer(Modifier.height(6.dp))
-                                ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 22.sp)
-                                Spacer(Modifier.height(20.dp))
-                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 36.sp)
+                                Spacer(Modifier.height(4.dp))
+                                ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 21.sp)
+                                Spacer(Modifier.height(14.dp))
+                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     tourClosingFeatures.forEach { f ->
                                         Row(
                                             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObStyle.CardFill)
-                                                .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
+                                                .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Box(Modifier.size(46.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
-                                                Image(painterResource(f.icon), null, modifier = Modifier.size(31.dp))
+                                            Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                                Image(painterResource(f.icon), null, modifier = Modifier.size(27.dp))
                                             }
                                             Column {
-                                                Text(t(f.title), style = ObStyle.body(15.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
-                                                Text(t(f.desc), style = ObStyle.body(12.sp).copy(color = ObStyle.Lavender), maxLines = 1)
+                                                Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
+                                                Text(t(f.desc), style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender), maxLines = 1)
                                             }
                                         }
                                     }
@@ -770,7 +770,9 @@ fun CoachOverlay(
                                 Image(
                                     painter = painterResource(popResFor(res)), contentDescription = null,
                                     contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                                    modifier = Modifier.fillMaxWidth(if (two) 0.8f else 1f).weight(1f, fill = false)
+                                    // Two-card stops keep their pops at natural size (equal weights starved
+                                    // the second one); single stops shrink to fit the band.
+                                    modifier = if (two) Modifier.fillMaxWidth(0.74f) else Modifier.fillMaxWidth().weight(1f, fill = false)
                                 )
                             }
                             val tourCard: @Composable (headline: String, sub: String, body: String, brainy: Int?, findIt: String, counter: Boolean, buttons: Boolean) -> Unit =
@@ -783,10 +785,10 @@ fun CoachOverlay(
                                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                             headerRow(brainy, counter)
                                             Spacer(Modifier.height(2.dp))
-                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 26.sp, align = TextAlign.Start)
-                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 19.sp, align = TextAlign.Start)
+                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = if (two) 22.sp else 26.sp, align = TextAlign.Start)
+                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = if (two) 16.sp else 19.sp, align = TextAlign.Start)
                                             Spacer(Modifier.height(4.dp))
-                                            Text(t(body), style = ObStyle.body(13.5.sp))
+                                            Text(t(body), style = ObStyle.body(if (two) 12.5.sp else 13.5.sp))
                                             if (findIt.isNotEmpty()) {
                                                 Spacer(Modifier.height(6.dp))
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -803,7 +805,7 @@ fun CoachOverlay(
                                     }
                                 }
                             Column(
-                                Modifier.fillMaxHeight(),
+                                if (two) Modifier.fillMaxHeight().verticalScroll(rememberScrollState()) else Modifier.fillMaxHeight(),
                                 verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 tourCard(step.headline, step.sub, step.body, step.brainy, if (two) "" else step.findIt, true, !two)

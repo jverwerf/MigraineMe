@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4061 entries.
+ * 4062 entries.
  */
 internal val PT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos os dados",
@@ -278,6 +278,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." to "Um antes e depois direto do que vais registando: para cada fator, pródromo, medicamento e alívio, quantas vezes apareceu nas crises dos últimos 30 dias face aos 30 dias anteriores.\n\nIsto é uma contagem, não uma análise de ligações. Só conta o que está ligado a uma crise e só compara as duas janelas de datas: nada é filtrado nem pesado. Um item aparece aqui assim que o seu número se mexe entre os dois períodos.\n\nAs cores dão a leitura num relance: algo indesejado (fator, pródromo, medicamento) a subir fica a vermelho, a descer fica a verde. Com os alívios é ao contrário: usá-los mais fica a verde.\n\nSe o teu número de medicação aguda sobe depressa, uma nota curta avisa. A dor de cabeça por uso excessivo de medicamentos existe mesmo, e apanhar a tendência cedo é precisamente para isso que este cartão serve.\n\nA pré-visualização mostra os quatro maiores movimentos. Entra para a lista completa, igual à página O que mudou do relatório PDF.",
     "A taller, warmer bar means more of that compound in this food." to "Uma barra mais alta e quente indica mais dessa substância.",
     "A to Z" to "A-Z",
+    "AI Calibration" to "Calibração IA",
     "AI Calibration — How the App Learns You" to "Calibração com IA — como aprende de ti",
     "AI Companions" to "Guias com IA",
     "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed." to "Os guias com IA marcam artigos que combinam com o teu perfil. Segue os que te servem e o conteúdo útil chega ao teu mural.",

@@ -3780,7 +3780,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1349",
-      "app/src/main/java/com/migraineme/ShopScreen.kt:374"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:381"
     ],
     "max_len": 28,
     "count": 2
@@ -6112,7 +6112,7 @@
     "en": "%s product photo",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:208"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:215"
     ],
     "max_len": 26,
     "count": 1
@@ -6934,6 +6934,15 @@
       "app/src/main/java/com/migraineme/RiskIcons.kt:228"
     ],
     "max_len": 89,
+    "count": 1
+  },
+  {
+    "en": "AI Calibration",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -9469,7 +9478,7 @@
     "en": "Buy %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:305"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:312"
     ],
     "max_len": 14,
     "count": 1
@@ -13222,7 +13231,7 @@
     "en": "Find it:",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:793"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:795"
     ],
     "max_len": 14,
     "count": 1
@@ -17479,7 +17488,7 @@
     "en": "MigraineMe is not a medical device and does not recommend treatments. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:358"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:365"
     ],
     "max_len": 101,
     "count": 1
@@ -19216,7 +19225,7 @@
     "en": "Nothing to show here yet. Check back once you have a connection.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:110"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:114"
     ],
     "max_len": 92,
     "count": 1
@@ -20611,7 +20620,7 @@
     "en": "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:80"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:84"
     ],
     "max_len": 245,
     "count": 1
@@ -20728,7 +20737,7 @@
     "en": "Prescription devices need a conversation with your doctor. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:359"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:366"
     ],
     "max_len": 85,
     "count": 1
@@ -20737,7 +20746,7 @@
     "en": "Prescription only",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:196"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:203"
     ],
     "max_len": 20,
     "count": 1
@@ -22339,7 +22348,7 @@
     "en": "Scroll for more",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:850"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:852"
     ],
     "max_len": 25,
     "count": 1
@@ -23077,7 +23086,7 @@
     "en": "Shop",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:74"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:78"
     ],
     "max_len": 14,
     "count": 1
@@ -23761,7 +23770,7 @@
     "en": "Some links here earn us a commission.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:90"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:94"
     ],
     "max_len": 53,
     "count": 1
@@ -27586,7 +27595,7 @@
     "en": "WHAT PEOPLE REPORT",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:240"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:247"
     ],
     "max_len": 21,
     "count": 1
@@ -27874,7 +27883,7 @@
     "en": "We earn a commission on links to devices.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ShopScreen.kt:360"
+      "app/src/main/java/com/migraineme/ShopScreen.kt:367"
     ],
     "max_len": 59,
     "count": 1

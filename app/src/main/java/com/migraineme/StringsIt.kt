@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4061 entries.
+ * 4062 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -278,6 +278,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." to "Un prima e dopo diretto di ciò che inserisci: per ogni fattore, prodromo, farmaco e sollievo, quante volte è comparso negli attacchi degli ultimi 30 giorni rispetto ai 30 giorni prima.\n\nQuesto è un conteggio, non un'analisi di legami. Conta solo ciò che è collegato a un attacco e confronta solo le due finestre di date: niente viene filtrato o pesato. Una voce compare qui appena il suo numero si è mosso tra i due periodi.\n\nI colori danno la lettura a colpo d'occhio: una voce indesiderata (fattore, prodromo, farmaco) che sale diventa rossa, che cala diventa verde. Con i sollievi è il contrario: usarli di più diventa verde.\n\nSe il numero dei farmaci acuti sale in fretta, una nota breve lo segnala. Il mal di testa da abuso di farmaci esiste davvero, e cogliere presto la tendenza è proprio a cosa serve questa scheda.\n\nL'anteprima mostra i quattro movimenti più grandi. Entra per l'elenco completo, uguale alla pagina Cosa è cambiato del rapporto PDF.",
     "A taller, warmer bar means more of that compound in this food." to "Una barra più alta e calda indica più di quella sostanza.",
     "A to Z" to "A-Z",
+    "AI Calibration" to "Calibrazione IA",
     "AI Calibration — How the App Learns You" to "Taratura IA: come l'app impara da te",
     "AI Companions" to "Guide IA",
     "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed." to "Le guide IA segnalano articoli adatti al tuo profilo. Segui quelle che ti somigliano e i contenuti utili arrivano nel tuo feed.",
