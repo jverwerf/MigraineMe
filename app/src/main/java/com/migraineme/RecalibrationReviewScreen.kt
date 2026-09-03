@@ -220,7 +220,7 @@ fun RecalibrationReviewScreen(
 
                 BaseCard {
                     Text(
-                        sectionTitle,
+                        t(sectionTitle),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
@@ -347,9 +347,9 @@ private fun ProposalRow(
                     Spacer(Modifier.width(8.dp))
                     if (proposal.type == "gauge_threshold") {
                         Text(t("Was "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(proposal.fromValue, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(prettyValue(proposal.fromValue), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(proposal.toValue, color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Text(prettyValue(proposal.toValue), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     } else {
                         SeverityBadge(proposal.fromValue)
                         Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -734,4 +734,17 @@ private fun WarningRow(proposal: RecalibrationViewModel.Proposal) {
             }
         }
     }
+}
+
+
+/** Proposal values are stored as enum/level codes; show them in the user's language. */
+@Composable
+private fun prettyValue(v: String): String = when (v.uppercase()) {
+    "FAVORITE" -> t("Favourite")
+    "NOT_FAVORITE" -> t("Not a favourite")
+    "HIGH" -> t("HIGH")
+    "MILD" -> t("MILD")
+    "LOW" -> t("LOW")
+    "NONE" -> t("NONE")
+    else -> v
 }

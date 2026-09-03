@@ -260,7 +260,7 @@ fun TriggersScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    t.type,
+                                    tSync(t.type),
                                     color = AppTheme.BodyTextColor,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                 )

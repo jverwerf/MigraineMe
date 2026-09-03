@@ -39,7 +39,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
             Spacer(Modifier.weight(1f))
 
             Image(
-                painter = painterResource(id = R.drawable.brainy_premium),
+                painter = painterResource(id = R.drawable.brainy_recs),
                 contentDescription = null,
                 modifier = Modifier.size(150.dp)
             )
@@ -70,7 +70,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
 
             // Same language as the paywall: blob perks in a card that carries
             // the page watermark.
-            BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
+            BrainyWatermarkCard(resId = R.drawable.brainy_shield, flipWatermark = true) {
                 GiftPerk(R.drawable.brainy_risk_small, t("7-day risk outlook"))
                 GiftPerk(R.drawable.brainy_detective_small, t("AI daily insights"))
                 GiftPerk(R.drawable.brainy_ask_small, t("Ask MigraineMe chat"))

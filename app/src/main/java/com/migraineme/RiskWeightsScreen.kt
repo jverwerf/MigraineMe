@@ -331,7 +331,7 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
         modifier = Modifier.border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(severity, color = color, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+            Text(t(severity), color = color, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(12.dp))
 
             // Bar chart

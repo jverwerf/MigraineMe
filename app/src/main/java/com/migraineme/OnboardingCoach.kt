@@ -50,6 +50,8 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -303,6 +305,17 @@ object TourManager {
 
     fun isActive(): Boolean = _state.value.active
     fun currentPhase(): CoachPhase = _state.value.phase
+}
+
+/** The pop-out still for the current display language: `<base>_<lang>` when bundled, else the base. */
+@Composable
+private fun popResFor(base: Int): Int {
+    val ctx = LocalContext.current
+    val lang by LangPrefs.lang.collectAsState()
+    if (lang == Lang.EN) return base
+    val name = ctx.resources.getResourceEntryName(base) + "_" + lang.code
+    val id = ctx.resources.getIdentifier(name, "drawable", ctx.packageName)
+    return if (id != 0) id else base
 }
 
 @Composable
@@ -755,7 +768,7 @@ fun CoachOverlay(
                             val two = step.second != null
                             val popImage: @Composable ColumnScope.(Int) -> Unit = { res ->
                                 Image(
-                                    painter = painterResource(res), contentDescription = null,
+                                    painter = painterResource(popResFor(res)), contentDescription = null,
                                     contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                                     modifier = Modifier.fillMaxWidth(if (two) 0.8f else 1f).weight(1f, fill = false)
                                 )

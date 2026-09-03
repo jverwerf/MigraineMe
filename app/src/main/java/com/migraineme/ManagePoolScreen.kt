@@ -300,7 +300,7 @@ fun ManagePoolScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "${category.replaceFirstChar { c -> c.uppercase() }} ($itemCount)",
+                                "${t(category.replaceFirstChar { c -> c.uppercase() })} ($itemCount)",
                                 color = effectiveConfig.iconColor.copy(alpha = 0.8f),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
@@ -361,7 +361,7 @@ fun ManagePoolScreen(
 
                                 // Group name + member count
                                 Column(Modifier.weight(1f)) {
-                                    Text(groupName, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text(t(groupName), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                                     Text(t("%s metrics", members.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                 }
 
@@ -465,7 +465,7 @@ fun ManagePoolScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "${category.replaceFirstChar { c -> c.uppercase() }} (${categoryItems.size})",
+                                    "${t(category.replaceFirstChar { c -> c.uppercase() })} (${categoryItems.size})",
                                     color = effectiveConfig.iconColor.copy(alpha = 0.8f),
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                                 )

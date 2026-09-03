@@ -4041,5 +4041,20 @@
   "you are in control": "c'est toi qui décides",
   "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Chaque mesure est un interrupteur. Certaines demandent d'abord une permission. Ce que ta montre connectée fournit est déjà activé.",
   "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first.": "Du matériel pour les aspects de la migraine sur lesquels on peut agir : lumière, bruit, sommeil et la crise elle-même. Chaque objet a d'abord traversé nos propres mauvais jours.",
-  "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.": "Des praticiens avec qui partager ton journal, des articles choisis pour toi, et un forum de gens comme toi."
+  "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.": "Des praticiens avec qui partager ton journal, des articles choisis pour toi, et un forum de gens comme toi.",
+  "Irregular sleep": "Sommeil irrégulier",
+  "Poor sleep": "Mauvais sommeil",
+  "Oversleep": "Trop de sommeil",
+  "Gauge thresholds": "Seuils de la jauge",
+  "Decay curves": "Courbes",
+  "Trigger adjustments": "Ajustements des facteurs",
+  "Prodrome adjustments": "Ajustements des prodromes",
+  "Medicine favorites": "Médicaments favoris",
+  "Relief favorites": "Soulagements favoris",
+  "Symptom favorites": "Symptômes favoris",
+  "Activity favorites": "Activités favorites",
+  "Missed activity favorites": "Activités manquées",
+  "Menstrual cycle decay": "Courbe du cycle",
+  "Favourite": "Favori",
+  "Not a favourite": "Pas un favori"
 }

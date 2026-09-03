@@ -4789,7 +4789,7 @@
     "en": "Start",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:679",
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:697",
       "app/src/main/java/com/migraineme/ReviewLogScreen.kt:85"
     ],
     "max_len": 14,
@@ -5734,7 +5734,7 @@
     "en": "%1$s/%2$s — Tap to expand",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:606"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:624"
     ],
     "max_len": 36,
     "count": 1
@@ -7276,6 +7276,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:305"
     ],
     "max_len": 22,
+    "count": 1
+  },
+  {
+    "en": "Activity favorites",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -9250,6 +9259,15 @@
     "count": 1
   },
   {
+    "en": "Body",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Body Fat",
     "class": "hard",
     "sites": [
@@ -11194,6 +11212,15 @@
     "count": 1
   },
   {
+    "en": "Decay curves",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Decay weights saved",
     "class": "hard",
     "sites": [
@@ -12862,7 +12889,7 @@
     "en": "Exit tour",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:699"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:717"
     ],
     "max_len": 19,
     "count": 1
@@ -13084,6 +13111,15 @@
     "count": 1
   },
   {
+    "en": "Favourite",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:743"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Fermented foods",
     "class": "hard",
     "sites": [
@@ -13168,7 +13204,7 @@
     "en": "Find it:",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:774"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:793"
     ],
     "max_len": 14,
     "count": 1
@@ -13822,6 +13858,15 @@
     "count": 1
   },
   {
+    "en": "Gauge thresholds",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Gender",
     "class": "hard",
     "sites": [
@@ -14080,6 +14125,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "HIGH",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:745"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -15352,6 +15406,15 @@
     "count": 1
   },
   {
+    "en": "Irregular sleep",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Irritability",
     "class": "hard",
     "sites": [
@@ -15574,6 +15637,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:384"
     ],
     "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "LOW",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:747"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -16711,6 +16783,15 @@
     "count": 1
   },
   {
+    "en": "MILD",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:746"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Magnesium",
     "class": "hard",
     "sites": [
@@ -16963,6 +17044,15 @@
     "count": 1
   },
   {
+    "en": "Medicine favorites",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Medicine logged!",
     "class": "hard",
     "sites": [
@@ -17053,12 +17143,30 @@
     "count": 1
   },
   {
+    "en": "Menstrual Cycle",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Menstrual cycle",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:88"
     ],
     "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "Menstrual cycle decay",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 42,
     "count": 1
   },
   {
@@ -17479,7 +17587,7 @@
     "en": "Minimize",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:693"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:711"
     ],
     "max_len": 18,
     "count": 1
@@ -17527,6 +17635,15 @@
       "tagCategoryLabel:community-browse-heading"
     ],
     "max_len": 24,
+    "count": 1
+  },
+  {
+    "en": "Missed activity favorites",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 50,
     "count": 1
   },
   {
@@ -17716,6 +17833,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "NONE",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:748"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -18862,6 +18988,15 @@
     "count": 1
   },
   {
+    "en": "Not a favourite",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:744"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
     "en": "Not authenticated",
     "class": "hard",
     "sites": [
@@ -19480,6 +19615,15 @@
       "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Oversleep",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -20356,6 +20500,15 @@
     "count": 1
   },
   {
+    "en": "Poor sleep",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Population default decay curve.",
     "class": "soft",
     "sites": [
@@ -20686,6 +20839,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Prodrome adjustments",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -21235,6 +21397,15 @@
       "app/src/main/java/com/migraineme/OnboardingPages.kt:1043"
     ],
     "max_len": 46,
+    "count": 1
+  },
+  {
+    "en": "Relief favorites",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -22141,7 +22312,7 @@
     "en": "Scroll for more",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:831"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:850"
     ],
     "max_len": 25,
     "count": 1
@@ -22654,7 +22825,7 @@
     "en": "Set up profile",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:743"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:762"
     ],
     "max_len": 17,
     "count": 1
@@ -24334,6 +24505,15 @@
     "count": 1
   },
   {
+    "en": "Symptom favorites",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Symptom intensity",
     "class": "hard",
     "sites": [
@@ -24409,7 +24589,7 @@
     "en": "THE TOUR",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:719"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:737"
     ],
     "max_len": 14,
     "count": 1
@@ -26131,6 +26311,15 @@
       "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
     ],
     "max_len": 27,
+    "count": 1
+  },
+  {
+    "en": "Trigger adjustments",
+    "class": "soft",
+    "sites": [
+      "ManagePoolScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
