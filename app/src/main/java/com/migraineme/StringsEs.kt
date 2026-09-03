@@ -2415,7 +2415,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Potassium" to "Potasio",
     "Potassium high" to "Potasio alto",
     "Potassium low" to "Potasio bajo",
-    "Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first." to "Material práctico para las partes de la migraña en las que sí puedes actuar: luz, ruido y sueño. Todo ha pasado antes por nuestros propios días malos.",
+    "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Material práctico para las partes de la migraña en las que sí puedes actuar: luz, ruido, sueño y el propio ataque. Todo ha pasado antes por nuestros propios días malos.",
     "Practitioner" to "Profesional",
     "Practitioners" to "Profesionales",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Los profesionales aquí listados son independientes. MigraineMe no los emplea ni participa en lo que acuerdes con ellos.",

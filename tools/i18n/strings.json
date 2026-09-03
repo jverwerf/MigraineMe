@@ -20446,12 +20446,12 @@
     "count": 1
   },
   {
-    "en": "Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first.",
+    "en": "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first.",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ShopScreen.kt:80"
     ],
-    "max_len": 217,
+    "max_len": 245,
     "count": 1
   },
   {

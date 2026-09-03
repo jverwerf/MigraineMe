@@ -2415,7 +2415,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoog",
     "Potassium low" to "Kalium laag",
-    "Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first." to "Praktische spullen voor de kanten van migraine waar je iets aan kunt doen: licht, geluid en slaap. Alles is eerst door onze eigen slechte dagen gegaan.",
+    "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Praktische spullen voor de kanten van migraine waar je iets aan kunt doen: licht, geluid, slaap en de aanval zelf. Alles is eerst door onze eigen slechte dagen gegaan.",
     "Practitioner" to "Behandelaar",
     "Practitioners" to "Behandelaars",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "De behandelaars hier zijn zelfstandig. MigraineMe heeft hen niet in dienst en staat buiten wat je met hen afspreekt.",

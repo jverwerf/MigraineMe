@@ -77,7 +77,7 @@ fun ShopScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                t("Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first."),
+                t("Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center

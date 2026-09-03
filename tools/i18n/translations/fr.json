@@ -3840,7 +3840,6 @@
   "this week (vs %1$s)": "semaine (vs %1$s)",
   "Buy %s": "Acheter %s",
   "Nothing to show here yet. Check back once you have a connection.": "Rien à afficher pour l'instant. Reviens dès que tu as une connexion.",
-  "Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first.": "Du matériel pour les aspects de la migraine sur lesquels on peut agir : lumière, bruit et sommeil. Chaque objet a d'abord traversé nos propres mauvais jours.",
   "Log Missed": "Manqué",
   "Most missed": "Le plus manqué",
   "Most without an attack": "Le plus sans crise",
@@ -4041,5 +4040,6 @@
   "Choose what to *collect.*": "Choisis quoi *collecter.*",
   "you are in control": "c'est toi qui décides",
   "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Chaque mesure est un interrupteur. Certaines demandent d'abord une permission. Ce que ta montre connectée fournit est déjà activé.",
-  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Trouve un cabinet près de toi, partage ton journal avec le praticien de ton choix, lis des articles choisis pour toi, rejoins le forum."
+  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Trouve un cabinet près de toi, partage ton journal avec le praticien de ton choix, lis des articles choisis pour toi, rejoins le forum.",
+  "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first.": "Du matériel pour les aspects de la migraine sur lesquels on peut agir : lumière, bruit, sommeil et la crise elle-même. Chaque objet a d'abord traversé nos propres mauvais jours."
 }
