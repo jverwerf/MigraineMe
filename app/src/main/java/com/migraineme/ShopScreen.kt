@@ -43,7 +43,11 @@ fun ShopScreen(onBack: () -> Unit) {
     var groups by remember { mutableStateOf<List<ShopCatalogue.Group>?>(null) }
 
     LaunchedEffect(LangPrefs.get()) {
-        groups = ShopCatalogue.load(context)
+        val loaded = ShopCatalogue.load(context)
+        groups = loaded
+        // One impression per card per open, so a card's click-through can be
+        // read next to the partner's own click count.
+        ShopCatalogue.recordEvents(context, "impression", loaded.flatMap { g -> g.items.map { it.key } })
     }
 
     Column(
@@ -128,6 +132,9 @@ fun ShopScreen(onBack: () -> Unit) {
                     ShopCard(
                         item = shopItem,
                         onOpenLink = { url ->
+                            // Only the Buy row is a click; the rating source
+                            // link is a citation, not a sale.
+                            if (url == shopItem.url) ShopCatalogue.recordEvents(context, "click", listOf(shopItem.key))
                             runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                         }
                     )

@@ -2,7 +2,9 @@ package com.migraineme
 
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -127,6 +129,47 @@ object ShopCatalogue {
     } catch (e: Exception) {
         Log.w(TAG, "shop_catalogue failed: ${e.message}")
         null
+    }
+
+    /**
+     * Impression and click log, our side of the partner panels' click counts.
+     * `impression` is sent once per Shop open with every key the catalogue
+     * returned; `click` is sent with the one key whose Buy row was tapped.
+     * Rows land in `shop_events` via `record_shop_events` and the biz
+     * dashboard reads them per card and app.
+     *
+     * Fire-and-forget on IO: the tap that opens the browser never waits on
+     * it, and a failure is a lost data point, not a broken page.
+     */
+    fun recordEvents(context: Context, event: String, keys: List<String>) {
+        if (keys.isEmpty()) return
+        val app = context.applicationContext
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val body = JSONObject().apply {
+                    put("p_app", "migraine")
+                    put("p_platform", "android")
+                    put("p_event", event)
+                    put("p_item_keys", JSONArray(keys))
+                    put("p_country", country(app) ?: JSONObject.NULL)
+                }
+                val req = Request.Builder()
+                    .url("${BuildConfig.SUPABASE_URL}/rest/v1/rpc/record_shop_events")
+                    .post(body.toString().toRequestBody("application/json".toMediaType()))
+                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .apply {
+                        // With a session the row carries the user; without
+                        // one it is still a counted anonymous impression.
+                        SessionStore.readAccessToken(app)?.let { addHeader("Authorization", "Bearer $it") }
+                    }
+                    .build()
+                http.newCall(req).execute().use { res ->
+                    if (!res.isSuccessful) Log.w(TAG, "record_shop_events ${res.code}")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "record_shop_events failed: ${e.message}")
+            }
+        }
     }
 
     private fun parse(json: String): List<Group> = try {
