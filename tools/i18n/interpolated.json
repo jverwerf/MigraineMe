@@ -608,11 +608,11 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:603",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:606",
     "line": "                                    t(\"%1\\$s/%2\\$s — Tap to expand\", tourState.stepIndex + 1, steps.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:693",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:704",
     "line": "                                    Text(t(\"%1\\$s of %2\\$s\", tourState.stepIndex + 1, steps.size), style = ObStyle.label(12.sp))"
   },
   {

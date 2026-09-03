@@ -404,9 +404,10 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Enable Location"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("MigraineMe uses your location to track weather conditions — a top migraine trigger. We collect city-level data only, never your exact address."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -415,6 +416,7 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.Schedule, t("Timezone-accurate trigger detection"))
             FeatureBullet(Icons.Outlined.Terrain, t("Altitude change monitoring"))
             FeatureBullet(Icons.Outlined.TrendingUp, t("Better risk predictions"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -489,9 +491,10 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Enable Notifications"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -500,6 +503,7 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.Nightlight, t("Evening check-in reminders"))
             FeatureBullet(Icons.Outlined.AutoAwesome, t("AI calibration updates"))
             FeatureBullet(Icons.Outlined.Article, t("New articles matching your triggers"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -571,9 +575,10 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Enable Microphone"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("MigraineMe can use your microphone for voice-based logging and ambient noise detection — both known migraine factors."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -582,6 +587,7 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.GraphicEq, t("Ambient noise level tracking"))
             FeatureBullet(Icons.Outlined.Nightlight, t("Evening check-in by voice"))
             FeatureBullet(Icons.Outlined.AutoAwesome, t("AI story input via voice"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -658,9 +664,10 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Enable Calendar"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("MigraineMe reads your calendar to suggest activities, reliefs, and stress triggers from your events — no events are stored, only what you confirm."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -669,6 +676,7 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.Warning, t("Spot stress-heavy meeting days"))
             FeatureBullet(Icons.Outlined.CheckCircle, t("One tap to confirm or skip"))
             FeatureBullet(Icons.Outlined.Lock, t("Read-only, never written back"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -747,9 +755,10 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Enable Screen Time"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("Screen time is a common migraine trigger. MigraineMe can track your usage patterns to find correlations with your attacks."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -758,6 +767,7 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.Nightlight, t("Late-night usage detection"))
             FeatureBullet(Icons.Outlined.Apps, t("App usage patterns"))
             FeatureBullet(Icons.Outlined.SelfImprovement, t("Digital wellness correlation"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -831,9 +841,10 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         ObHeadline(t("Disable Battery Optimization"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
+        ObInfoCard {
         Text(
             t("Android may pause MigraineMe in the background to save battery. Disabling optimization ensures reliable data collection and timely alerts."),
-            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -842,6 +853,7 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             FeatureBullet(Icons.Outlined.Storage, t("Uninterrupted data collection"))
             FeatureBullet(Icons.Outlined.Notifications, t("Timely notifications"))
             FeatureBullet(Icons.Outlined.Speed, t("Consistent risk scoring"))
+        }
         }
 
         Spacer(Modifier.weight(1f))
@@ -1062,3 +1074,16 @@ fun CompletePage(saving: Boolean) {
     }
 }
 
+
+
+/** Readable block for the permission pages: text + bullets on a card, not on the lattice. */
+@Composable
+fun ObInfoCard(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth()
+            .background(ObStyle.CardFill, RoundedCornerShape(20.dp))
+            .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+        content = content
+    )
+}

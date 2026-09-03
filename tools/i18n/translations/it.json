@@ -3965,7 +3965,6 @@
   "Set your last period and cycle length. Risk rises around the predicted date.": "Inserisci ultimo ciclo e durata. Il rischio sale intorno alla data prevista.",
   "Settings menu (top left) › Risk Model": "Menu (in alto a sinistra) › Modello di rischio",
   "Share a report": "Condividi un report",
-  "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.": "Condividi il diario con un professionista a tua scelta, trovane uno vicino, leggi articoli scelti per te, entra nel forum.",
   "Show me how it works": "Mostrami come funziona",
   "Show me the app": "Mostrami l'app",
   "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.": "Sonno, HRV, meteo, ciclo, cibo. Tocca una scheda per dettagli e storico.",
@@ -4031,5 +4030,16 @@
   "Now let's set up\nyour *data*": "Ora impostiamo\ni tuoi *dati*",
   "takes a few minutes": "pochi minuti",
   "THE TOUR": "IL TOUR",
-  "wearables, data, then the AI personalises it all": "wearable, dati, poi l'IA personalizza tutto"
+  "wearables, data, then the AI personalises it all": "wearable, dati, poi l'IA personalizza tutto",
+  "Connect *Health Connect.*": "Collega *Health Connect.*",
+  "phone data in, nothing to type": "dati dal telefono, senza scrivere",
+  "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.": "Prende sonno, passi e nutrizione dalle app già sul telefono. Fitbit o Samsung? Passano anche da qui.",
+  "Connect your *wearable.*": "Collega il tuo *wearable.*",
+  "Oura, Polar, Garmin": "Oura, Polar, Garmin",
+  "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.": "Sonno, HRV, temperatura cutanea e altro arrivano da soli. Garmin? Associa orologio sblocca la nostra app watch.",
+  "Tap Connect on yours below.": "Tocca Collega sul tuo qui sotto.",
+  "Choose what to *collect.*": "Scegli cosa *raccogliere.*",
+  "you are in control": "decidi tu",
+  "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Ogni metrica è un interruttore. Alcune chiedono prima un permesso. Ciò che dà il tuo wearable è già attivo.",
+  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Trova uno studio vicino, condividi il diario con un professionista a tua scelta, leggi articoli scelti per te, entra nel forum."
 }

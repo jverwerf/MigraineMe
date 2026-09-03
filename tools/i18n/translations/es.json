@@ -3965,7 +3965,6 @@
   "Set your last period and cycle length. Risk rises around the predicted date.": "Indica tu última regla y la duración del ciclo. El riesgo sube cerca de la fecha prevista.",
   "Settings menu (top left) › Risk Model": "Menú (arriba a la izquierda) › Modelo de riesgo",
   "Share a report": "Comparte un informe",
-  "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.": "Comparte tu diario con el profesional que elijas, encuentra uno cerca, lee artículos elegidos para ti, participa en el foro.",
   "Show me how it works": "Enséñame cómo funciona",
   "Show me the app": "Enséñame la app",
   "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.": "Sueño, VFC, tiempo, ciclo, comida. Toca una tarjeta para el detalle y el historial.",
@@ -4031,5 +4030,16 @@
   "Now let's set up\nyour *data*": "Ahora configuremos\ntus *datos*",
   "takes a few minutes": "lleva unos minutos",
   "THE TOUR": "EL RECORRIDO",
-  "wearables, data, then the AI personalises it all": "wearables, datos, y la IA lo personaliza todo"
+  "wearables, data, then the AI personalises it all": "wearables, datos, y la IA lo personaliza todo",
+  "Connect *Health Connect.*": "Conecta *Health Connect.*",
+  "phone data in, nothing to type": "datos del móvil, sin escribir nada",
+  "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.": "Trae sueño, pasos y nutrición de las apps que ya tienes. ¿Fitbit o Samsung? También entran por aquí.",
+  "Connect your *wearable.*": "Conecta tu *wearable.*",
+  "Oura, Polar, Garmin": "Oura, Polar, Garmin",
+  "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.": "Sueño, VFC, temperatura de la piel y más llegan solos. ¿Garmin? Emparejar reloj activa nuestra app de reloj.",
+  "Tap Connect on yours below.": "Toca Conectar en el tuyo abajo.",
+  "Choose what to *collect.*": "Elige qué *recoger.*",
+  "you are in control": "tú tienes el control",
+  "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Cada métrica es un interruptor. Algunas piden permiso antes. Lo que da tu wearable ya está activado.",
+  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Encuentra una consulta cerca, comparte tu diario con el profesional que elijas, lee artículos elegidos para ti, participa en el foro."
 }

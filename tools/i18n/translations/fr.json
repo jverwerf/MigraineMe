@@ -3965,7 +3965,6 @@
   "Set your last period and cycle length. Risk rises around the predicted date.": "Indique tes dernières règles et la durée du cycle. Le risque monte autour de la date prévue.",
   "Settings menu (top left) › Risk Model": "Menu (en haut à gauche) › Modèle de risque",
   "Share a report": "Partage un rapport",
-  "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.": "Partage ton journal avec le praticien de ton choix, trouves-en un près de toi, lis des articles choisis pour toi, rejoins le forum.",
   "Show me how it works": "Voir comment ça marche",
   "Show me the app": "Montre-moi l'app",
   "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.": "Sommeil, VFC, météo, cycle, repas. Touche une carte pour le détail et l'historique.",
@@ -4031,5 +4030,16 @@
   "Now let's set up\nyour *data*": "Configurons\ntes *données*",
   "takes a few minutes": "quelques minutes",
   "THE TOUR": "LA VISITE",
-  "wearables, data, then the AI personalises it all": "montre, données, puis l'IA personnalise tout"
+  "wearables, data, then the AI personalises it all": "montre, données, puis l'IA personnalise tout",
+  "Connect *Health Connect.*": "Connecte *Health Connect.*",
+  "phone data in, nothing to type": "les données du téléphone, sans rien taper",
+  "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.": "Récupère sommeil, pas et nutrition depuis les apps déjà sur ton téléphone. Fitbit ou Samsung ? Ça passe aussi par ici.",
+  "Connect your *wearable.*": "Connecte ta *montre.*",
+  "Oura, Polar, Garmin": "Oura, Polar, Garmin",
+  "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.": "Sommeil, VFC, température cutanée et plus arrivent tout seuls. Garmin ? Jumeler la montre active notre app montre.",
+  "Tap Connect on yours below.": "Touche Connecter sur la tienne en dessous.",
+  "Choose what to *collect.*": "Choisis quoi *collecter.*",
+  "you are in control": "c'est toi qui décides",
+  "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Chaque mesure est un interrupteur. Certaines demandent d'abord une permission. Ce que ta montre connectée fournit est déjà activé.",
+  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Trouve un cabinet près de toi, partage ton journal avec le praticien de ton choix, lis des articles choisis pour toi, rejoins le forum."
 }

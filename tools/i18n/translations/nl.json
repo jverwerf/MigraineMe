@@ -3965,7 +3965,6 @@
   "Set your last period and cycle length. Risk rises around the predicted date.": "Vul je laatste menstruatie en cycluslengte in. Rond de verwachte datum stijgt het risico.",
   "Settings menu (top left) › Risk Model": "Menu (linksboven) › Risicomodel",
   "Share a report": "Deel een rapport",
-  "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.": "Deel je dagboek met een zorgverlener naar keuze, vind er een in de buurt, lees artikelen voor jou, doe mee op het forum.",
   "Show me how it works": "Laat zien hoe het werkt",
   "Show me the app": "Toon me de app",
   "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.": "Slaap, HRV, weer, cyclus, eten. Tik op een kaart voor detail en geschiedenis.",
@@ -4031,5 +4030,16 @@
   "Now let's set up\nyour *data*": "Nu stellen we\nje *data* in",
   "takes a few minutes": "duurt een paar minuten",
   "THE TOUR": "DE TOUR",
-  "wearables, data, then the AI personalises it all": "wearables, data, dan personaliseert de AI alles"
+  "wearables, data, then the AI personalises it all": "wearables, data, dan personaliseert de AI alles",
+  "Connect *Health Connect.*": "Koppel *Health Connect.*",
+  "phone data in, nothing to type": "telefoondata erin, niets typen",
+  "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.": "Haalt slaap, stappen en voeding uit de apps op je telefoon. Fitbit of Samsung? Die komen hier ook door.",
+  "Connect your *wearable.*": "Koppel je *wearable.*",
+  "Oura, Polar, Garmin": "Oura, Polar, Garmin",
+  "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.": "Slaap, HRV, huidtemperatuur en meer komen vanzelf binnen. Garmin? Horloge koppelen ontgrendelt onze watch-app.",
+  "Tap Connect on yours below.": "Tik op Koppelen bij de jouwe hieronder.",
+  "Choose what to *collect.*": "Kies wat je *verzamelt.*",
+  "you are in control": "jij hebt de controle",
+  "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.": "Elke metriek is een schakelaar. Sommige vragen eerst toestemming. Wat je wearable levert staat al aan.",
+  "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.": "Vind een praktijk in de buurt, deel je dagboek met een zorgverlener naar keuze, lees artikelen voor jou, doe mee op het forum."
 }

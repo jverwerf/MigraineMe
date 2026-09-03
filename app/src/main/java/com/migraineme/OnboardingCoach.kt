@@ -181,7 +181,7 @@ val tourSteps = listOf(
         findIt = "Home › “suggestions for you” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
     TourStep(Routes.HOME, Icons.Outlined.Forum, "Community", highlight = "", navHint = NavHintLocation.TOP_COMMUNITY,
         headline = "You are *not alone.*", sub = "guidance, articles, forum",
-        body = "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.",
+        body = "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.",
         findIt = "Community icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
     TourStep(Routes.HOME, Icons.Outlined.Home, "", body = "", highlight = "", closing = true,
         headline = "And there's\n*much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
@@ -189,17 +189,20 @@ val tourSteps = listOf(
 
 val setupSteps = listOf(
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.FavoriteBorder, "Connect Health Connect",
-        "Health Connect pulls health data from apps on your phone. If apps like MyFitnessPal, Cronometer, or Samsung Health share data with Health Connect, we can use it too.\n\nIf you wear a Fitbit, Samsung Watch, or another wearable we don't connect to directly, you can still bring its data in here: connect that wearable's own app to Health Connect, then Health Connect to MigraineMe.",
+        "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.",
         "Tap Connect on the Health Connect card above.",
-        interactive = true, spotlightKey = "health_connect_card", bottomCard = true, brainy = R.drawable.brainy_physical_small),
+        interactive = true, spotlightKey = "health_connect_card", bottomCard = true, brainy = R.drawable.brainy_physical_small,
+        headline = "Connect *Health Connect.*", sub = "phone data in, nothing to type"),
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect Your Wearable",
-        "We support Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch.",
-        "Tap Connect on your wearable below.",
-        interactive = true, spotlightKey = "wearables_group", brainy = R.drawable.brainy_detective_small),
+        "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.",
+        "Tap Connect on yours below.",
+        interactive = true, spotlightKey = "wearables_group", brainy = R.drawable.brainy_detective_small,
+        headline = "Connect your *wearable.*", sub = "Oura, Polar, Garmin"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
-        "Pick which data points you want to collect. Some will need permissions before you can toggle them on. We've already toggled on the ones connected to your watch.",
-        "Use search at the top to jump to a specific metric. Permissions can be changed later in Android system settings.",
-        interactive = true, brainy = R.drawable.brainy_shield_small),
+        "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.",
+        "Use search at the top to jump to a specific metric.",
+        interactive = true, brainy = R.drawable.brainy_shield_small,
+        headline = "Choose what to *collect.*", sub = "you are in control"),
 )
 
 object SpotlightState {
@@ -566,7 +569,7 @@ fun CoachOverlay(
                             // never receives the tap that expands it.
                             val isWearableStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 1
                             val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                            Modifier.padding(top = statusInset + if (isWearableStep) 60.dp else 12.dp, bottom = 12.dp)
+                            Modifier.padding(top = statusInset + if (isWearableStep) 44.dp else 12.dp, bottom = 12.dp)
                         }
                     ),
                 contentAlignment = if (isTour) Alignment.Center else if (alignBottom) Alignment.BottomCenter else Alignment.TopCenter
@@ -613,6 +616,14 @@ fun CoachOverlay(
                         // keep the card translucent so the toggles behind stay visible.
                         val isDataStepCard = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
                         val maxCardHeight = screenH * 0.4f
+                        // Wearable step: the card may use exactly the space above the measured
+                        // wearables group (top of Oura), minus the card's own top padding and a gap.
+                        val wearableCardMax: androidx.compose.ui.unit.Dp = run {
+                            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                            val spotTop = spotlightRect?.top
+                            if (spotTop != null && spotTop > 0f) (with(density) { spotTop.toDp() } - statusInset - 44.dp - 16.dp).coerceIn(150.dp, screenH * 0.45f)
+                            else 240.dp
+                        }
 
                         // ── Shared button row: Back · Skip · Next/Done. Logic unchanged. ──
                         val buttonsRow: @Composable () -> Unit = {
@@ -642,7 +653,7 @@ fun CoachOverlay(
                                             shape = RoundedCornerShape(50),
                                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                                             border = androidx.compose.foundation.BorderStroke(1.5.dp, ObStyle.CardLine),
-                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
+                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
                                         ) { Text(t("Back"), style = ObStyle.button(13.sp)) }
                                     }
                                     if (tourState.stepIndex < steps.size - 1) {
@@ -650,7 +661,7 @@ fun CoachOverlay(
                                             onClick = { val route = TourManager.nextStep(); if (route != null) navigateTo(route) },
                                             colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                                             shape = RoundedCornerShape(50),
-                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
+                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
                                         ) { Text(t("Next"), style = ObStyle.button(13.sp)) }
                                     } else {
                                         // Data step: gate Done until the user has scrolled to
@@ -674,7 +685,7 @@ fun CoachOverlay(
                         // ── Header row: Brainy · collapse chevron · exit (tour) · counter ──
                         val headerRow: @Composable (brainy: Int?, showCounter: Boolean) -> Unit = { brainy, showCounter ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (brainy != null) Image(painterResource(brainy), null, modifier = Modifier.size(44.dp))
+                                if (brainy != null) Image(painterResource(brainy), null, modifier = Modifier.size(if (isTour) 36.dp else 44.dp))
                                 else Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.weight(1f))
                                 if (!isTour) {
@@ -750,23 +761,23 @@ fun CoachOverlay(
                                         elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                                         modifier = Modifier.fillMaxWidth().border(1.5.dp, cardBorder, cardShape)
                                     ) {
-                                        Column(Modifier.padding(21.dp)) {
+                                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                             headerRow(brainy, counter)
-                                            Spacer(Modifier.height(6.dp))
-                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 28.sp, align = TextAlign.Start)
-                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 20.sp, align = TextAlign.Start)
-                                            Spacer(Modifier.height(6.dp))
-                                            Text(t(body), style = ObStyle.body(14.sp))
+                                            Spacer(Modifier.height(2.dp))
+                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 26.sp, align = TextAlign.Start)
+                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 19.sp, align = TextAlign.Start)
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(t(body), style = ObStyle.body(13.5.sp))
                                             if (findIt.isNotEmpty()) {
-                                                Spacer(Modifier.height(8.dp))
+                                                Spacer(Modifier.height(6.dp))
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(t("Find it:"), style = ObStyle.label(12.sp))
+                                                    Text(t("Find it:"), style = ObStyle.label(11.5.sp))
                                                     Spacer(Modifier.width(6.dp))
-                                                    Text(t(findIt), style = ObStyle.label(12.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
+                                                    Text(t(findIt), style = ObStyle.label(11.5.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
                                                 }
                                             }
                                             if (buttons) {
-                                                Spacer(Modifier.height(12.dp))
+                                                Spacer(Modifier.height(8.dp))
                                                 buttonsRow()
                                             }
                                         }
@@ -774,7 +785,7 @@ fun CoachOverlay(
                                 }
                             Column(
                                 Modifier.fillMaxHeight(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally
+                                verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 tourCard(step.headline, step.sub, step.body, step.brainy, if (two) "" else step.findIt, true, !two)
                                 step.pop?.let { popImage(it) }
@@ -790,21 +801,23 @@ fun CoachOverlay(
                                 colors = CardDefaults.cardColors(containerColor = cardFill), shape = cardShape,
                                 elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                                 modifier = Modifier.fillMaxWidth()
-                                    .then(if (isWearableStep) Modifier.height(215.dp) else Modifier.heightIn(max = maxCardHeight).animateContentSize(spring(dampingRatio = 0.8f)))
+                                    .heightIn(max = if (isWearableStep) wearableCardMax else screenH * 0.45f).animateContentSize(spring(dampingRatio = 0.8f))
                                     .border(1.5.dp, cardBorder, cardShape)
                             ) {
                                 val bodyScrollState = rememberScrollState()
                                 LaunchedEffect(tourState.stepIndex) { bodyScrollState.scrollTo(0) }
-                                Column(Modifier.padding(16.dp)) {
+                                val compact = isWearableStep
+                                Column(Modifier.padding(horizontal = 16.dp, vertical = if (compact) 10.dp else 16.dp)) {
                                     Box(Modifier.weight(1f, fill = false)) {
                                         Column(Modifier.verticalScroll(bodyScrollState)) {
                                             headerRow(step.brainy, true)
-                                            Spacer(Modifier.height(4.dp))
-                                            ObHeadline(t(step.title), Modifier.fillMaxWidth(), size = 22.sp, align = TextAlign.Start)
-                                            Spacer(Modifier.height(6.dp))
-                                            Text(t(step.body), style = ObStyle.body(14.sp))
-                                            Spacer(Modifier.height(8.dp))
-                                            Text(t(step.highlight), style = ObStyle.body(14.sp).copy(color = ObStyle.Pink, fontWeight = FontWeight.SemiBold))
+                                            Spacer(Modifier.height(if (compact) 0.dp else 4.dp))
+                                            ObHeadline(t(step.headline.ifEmpty { step.title }), Modifier.fillMaxWidth(), size = if (compact) 22.sp else 26.sp, align = TextAlign.Start)
+                                            if (step.sub.isNotEmpty()) ObHand(t(step.sub), Modifier.fillMaxWidth(), size = if (compact) 17.sp else 19.sp, align = TextAlign.Start)
+                                            Spacer(Modifier.height(if (compact) 2.dp else 6.dp))
+                                            Text(t(step.body), style = ObStyle.body(if (compact) 13.sp else 14.sp))
+                                            Spacer(Modifier.height(if (compact) 4.dp else 8.dp))
+                                            Text(t(step.highlight), style = ObStyle.body(if (compact) 13.sp else 14.sp).copy(color = ObStyle.Pink, fontWeight = FontWeight.SemiBold))
                                             Spacer(Modifier.height(if (isInteractive) 6.dp else 14.dp))
                                         }
                                         // Static fade + chevron while there is more body below

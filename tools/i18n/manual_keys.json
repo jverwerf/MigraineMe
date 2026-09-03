@@ -3757,7 +3757,7 @@
       "max_len": 60
     },
     {
-      "en": "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.",
+      "en": "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -4083,6 +4083,94 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 60
+    },
+    {
+      "en": "Connect *Health Connect.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "phone data in, nothing to type",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 232
+    },
+    {
+      "en": "Tap Connect on the Health Connect card above.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 90
+    },
+    {
+      "en": "Connect your *wearable.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Oura, Polar, Garmin",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 202
+    },
+    {
+      "en": "Tap Connect on yours below.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Choose what to *collect.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "you are in control",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 214
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
