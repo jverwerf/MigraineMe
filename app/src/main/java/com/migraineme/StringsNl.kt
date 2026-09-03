@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4058 entries.
+ * 4061 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -487,6 +487,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Answer a few questions" to "Een paar vragen beantwoorden",
     "Answer a short set of questions about your attacks." to "Beantwoord een paar korte vragen over je aanvallen.",
     "Answer questions about your migraines, AI configures everything" to "Beantwoord vragen over je migraine, de AI stelt alles in",
+    "Answer updates" to "Antwoord-updates",
     "Anti-Nausea" to "Anti-misselijk",
     "Anxiety" to "Angst",
     "Anxiety or worry" to "Angst of zorgen",
@@ -970,6 +971,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Data" to "Gegevens",
     "Data Collection" to "Gegevens",
     "Data flows in from your wearable, Health Connect and phone" to "Data komt binnen via je wearable, Health Connect en telefoon",
+    "Data warnings" to "Datawaarschuwingen",
     "Date" to "Date",
     "Day" to "Dag",
     "Day of Week" to "Weekdag",
@@ -2470,6 +2472,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Profile" to "Profiel",
     "Profile Recalibration" to "Profiel bijstellen",
     "Profile re-assessment is available once per day. Try again tomorrow." to "Je profiel kun je één keer per dag opnieuw laten bekijken. Probeer het morgen.",
+    "Profile snapshot" to "Profielmomentopname",
     "Profile — Account, Subscription & AI Setup" to "Profiel — account, abonnement & AI-setup",
     "Progressive relaxation" to "Progressieve relaxatie",
     "Propranolol" to "Propranolol",

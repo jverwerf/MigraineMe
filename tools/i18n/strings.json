@@ -8098,6 +8098,15 @@
     "count": 1
   },
   {
+    "en": "Answer updates",
+    "class": "soft",
+    "sites": [
+      "RecalibrationReviewScreen.kt:variable-render"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Anxiety",
     "class": "hard",
     "sites": [
@@ -11164,6 +11173,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:326"
     ],
     "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "Data warnings",
+    "class": "soft",
+    "sites": [
+      "RecalibrationReviewScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -20884,6 +20902,15 @@
       "supabase/functions/recalibrate/index.ts (cooldown message)"
     ],
     "max_len": 98,
+    "count": 1
+  },
+  {
+    "en": "Profile snapshot",
+    "class": "soft",
+    "sites": [
+      "RecalibrationReviewScreen.kt:variable-render"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {

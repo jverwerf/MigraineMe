@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4058 entries.
+ * 4061 entries.
  */
 internal val PT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos os dados",
@@ -487,6 +487,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Answer a few questions" to "Responder a umas perguntas",
     "Answer a short set of questions about your attacks." to "Responde a umas breves perguntas sobre as tuas crises.",
     "Answer questions about your migraines, AI configures everything" to "Responde a perguntas sobre as tuas enxaquecas e a IA configura tudo",
+    "Answer updates" to "Atualizações de respostas",
     "Anti-Nausea" to "Antináuseas",
     "Anxiety" to "Ansiedade",
     "Anxiety or worry" to "Ansiedade ou stress",
@@ -970,6 +971,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Data" to "Dados",
     "Data Collection" to "Recolha de dados",
     "Data flows in from your wearable, Health Connect and phone" to "Os dados chegam do teu wearable, Health Connect e telemóvel",
+    "Data warnings" to "Avisos de dados",
     "Date" to "Encontro",
     "Day" to "Dia",
     "Day of Week" to "Dia da semana",
@@ -2470,6 +2472,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Profile" to "Perfil",
     "Profile Recalibration" to "Recalibração do perfil",
     "Profile re-assessment is available once per day. Try again tomorrow." to "O perfil pode ser revisto uma vez por dia. Tenta amanhã.",
+    "Profile snapshot" to "Retrato do perfil",
     "Profile — Account, Subscription & AI Setup" to "Perfil — conta, subscrição e IA",
     "Progressive relaxation" to "Relaxamento progressivo",
     "Propranolol" to "Propranolol",
