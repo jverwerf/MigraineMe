@@ -558,7 +558,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
             Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.width(36.dp))
             for (p in sorted) {
-                Text(p.fromValue ?: "–", color = AppTheme.SubtleTextColor,
+                Text(p.fromValue?.let { prettyValue(it) } ?: "–", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(56.dp), textAlign = TextAlign.Center)
             }
@@ -572,7 +572,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
             for (p in sorted) {
                 val effectiveNew = if (p.accepted) p.toValue else p.fromValue
                 val changed = effectiveNew != p.fromValue
-                Text(effectiveNew ?: "–",
+                Text(effectiveNew?.let { prettyValue(it) } ?: "–",
                     color = if (changed) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = if (changed) FontWeight.Bold else FontWeight.Normal

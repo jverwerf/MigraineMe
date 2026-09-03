@@ -839,7 +839,7 @@ private fun ActiveTriggersCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            t.name,
+                            tSync(t.name),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             maxLines = 1,
@@ -858,7 +858,7 @@ private fun ActiveTriggersCard(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                t.severity,
+                                tSync(t.severity),
                                 color = sevColor,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                             )
