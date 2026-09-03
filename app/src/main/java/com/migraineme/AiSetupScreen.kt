@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -671,14 +672,14 @@ fun AiSetupScreen(
             LinearProgressIndicator(
                 progress = { pageNum.toFloat() / totalPages },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)),
-                color = AppTheme.AccentPink, trackColor = AppTheme.TrackColor,
+                color = ObStyle.Pink, trackColor = ObStyle.Muted.copy(alpha = 0.35f),
             )
             Row(Modifier.padding(horizontal = 28.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPink, modifier = Modifier.size(14.dp))
+                Icon(Icons.Outlined.AutoAwesome, null, tint = ObStyle.Pink, modifier = Modifier.size(14.dp))
                 Text(
                     if (editMode) t("Edit — %1\$s", AiSetupEntry.title(startPage ?: ""))
                     else t("MigraineMe Setup — %1\$s of %2\$s", pageNum, totalPages),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
+                    style = ObStyle.label(12.sp)
                 )
             }
             Spacer(Modifier.height(8.dp))

@@ -3531,6 +3531,558 @@
         "BarcodeAddFoodDialog.kt:mealType"
       ],
       "max_len": 16
+    },
+    {
+      "en": "A check-in *each evening.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "AI tracks triggers based on what's in your calendar",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 102
+    },
+    {
+      "en": "All your *health data.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "And there's *much more*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Ask *MigraineMe.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 190
+    },
+    {
+      "en": "Community icon (top right)",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Connect your calendar",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every Monday it *learns* you.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every Monday it *learns.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every trigger counts Low, Mild or High towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 304
+    },
+    {
+      "en": "Garmin, Apple Watch, Polar, Oura, WHOOP and more",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
+      "en": "Home tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Home tab › Ask MigraineMe card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Home › “suggestions for you” banner",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 70
+    },
+    {
+      "en": "Insights tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "It estimates *7 days* ahead.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Log an *attack.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Log and track from your wearable",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 64
+    },
+    {
+      "en": "Log tab › Daily Check-In",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Log tab › Log Migraine",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Monitor tab › Diet card  ·  Monitor › Menstruation",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 100
+    },
+    {
+      "en": "Monitor tab › Sleep card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Near the top? It says *HIGH.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 184
+    },
+    {
+      "en": "Set up trigger alarms",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Set your last period and cycle length. Risk rises around the predicted date.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 152
+    },
+    {
+      "en": "Settings menu (top left) › Risk Model",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "Share a report",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 226
+    },
+    {
+      "en": "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 156
+    },
+    {
+      "en": "Started a treatment?",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 224
+    },
+    {
+      "en": "The gauge shows how full your bucket is: Low, Mild or High. Under it: the 7 day outlook.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 176
+    },
+    {
+      "en": "Triggers fill your *bucket.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Triggers, medicines, reliefs, how you felt. One pass through your day, tap what applies, done.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 188
+    },
+    {
+      "en": "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 140
+    },
+    {
+      "en": "What you *eat.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "What your data *says.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Where *HIGH* starts.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Which triggers really matter, what helped, and a report you can hand your doctor.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 162
+    },
+    {
+      "en": "You are *not alone.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "You log your *attacks.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Your *cycle.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Your journal",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Your own pool",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Your risk *today.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "a PDF from your own data",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "accept or reject, one tap",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "add triggers, medicines, reliefs; switch off the rest",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 106
+    },
+    {
+      "en": "after a few logged attacks",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "everything you logged, tap to fix what's missing",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
+      "en": "for anything you want to log yourself",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "get warned when pressure drops or sleep goes off",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
+      "en": "guidance, articles, forum",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "look here every morning",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "one place, one card each",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "questions about your own data",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "risk rises around your period",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "scan it, or search it",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "see how it's going, from your own logs",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 76
+    },
+    {
+      "en": "sleep, weather, stress, food...\nmost of it added automatically",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 124
+    },
+    {
+      "en": "so you can plan around it",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "take it from here",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "that is the only thing you have to do",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "the AI sets the lines, you can move them",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "the more you log, the sharper it gets",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "the one thing you have to do",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "your risk, checked every morning",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 64
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

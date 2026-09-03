@@ -165,7 +165,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BATTERY_OPTIMIZATION }
+private enum class PageId { WELCOME, HOW_IT_WORKS, CHOICE, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -356,22 +356,7 @@ fun OnboardingScreen(
             Spacer(Modifier.height(20.dp))
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                // HowItWorksPage is always composed (with key to keep it stable) but only visible when on that page.
-                // This prevents AnimatedContent from ever creating/destroying it.
-                key("how_it_works_stable") {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = currentPage == PageId.HOW_IT_WORKS,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        HowItWorksPage(
-                            alreadyRevealed = howItWorksRevealed,
-                            onAllRevealed = { howItWorksRevealed = true }
-                        )
-                    }
-                }
-
-                if (currentPage != PageId.HOW_IT_WORKS) {
+                run {
                     AnimatedContent(
                         targetState = currentIdx.coerceIn(0, pages.size - 1),
                         transitionSpec = {
@@ -380,22 +365,26 @@ fun OnboardingScreen(
                         }, label = "page"
                     ) { idx ->
                         when (pages[idx.coerceIn(0, pages.size - 1)]) {
-                            PageId.WELCOME -> WelcomePage(
-                                onTakeFullTour = {
-                                    OnboardingMode.noSeed = false
-                                    currentIdx = pages.indexOf(PageId.HOW_IT_WORKS)
+                            PageId.WELCOME -> ObWelcomePage(onNext = { currentIdx = pages.indexOf(PageId.HOW_IT_WORKS) })
+                            PageId.HOW_IT_WORKS -> ObHowItWorksPage(
+                                onDone = { currentIdx = pages.indexOf(PageId.CHOICE) },
+                                onSkip = { currentIdx = pages.indexOf(PageId.CHOICE) }
+                            )
+                            PageId.CHOICE -> ObChoicePage(
+                                onTakeTour = {
+                                    // The tour runs on stills over the live app, so
+                                    // nothing is seeded: no loading page, no demo rows,
+                                    // no purge on exit. noSeed makes every existing
+                                    // cleanup path a no-op.
+                                    OnboardingMode.noSeed = true
+                                    proceedWithTour { onStartTour() }
                                 },
                                 onSetUpProfile = {
-                                    // Show the setup landing first, the way iOS
-                                    // and the RN apps do. This jumped straight
-                                    // out to Data settings, so the page existed
-                                    // in the flow but was never reachable.
                                     OnboardingMode.noSeed = true
                                     currentIdx = pages.indexOf(PageId.SETUP_LANDING)
                                 },
                                 onGoToApp = { skipOnboarding { onAcuteAttack() } }
                             )
-                            PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
                             PageId.LOADING_DATA -> LoadingDataPage(
                                 progress = seedProgress.fraction,
                                 statusText = seedProgress.phase,
@@ -414,47 +403,8 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            if (currentPage == PageId.WELCOME || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+            if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS || currentPage == PageId.CHOICE || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
                 // These pages handle their own buttons
-            } else if (currentPage == PageId.HOW_IT_WORKS) {
-                Column(
-                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    run {
-                        // No-seed onboarding skips the demo tour (it would showcase demo
-                        // insights that don't exist) and goes straight to Data Settings.
-                        val noSeed = OnboardingMode.noSeed
-                        Button(
-                            onClick = {
-                                // proceedWithTour marks onboarding complete in Supabase, then
-                                // navigates — matching the seeded path (which marks complete on
-                                // entering the tour). Without it the no-seed user would be sent
-                                // back to onboarding on next launch.
-                                if (noSeed) proceedWithTour { onStartDataSettingsNoSeed() }
-                                else currentIdx = pages.indexOf(PageId.LOADING_DATA)
-                            },
-                            enabled = howItWorksRevealed,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = AppTheme.AccentPink,
-                                disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f)
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth().height(52.dp)
-                        ) {
-                            Text(if (noSeed) t("Set Up My Data") else t("Take the Tour"), fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            if (noSeed) t("We'll take you straight to your data settings to choose what to track.")
-                            else t("We'll prepare your example data first — this takes up to a minute."),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
             } else Row(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -478,6 +428,7 @@ fun OnboardingScreen(
                 // Right
                 when (currentPage) {
                     PageId.HOW_IT_WORKS -> {}
+                    PageId.CHOICE -> {}
                     PageId.WELCOME -> {}
                     PageId.LOCATION_PERMISSION -> {}
                     PageId.NOTIFICATION_PERMISSION -> {}

@@ -33,6 +33,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Private helpers (copies from v1 — keeps old file untouched)
@@ -42,20 +43,18 @@ import androidx.compose.ui.unit.dp
 private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, pageNum: Int, totalPages: Int, brainy: Int? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         if (brainy != null) {
-            // Brainy carries the section rather than a generic glyph. No gradient
-            // tile behind him — the art already reads as a badge.
-            Image(painter = painterResource(id = brainy), contentDescription = null, modifier = Modifier.size(72.dp))
+            Image(painter = painterResource(id = brainy), contentDescription = null, modifier = Modifier.size(84.dp))
         } else {
-            Box(Modifier.size(48.dp).background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Box(Modifier.size(52.dp).background(ObStyle.CardFill, RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = ObStyle.Pink, modifier = Modifier.size(26.dp))
             }
         }
         Spacer(Modifier.height(12.dp))
-        Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(4.dp))
-        Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-        // No page counter here — the top bar already shows "MigraineMe Setup — n of N",
-        // and the two counters disagreed (they count different things).
+        // Poppins headline + handwritten sub line, the onboarding look.
+        ObHeadline(title, Modifier.fillMaxWidth(), size = 26.sp)
+        Spacer(Modifier.height(2.dp))
+        ObHand(subtitle, Modifier.fillMaxWidth(), size = 18.sp)
+        // No page counter here — the top bar already shows "MigraineMe Setup — n of N".
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -96,11 +95,14 @@ private fun QCard(label: String, icon: ImageVector? = null, subtitle: String? = 
         )
     }
 
-    Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = ObStyle.CardFill), shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth().border(1.dp, ObStyle.CardLine.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
+    ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (icon != null) { Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)) }
-                Text(t(label), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
+                if (icon != null) { Icon(icon, null, tint = ObStyle.Pink, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)) }
+                Text(t(label), style = ObStyle.body(15.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
                 if (isSuggested) {
                     Spacer(Modifier.width(6.dp))
                     Icon(
@@ -110,7 +112,7 @@ private fun QCard(label: String, icon: ImageVector? = null, subtitle: String? = 
                     )
                 }
             }
-            if (subtitle != null) { Spacer(Modifier.height(4.dp)); Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall) }
+            if (subtitle != null) { Spacer(Modifier.height(4.dp)); Text(subtitle, style = ObStyle.label(12.sp)) }
             Spacer(Modifier.height(12.dp))
             content()
         }
@@ -125,8 +127,8 @@ private fun QSingleChips(options: List<String>, selected: String?, onSelect: (St
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 for (option in row) {
                     val sel = option == selected
-                    Box(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (sel) AppTheme.AccentPurple.copy(alpha = 0.3f) else AppTheme.TrackColor.copy(alpha = 0.3f)).border(1.dp, if (sel) AppTheme.AccentPurple else Color.Transparent, RoundedCornerShape(10.dp)).clickable { onSelect(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(t(option), color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
+                    Box(Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (sel) ObStyle.Pink else Color.Transparent).border(1.dp, if (sel) ObStyle.Pink else ObStyle.CardLine.copy(alpha = 0.6f), RoundedCornerShape(50)).clickable { onSelect(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center, maxLines = 2)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -143,8 +145,8 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 for (option in row) {
                     val sel = option in selected
-                    Box(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (sel) AppTheme.AccentPink.copy(alpha = 0.25f) else AppTheme.TrackColor.copy(alpha = 0.3f)).border(1.dp, if (sel) AppTheme.AccentPink else Color.Transparent, RoundedCornerShape(10.dp)).clickable { onToggle(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(t(option), color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
+                    Box(Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (sel) ObStyle.Pink else Color.Transparent).border(1.dp, if (sel) ObStyle.Pink else ObStyle.CardLine.copy(alpha = 0.6f), RoundedCornerShape(50)).clickable { onToggle(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center, maxLines = 2)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -688,21 +690,18 @@ fun AiQuestionsPageStory(
     ) {
         // Hero card with speech bubble icon, title & subtitle (matches iOS)
         Card(
-            colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+            colors = CardDefaults.cardColors(containerColor = ObStyle.CardFill),
             shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().border(1.dp, ObStyle.CardLine.copy(alpha = 0.45f), RoundedCornerShape(24.dp))
         ) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    Modifier.size(48.dp).background(AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Outlined.Chat, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
-                }
+                Image(painter = painterResource(id = R.drawable.brainy_ask_small), contentDescription = null, modifier = Modifier.size(72.dp))
                 Spacer(Modifier.height(12.dp))
-                Text(t("Tell us about your migraines"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
-                Spacer(Modifier.height(4.dp))
-                Text(t("Tap the mic and talk, or type below. We'll fill in what you tell us directly, then suggest what else is worth tracking based on your profile — you can adjust it all on the next pages."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                ObHeadline(t("Tell us about your migraines"), Modifier.fillMaxWidth(), size = 26.sp)
+                Spacer(Modifier.height(2.dp))
+                ObHand(t("talk, or type"), Modifier.fillMaxWidth(), size = 18.sp)
+                Spacer(Modifier.height(8.dp))
+                Text(t("Tap the mic and talk, or type below. We'll fill in what you tell us directly, then suggest what else is worth tracking based on your profile — you can adjust it all on the next pages."), style = ObStyle.body(13.sp), textAlign = TextAlign.Center)
             }
         }
 

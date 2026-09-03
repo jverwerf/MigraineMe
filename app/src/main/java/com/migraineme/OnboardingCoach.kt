@@ -41,7 +41,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,89 +99,99 @@ data class TourStep(
     val spotlightKey: String? = null,
     val navHint: NavHintLocation? = null,
     val bottomCard: Boolean = false,
+    // ── New-style tour card (stills over the live app) ──
+    /** "Where *HIGH* starts." — one pink word between asterisks. Empty = use [title]. */
+    val headline: String = "",
+    /** Handwritten sub line under the headline. */
+    val sub: String = "",
+    /** "Find it:" line — where the screen lives. */
+    val findIt: String = "",
+    /** Pop-out image drawn under the card (drawable-nodpi/tour_pop_NN). */
+    val pop: Int? = null,
+    /** Brainy pose in the card header. */
+    val brainy: Int? = null,
+    /** Optional second card on the same stop (Food + cycle). */
+    val second: TourSegment? = null,
+    /** The closing "much more" screen: full card with feature rows, no pop. */
+    val closing: Boolean = false,
+)
+
+data class TourSegment(val headline: String, val sub: String, val body: String, val pop: Int, val brainy: Int)
+
+data class TourFeature(val icon: Int, val title: String, val desc: String)
+
+/** Rows on the closing screen — the promo video's "And there's much more" slide, adjusted for the tour. */
+val tourClosingFeatures = listOf(
+    TourFeature(R.drawable.brainy_act_meeting, "Connect your calendar", "AI tracks triggers based on what's in your calendar"),
+    TourFeature(R.drawable.tile_watch, "Log and track from your wearable", "Garmin, Apple Watch, Polar, Oura, WHOOP and more"),
+    TourFeature(R.drawable.brainy_trig_medication, "Started a treatment?", "see how it's going, from your own logs"),
+    TourFeature(R.drawable.tile_report, "Share a report", "a PDF from your own data"),
+    TourFeature(R.drawable.brainy_act_reading, "Your journal", "everything you logged, tap to fix what's missing"),
+    TourFeature(R.drawable.brainy_trigger_small, "Your own pool", "add triggers, medicines, reliefs; switch off the rest"),
+    TourFeature(R.drawable.brainy_trig_storm, "Set up trigger alarms", "get warned when pressure drops or sleep goes off"),
 )
 
 val tourSteps = listOf(
-    TourStep(Routes.HOME, Icons.Outlined.Home, "Home — Your Risk Today",
-        "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score.",
-        "Tap any day on the 7-day forecast strip to preview future risk, or tap the gauge for the full contributor breakdown.",
-        navHint = NavHintLocation.BOTTOM_HOME),
-    TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor — Your Health Data",
-        "Every relevant health signal in one place, each as its own card.\n\nRisk shows your current bucket level, top contributors, and the favourites you've pinned. Migraines rolls up this week's attacks (count, avg severity, vs last week, all-time total). Medicines tracks 30-day usage in D/W/M totals. Treatments scores each drug, device, or lifestyle change as Working well / Showing progress / Some effect / Not noticeable, compared against your migraine days before it started.\n\nSleep, Physical, Mental, Environment, and Nutrition pull live from your wearable, phone, weather feed, and any nutrition app linked through Health Connect (caffeine, sodium, tyramine, alcohol, gluten and histamine get flagged automatically).\n\nMenstruation predicts your next period and feeds it back into the risk score. Tap any card for the detail screen with charts and a history view.",
-        "Hit Customize at the top to reorder cards (drag on Android, arrows on iOS) or hide ones you don't care about. The order saves to your account.",
-        navHint = NavHintLocation.BOTTOM_MONITOR),
-    TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Diet — What You're Eating",
-        "Three ways to log food: scan a barcode, search the USDA database (700,000+ items), or let Health Connect pull from MyFitnessPal, Cronometer, or any nutrition app you already use.\n\nMigraineMe automatically scores each item against the nutrients that matter most for migraine. For everyday tracking that's caffeine, sodium and sugar.\n\nOn top of those, four known dietary triggers get flagged whenever they show up: tyramine (aged cheeses, cured meats), alcohol, gluten, and histamine (fermented foods). Excess in any of these, or a sudden withdrawal like skipping your usual coffee, feeds straight into your risk score.\n\nYou pick which three metrics show on the card; the detail screen has the full breakdown plus a daily history chart.",
-        "Try the barcode scanner on something in your kitchen, or search a food to see how tyramine, alcohol, gluten and histamine get flagged when any of them are present.",
-        interactive = true,
-        navHint = NavHintLocation.BOTTOM_MONITOR),
-    TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights — What Your Data Says",
-        "Seven cards that turn your logs into something actionable.\n\nFull Report builds a doctor-ready PDF with every metric for the period you choose. AI Recommendations reads your data and suggests changes across six categories (triggers, prodromes, medicines, reliefs, activities, symptoms), including overuse flags for medicines.\n\nAccuracy scores your gauge against what actually happened: true positives, false alarms, and missed attacks. What Happened ranks each trigger and prodrome by how much it lifts your attack risk.\n\nWhat Worked scores each treatment by its impact on severity and duration. What Were You Doing shows which activities and locations turn up most around your attacks. How Did It Impact You rolls up severity, duration, pain locations, aura location and missed activities.",
-        "Tap Full Report for the PDF, or AI Recommendations to review and accept or reject each suggestion with one tap.",
-        navHint = NavHintLocation.BOTTOM_INSIGHTS),
-    TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log — Capture Everything",
-        "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nPick Aura as a symptom anywhere and a short sheet opens so you can mark where in your vision it appeared and how long it lasted. You can skip it, and you can change it later by tapping Aura again.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack.",
-        "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later.",
-        navHint = NavHintLocation.BOTTOM_MIGRAINE),
-    TourStep(Routes.TRIGGERS, Icons.Outlined.Whatshot, "Auto-Captured Data — Less Logging, More Tracking",
-        "You don't have to manually log every trigger. MigraineMe pulls signals from your wearable, phone, location, and the apps you've linked (Health Connect) and converts them into trigger logs automatically.\n\nThe big ones: poor sleep or sudden over-sleep, low HRV vs. your baseline, falling barometric pressure, hot or humid days, period-prediction windows, and nutrient flags from anything you ate (caffeine, sodium, tyramine, alcohol, gluten, histamine).\n\nActivities like workouts, runs, walks, and meditations get pulled in the same way, so they appear under your daily logs without you tapping anything.\n\nEven prodromes can be auto-suggested when your data shows the signature pattern (HRV dip, sleep disruption, mood shift) that usually precedes one of your attacks.\n\nAnything auto-captured shows up on your Triggers screen with a timestamp so you can see exactly when it landed.",
-        "If the app is detecting something you don't trust, tap the item and adjust its severity in Manage Items, or turn the whole source off under Data Settings.",
-        navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true),
-    TourStep(Routes.EVENING_CHECKIN, Icons.Outlined.Nightlight, "Daily Check-In — One-Tap Review of Your Day",
-        "Every evening MigraineMe sends a single notification asking how today went.\n\nOpen it and you get a list of everything the app already caught for you (sleep, weather, nutrients, activities, prodromes), plus a sweep across triggers, prodromes, medicines, reliefs, activities, and a \"From your calendar\" page that lifts events out of your phone calendar so you can tag them as triggers, reliefs, or activities in one tap.\n\nFor every active treatment regimen, you also get a side-effects page so the Treatments card knows what to weigh against efficacy.\n\nPostdromes are linked here too: instead of asking \"do you have a postdrome right now?\" which usually means nothing, the check-in walks you back through any attack you had today and asks what came after.\n\nTwo ways to fill in anything missing: tap the mic and talk through your day in plain English (voice-to-text AI parses out triggers, prodromes, medicines, reliefs, mood, postdromes, anything you mention), or step through the form manually.",
-        "Try the voice input on a real day. The AI is forgiving, you can ramble through \"tired, had wine and pasta, took ibuprofen at 4, felt better by 8\" and it'll log all four.",
-        navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true),
-    TourStep(Routes.MENSTRUATION_SETTINGS, Icons.Outlined.CalendarMonth, "Menstrual Cycle — A Real Risk Factor",
-        "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length.",
-        "Open the card and tap Edit to set or correct your last period date. If your cycle is irregular, log each actual period as it happens and the prediction adjusts over time.",
-        navHint = NavHintLocation.BOTTOM_MONITOR),
-    TourStep(Routes.MONITOR_TREATMENTS, Icons.Outlined.Medication, "Treatments — What's Actually Helping",
-        "Every treatment you start (medications, supplements, lifestyle changes) gets tracked from start to today. We compare your migraine days, severity, duration, and trigger sensitivity in the baseline 28 days before each treatment started against everything since.\n\nEach treatment gets one of four bands: Working well, Showing progress, Some effect, or Not noticeable. The scoring uses confounders so a treatment doesn't get unfairly blamed when your sleep tanked the same week, or unfairly credited when your stress just happened to drop.\n\nTap any treatment for the detail screen: efficacy band, side-effect logs, trigger-shift breakdown (which of your usual triggers are easing off), and a monthly migraine-days trend.",
-        "Start a treatment the moment you begin a new medication, supplement, or lifestyle change. We compare it to a baseline and a working baseline so you can see what works for you and what doesn't.",
-        navHint = NavHintLocation.BOTTOM_MONITOR),
-    TourStep(Routes.JOURNAL, Icons.Outlined.History, "Journal — Everything You've Logged",
-        "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back.",
-        "Tap any entry to edit it. Use the \"Needs attention\" filter when the tab shows a number so you can clean those up in one pass.",
-        navHint = NavHintLocation.BOTTOM_JOURNAL),
-    TourStep(Routes.COMMUNITY, Icons.Outlined.Forum, "Community — Guidance, Articles & Forum",
-        "Community opens on Guidance. This is where the people who help you with your migraine live. At the top, our practitioners: you can connect with them and, if you choose, share parts of your diary. You decide exactly what they may see and you can stop the sharing at any time. Below them, practices near you that treat migraine, each checked against their own website. Those can't see your diary; they're there so you can find help close to home.\n\nArticles is a library of expert-written pieces on migraine science, treatments, lifestyle changes, and patient experience. Switch between For You (personalised to the conditions and triggers you've tagged), Latest, Browse, and Saved.\n\nForum is open discussion: post anything, comment on others, save threads.\n\nBlogs are our own longer reads, the same ones as on migraineme.app.\n\nConnect to one of our AI companions in Manage Items (each one has its own focus area: nutrition, sleep, hormonal, etc.) and the For You feed re-ranks toward articles that match your subscribed companions and your actual data.",
-        "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two.",
-        navHint = NavHintLocation.TOP_COMMUNITY),
-    TourStep(Routes.HOME, Icons.Outlined.Tune, "Settings — Make It Yours",
-        "Open the drawer (top-left menu) for full control.\n\nManage Items is where everything is customisable: add your own triggers, prodromes, medicines, reliefs, symptoms, activities or locations, change the severity weighting on each one, or turn off the defaults you don't care about. It's also where you follow AI Companions to personalise your Articles feed.\n\nRisk Model lets you move your LOW / MILD / HIGH thresholds and reshape the per-day decay curve (how much today's trigger counts vs. one from 6 days ago) so the gauge reflects what an actual risky day looks like for you.\n\nData Settings controls which metrics MigraineMe pulls from your wearable, Health Connect, or HealthKit. Connections lets you link or unlink your wearable, calendar, and health platforms.\n\nNotifications, Profile, and Help round out the drawer.",
-        "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge.",
-        navHint = NavHintLocation.TOP_SETTINGS),
-    TourStep(Routes.RISK_WEIGHTS, Icons.Outlined.Tune, "Risk Model — Where Your Bucket Tips",
-        "Risk Model shapes your gauge with two things:\n\nThresholds are where LOW becomes MILD and MILD becomes HIGH. They define the colour bands on the meter, so they reflect what an actual risky day looks like for you.\n\nDecay curve is how heavily today's triggers count versus one from 6 days ago. The bucket has a 7-day memory; this curve sets the weight on each day.\n\nAt the end of this onboarding, our AI will set both up for you based on what you tell us. This screen is here just in case reality doesn't match our suggestions and you want to fine-tune.\n\nOn top of that, the weekly AI Calibration automatically nudges these values 20-30% toward whatever actually predicts your attacks. So the gauge keeps sharpening itself over time, even if you never touch this screen.",
-        "Tap any threshold circle to edit it, or use the per-day decay curve below. Changes save instantly.",
-        interactive = true),
-    TourStep(Routes.MANAGE_ITEMS, Icons.Outlined.Tune, "Manage Items — Your Personal Pool",
-        "Every trigger, prodrome, medicine, relief, symptom, activity, location and missed-activity in the app comes from a pool. This is where you customise it.\n\nAdd your own (a specific dish, a workplace, a colleague). Adjust the severity weight on any default. Turn off items you don't care about so they stop showing up in Quick Log, Daily Check-In, and the AI Recommendations.\n\nAI Companions also live here: follow the ones whose focus area (sleep, hormones, food, weather, etc.) matches you and your Articles feed re-ranks toward what they cover.\n\nLess noise here means a sharper gauge and cleaner insights.",
-        "Open the category you log most often and switch off anything that doesn't apply to you. Scroll to AI Companions to follow a curator or two.",
-        interactive = true),
-    TourStep(Routes.PROFILE, Icons.Outlined.AccountCircle, "Profile — Account, Subscription & AI Setup",
-        "Your account home: name, photo, email, password.\n\nSubscription shows your current plan and trial days remaining.\n\nAI Migraine Profile is the snapshot of what you told us during AI Setup, kept as a reference for you and any clinician you share data with.\n\nFrom here you can rerun onboarding or delete your account.",
-        "Tap your avatar to update your photo. Rerun onboarding from this screen if you want to walk through the tour again later.",
-        interactive = true),
-    TourStep(Routes.RECALIBRATION_REVIEW, Icons.Outlined.AutoAwesome, "AI Calibration — How the App Learns You",
-        "Every week MigraineMe re-reads everything you've logged plus the data flowing in from your wearable. When something has shifted, it proposes a calibration package:\n\n• Trigger and prodrome severity weights, tuned to what actually lifts your risk\n• New triggers, prodromes, medicines, reliefs, symptoms, activities or missed activities that have shown up enough to deserve a spot in your pool\n• Updated gauge thresholds (LOW / MILD / HIGH) and the day-by-day decay curve\n• Menstrual cycle decay curve refined to your real pattern\n• Refreshed AI Migraine Profile snapshot\n• Data warnings if a metric dropped off or has gaps we can't work around\n\nWhat counts as a 'risky day' for you isn't the same as someone else, and your patterns shift over time. Calibration nudges the model 20-30% toward whatever actually predicts your attacks.",
-        "Each proposal lands on this review screen with a one-tap accept or reject. You can always tweak the same values manually under Risk Model or Manage Items.",
-        navHint = NavHintLocation.BOTTOM_INSIGHTS),
+    TourStep(Routes.HOME, Icons.Outlined.Home, "Home", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
+        headline = "Your risk *today.*", sub = "look here every morning",
+        body = "The gauge shows how full your bucket is: Low, Mild or High. Under it: the 7 day outlook.",
+        findIt = "Home tab", pop = R.drawable.tour_pop_01, brainy = R.drawable.brainy_risk_small),
+    TourStep(Routes.HOME, Icons.Outlined.Tune, "Risk Model", highlight = "", navHint = NavHintLocation.TOP_SETTINGS,
+        headline = "Where *HIGH* starts.", sub = "the AI sets the lines, you can move them",
+        body = "Every trigger counts Low, Mild or High towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
+        findIt = "Settings menu (top left) › Risk Model", pop = R.drawable.tour_pop_02, brainy = R.drawable.brainy_archer_small),
+    TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log", highlight = "", navHint = NavHintLocation.BOTTOM_MIGRAINE,
+        headline = "Log an *attack.*", sub = "the one thing you have to do",
+        body = "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit.",
+        findIt = "Log tab › Log Migraine", pop = R.drawable.tour_pop_03, brainy = R.drawable.brainy_migraines_small),
+    TourStep(Routes.HOME, Icons.Outlined.Forum, "Ask MigraineMe", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
+        headline = "Ask *MigraineMe.*", sub = "questions about your own data",
+        body = "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs.",
+        findIt = "Home tab › Ask MigraineMe card", pop = R.drawable.tour_pop_04, brainy = R.drawable.brainy_ask_small),
+    TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
+        headline = "All your *health data.*", sub = "one place, one card each",
+        body = "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.",
+        findIt = "Monitor tab › Sleep card", pop = R.drawable.tour_pop_05, brainy = R.drawable.brainy_detective_small),
+    TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Diet", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
+        headline = "What you *eat.*", sub = "scan it, or search it",
+        body = "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
+        findIt = "Monitor tab › Diet card  ·  Monitor › Menstruation", pop = R.drawable.tour_pop_06_1, brainy = R.drawable.brainy_diet_small,
+        second = TourSegment("Your *cycle.*", "risk rises around your period",
+            "Set your last period and cycle length. Risk rises around the predicted date.",
+            R.drawable.tour_pop_06_2, R.drawable.brainy_menstruation_small)),
+    TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights", highlight = "", navHint = NavHintLocation.BOTTOM_INSIGHTS,
+        headline = "What your data *says.*", sub = "after a few logged attacks",
+        body = "Which triggers really matter, what helped, and a report you can hand your doctor.",
+        findIt = "Insights tab", pop = R.drawable.tour_pop_07, brainy = R.drawable.brainy_recs_small),
+    TourStep(Routes.EVENING_CHECKIN, Icons.Outlined.Nightlight, "Daily Check-In", highlight = "", navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true,
+        headline = "A check-in *each evening.*", sub = "for anything you want to log yourself",
+        body = "Triggers, medicines, reliefs, how you felt. One pass through your day, tap what applies, done.",
+        findIt = "Log tab › Daily Check-In", pop = R.drawable.tour_pop_08, brainy = R.drawable.brainy_ask_small),
+    TourStep(Routes.HOME, Icons.Outlined.AutoAwesome, "AI Calibration", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
+        headline = "Every Monday it *learns.*", sub = "accept or reject, one tap",
+        body = "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
+        findIt = "Home › “suggestions for you” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
+    TourStep(Routes.HOME, Icons.Outlined.Forum, "Community", highlight = "", navHint = NavHintLocation.TOP_COMMUNITY,
+        headline = "You are *not alone.*", sub = "guidance, articles, forum",
+        body = "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.",
+        findIt = "Community icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
+    TourStep(Routes.HOME, Icons.Outlined.Home, "Much more", body = "", highlight = "", closing = true,
+        headline = "And there's *much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
 )
 
 val setupSteps = listOf(
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.FavoriteBorder, "Connect Health Connect",
         "Health Connect pulls health data from apps on your phone. If apps like MyFitnessPal, Cronometer, or Samsung Health share data with Health Connect, we can use it too.\n\nIf you wear a Fitbit, Samsung Watch, or another wearable we don't connect to directly, you can still bring its data in here: connect that wearable's own app to Health Connect, then Health Connect to MigraineMe.",
         "Tap Connect on the Health Connect card above.",
-        interactive = true, spotlightKey = "health_connect_card", bottomCard = true),
+        interactive = true, spotlightKey = "health_connect_card", bottomCard = true, brainy = R.drawable.brainy_physical_small),
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect Your Wearable",
         "We support Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch.",
         "Tap Connect on your wearable below.",
-        interactive = true, spotlightKey = "wearables_group"),
+        interactive = true, spotlightKey = "wearables_group", brainy = R.drawable.brainy_detective_small),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
         "Pick which data points you want to collect. Some will need permissions before you can toggle them on. We've already toggled on the ones connected to your watch.",
         "Use search at the top to jump to a specific metric. Permissions can be changed later in Android system settings.",
-        interactive = true),
+        interactive = true, brainy = R.drawable.brainy_shield_small),
 )
 
 object SpotlightState {
@@ -393,7 +405,7 @@ fun CoachOverlay(
                     )
                 }
             } else if (!step.interactive) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)))
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (tourState.phase == CoachPhase.TOUR) 0.82f else 0.2f)))
             }
         }
     }
@@ -445,9 +457,9 @@ fun CoachOverlay(
     AnimatedVisibility(visible = step != null, enter = slideInVertically { if (shouldAlignBottom) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (shouldAlignBottom) it else -it } + fadeOut(tween(200))) {
         if (step != null) {
             val isInteractive = step.interactive
-            val isProfileStep = step.route == Routes.PROFILE
-            val isRiskModelStep = step.route == Routes.RISK_WEIGHTS
             val alignBottom = shouldAlignBottom
+            val isTour = tourState.phase == CoachPhase.TOUR
+            val screenH = LocalConfiguration.current.screenHeightDp.dp
 
             Box(
                 Modifier
@@ -458,8 +470,7 @@ fun CoachOverlay(
                             // In TOUR phase the app's bottom navigation bar (~80dp) is visible
                             // beneath the overlay; lift the card above it so the navHint pulse
                             // on the target tab stays in view.
-                            val liftAboveNav = tourState.phase == CoachPhase.TOUR
-                            Modifier.padding(bottom = if (liftAboveNav) 92.dp else 12.dp)
+                            Modifier.padding(bottom = if (isTour) 92.dp else 12.dp)
                         } else {
                             // Push the card down on the Connect Wearable step so it sits
                             // below the status bar / Back row instead of hugging the top.
@@ -478,34 +489,28 @@ fun CoachOverlay(
                     label = "collapse"
                 ) { collapsed ->
                     if (collapsed) {
+                        // Collapsed pill: tap to bring the card back. Same behaviour as
+                        // before, restyled. The user hides the card to work the page.
                         Card(
                             onClick = {
                                 userExpanded = true
                                 isCollapsed = false
                             },
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E)),
+                            colors = CardDefaults.cardColors(containerColor = ObStyle.CardFill),
                             shape = RoundedCornerShape(28.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                            modifier = Modifier
-                                .border(1.dp, Color(0xFFFF7BB0).copy(alpha = 0.5f), RoundedCornerShape(28.dp))
+                            modifier = Modifier.border(1.5.dp, ObStyle.Pink.copy(alpha = 0.6f), RoundedCornerShape(28.dp))
                         ) {
                             Row(
                                 Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Box(
-                                    Modifier.size(28.dp).background(
-                                        Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
-                                        CircleShape
-                                    ), contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(14.dp))
-                                }
+                                if (step.brainy != null) Image(painterResource(step.brainy), null, modifier = Modifier.size(28.dp))
+                                else Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Text(
                                     t("%1\$s/%2\$s — Tap to expand", tourState.stepIndex + 1, steps.size),
-                                    color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = ObStyle.label(13.sp)
                                 )
                             }
                         }
@@ -516,145 +521,28 @@ fun CoachOverlay(
                         // Data step overlays the data list and asks the user to scroll it —
                         // keep the card translucent so the toggles behind stay visible.
                         val isDataStepCard = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
-                        val maxCardHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // ── Card body with Back (bottom-left) + Next (bottom-right) overlapping ──
-                            Box(modifier = Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E).copy(alpha = if (isDataStepCard) 0.8f else 1f)),
-                                shape = RoundedCornerShape(18.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                                modifier = Modifier.fillMaxWidth()
-                                    .then(if (isWearableStep) Modifier.height(205.dp) else Modifier.heightIn(max = maxCardHeight).animateContentSize(spring(dampingRatio = 0.8f)))
-                                    .border(
-                                        2.dp,
-                                        if (isInteractive) Brush.linearGradient(listOf(Color(0xFFFF7BB0).copy(alpha = pulseAlpha), Color(0xFFFF7BB0).copy(alpha = pulseAlpha)))
-                                        else Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.5f), AppTheme.AccentPink.copy(alpha = 0.3f))),
-                                        RoundedCornerShape(18.dp)
-                                    )
+                        val maxCardHeight = screenH * 0.4f
+
+                        // ── Shared button row: Back · Skip · Next/Done. Logic unchanged. ──
+                        val buttonsRow: @Composable () -> Unit = {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(Modifier.fillMaxWidth().height(3.dp).background(
-                                    Brush.horizontalGradient(listOf(
-                                        if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple,
-                                        if (isInteractive) AppTheme.AccentPurple else AppTheme.AccentPink
-                                    ))
-                                ))
-
-                                val bodyScrollState = rememberScrollState()
-                                LaunchedEffect(tourState.stepIndex) { bodyScrollState.scrollTo(0) }
-                                // Watermark overlays the body (bottom-right, facing left
-                                // into the card) — same treatment as the app's cards. It
-                                // must sit in a Box with the content, not in the column
-                                // flow, or it takes layout space and pushes text down.
-                                Box(Modifier.fillMaxWidth()) {
-                                brainyForCoachTitle(step.title)?.let { wm ->
-                                    Box(Modifier.matchParentSize()) {
-                                        Image(
-                                            painter = painterResource(wm),
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .align(Alignment.BottomEnd)
-                                                .offset(x = 16.dp, y = 20.dp)
-                                                .alpha(0.14f)
-                                                .graphicsLayer(scaleX = -1f)
-                                        )
-                                    }
-                                }
-                                Column(Modifier.padding(16.dp)) {
-                                Box(Modifier.weight(1f, fill = false)) {
-                                Column(Modifier.verticalScroll(bodyScrollState)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        val headerBrainy = brainyForCoachTitle(step.title)
-                                        if (headerBrainy != null) {
-                                            MonitorBlobIcon(headerBrainy, flip = false)
-                                        } else {
-                                            Box(Modifier.size(38.dp).background(
-                                                Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
-                                                CircleShape), contentAlignment = Alignment.Center) {
-                                                Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                            }
-                                        }
-                                        Column(Modifier.weight(1f)) {
-                                            Text(t(step.title), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                            Text(t("%1\$s of %2\$s", tourState.stepIndex + 1, steps.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                                        }
-                                        IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
-                                            Icon(Icons.Outlined.UnfoldLess, t("Minimize"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
-                                        }
-                                        if (tourState.phase == CoachPhase.TOUR) {
-                                            // Exit runs the same cleanup as finishing: clearDemoData joins
-                                            // the seed job before deleting, then lands on setup landing.
-                                            IconButton(onClick = { finishAndClean() }, modifier = Modifier.size(28.dp)) {
-                                                Icon(Icons.Outlined.Close, t("Exit tour"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-                                            }
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(10.dp))
-                                    Text(t(step.body), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, lineHeight = MaterialTheme.typography.bodyMedium.lineHeight)
-                                    Spacer(Modifier.height(8.dp))
-                                    Text(t(step.highlight), color = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-
-                                    Spacer(Modifier.height(if (isInteractive) 6.dp else 14.dp))
-
-                                    } // end scrollable body — actions stay pinned below
-
-                                    // The card is height-capped at 40% of the screen, so
-                                    // most steps' bodies are cut mid-sentence. Nothing
-                                    // said so: the old bouncing chevron was dropped and
-                                    // the 08-12 i18n commit left no affordance at all.
-                                    // A static fade + chevron, drawn only while there is
-                                    // more body below, says "keep reading" without any
-                                    // animation (motion is a migraine trigger).
-                                    if (bodyScrollState.canScrollForward) {
-                                        Box(
-                                            Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .fillMaxWidth()
-                                                .height(30.dp)
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        listOf(
-                                                            Color.Transparent,
-                                                            Color(0xFF1E0A2E).copy(alpha = if (isDataStepCard) 0.8f else 1f)
-                                                        )
-                                                    )
-                                                ),
-                                            contentAlignment = Alignment.BottomCenter
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.KeyboardArrowDown,
-                                                contentDescription = t("Scroll for more"),
-                                                tint = AppTheme.SubtleTextColor,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                    } // end body Box (scroll area + fade affordance)
-                                    // Back · Skip · Next on one row inside the card, the
-                                    // way VertigoMe does it. They used to straddle the card
-                                    // border, which left no room for Skip in the middle and
-                                    // meant Back was hidden on the first step — so the coach
-                                    // was a one-way corridor with no route back to the
-                                    // permission pages behind it.
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // The tour's first step has nothing behind it: Back
-                                        // here used to exit the whole tour (landing the user
-                                        // on setup out of nowhere). Hide it, matching iOS;
-                                        // the setup phase keeps Back on step 0 as its route
-                                        // to the permission pages.
-                                        val hideBack = tourState.phase == CoachPhase.TOUR && tourState.stepIndex == 0
-                                        if (hideBack) {
-                                            Spacer(Modifier.width(1.dp))
-                                        } else {
+                                // The tour's first step has nothing behind it: Back
+                                // here used to exit the whole tour (landing the user
+                                // on setup out of nowhere). Hide it, matching iOS;
+                                // the setup phase keeps Back on step 0 as its route
+                                // to the permission pages.
+                                val hideBack = isTour && tourState.stepIndex == 0
+                                Text(
+                                    t("Skip"),
+                                    style = ObStyle.label(14.sp).copy(color = ObStyle.Muted),
+                                    modifier = Modifier.clickable { finishAndClean() }.padding(vertical = 8.dp)
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    if (!hideBack) {
                                         OutlinedButton(
                                             onClick = {
                                                 val route = TourManager.prevStep()
@@ -662,81 +550,205 @@ fun CoachOverlay(
                                             },
                                             shape = RoundedCornerShape(50),
                                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                                            border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.35f)),
-                                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
-                                        ) {
-                                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(14.dp))
-                                            Spacer(Modifier.width(6.dp))
-                                            Text(t("Back"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                                        }
-                                        }
-
-                                        Text(
-                                            t("Skip"),
-                                            color = AppTheme.SubtleTextColor,
-                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                            modifier = Modifier.clickable { finishAndClean() }
-                                        )
-
-                                        if (tourState.stepIndex < steps.size - 1) {
-                                            Button(
-                                                onClick = { val route = TourManager.nextStep(); if (route != null) navigateTo(route) },
-                                                colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
-                                                shape = RoundedCornerShape(50),
-                                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-                                            ) {
-                                                Text(t("Next"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                                                Spacer(Modifier.width(6.dp))
-                                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
-                                            }
-                                        } else {
-                                            // Data step: gate Done until the user has scrolled to
-                                            // the very bottom of the data list (scrollPosition ==
-                                            // -1). This gate was silently dropped by the 08-12
-                                            // i18n commit; it is the designed behaviour.
-                                            val isDataStepDone = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
-                                            val gateScroll = isDataStepDone && SetupScrollState.scrollPosition != -1
-                                            Button(
-                                                onClick = { if (!gateScroll) finishAndClean() },
-                                                enabled = !gateScroll,
-                                                colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
-                                                shape = RoundedCornerShape(50),
-                                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-                                            ) {
-                                                Text(t("Done"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                                            }
-                                        }
+                                            border = androidx.compose.foundation.BorderStroke(1.5.dp, ObStyle.CardLine),
+                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
+                                        ) { Text(t("Back"), style = ObStyle.button(13.sp)) }
                                     }
-
-                                    Spacer(Modifier.height(12.dp))
-
-                                    // Step dots — hidden on the wearable step, where the card
-                                    // is height-capped to clear the cards it points at and the
-                                    // header already says "N of 3".
-                                    if (!isWearableStep)
-                                    // Step dots
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            steps.indices.forEach { i ->
-                                                Box(Modifier.size(if (i == tourState.stepIndex) 8.dp else 5.dp).clip(CircleShape).background(
-                                                    when {
-                                                        i == tourState.stepIndex -> if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple
-                                                        i < tourState.stepIndex -> (if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple).copy(alpha = 0.4f)
-                                                        else -> AppTheme.TrackColor
-                                                    }
-                                                ))
-                                            }
-                                        }
+                                    if (tourState.stepIndex < steps.size - 1) {
+                                        Button(
+                                            onClick = { val route = TourManager.nextStep(); if (route != null) navigateTo(route) },
+                                            colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                                            shape = RoundedCornerShape(50),
+                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
+                                        ) { Text(t("Next"), style = ObStyle.button(13.sp)) }
+                                    } else {
+                                        // Data step: gate Done until the user has scrolled to
+                                        // the very bottom of the data list (scrollPosition ==
+                                        // -1). Designed behaviour, unchanged.
+                                        val isDataStepDone = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
+                                        val gateScroll = isDataStepDone && SetupScrollState.scrollPosition != -1
+                                        Button(
+                                            onClick = { if (!gateScroll) finishAndClean() },
+                                            enabled = !gateScroll,
+                                            colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink,
+                                                disabledContainerColor = ObStyle.Pink.copy(alpha = 0.35f), disabledContentColor = ObStyle.Ink.copy(alpha = 0.6f)),
+                                            shape = RoundedCornerShape(50),
+                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
+                                        ) { Text(if (isTour) t("Start") else t("Done"), style = ObStyle.button(13.sp)) }
                                     }
-                                }
                                 }
                             }
+                        }
 
-                            } // end Box wrapping Card + Next overlap
+                        // ── Header row: Brainy · collapse chevron · exit (tour) · counter ──
+                        val headerRow: @Composable (brainy: Int?, showCounter: Boolean) -> Unit = { brainy, showCounter ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (brainy != null) Image(painterResource(brainy), null, modifier = Modifier.size(44.dp))
+                                else Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+                                Spacer(Modifier.weight(1f))
+                                IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
+                                    Icon(Icons.Outlined.UnfoldLess, t("Minimize"), tint = ObStyle.Lavender, modifier = Modifier.size(18.dp))
+                                }
+                                if (isTour) {
+                                    // Exit runs the same cleanup as finishing.
+                                    IconButton(onClick = { finishAndClean() }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Outlined.Close, t("Exit tour"), tint = ObStyle.Lavender, modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                                if (showCounter) {
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(t("%1\$s of %2\$s", tourState.stepIndex + 1, steps.size), style = ObStyle.label(12.sp))
+                                }
+                            }
+                        }
+
+                        val cardShape = RoundedCornerShape(22.dp)
+                        val cardBorder = if (isInteractive) ObStyle.Pink.copy(alpha = pulseAlpha) else ObStyle.CardLine.copy(alpha = 0.7f)
+                        val cardFill = ObStyle.CardFill.copy(alpha = if (isDataStepCard) 0.88f else 1f)
+
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                        if (isTour && step.closing) {
+                            // ── Closing screen: "And there's much more", feature rows, Start ──
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = cardFill), shape = cardShape,
+                                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(max = screenH * 0.78f).border(1.5.dp, cardBorder, cardShape)
+                            ) {
+                                Column(Modifier.padding(16.dp)) {
+                                    headerRow(step.brainy, false)
+                                    Spacer(Modifier.height(6.dp))
+                                    ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 26.sp)
+                                    ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 18.sp)
+                                    Spacer(Modifier.height(10.dp))
+                                    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        tourClosingFeatures.forEach { f ->
+                                            Row(
+                                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.06f))
+                                                    .border(1.dp, ObStyle.CardLine.copy(alpha = 0.35f), RoundedCornerShape(16.dp)).padding(10.dp),
+                                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Box(Modifier.size(44.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                                    Image(painterResource(f.icon), null, modifier = Modifier.size(30.dp))
+                                                }
+                                                Column {
+                                                    Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
+                                                    Text(t(f.desc), style = ObStyle.body(12.sp).copy(color = ObStyle.Lavender))
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                    buttonsRow()
+                                }
+                            }
+                        } else if (isTour) {
+                            // ── Tour stop: card (+ pop-out still) [+ second card + pop] ──
+                            val two = step.second != null
+                            val popMax = screenH * (if (two) 0.22f else 0.36f)
+                            val popImage: @Composable (Int) -> Unit = { res ->
+                                Image(
+                                    painter = painterResource(res), contentDescription = null,
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                                    modifier = Modifier.fillMaxWidth().heightIn(max = popMax)
+                                )
+                            }
+                            val tourCard: @Composable (headline: String, sub: String, body: String, brainy: Int?, findIt: String, counter: Boolean, buttons: Boolean) -> Unit =
+                                { headline, sub, body, brainy, findIt, counter, buttons ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = cardFill), shape = cardShape,
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                                        modifier = Modifier.fillMaxWidth().border(1.5.dp, cardBorder, cardShape)
+                                    ) {
+                                        Column(Modifier.padding(16.dp)) {
+                                            headerRow(brainy, counter)
+                                            Spacer(Modifier.height(4.dp))
+                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 24.sp, align = TextAlign.Start)
+                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 18.sp, align = TextAlign.Start)
+                                            Spacer(Modifier.height(6.dp))
+                                            Text(t(body), style = ObStyle.body(14.sp))
+                                            if (findIt.isNotEmpty()) {
+                                                Spacer(Modifier.height(8.dp))
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(t("Find it:"), style = ObStyle.label(12.sp))
+                                                    Spacer(Modifier.width(6.dp))
+                                                    Text(t(findIt), style = ObStyle.label(12.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
+                                                }
+                                            }
+                                            if (buttons) {
+                                                Spacer(Modifier.height(12.dp))
+                                                buttonsRow()
+                                            }
+                                        }
+                                    }
+                                }
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                tourCard(step.headline, step.sub, step.body, step.brainy, if (two) "" else step.findIt, true, !two)
+                                step.pop?.let { popImage(it) }
+                                step.second?.let { seg ->
+                                    tourCard(seg.headline, seg.sub, seg.body, seg.brainy, step.findIt, false, true)
+                                    popImage(seg.pop)
+                                }
+                            }
+                        } else {
+                            // ── Setup step: same card as before, restyled. Height cap, scroll
+                            // fade, wearable fixed height, data translucency all unchanged. ──
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = cardFill), shape = cardShape,
+                                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                                    .then(if (isWearableStep) Modifier.height(215.dp) else Modifier.heightIn(max = maxCardHeight).animateContentSize(spring(dampingRatio = 0.8f)))
+                                    .border(1.5.dp, cardBorder, cardShape)
+                            ) {
+                                val bodyScrollState = rememberScrollState()
+                                LaunchedEffect(tourState.stepIndex) { bodyScrollState.scrollTo(0) }
+                                Column(Modifier.padding(16.dp)) {
+                                    Box(Modifier.weight(1f, fill = false)) {
+                                        Column(Modifier.verticalScroll(bodyScrollState)) {
+                                            headerRow(step.brainy, true)
+                                            Spacer(Modifier.height(4.dp))
+                                            ObHeadline(t(step.title), Modifier.fillMaxWidth(), size = 22.sp, align = TextAlign.Start)
+                                            Spacer(Modifier.height(6.dp))
+                                            Text(t(step.body), style = ObStyle.body(14.sp))
+                                            Spacer(Modifier.height(8.dp))
+                                            Text(t(step.highlight), style = ObStyle.body(14.sp).copy(color = ObStyle.Pink, fontWeight = FontWeight.SemiBold))
+                                            Spacer(Modifier.height(if (isInteractive) 6.dp else 14.dp))
+                                        }
+                                        // Static fade + chevron while there is more body below
+                                        // (no animation: motion is a migraine trigger).
+                                        if (bodyScrollState.canScrollForward) {
+                                            Box(
+                                                Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(30.dp)
+                                                    .background(Brush.verticalGradient(listOf(Color.Transparent, cardFill))),
+                                                contentAlignment = Alignment.BottomCenter
+                                            ) {
+                                                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = t("Scroll for more"), tint = ObStyle.Lavender, modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                    }
+                                    buttonsRow()
+                                    Spacer(Modifier.height(10.dp))
+                                    // Step dots — hidden on the wearable step, where the card
+                                    // is height-capped and the header already says "N of 3".
+                                    if (!isWearableStep) {
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                steps.indices.forEach { i ->
+                                                    Box(Modifier.size(if (i == tourState.stepIndex) 8.dp else 5.dp).clip(CircleShape).background(
+                                                        when {
+                                                            i == tourState.stepIndex -> ObStyle.Pink
+                                                            i < tourState.stepIndex -> ObStyle.Pink.copy(alpha = 0.4f)
+                                                            else -> ObStyle.Muted.copy(alpha = 0.5f)
+                                                        }
+                                                    ))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        } // end Box wrapping the card(s)
                         }
                     }
                 }
@@ -744,5 +756,3 @@ fun CoachOverlay(
         }
     }
 }
-
-
