@@ -81,6 +81,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -1039,6 +1041,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 topBar = {
                     if (!isWizardFullscreen) {
                     CenterAlignedTopAppBar(
+                        // The tour overlay paints its lattice exactly between the two bars.
+                        modifier = Modifier.onGloballyPositioned { CoachBars.topBottomPx = it.boundsInRoot().bottom },
                         scrollBehavior = scrollBehavior,
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                             containerColor = Color.Transparent,
@@ -3118,6 +3122,7 @@ private fun BottomBar(
     )
 
     NavigationBar(
+        modifier = Modifier.onGloballyPositioned { CoachBars.bottomTopPx = it.boundsInRoot().top },
         containerColor = Color(0xFF2A003D),
         tonalElevation = 0.dp
     ) {

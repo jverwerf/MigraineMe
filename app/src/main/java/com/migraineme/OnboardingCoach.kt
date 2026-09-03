@@ -42,6 +42,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -175,8 +183,8 @@ val tourSteps = listOf(
         headline = "You are *not alone.*", sub = "guidance, articles, forum",
         body = "Share your diary with a practitioner you choose, find one near you, read articles picked for you, join the forum.",
         findIt = "Community icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
-    TourStep(Routes.HOME, Icons.Outlined.Home, "Much more", body = "", highlight = "", closing = true,
-        headline = "And there's *much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
+    TourStep(Routes.HOME, Icons.Outlined.Home, "", body = "", highlight = "", closing = true,
+        headline = "And there's\n*much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
 )
 
 val setupSteps = listOf(
@@ -218,6 +226,14 @@ fun Modifier.spotlightTarget(key: String): Modifier = this.onGloballyPositioned 
     if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
         SpotlightState.register(key, coords.boundsInRoot())
     }
+}
+
+/** Root-space edges of the app's top and bottom bars, reported by MainActivity. */
+object CoachBars {
+    var topBottomPx by mutableStateOf(0f)
+    var bottomTopPx by mutableStateOf(0f)
+    var overlayTopPx by mutableStateOf(0f)
+    var overlayBottomPx by mutableStateOf(0f)
 }
 
 enum class CoachPhase { TOUR, SETUP }
@@ -284,6 +300,66 @@ object TourManager {
 
     fun isActive(): Boolean = _state.value.active
     fun currentPhase(): CoachPhase = _state.value.phase
+}
+
+@Composable
+private fun TourChrome(step: TourStep, pulseAlpha: Float) {
+    val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val ring = Color(0xFFFF7BB0).copy(alpha = pulseAlpha)
+    Box(Modifier.fillMaxSize()) {
+        ObLatticeBackground()
+        // Top bar: settings (left), screen title, community (right) — same places as the app.
+        Box(Modifier.fillMaxWidth().align(Alignment.TopCenter).background(Color(0xFF2A003D)).padding(top = statusInset).height(64.dp)) {
+            Box(Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(44.dp)
+                .then(if (step.navHint == NavHintLocation.TOP_SETTINGS) Modifier.border(3.dp, ring, RoundedCornerShape(12.dp)) else Modifier),
+                contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.Settings, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            }
+            Text(t(step.title), color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Center))
+            Box(Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(44.dp)
+                .then(if (step.navHint == NavHintLocation.TOP_COMMUNITY) Modifier.border(3.dp, ring, RoundedCornerShape(12.dp)) else Modifier),
+                contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.Groups, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            }
+        }
+        // Bottom bar: the five tabs, solid, the hinted one ringed.
+        val tabs = listOf(
+            Triple(NavHintLocation.BOTTOM_MONITOR, "Monitor", Icons.Outlined.Timeline),
+            Triple(NavHintLocation.BOTTOM_INSIGHTS, "Insights", Icons.Outlined.BarChart),
+            Triple(NavHintLocation.BOTTOM_HOME, "Home", Icons.Outlined.Home),
+            Triple(NavHintLocation.BOTTOM_MIGRAINE, "Log", SymptomIcons.MigraineStarburst),
+            Triple(NavHintLocation.BOTTOM_JOURNAL, "Journal", Icons.Outlined.History),
+        )
+        Row(
+            Modifier.fillMaxWidth().align(Alignment.BottomCenter).background(Color(0xFF2A003D)).padding(bottom = navInset).height(80.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            tabs.forEach { (hint, label, icon) ->
+                val hinted = step.navHint == hint
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        Modifier.width(64.dp).height(32.dp).clip(RoundedCornerShape(16.dp))
+                            .background(if (hinted) AppTheme.AccentPurple.copy(alpha = 0.25f) else Color.Transparent)
+                            .then(if (hinted) Modifier.border(3.dp, ring, RoundedCornerShape(16.dp)) else Modifier),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp)) }
+                    Spacer(Modifier.height(4.dp))
+                    Text(t(label), color = Color.White.copy(alpha = if (hinted) 1f else 0.85f), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun coachBarPaddings(): Pair<androidx.compose.ui.unit.Dp, androidx.compose.ui.unit.Dp> {
+    val density = LocalDensity.current
+    val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val top = if (CoachBars.topBottomPx > 0f) with(density) { (CoachBars.topBottomPx - CoachBars.overlayTopPx).toDp() } else statusInset + 64.dp
+    val bottom = if (CoachBars.bottomTopPx > 0f && CoachBars.overlayBottomPx > 0f) with(density) { (CoachBars.overlayBottomPx - CoachBars.bottomTopPx).toDp() } else 80.dp + navInset
+    return top.coerceAtLeast(0.dp) to bottom.coerceAtLeast(0.dp)
 }
 
 @Composable
@@ -360,6 +436,8 @@ fun CoachOverlay(
                     coords.boundsInRoot().left,
                     coords.boundsInRoot().top
                 )
+                CoachBars.overlayTopPx = coords.boundsInRoot().top
+                CoachBars.overlayBottomPx = coords.boundsInRoot().bottom
             }
     )
 
@@ -405,7 +483,15 @@ fun CoachOverlay(
                     )
                 }
             } else if (!step.interactive) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (tourState.phase == CoachPhase.TOUR) 0.82f else 0.2f)))
+                if (tourState.phase == CoachPhase.TOUR) {
+                    // Tour stops draw their own chrome: lattice full screen, a top bar
+                    // with the settings and community icons, a solid bottom bar with the
+                    // five tabs. The live app is not shown. The nav hint rings the tab or
+                    // icon the stop refers to.
+                    TourChrome(step, pulseAlpha)
+                } else {
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)))
+                }
             }
         }
     }
@@ -466,19 +552,24 @@ fun CoachOverlay(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
                     .then(
-                        if (alignBottom) {
-                            // In TOUR phase the app's bottom navigation bar (~80dp) is visible
-                            // beneath the overlay; lift the card above it so the navHint pulse
-                            // on the target tab stays in view.
-                            Modifier.padding(bottom = if (isTour) 92.dp else 12.dp)
+                        if (isTour) {
+                            // Tour: the stack lives between our two bars, never over them.
+                            val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                            Modifier.padding(top = statusInset + 64.dp + 8.dp, bottom = 80.dp + navInset + 8.dp)
+                        } else if (alignBottom) {
+                            Modifier.padding(bottom = 12.dp)
                         } else {
                             // Push the card down on the Connect Wearable step so it sits
                             // below the status bar / Back row instead of hugging the top.
+                            // Below the status bar, or the collapsed pill lands under it and
+                            // never receives the tap that expands it.
                             val isWearableStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 1
-                            Modifier.padding(top = if (isWearableStep) 60.dp else 12.dp, bottom = 12.dp)
+                            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                            Modifier.padding(top = statusInset + if (isWearableStep) 60.dp else 12.dp, bottom = 12.dp)
                         }
                     ),
-                contentAlignment = if (alignBottom) Alignment.BottomCenter else Alignment.TopCenter
+                contentAlignment = if (isTour) Alignment.Center else if (alignBottom) Alignment.BottomCenter else Alignment.TopCenter
             ) {
                 AnimatedContent(
                     targetState = isCollapsed,
@@ -586,8 +677,10 @@ fun CoachOverlay(
                                 if (brainy != null) Image(painterResource(brainy), null, modifier = Modifier.size(44.dp))
                                 else Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.weight(1f))
-                                IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
-                                    Icon(Icons.Outlined.UnfoldLess, t("Minimize"), tint = ObStyle.Lavender, modifier = Modifier.size(18.dp))
+                                if (!isTour) {
+                                    IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Outlined.UnfoldLess, t("Minimize"), tint = ObStyle.Lavender, modifier = Modifier.size(18.dp))
+                                    }
                                 }
                                 if (isTour) {
                                     // Exit runs the same cleanup as finishing.
@@ -602,55 +695,52 @@ fun CoachOverlay(
                             }
                         }
 
-                        val cardShape = RoundedCornerShape(22.dp)
+                        val cardShape = RoundedCornerShape(17.dp)
                         val cardBorder = if (isInteractive) ObStyle.Pink.copy(alpha = pulseAlpha) else ObStyle.CardLine.copy(alpha = 0.7f)
                         val cardFill = ObStyle.CardFill.copy(alpha = if (isDataStepCard) 0.88f else 1f)
 
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                         if (isTour && step.closing) {
-                            // ── Closing screen: "And there's much more", feature rows, Start ──
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = cardFill), shape = cardShape,
-                                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                                modifier = Modifier.fillMaxWidth().heightIn(max = screenH * 0.78f).border(1.5.dp, cardBorder, cardShape)
-                            ) {
-                                Column(Modifier.padding(16.dp)) {
-                                    headerRow(step.brainy, false)
-                                    Spacer(Modifier.height(6.dp))
-                                    ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 26.sp)
-                                    ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 18.sp)
-                                    Spacer(Modifier.height(10.dp))
-                                    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        tourClosingFeatures.forEach { f ->
-                                            Row(
-                                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.06f))
-                                                    .border(1.dp, ObStyle.CardLine.copy(alpha = 0.35f), RoundedCornerShape(16.dp)).padding(10.dp),
-                                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
-                                                Box(Modifier.size(44.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
-                                                    Image(painterResource(f.icon), null, modifier = Modifier.size(30.dp))
-                                                }
-                                                Column {
-                                                    Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
-                                                    Text(t(f.desc), style = ObStyle.body(12.sp).copy(color = ObStyle.Lavender))
-                                                }
+                            // ── Closing screen: "And there's much more", feature rows, Start. Full page, like the mock. ──
+                            Column(Modifier.fillMaxSize().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(t("THE TOUR"), style = ObStyle.label(13.sp).copy(letterSpacing = 1.5.sp))
+                                Spacer(Modifier.height(6.dp))
+                                ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 36.sp)
+                                ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 21.sp)
+                                Spacer(Modifier.height(12.dp))
+                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    tourClosingFeatures.forEach { f ->
+                                        Row(
+                                            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObStyle.CardFill)
+                                                .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                                Image(painterResource(f.icon), null, modifier = Modifier.size(27.dp))
+                                            }
+                                            Column {
+                                                Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
+                                                Text(t(f.desc), style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender), maxLines = 1)
                                             }
                                         }
                                     }
-                                    Spacer(Modifier.height(12.dp))
-                                    buttonsRow()
                                 }
+                                Spacer(Modifier.height(12.dp))
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                    ObPillButton(t("Set up profile"), { finishAndClean() }, Modifier.width(244.dp).height(46.dp))
+                                }
+                                Spacer(Modifier.height(4.dp))
                             }
                         } else if (isTour) {
                             // ── Tour stop: card (+ pop-out still) [+ second card + pop] ──
                             val two = step.second != null
-                            val popMax = screenH * (if (two) 0.22f else 0.36f)
-                            val popImage: @Composable (Int) -> Unit = { res ->
+                            val popImage: @Composable ColumnScope.(Int) -> Unit = { res ->
                                 Image(
                                     painter = painterResource(res), contentDescription = null,
                                     contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                                    modifier = Modifier.fillMaxWidth().heightIn(max = popMax)
+                                    modifier = Modifier.fillMaxWidth(if (two) 0.8f else 1f).weight(1f, fill = false)
                                 )
                             }
                             val tourCard: @Composable (headline: String, sub: String, body: String, brainy: Int?, findIt: String, counter: Boolean, buttons: Boolean) -> Unit =
@@ -660,11 +750,11 @@ fun CoachOverlay(
                                         elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                                         modifier = Modifier.fillMaxWidth().border(1.5.dp, cardBorder, cardShape)
                                     ) {
-                                        Column(Modifier.padding(16.dp)) {
+                                        Column(Modifier.padding(21.dp)) {
                                             headerRow(brainy, counter)
-                                            Spacer(Modifier.height(4.dp))
-                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 24.sp, align = TextAlign.Start)
-                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 18.sp, align = TextAlign.Start)
+                                            Spacer(Modifier.height(6.dp))
+                                            ObHeadline(t(headline), Modifier.fillMaxWidth(), size = 28.sp, align = TextAlign.Start)
+                                            ObHand(t(sub), Modifier.fillMaxWidth(), size = 20.sp, align = TextAlign.Start)
                                             Spacer(Modifier.height(6.dp))
                                             Text(t(body), style = ObStyle.body(14.sp))
                                             if (findIt.isNotEmpty()) {
@@ -682,7 +772,10 @@ fun CoachOverlay(
                                         }
                                     }
                                 }
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                Modifier.fillMaxHeight(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 tourCard(step.headline, step.sub, step.body, step.brainy, if (two) "" else step.findIt, true, !two)
                                 step.pop?.let { popImage(it) }
                                 step.second?.let { seg ->

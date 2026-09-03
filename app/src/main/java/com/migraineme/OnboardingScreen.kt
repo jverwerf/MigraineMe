@@ -26,7 +26,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -314,43 +322,21 @@ fun OnboardingScreen(
         }
     }
 
-    val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
+    val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1E1330), Color(0xFF1E1330))) }
 
     Box(Modifier.fillMaxSize().background(bgBrush)) {
-        // Welcome page gets the Home-style sky background fading into the gradient.
-        if (currentPage == PageId.WELCOME) {
-            // The Scaffold hosting this route still reserves the status-bar
-            // inset even with no top bar, so without pulling the art up by
-            // that amount it stops short of the screen top instead of
-            // bleeding under the status bar.
-            val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-            Image(
-                painter = painterResource(id = R.drawable.purple_sky_bg),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                // Crop from the TOP of the artwork, not its centre. Centre
-                // crop skips the empty sky the illustration opens with and
-                // pushes the swing hard against the status bar.
-                alignment = Alignment.TopCenter,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.46f)
-                    .align(Alignment.TopCenter)
-                    .offset(y = -statusBarInset)
-            )
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.46f)
-                    .align(Alignment.TopCenter)
-                    .offset(y = -statusBarInset)
-                    .background(
-                        Brush.verticalGradient(
-                            0.3f to Color.Transparent,
-                            1f to Color(0xFF2A003D)
-                        )
-                    )
-            )
+        // The three intro pages sit on the store-screenshot lattice.
+        if (currentPage != PageId.LOADING_DATA) {
+            // Edge to edge: the Scaffold reserves the status and gesture bars, so the
+            // lattice is pulled up and stretched past both, or two bands show.
+            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            val heroPage = currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS || currentPage == PageId.CHOICE
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                Box(Modifier.offset(y = -statusInset).width(maxWidth).height(maxHeight + statusInset + navInset + 48.dp)) {
+                    ObLatticeBackground(dim = !heroPage)
+                }
+            }
         }
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(20.dp))
@@ -419,7 +405,7 @@ fun OnboardingScreen(
                     }
                     PageId.SETUP_LANDING -> {
                         TextButton(onClick = { skipOnboarding { onComplete() } }) {
-                            Text(t("Skip"), color = AppTheme.SubtleTextColor)
+                            Text(t("Skip"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
                         }
                     }
                     else -> {}
@@ -457,14 +443,7 @@ fun OnboardingScreen(
                         }
                     }
                     PageId.SETUP_LANDING -> {
-                        Button(
-                            onClick = { currentIdx = pages.indexOf(PageId.LOCATION_PERMISSION) },
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(t("Let's go")); Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                        }
+                        ObPillButton(t("Let's go"), { currentIdx = pages.indexOf(PageId.LOCATION_PERMISSION) }, Modifier.width(175.dp).height(46.dp))
                     }
                 }
             }
@@ -694,15 +673,14 @@ private fun SetupLandingPage() {
         Image(
             painter = painterResource(id = R.drawable.brainy_briefcase),
             contentDescription = null,
-            modifier = Modifier.size(96.dp)
+            modifier = Modifier.size(150.dp)
         )
 
-        Spacer(Modifier.height(20.dp))
-        Text(t("Now let's set up\nyour data"), color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(16.dp))
-        Text(t("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes."),
-            color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(12.dp))
+        ObHeadline(t("Now let's set up\nyour *data*"), Modifier.fillMaxWidth(), size = 36.sp)
+        Spacer(Modifier.height(4.dp))
+        ObHand(t("wearables, data, then the AI personalises it all"), Modifier.fillMaxWidth(), size = 21.sp)
+        Spacer(Modifier.height(22.dp))
         SetupStepPreview(Icons.Outlined.Lock, t("1. Permissions"), t("Location, notifications, microphone, calendar"))
         Spacer(Modifier.height(8.dp))
         SetupStepPreview(Icons.Outlined.Link, t("2. Connect"), t("Health Connect, Oura, Polar, Garmin"))
@@ -714,8 +692,7 @@ private fun SetupLandingPage() {
         // Pointer to the policy; iOS and the RN apps carry the same line.
         Text(
             t("See our Privacy Policy for details."),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = ObStyle.label(11.sp).copy(color = ObStyle.Muted),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -725,16 +702,16 @@ private fun SetupLandingPage() {
 @Composable
 private fun SetupStepPreview(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String) {
     Row(
-        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().background(ObStyle.CardFill, RoundedCornerShape(16.dp)).border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.size(40.dp).background(AppTheme.AccentPurple.copy(alpha = 0.15f), CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+        Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = ObStyle.Ink, modifier = Modifier.size(20.dp))
         }
         Column {
-            Text(title, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-            Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(title, style = ObStyle.body(14.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
+            Text(subtitle, style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender))
         }
     }
 }

@@ -3557,14 +3557,6 @@
       "max_len": 60
     },
     {
-      "en": "And there's *much more*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
       "en": "Ask *MigraineMe.*",
       "class": "soft",
       "sites": [
@@ -3597,7 +3589,7 @@
       "max_len": 60
     },
     {
-      "en": "Every Monday it *learns* you.",
+      "en": "Every Monday\nit *learns* you.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -3661,7 +3653,7 @@
       "max_len": 60
     },
     {
-      "en": "It estimates *7 days* ahead.",
+      "en": "It estimates\n*7 days* ahead.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -3717,7 +3709,7 @@
       "max_len": 60
     },
     {
-      "en": "Near the top? It says *HIGH.*",
+      "en": "Near the top?\nIt says *HIGH.*",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -3805,7 +3797,7 @@
       "max_len": 176
     },
     {
-      "en": "Triggers fill your *bucket.*",
+      "en": "Triggers fill\nyour *bucket.*",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -3869,7 +3861,7 @@
       "max_len": 60
     },
     {
-      "en": "You log your *attacks.*",
+      "en": "You log your\n*attacks.*",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -4083,6 +4075,14 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 64
+    },
+    {
+      "en": "And there's\n*much more*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

@@ -299,7 +299,7 @@ private fun FeatureBullet(icon: ImageVector, text: String) {
         ) {
             Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(12.dp))
         }
-        Text(text, color = Color.White, style = MaterialTheme.typography.bodySmall)
+        Text(text, style = ObStyle.body(14.sp).copy(color = Color.White))
     }
 }
 
@@ -398,15 +398,15 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.LocationOn, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.LocationOn, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Enable Location"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Enable Location"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("MigraineMe uses your location to track weather conditions — a top migraine trigger. We collect city-level data only, never your exact address."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -431,8 +431,8 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
@@ -443,13 +443,13 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                             android.Manifest.permission.ACCESS_COARSE_LOCATION
                         ))
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Allow Location Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }
@@ -483,15 +483,15 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.Notifications, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.Notifications, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Enable Notifications"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Enable Notifications"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -516,8 +516,8 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
@@ -527,13 +527,13 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                             launcher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                         } else { onGrant() }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Allow Notifications"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }
@@ -565,15 +565,15 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.Mic, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.Mic, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Enable Microphone"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Enable Microphone"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("MigraineMe can use your microphone for voice-based logging and ambient noise detection — both known migraine factors."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -598,20 +598,20 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.RECORD_AUDIO) },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Allow Microphone Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }
@@ -652,15 +652,15 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.DateRange, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.DateRange, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Enable Calendar"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Enable Calendar"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("MigraineMe reads your calendar to suggest activities, reliefs, and stress triggers from your events — no events are stored, only what you confirm."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -685,20 +685,20 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.READ_CALENDAR) },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Allow Calendar Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }
@@ -741,15 +741,15 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.PhoneAndroid, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.PhoneAndroid, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Enable Screen Time"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Enable Screen Time"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("Screen time is a common migraine trigger. MigraineMe can track your usage patterns to find correlations with your attacks."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -774,8 +774,8 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
@@ -785,13 +785,13 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                             context.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
                         } catch (_: Exception) {}
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Open Settings"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }
@@ -825,15 +825,15 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
                 CircleShape
             ))
-            Icon(Icons.Outlined.BatteryChargingFull, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+            Icon(Icons.Outlined.BatteryChargingFull, null, tint = ObStyle.Pink, modifier = Modifier.size(40.dp))
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(t("Disable Battery Optimization"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        ObHeadline(t("Disable Battery Optimization"), Modifier.fillMaxWidth(), size = 30.sp)
         Spacer(Modifier.height(12.dp))
         Text(
             t("Android may pause MigraineMe in the background to save battery. Disabling optimization ensures reliable data collection and timely alerts."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            style = ObStyle.body(14.sp), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -858,8 +858,8 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onGrant,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
@@ -873,13 +873,13 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text(t("Disable Battery Optimization"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), style = ObStyle.label(14.sp).copy(color = ObStyle.Muted))
             }
         }
     }

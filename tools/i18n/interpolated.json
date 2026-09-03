@@ -364,19 +364,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:341",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:343",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:376",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:378",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:410",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:412",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:444",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:446",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -608,11 +608,11 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:512",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:603",
     "line": "                                    t(\"%1\\$s/%2\\$s — Tap to expand\", tourState.stepIndex + 1, steps.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:600",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:693",
     "line": "                                    Text(t(\"%1\\$s of %2\\$s\", tourState.stepIndex + 1, steps.size), style = ObStyle.label(12.sp))"
   },
   {

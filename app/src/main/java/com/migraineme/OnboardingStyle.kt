@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -105,21 +107,21 @@ fun ObHand(text: String, modifier: Modifier = Modifier, size: TextUnit = 22.sp, 
 }
 
 @Composable
-fun ObPillButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, filled: Boolean = true, enabled: Boolean = true) {
+fun ObPillButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, filled: Boolean = true, enabled: Boolean = true, textSize: TextUnit = 15.sp, vPad: androidx.compose.ui.unit.Dp = 10.dp) {
     if (filled) {
         Button(
             onClick = onClick, enabled = enabled, shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink,
                 disabledContainerColor = ObStyle.Pink.copy(alpha = 0.35f), disabledContentColor = ObStyle.Ink.copy(alpha = 0.6f)),
-            contentPadding = PaddingValues(horizontal = 26.dp, vertical = 14.dp), modifier = modifier
-        ) { Text(label, style = ObStyle.button()) }
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = vPad), modifier = modifier
+        ) { Text(label, style = ObStyle.button(textSize), maxLines = 1) }
     } else {
         OutlinedButton(
             onClick = onClick, enabled = enabled, shape = RoundedCornerShape(50),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
             border = BorderStroke(1.5.dp, ObStyle.CardLine),
-            contentPadding = PaddingValues(horizontal = 26.dp, vertical = 14.dp), modifier = modifier
-        ) { Text(label, style = ObStyle.button()) }
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = vPad), modifier = modifier
+        ) { Text(label, style = ObStyle.button(textSize), maxLines = 1) }
     }
 }
 
@@ -145,4 +147,56 @@ fun ObDots(count: Int, active: Int) {
         }
     }
     Spacer(Modifier.height(4.dp))
+}
+
+/**
+ * The store-screenshot background: a staggered lattice of faint circles, each
+ * carrying a Brainy log icon at low alpha, over the purple glow. Drawn once per
+ * layout pass, no animation.
+ */
+private val latticeIcons = listOf(
+    R.drawable.brainy_trig_stress, R.drawable.brainy_trig_alcohol, R.drawable.brainy_rel_ice,
+    R.drawable.brainy_trig_storm, R.drawable.brainy_trig_caffeine, R.drawable.brainy_trig_menstruation,
+    R.drawable.brainy_rel_darkness, R.drawable.brainy_trig_screen_time, R.drawable.brainy_rel_water,
+    R.drawable.brainy_trig_noise,
+)
+
+@Composable
+fun ObLatticeBackground(modifier: Modifier = Modifier, dim: Boolean = false) {
+    val painters = latticeIcons.map { androidx.compose.ui.res.painterResource(it) }
+    androidx.compose.foundation.Canvas(modifier.fillMaxSize()) {
+        // Glow: dark edge with a soft purple core, slightly above centre.
+        drawRect(Color(0xFF1E1330))
+        drawCircle(
+            brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                listOf(Color(0xFF422A68).copy(alpha = 0.85f), Color(0xFF422A68).copy(alpha = 0f)),
+                center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height * 0.4f),
+                radius = size.width * 0.9f
+            ),
+            radius = size.width * 0.9f,
+            center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height * 0.4f)
+        )
+        val d = 88.dp.toPx()
+        val stepX = 104.dp.toPx()
+        val stepY = 100.dp.toPx()
+        var row = 0
+        var y = -d * 0.4f
+        var k = 0
+        while (y < size.height + d) {
+            var x = (if (row % 2 == 1) stepX / 2f else 0f) - d * 0.45f
+            while (x < size.width + d) {
+                drawCircle(Color.White.copy(alpha = if (dim) 0.02f else 0.035f), radius = d / 2f, center = androidx.compose.ui.geometry.Offset(x + d / 2f, y + d / 2f))
+                val p = painters[k % painters.size]
+                val iw = d * 0.62f
+                val ih = iw * (p.intrinsicSize.height / p.intrinsicSize.width).let { if (it.isNaN() || it <= 0f) 1f else it }
+                translate(left = x + (d - iw) / 2f, top = y + (d - ih) / 2f) {
+                    with(p) { draw(androidx.compose.ui.geometry.Size(iw, ih), alpha = if (dim) 0.07f else 0.16f) }
+                }
+                k++
+                x += stepX
+            }
+            row++
+            y += stepY
+        }
+    }
 }
