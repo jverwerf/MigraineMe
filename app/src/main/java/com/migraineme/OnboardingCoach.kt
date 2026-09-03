@@ -181,7 +181,7 @@ val tourSteps = listOf(
         findIt = "Home › “suggestions for you” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
     TourStep(Routes.HOME, Icons.Outlined.Forum, "Community", highlight = "", navHint = NavHintLocation.TOP_COMMUNITY,
         headline = "You are *not alone.*", sub = "guidance, articles, forum",
-        body = "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.",
+        body = "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
         findIt = "Community icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
     TourStep(Routes.HOME, Icons.Outlined.Home, "", body = "", highlight = "", closing = true,
         headline = "And there's\n*much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
@@ -312,6 +312,7 @@ private fun TourChrome(step: TourStep, pulseAlpha: Float) {
     val ring = Color(0xFFFF7BB0).copy(alpha = pulseAlpha)
     Box(Modifier.fillMaxSize()) {
         ObLatticeBackground()
+        if (step.closing) return@Box
         // Top bar: settings (left), screen title, community (right) — same places as the app.
         Box(Modifier.fillMaxWidth().align(Alignment.TopCenter).background(Color(0xFF2A003D)).padding(top = statusInset).height(64.dp)) {
             Box(Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(44.dp)
@@ -555,7 +556,11 @@ fun CoachOverlay(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
                     .then(
-                        if (isTour) {
+                        if (isTour && step.closing) {
+                            val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                            Modifier.padding(top = statusInset + 16.dp, bottom = navInset + 16.dp)
+                        } else if (isTour) {
                             // Tour: the stack lives between our two bars, never over them.
                             val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                             val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -715,34 +720,35 @@ fun CoachOverlay(
                         if (isTour && step.closing) {
                             // ── Closing screen: "And there's much more", feature rows, Start. Full page, like the mock. ──
                             Column(Modifier.fillMaxSize().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Spacer(Modifier.height(4.dp))
-                                Text(t("THE TOUR"), style = ObStyle.label(13.sp).copy(letterSpacing = 1.5.sp))
+                                Spacer(Modifier.height(24.dp))
+                                Text(t("THE TOUR"), style = ObStyle.label(14.sp).copy(letterSpacing = 1.5.sp))
+                                Spacer(Modifier.height(14.dp))
+                                ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 40.sp)
                                 Spacer(Modifier.height(6.dp))
-                                ObHeadline(t(step.headline), Modifier.fillMaxWidth(), size = 36.sp)
-                                ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 21.sp)
-                                Spacer(Modifier.height(12.dp))
-                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                ObHand(t(step.sub), Modifier.fillMaxWidth(), size = 22.sp)
+                                Spacer(Modifier.height(20.dp))
+                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     tourClosingFeatures.forEach { f ->
                                         Row(
                                             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObStyle.CardFill)
-                                                .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                                .border(1.dp, ObStyle.CardLine.copy(alpha = 0.5f), RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
                                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
-                                                Image(painterResource(f.icon), null, modifier = Modifier.size(27.dp))
+                                            Box(Modifier.size(46.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                                Image(painterResource(f.icon), null, modifier = Modifier.size(31.dp))
                                             }
                                             Column {
-                                                Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
-                                                Text(t(f.desc), style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender), maxLines = 1)
+                                                Text(t(f.title), style = ObStyle.body(15.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
+                                                Text(t(f.desc), style = ObStyle.body(12.sp).copy(color = ObStyle.Lavender), maxLines = 1)
                                             }
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(20.dp))
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                                     ObPillButton(t("Set up profile"), { finishAndClean() }, Modifier.width(244.dp).height(46.dp))
                                 }
-                                Spacer(Modifier.height(4.dp))
+                                Spacer(Modifier.height(12.dp))
                             }
                         } else if (isTour) {
                             // ── Tour stop: card (+ pop-out still) [+ second card + pop] ──

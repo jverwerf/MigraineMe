@@ -3757,7 +3757,7 @@
       "max_len": 60
     },
     {
-      "en": "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.",
+      "en": "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"

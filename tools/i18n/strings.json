@@ -13165,15 +13165,6 @@
     "count": 1
   },
   {
-    "en": "Find a practice near you, share your diary with a practitioner you choose, read articles picked for you, join the forum.",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 226,
-    "count": 1
-  },
-  {
     "en": "Find it:",
     "class": "hard",
     "sites": [
@@ -20479,6 +20470,15 @@
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:1273"
     ],
     "max_len": 175,
+    "count": 1
+  },
+  {
+    "en": "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 226,
     "count": 1
   },
   {
