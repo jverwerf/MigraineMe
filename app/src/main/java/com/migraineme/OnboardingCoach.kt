@@ -127,11 +127,11 @@ data class TourStep(
 )
 
 /**
- * Find-it lines are templates such as "{Home} tab": the template is translated as a whole and
+ * Find-it lines and tour bodies are templates such as "{Home} tab": the template is translated as a whole and
  * every {key} is then replaced by that label's own translation, so the line always names the
  * tab, card or menu item exactly the way this app shows it in the current language.
  */
-fun expandFindIt(template: String): String =
+fun expandLabels(template: String): String =
     Regex("\\{([^}]+)\\}").replace(tSync(template)) { tSync(it.groupValues[1]) }
 
 data class TourSegment(val headline: String, val sub: String, val body: String, val pop: Int, val brainy: Int)
@@ -152,11 +152,11 @@ val tourClosingFeatures = listOf(
 val tourSteps = listOf(
     TourStep(Routes.HOME, Icons.Outlined.Home, "Home", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
         headline = "Your risk *today.*", sub = "look here every morning",
-        body = "The gauge shows how full your bucket is: Low, Mild or High. Under it: the 7 day outlook.",
+        body = "The gauge shows how full your bucket is: {Low}, {Mild} or {High}. Under it: the 7 day outlook.",
         findIt = "{Home} tab", pop = R.drawable.tour_pop_01, brainy = R.drawable.brainy_risk_small),
     TourStep(Routes.HOME, Icons.Outlined.Tune, "Risk Model", highlight = "", navHint = NavHintLocation.TOP_SETTINGS,
         headline = "Where *HIGH* starts.", sub = "the AI sets the lines, you can move them",
-        body = "Every trigger counts Low, Mild or High towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
+        body = "Every trigger counts {Low}, {Mild} or {High} towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
         findIt = "Settings menu (top left) › {Risk Model}", pop = R.drawable.tour_pop_02, brainy = R.drawable.brainy_archer_small),
     TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log", highlight = "", navHint = NavHintLocation.BOTTOM_MIGRAINE,
         headline = "Log an *attack.*", sub = "the one thing you have to do",
@@ -796,13 +796,13 @@ fun CoachOverlay(
                                             ObHeadline(t(headline), Modifier.fillMaxWidth(), size = if (two) 22.sp else 26.sp, align = TextAlign.Start)
                                             ObHand(t(sub), Modifier.fillMaxWidth(), size = if (two) 16.sp else 19.sp, align = TextAlign.Start)
                                             Spacer(Modifier.height(4.dp))
-                                            Text(t(body), style = ObStyle.body(if (two) 12.5.sp else 13.5.sp))
+                                            Text(expandLabels(body), style = ObStyle.body(if (two) 12.5.sp else 13.5.sp))
                                             if (findIt.isNotEmpty()) {
                                                 Spacer(Modifier.height(6.dp))
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     Text(t("Find it:"), style = ObStyle.label(11.5.sp))
                                                     Spacer(Modifier.width(6.dp))
-                                                    Text(expandFindIt(findIt), style = ObStyle.label(11.5.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
+                                                    Text(expandLabels(findIt), style = ObStyle.label(11.5.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
                                                 }
                                             }
                                             if (buttons) {

@@ -3597,7 +3597,7 @@
       "max_len": 60
     },
     {
-      "en": "Every trigger counts Low, Mild or High towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
+      "en": "Every trigger counts {Low}, {Mild} or {High} towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
@@ -3709,7 +3709,7 @@
       "max_len": 224
     },
     {
-      "en": "The gauge shows how full your bucket is: Low, Mild or High. Under it: the 7 day outlook.",
+      "en": "The gauge shows how full your bucket is: {Low}, {Mild} or {High}. Under it: the 7 day outlook.",
       "class": "soft",
       "sites": [
         "OnboardingCoach.kt:tourSteps-table"
