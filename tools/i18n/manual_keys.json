@@ -4419,6 +4419,254 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 40
+    },
+    {
+      "en": "Sleep duration",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Sleep score",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Sleep efficiency",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Sleep stages",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Sleep disturbances",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Fell asleep time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Woke up time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Recovery score",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Resting heart rate",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "HRV",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Skin temperature",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Blood oxygen (SpO2)",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Activities",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Workout HR zones",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Steps",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Strain",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Stress index",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Phone screen time tracking",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 52
+    },
+    {
+      "en": "Late night screen time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 44
+    },
+    {
+      "en": "Noise Sampling",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Phone brightness",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Phone volume",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Dark mode usage",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Phone unlocks",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Temperature",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Pressure",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Humidity",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Wind",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "UV index",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Thunderstorms",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Menstruation",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

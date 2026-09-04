@@ -228,7 +228,7 @@ fun DataSettingsRow(
                     .padding(end = 10.dp)
             ) {
                 Text(
-                    row.collectedByLabel,
+                    t(row.collectedByLabel),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )

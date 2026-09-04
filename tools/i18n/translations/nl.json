@@ -4060,5 +4060,14 @@
   "Data warnings": "Datawaarschuwingen",
   "Answer updates": "Antwoord-updates",
   "Profile snapshot": "Profielmomentopname",
-  "AI Calibration": "AI-kalibratie"
+  "AI Calibration": "AI-kalibratie",
+  "Fell asleep time": "Inslaaptijd",
+  "Woke up time": "Wektijd",
+  "Recovery score": "Herstelscore",
+  "Blood oxygen (SpO2)": "Bloedzuurstof (SpO2)",
+  "Workout HR zones": "HR-zones bij training",
+  "Phone screen time tracking": "Schermtijd van je telefoon",
+  "Noise Sampling": "Geluidsmeting",
+  "Dark mode usage": "Gebruik donkere modus",
+  "Thunderstorms": "Onweer"
 }

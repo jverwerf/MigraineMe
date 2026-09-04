@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4062 entries.
+ * 4071 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -670,6 +670,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Blogs" to "Blogs",
     "Blood glucose high" to "Glucosa alta",
     "Blood glucose low" to "Glucosa baja",
+    "Blood oxygen (SpO2)" to "Oxígeno en sangre (SpO2)",
     "Blood oxygen (SpO₂)" to "Oxígeno (SpO₂)",
     "Blood pressure high" to "Tensión alta",
     "Blood pressure low" to "Tensión baja",
@@ -967,6 +968,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Dark mode" to "Modo oscuro",
     "Dark mode high" to "Modo oscuro alto",
     "Dark mode low" to "Modo oscuro bajo",
+    "Dark mode usage" to "Uso del modo oscuro",
     "Dark room" to "Cuarto oscuro",
     "Darkness" to "Oscuridad",
     "Data" to "Datos",
@@ -1284,6 +1286,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Feeling low or depressed" to "Ánimo bajo o depresión",
     "Feeling unusually low or sad" to "Bajón o tristeza rara",
     "Fell Asleep" to "Inicio sueño",
+    "Fell asleep time" to "Hora de dormirse",
     "Female" to "Mujer",
     "Fermented foods" to "Fermentados",
     "Fetching your data..." to "Obteniendo tus datos...",
@@ -2169,6 +2172,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Noise Avg" to "Ruido med.",
     "Noise High" to "Ruido alto",
     "Noise Low" to "Ruido bajo",
+    "Noise Sampling" to "Medición de ruido",
     "Noise cancelling headphones" to "Auriculares antirruido",
     "Noise high" to "Mucho ruido",
     "Noise levels" to "Nivel de ruido",
@@ -2372,6 +2376,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Phone" to "Móvil",
     "Phone (API)" to "Móvil (API)",
     "Phone brightness" to "Brillo del móvil",
+    "Phone screen time tracking" to "Tiempo de pantalla del móvil",
     "Phone unlocks" to "Desbloqueos",
     "Phone unlocks high" to "Muchos desbloqueos",
     "Phone unlocks low" to "Pocos desbloqueos",
@@ -2533,6 +2538,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Recovery below 33%" to "Recuperación <33%",
     "Recovery high" to "Recuperación alta",
     "Recovery low" to "Recuperación baja",
+    "Recovery score" to "Puntuación de recuperación",
     "Recovery symptoms" to "Tras el ataque",
     "Recovery symptoms that lingered after the attack ended" to "Síntomas que siguieron tras acabar el ataque",
     "Red bands = migraine days" to "Rojo = días con migraña",
@@ -3198,6 +3204,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Thu" to "jue",
     "Thunderstorm" to "Tormenta",
     "Thunderstorm with hail" to "Tormenta con granizo",
+    "Thunderstorms" to "Tormentas",
     "Thunderstorms / electrical storms" to "Tormentas / aparato eléctrico",
     "Tight at the sides at first" to "Al principio aprieta a los lados",
     "Time Range" to "Periodo",
@@ -3696,6 +3703,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Within {0}" to "En {0}",
     "Without aura" to "Sin aura",
     "Woke Up" to "Despertar",
+    "Woke up time" to "Hora de despertar",
     "Word-finding trouble" to "Dificultad con las palabras",
     "Work" to "Trabajo",
     "Work pressure, anxiety, conflict" to "Presión laboral, ansiedad, conflicto",
@@ -3703,6 +3711,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Working" to "Trabajar",
     "Working from home" to "Teletrabajo",
     "Working well" to "Funciona bien",
+    "Workout HR zones" to "Zonas de FC en ejercicio",
     "Works Best When" to "Funciona mejor si",
     "Works Best When…" to "Funciona mejor si…",
     "Works best when" to "Funciona mejor cuando",

@@ -4060,5 +4060,14 @@
   "Data warnings": "Avisos de datos",
   "Answer updates": "Cambios de respuestas",
   "Profile snapshot": "Instantánea del perfil",
-  "AI Calibration": "Calibración IA"
+  "AI Calibration": "Calibración IA",
+  "Fell asleep time": "Hora de dormirse",
+  "Woke up time": "Hora de despertar",
+  "Recovery score": "Puntuación de recuperación",
+  "Blood oxygen (SpO2)": "Oxígeno en sangre (SpO2)",
+  "Workout HR zones": "Zonas de FC en ejercicio",
+  "Phone screen time tracking": "Tiempo de pantalla del móvil",
+  "Noise Sampling": "Medición de ruido",
+  "Dark mode usage": "Uso del modo oscuro",
+  "Thunderstorms": "Tormentas"
 }

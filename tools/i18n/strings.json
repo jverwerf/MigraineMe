@@ -9241,6 +9241,15 @@
     "count": 1
   },
   {
+    "en": "Blood oxygen (SpO2)",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Blood pressure high",
     "class": "hard",
     "sites": [
@@ -11155,6 +11164,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Dark mode usage",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -13147,6 +13165,15 @@
     "count": 1
   },
   {
+    "en": "Fell asleep time",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Fermented foods",
     "class": "hard",
     "sites": [
@@ -14174,11 +14201,11 @@
   },
   {
     "en": "HRV",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15119,11 +15146,11 @@
   },
   {
     "en": "Humidity",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15853,6 +15880,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Late night screen time",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 44,
     "count": 1
   },
   {
@@ -18934,6 +18970,15 @@
     "count": 1
   },
   {
+    "en": "Noise Sampling",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Noise cancelling headphones",
     "class": "hard",
     "sites": [
@@ -20221,6 +20266,24 @@
     "count": 1
   },
   {
+    "en": "Phone brightness",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Phone screen time tracking",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 52,
+    "count": 1
+  },
+  {
     "en": "Phone unlocks",
     "class": "soft",
     "sites": [
@@ -20771,11 +20834,11 @@
   },
   {
     "en": "Pressure",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -21355,6 +21418,15 @@
     "count": 1
   },
   {
+    "en": "Recovery score",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Recovery symptoms",
     "class": "hard",
     "sites": [
@@ -21730,6 +21802,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Resting heart rate",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -23443,6 +23524,15 @@
     "count": 1
   },
   {
+    "en": "Sleep disturbances",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Sleep disturbances high",
     "class": "hard",
     "sites": [
@@ -23566,6 +23656,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Sleep stages",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -24065,11 +24164,11 @@
   },
   {
     "en": "Steps",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -24200,11 +24299,11 @@
   },
   {
     "en": "Strain",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -25145,11 +25244,11 @@
   },
   {
     "en": "Temperature",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -25762,6 +25861,15 @@
       "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
     ],
     "max_len": 25,
+    "count": 1
+  },
+  {
+    "en": "Thunderstorms",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -29231,11 +29339,11 @@
   },
   {
     "en": "Wind",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "DataSettingsSections.kt:table"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -29311,6 +29419,15 @@
     "count": 1
   },
   {
+    "en": "Woke up time",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Word-finding trouble",
     "class": "hard",
     "sites": [
@@ -29362,6 +29479,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
     ],
     "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "Workout HR zones",
+    "class": "soft",
+    "sites": [
+      "DataSettingsSections.kt:table"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {

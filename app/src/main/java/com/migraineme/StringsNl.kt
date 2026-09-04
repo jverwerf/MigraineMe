@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4062 entries.
+ * 4071 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -670,6 +670,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Blogs" to "Blogs",
     "Blood glucose high" to "Bloedsuiker hoog",
     "Blood glucose low" to "Bloedsuiker laag",
+    "Blood oxygen (SpO2)" to "Bloedzuurstof (SpO2)",
     "Blood oxygen (SpO₂)" to "Zuurstof (SpO₂)",
     "Blood pressure high" to "Bloeddruk hoog",
     "Blood pressure low" to "Bloeddruk laag",
@@ -967,6 +968,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Dark mode" to "Donker thema",
     "Dark mode high" to "Donkere modus hoog",
     "Dark mode low" to "Donkere modus laag",
+    "Dark mode usage" to "Gebruik donkere modus",
     "Dark room" to "Donkere kamer",
     "Darkness" to "Donker",
     "Data" to "Gegevens",
@@ -1284,6 +1286,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Feeling low or depressed" to "Somber of down",
     "Feeling unusually low or sad" to "Ongewoon somber of verdrietig",
     "Fell Asleep" to "In slaap",
+    "Fell asleep time" to "Inslaaptijd",
     "Female" to "Vrouw",
     "Fermented foods" to "Gefermenteerd",
     "Fetching your data..." to "Je gegevens ophalen...",
@@ -2169,6 +2172,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Noise Avg" to "Geluid gem.",
     "Noise High" to "Geluid hoog",
     "Noise Low" to "Geluid laag",
+    "Noise Sampling" to "Geluidsmeting",
     "Noise cancelling headphones" to "Noise-cancelling koptelefoon",
     "Noise high" to "Veel lawaai",
     "Noise levels" to "Geluidsniveau",
@@ -2372,6 +2376,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Phone" to "Telefoon",
     "Phone (API)" to "Mobiel (API)",
     "Phone brightness" to "Schermhelderheid",
+    "Phone screen time tracking" to "Schermtijd van je telefoon",
     "Phone unlocks" to "Keer ontgrendeld",
     "Phone unlocks high" to "Vaak ontgrendeld",
     "Phone unlocks low" to "Zelden ontgrendeld",
@@ -2533,6 +2538,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Recovery below 33%" to "Herstel onder 33%",
     "Recovery high" to "Herstel hoog",
     "Recovery low" to "Herstel laag",
+    "Recovery score" to "Herstelscore",
     "Recovery symptoms" to "Naweeën",
     "Recovery symptoms that lingered after the attack ended" to "Klachten die bleven na het einde van de aanval",
     "Red bands = migraine days" to "Rood = migrainedagen",
@@ -3198,6 +3204,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Thu" to "do",
     "Thunderstorm" to "Onweer",
     "Thunderstorm with hail" to "Onweer met hagel",
+    "Thunderstorms" to "Onweer",
     "Thunderstorms / electrical storms" to "Onweer / elektrische storm",
     "Tight at the sides at first" to "Eerst strak aan de zijkanten",
     "Time Range" to "Periode",
@@ -3696,6 +3703,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Within {0}" to "Binnen {0}",
     "Without aura" to "Zonder aura",
     "Woke Up" to "Wakker",
+    "Woke up time" to "Wektijd",
     "Word-finding trouble" to "Woordvindproblemen",
     "Work" to "Werk",
     "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",
@@ -3703,6 +3711,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Working" to "Werken",
     "Working from home" to "Thuiswerken",
     "Working well" to "Werkt goed",
+    "Workout HR zones" to "HR-zones bij training",
     "Works Best When" to "Werkt best als",
     "Works Best When…" to "Werkt best als…",
     "Works best when" to "Werkt het best als",
