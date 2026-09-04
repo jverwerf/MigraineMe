@@ -126,6 +126,14 @@ data class TourStep(
     val closing: Boolean = false,
 )
 
+/**
+ * Find-it lines are templates such as "{Home} tab": the template is translated as a whole and
+ * every {key} is then replaced by that label's own translation, so the line always names the
+ * tab, card or menu item exactly the way this app shows it in the current language.
+ */
+fun expandFindIt(template: String): String =
+    Regex("\\{([^}]+)\\}").replace(tSync(template)) { tSync(it.groupValues[1]) }
+
 data class TourSegment(val headline: String, val sub: String, val body: String, val pop: Int, val brainy: Int)
 
 data class TourFeature(val icon: Int, val title: String, val desc: String)
@@ -145,46 +153,46 @@ val tourSteps = listOf(
     TourStep(Routes.HOME, Icons.Outlined.Home, "Home", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
         headline = "Your risk *today.*", sub = "look here every morning",
         body = "The gauge shows how full your bucket is: Low, Mild or High. Under it: the 7 day outlook.",
-        findIt = "Home tab", pop = R.drawable.tour_pop_01, brainy = R.drawable.brainy_risk_small),
+        findIt = "{Home} tab", pop = R.drawable.tour_pop_01, brainy = R.drawable.brainy_risk_small),
     TourStep(Routes.HOME, Icons.Outlined.Tune, "Risk Model", highlight = "", navHint = NavHintLocation.TOP_SETTINGS,
         headline = "Where *HIGH* starts.", sub = "the AI sets the lines, you can move them",
         body = "Every trigger counts Low, Mild or High towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
-        findIt = "Settings menu (top left) › Risk Model", pop = R.drawable.tour_pop_02, brainy = R.drawable.brainy_archer_small),
+        findIt = "Settings menu (top left) › {Risk Model}", pop = R.drawable.tour_pop_02, brainy = R.drawable.brainy_archer_small),
     TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log", highlight = "", navHint = NavHintLocation.BOTTOM_MIGRAINE,
         headline = "Log an *attack.*", sub = "the one thing you have to do",
         body = "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit.",
-        findIt = "Log tab › Log Migraine", pop = R.drawable.tour_pop_03, brainy = R.drawable.brainy_migraines_small),
+        findIt = "{Log} tab › {Log Migraine}", pop = R.drawable.tour_pop_03, brainy = R.drawable.brainy_migraines_small),
     TourStep(Routes.HOME, Icons.Outlined.Forum, "Ask MigraineMe", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
         headline = "Ask *MigraineMe.*", sub = "questions about your own data",
         body = "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs.",
-        findIt = "Home tab › Ask MigraineMe card", pop = R.drawable.tour_pop_04, brainy = R.drawable.brainy_ask_small),
+        findIt = "{Home} tab › {Ask MigraineMe} card", pop = R.drawable.tour_pop_04, brainy = R.drawable.brainy_ask_small),
     TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
         headline = "All your *health data.*", sub = "one place, one card each",
         body = "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.",
-        findIt = "Monitor tab › Sleep card", pop = R.drawable.tour_pop_05, brainy = R.drawable.brainy_detective_small),
+        findIt = "{Monitor} tab › {Sleep} card", pop = R.drawable.tour_pop_05, brainy = R.drawable.brainy_detective_small),
     TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Diet", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
         headline = "What you *eat.*", sub = "scan it, or search it",
         body = "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
-        findIt = "Monitor tab › Diet card  ·  Monitor › Menstruation", pop = R.drawable.tour_pop_06_1, brainy = R.drawable.brainy_diet_small,
+        findIt = "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}", pop = R.drawable.tour_pop_06_1, brainy = R.drawable.brainy_diet_small,
         second = TourSegment("Your *cycle.*", "risk rises around your period",
             "Set your last period and cycle length. Risk rises around the predicted date.",
             R.drawable.tour_pop_06_2, R.drawable.brainy_menstruation_small)),
     TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights", highlight = "", navHint = NavHintLocation.BOTTOM_INSIGHTS,
         headline = "What your data *says.*", sub = "after a few logged attacks",
         body = "Which triggers really matter, what helped, and a report you can hand your doctor.",
-        findIt = "Insights tab", pop = R.drawable.tour_pop_07, brainy = R.drawable.brainy_recs_small),
+        findIt = "{Insights} tab", pop = R.drawable.tour_pop_07, brainy = R.drawable.brainy_recs_small),
     TourStep(Routes.EVENING_CHECKIN, Icons.Outlined.Nightlight, "Daily Check-In", highlight = "", navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true,
         headline = "A check-in *each evening.*", sub = "for anything you want to log yourself",
         body = "Triggers, medicines, reliefs, how you felt. One pass through your day, tap what applies, done.",
-        findIt = "Log tab › Daily Check-In", pop = R.drawable.tour_pop_08, brainy = R.drawable.brainy_ask_small),
+        findIt = "{Log} tab › {Daily Check-In}", pop = R.drawable.tour_pop_08, brainy = R.drawable.brainy_ask_small),
     TourStep(Routes.HOME, Icons.Outlined.AutoAwesome, "AI Calibration", highlight = "", navHint = NavHintLocation.BOTTOM_HOME,
         headline = "Every Monday it *learns.*", sub = "accept or reject, one tap",
         body = "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
-        findIt = "Home › “suggestions for you” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
+        findIt = "{Home} › “{MigraineMe has suggestions for you}” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
     TourStep(Routes.HOME, Icons.Outlined.Forum, "Community", highlight = "", navHint = NavHintLocation.TOP_COMMUNITY,
         headline = "You are *not alone.*", sub = "guidance, articles, forum",
         body = "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
-        findIt = "Community icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
+        findIt = "{Community} icon (top right)", pop = R.drawable.tour_pop_10, brainy = R.drawable.brainy_recs_small),
     TourStep(Routes.HOME, Icons.Outlined.Home, "", body = "", highlight = "", closing = true,
         headline = "And there's\n*much more*", sub = "take it from here", brainy = R.drawable.brainy_recs_small),
 )
@@ -794,7 +802,7 @@ fun CoachOverlay(
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     Text(t("Find it:"), style = ObStyle.label(11.5.sp))
                                                     Spacer(Modifier.width(6.dp))
-                                                    Text(t(findIt), style = ObStyle.label(11.5.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
+                                                    Text(expandFindIt(findIt), style = ObStyle.label(11.5.sp).copy(color = Color.White, fontWeight = FontWeight.SemiBold))
                                                 }
                                             }
                                             if (buttons) {

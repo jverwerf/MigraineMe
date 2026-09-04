@@ -3573,14 +3573,6 @@
       "max_len": 190
     },
     {
-      "en": "Community icon (top right)",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
       "en": "Connect your calendar",
       "class": "soft",
       "sites": [
@@ -3621,38 +3613,6 @@
       "max_len": 96
     },
     {
-      "en": "Home tab",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Home tab › Ask MigraineMe card",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Home › “suggestions for you” banner",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 70
-    },
-    {
-      "en": "Insights tab",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
       "en": "It estimates\n*7 days* ahead.",
       "class": "soft",
       "sites": [
@@ -3675,38 +3635,6 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 64
-    },
-    {
-      "en": "Log tab › Daily Check-In",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Log tab › Log Migraine",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Monitor tab › Diet card  ·  Monitor › Menstruation",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 100
-    },
-    {
-      "en": "Monitor tab › Sleep card",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
     },
     {
       "en": "Near the top?\nIt says *HIGH.*",
@@ -3739,14 +3667,6 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 152
-    },
-    {
-      "en": "Settings menu (top left) › Risk Model",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 74
     },
     {
       "en": "Share a report",
@@ -4667,6 +4587,726 @@
         "DataSettingsSections.kt:table"
       ],
       "max_len": 40
+    },
+    {
+      "en": "{Home} tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "Settings menu (top left) › {Risk Model}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Log} tab › {Log Migraine}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Home} tab › {Ask MigraineMe} card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Monitor} tab › {Sleep} card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Insights} tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Log} tab › {Daily Check-In}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Home} › “{MigraineMe has suggestions for you}” banner",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Community} icon (top right)",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "%1$s covers %2$s.",
+      "class": "soft",
+      "sites": [
+        "CompanionsScreen.kt:companion-description"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Interested in %1$s.",
+      "class": "soft",
+      "sites": [
+        "CompanionsScreen.kt:companion-description"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "CBT",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "CGRP treatments",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "FL-41 glasses",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "HRT",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "HRV tracking",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "alcohol",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "anxiety",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "barometric pressure",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "bright lights",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "burnout",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "caffeine withdrawal",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "circadian rhythm",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "clinical trials",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "contraceptives",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "cycle tracking",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "dehydration",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "elimination diets",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "emotional overload",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "environmental control",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "estrogen withdrawal",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "exercise intensity",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "food triggers",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "gepants",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "graded exercise",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "heart rate zones",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "histamine",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "hormonal fluctuations",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "hydration tracking",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "irregular schedule",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "jet lag",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "let-down effect",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "light sensitivity",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "loud noise",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "magnesium",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "meal timing",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "medication overuse",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "melatonin",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "mindfulness",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "mini-prevention",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "neck exercises",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "neck tension",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "overexertion",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "oversleeping",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "pacing strategies",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "perimenopause",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "period cycle",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "physical strain",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "physiotherapy",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "poor sleep",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "posture",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "pregnancy",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "preventive medications",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "rebound headaches",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "recovery scores",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "relaxation techniques",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "riboflavin",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "screen filters",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "screens",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "sensory management",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "shift work",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "skipped meals",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "sleep apnea",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "sleep hygiene",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "sleep position",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "stress",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "strong smells",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "supplement timing",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "supplements",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "temperature changes",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "therapy",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "training strain",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "treatment guidelines",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "treatment side effects",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "triptans",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "warm-up protocols",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "weather tracking",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "work-life balance",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "yoga",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

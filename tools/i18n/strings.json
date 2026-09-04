@@ -4789,7 +4789,7 @@
     "en": "Start",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:697",
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:705",
       "app/src/main/java/com/migraineme/ReviewLogScreen.kt:85"
     ],
     "max_len": 14,
@@ -5560,6 +5560,15 @@
     "count": 1
   },
   {
+    "en": "%1$s covers %2$s.",
+    "class": "soft",
+    "sites": [
+      "CompanionsScreen.kt:companion-description"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "%1$s has asked to see:",
     "class": "soft",
     "sites": [
@@ -5734,7 +5743,7 @@
     "en": "%1$s/%2$s — Tap to expand",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:624"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:632"
     ],
     "max_len": 36,
     "count": 1
@@ -9520,6 +9529,24 @@
     "count": 1
   },
   {
+    "en": "CBT",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "CGRP treatments",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "CONTENTS",
     "class": "soft",
     "sites": [
@@ -10246,15 +10273,6 @@
       "app/src/main/java/com/migraineme/CommunityEngagement.kt:154"
     ],
     "max_len": 20,
-    "count": 1
-  },
-  {
-    "en": "Community icon (top right)",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
     "count": 1
   },
   {
@@ -12934,7 +12952,7 @@
     "en": "Exit tour",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:717"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:725"
     ],
     "max_len": 19,
     "count": 1
@@ -12991,6 +13009,15 @@
       "app/src/main/java/com/migraineme/BlogDetailScreen.kt:129"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "FL-41 glasses",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -13258,7 +13285,7 @@
     "en": "Find it:",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:795"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:803"
     ],
     "max_len": 14,
     "count": 1
@@ -14200,6 +14227,15 @@
     "count": 1
   },
   {
+    "en": "HRT",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "HRV",
     "class": "soft",
     "sites": [
@@ -14224,6 +14260,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "HRV tracking",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -14620,33 +14665,6 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
-    "count": 1
-  },
-  {
-    "en": "Home tab",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
-    "count": 1
-  },
-  {
-    "en": "Home tab › Ask MigraineMe card",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
-    "count": 1
-  },
-  {
-    "en": "Home › “suggestions for you” banner",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 70,
     "count": 1
   },
   {
@@ -15388,21 +15406,21 @@
     "count": 1
   },
   {
-    "en": "Insights tab",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
-    "count": 1
-  },
-  {
     "en": "Insomnia",
     "class": "hard",
     "sites": [
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Interested in %1$s.",
+    "class": "soft",
+    "sites": [
+      "CompanionsScreen.kt:companion-description"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -16603,24 +16621,6 @@
     "count": 1
   },
   {
-    "en": "Log tab › Daily Check-In",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
-    "count": 1
-  },
-  {
-    "en": "Log tab › Log Migraine",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
-    "count": 1
-  },
-  {
     "en": "Log treatments to track what helps most",
     "class": "soft",
     "sites": [
@@ -17650,7 +17650,7 @@
     "en": "Minimize",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:711"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:719"
     ],
     "max_len": 18,
     "count": 1
@@ -17743,24 +17743,6 @@
       "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
     ],
     "max_len": 20,
-    "count": 1
-  },
-  {
-    "en": "Monitor tab › Diet card  ·  Monitor › Menstruation",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 100,
-    "count": 1
-  },
-  {
-    "en": "Monitor tab › Sleep card",
-    "class": "soft",
-    "sites": [
-      "OnboardingCoach.kt:tourSteps-table"
-    ],
-    "max_len": 60,
     "count": 1
   },
   {
@@ -22429,7 +22411,7 @@
     "en": "Scroll for more",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:852"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:860"
     ],
     "max_len": 25,
     "count": 1
@@ -22942,7 +22924,7 @@
     "en": "Set up profile",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:762"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:770"
     ],
     "max_len": 17,
     "count": 1
@@ -22993,12 +22975,12 @@
     "count": 1
   },
   {
-    "en": "Settings menu (top left) › Risk Model",
+    "en": "Settings menu (top left) › {Risk Model}",
     "class": "soft",
     "sites": [
       "OnboardingCoach.kt:tourSteps-table"
     ],
-    "max_len": 74,
+    "max_len": 80,
     "count": 1
   },
   {
@@ -24724,7 +24706,7 @@
     "en": "THE TOUR",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:737"
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:745"
     ],
     "max_len": 14,
     "count": 1
@@ -30508,6 +30490,15 @@
     "count": 1
   },
   {
+    "en": "alcohol",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "all time",
     "class": "hard",
     "sites": [
@@ -30550,6 +30541,15 @@
       "supabase/functions/winback-daily/index.ts (winback email)"
     ],
     "max_len": 63,
+    "count": 1
+  },
+  {
+    "en": "anxiety",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -30634,6 +30634,15 @@
     "count": 1
   },
   {
+    "en": "barometric pressure",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "be added to your journal when conditions are met.",
     "class": "soft",
     "sites": [
@@ -30670,12 +30679,39 @@
     "count": 1
   },
   {
+    "en": "bright lights",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "burnout",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "by %1$s, in %2$s of %3$s doses",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:595"
     ],
     "max_len": 43,
+    "count": 1
+  },
+  {
+    "en": "caffeine withdrawal",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -30724,6 +30760,42 @@
     "count": 1
   },
   {
+    "en": "circadian rhythm",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "clinical trials",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "contraceptives",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "cycle tracking",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "data and evidence come first",
     "class": "soft",
     "sites": [
@@ -30739,6 +30811,15 @@
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:263"
     ],
     "max_len": 21,
+    "count": 1
+  },
+  {
+    "en": "dehydration",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -30877,12 +30958,66 @@
     "count": 1
   },
   {
+    "en": "elimination diets",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "emotional overload",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "environmental control",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "estrogen withdrawal",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "everything you logged, tap to fix what's missing",
     "class": "soft",
     "sites": [
       "OnboardingCoach.kt:tourSteps-table"
     ],
     "max_len": 96,
+    "count": 1
+  },
+  {
+    "en": "exercise intensity",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "food triggers",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -30940,6 +31075,15 @@
     "count": 1
   },
   {
+    "en": "gepants",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "get warned when pressure drops or sleep goes off",
     "class": "soft",
     "sites": [
@@ -30955,6 +31099,15 @@
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:449"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "graded exercise",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -30976,6 +31129,15 @@
     "count": 1
   },
   {
+    "en": "heart rate zones",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "high",
     "class": "hard",
     "sites": [
@@ -30994,6 +31156,15 @@
     "count": 1
   },
   {
+    "en": "histamine",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "homeopath",
     "class": "hard",
     "sites": [
@@ -31003,12 +31174,30 @@
     "count": 1
   },
   {
+    "en": "hormonal fluctuations",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "how many points it contributes on each day relative to the predicted date. ",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:216"
     ],
     "max_len": 108,
+    "count": 1
+  },
+  {
+    "en": "hydration tracking",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31048,6 +31237,24 @@
     "count": 1
   },
   {
+    "en": "irregular schedule",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "jet lag",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "last %s wks",
     "class": "hard",
     "sites": [
@@ -31063,6 +31270,24 @@
       "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:67"
     ],
     "max_len": 34,
+    "count": 1
+  },
+  {
+    "en": "let-down effect",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "light sensitivity",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31120,12 +31345,39 @@
     "count": 1
   },
   {
+    "en": "loud noise",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "low",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:313"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "magnesium",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "meal timing",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31144,6 +31396,24 @@
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:439"
     ],
     "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "medication overuse",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "melatonin",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31201,6 +31471,24 @@
     "count": 1
   },
   {
+    "en": "mindfulness",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "mini-prevention",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "missing %s",
     "class": "hard",
     "sites": [
@@ -31216,6 +31504,24 @@
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:742"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "neck exercises",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "neck tension",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31309,6 +31615,33 @@
     "count": 1
   },
   {
+    "en": "overexertion",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "oversleeping",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "pacing strategies",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "pain rose after these doses, in %1$s of %2$s",
     "class": "soft",
     "sites": [
@@ -31327,6 +31660,24 @@
     "count": 1
   },
   {
+    "en": "perimenopause",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "period cycle",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "phone data in, nothing to type",
     "class": "soft",
     "sites": [
@@ -31336,12 +31687,66 @@
     "count": 1
   },
   {
+    "en": "physical strain",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "physiotherapy",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "poor sleep",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "possible",
     "class": "soft",
     "sites": [
       "build-report-html/render.ts"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "posture",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "pregnancy",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "preventive medications",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31372,6 +31777,33 @@
     "count": 1
   },
   {
+    "en": "rebound headaches",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "recovery scores",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "relaxation techniques",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "relief: %s",
     "class": "hard",
     "sites": [
@@ -31396,6 +31828,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:433"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "riboflavin",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31444,12 +31885,84 @@
     "count": 1
   },
   {
+    "en": "screen filters",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "screens",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "see how it's going, from your own logs",
     "class": "soft",
     "sites": [
       "OnboardingCoach.kt:tourSteps-table"
     ],
     "max_len": 76,
+    "count": 1
+  },
+  {
+    "en": "sensory management",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "shift work",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "skipped meals",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "sleep apnea",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "sleep hygiene",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "sleep position",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31516,12 +32029,48 @@
     "count": 1
   },
   {
+    "en": "stress",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "strong",
     "class": "soft",
     "sites": [
       "build-report-html/render.ts"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "strong smells",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "supplement timing",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "supplements",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31549,6 +32098,15 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:702"
     ],
     "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "temperature changes",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31612,6 +32170,15 @@
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:313"
     ],
     "max_len": 53,
+    "count": 1
+  },
+  {
+    "en": "therapy",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31687,12 +32254,48 @@
     "count": 1
   },
   {
+    "en": "training strain",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "treatment guidelines",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "treatment side effects",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "trigger detection based on your health data.",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:109"
     ],
     "max_len": 63,
+    "count": 1
+  },
+  {
+    "en": "triptans",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31750,6 +32353,15 @@
     "count": 1
   },
   {
+    "en": "warm-up protocols",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "was %s",
     "class": "hard",
     "sites": [
@@ -31768,12 +32380,39 @@
     "count": 1
   },
   {
+    "en": "weather tracking",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "work-life balance",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "yet. You haven't been charged. This is usually temporary.",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:51"
     ],
     "max_len": 82,
+    "count": 1
+  },
+  {
+    "en": "yoga",
+    "class": "soft",
+    "sites": [
+      "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -31990,6 +32629,87 @@
       "build-report-html/render.ts"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "{Community} icon (top right)",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Home} tab",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Home} tab › {Ask MigraineMe} card",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Home} › “{MigraineMe has suggestions for you}” banner",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Insights} tab",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Log} tab › {Daily Check-In}",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Log} tab › {Log Migraine}",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
+    "count": 1
+  },
+  {
+    "en": "{Monitor} tab › {Sleep} card",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:tourSteps-table"
+    ],
+    "max_len": 80,
     "count": 1
   },
   {
