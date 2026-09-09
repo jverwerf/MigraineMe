@@ -503,7 +503,7 @@ serve(async (req: Request) => {
 
     const { data: menstruationConfig } = await supabase
       .from("menstruation_settings")
-      .select("last_menstruation_date, avg_cycle_length, auto_update_average, predict_ovulation")
+      .select("last_menstruation_date, avg_cycle_length, auto_update_average, predict_ovulation, ovulation_cycle_day")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -908,8 +908,9 @@ serve(async (req: Request) => {
     let offsetHistogram: Record<number, number> = {};
     let onCycleCount = 0;
     let offCycleCount = 0;
-    // Second histogram, relative to estimated ovulation (14 days before
-    // each logged period). Only built when the user predicts ovulation.
+    // Second histogram, relative to estimated ovulation (the user's ovulation
+    // cycle day counted from each logged period, day 1 = period start). Only
+    // built when the user predicts ovulation.
     const predictOvulation = menstruationConfig?.predict_ovulation === true;
     let ovulationHistogram: Record<number, number> = {};
     let onOvulationCount = 0;
@@ -947,7 +948,8 @@ serve(async (req: Request) => {
 
       if (predictOvulation) {
         for (let i = -7; i <= 7; i++) ovulationHistogram[i] = 0;
-        const ovulationDates = eventDates.map((t: number) => t - 14 * 86400000);
+        const ovulationDayOffset = (Number(menstruationConfig?.ovulation_cycle_day) || 14) - 1;
+        const ovulationDates = eventDates.map((t: number) => t + ovulationDayOffset * 86400000);
         for (const m of migraines) {
           if (!m.start_at) continue;
           const mTime = new Date(m.start_at.substring(0, 10) + "T00:00:00Z").getTime();
@@ -1819,7 +1821,7 @@ This curve is severity-agnostic — only ONE curve per user, not three (unlike r
 
 === OPTIONAL SECOND CURVE: OVULATION ===
 
-Some patients also predict ovulation. For them the app keeps a second synthetic event, "ovulation_predicted", 14 days before the predicted period, with its OWN 15-day curve (ovulation_weights, default peak 3 at day_0 with 1.5 either side, much smaller than the period curve). When the input contains an "=== OVULATION ===" section, treat it exactly like the period curve with the same rules: match ITS histogram, preserve ITS scale (within ±30% of its current peak, default 3 when no curve is set), nudge by at most 1 day and 20%, whole integers, and return null when it already fits. When the section is absent, omit "ovulation_weights" entirely.
+Some patients also predict ovulation. For them the app keeps a second synthetic event, "ovulation_predicted", on their chosen ovulation cycle day (default day 14), with its OWN 15-day curve (ovulation_weights, default peak 3 at day_0 with 1.5 either side, much smaller than the period curve). When the input contains an "=== OVULATION ===" section, treat it exactly like the period curve with the same rules: match ITS histogram, preserve ITS scale (within ±30% of its current peak, default 3 when no curve is set), nudge by at most 1 day and 20%, whole integers, and return null when it already fits. When the section is absent, omit "ovulation_weights" entirely.
 
 The daily gauge = sum of (menstruation curve contribution at the right offset) + (every active trigger × its decay weight) + (every active prodrome × its decay weight). So this curve STACKS with everything else. If you collapse it from peak=6 to peak=0.8, you've effectively removed menstruation from the patient's gauge entirely.
 
@@ -1923,7 +1925,7 @@ function buildCall3Message(
   if (ovulation) {
     L.push("");
     L.push("=== OVULATION ===");
-    L.push(`Predicted ovulation is 14 days before each predicted period. Migraines within ±7 days of estimated ovulation: ${ovulation.onCount} of ${mc}`);
+    L.push(`Predicted ovulation falls on the patient's chosen cycle day (day 1 = period start), counted from each logged period. Migraines within ±7 days of estimated ovulation: ${ovulation.onCount} of ${mc}`);
     L.push("Histogram (offset days from estimated ovulation → migraine count):");
     for (let i = -7; i <= 7; i++) {
       const key = i === 0 ? "day_0" : i < 0 ? `day_m${Math.abs(i)}` : `day_p${i}`;
