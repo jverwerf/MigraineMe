@@ -4152,5 +4152,13 @@
   "Predict ovulation": "Prédire l'ovulation",
   "Predict ovulation too?": "Prédire aussi l'ovulation ?",
   "Adds a smaller risk bump around mid-cycle.": "Ajoute une petite hausse du risque en milieu de cycle.",
-  "Ovulation decay": "Courbe de l'ovulation"
+  "Ovulation decay": "Courbe de l'ovulation",
+  "Ovulation Risk Curve": "Courbe d'ovulation",
+  "Tap a bar to edit · Risk points per day relative to predicted ovulation": "Touche une barre · Points de risque par jour vs ovulation prévue",
+  "Before Ovulation": "Avant ovulation",
+  "Ovulation Day": "Jour d'ovulation",
+  "After Ovulation": "Après ovulation",
+  "Before Period": "Avant règles",
+  "Period Day": "Jour de règles",
+  "After Period": "Après règles"
 }

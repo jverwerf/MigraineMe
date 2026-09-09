@@ -4152,5 +4152,13 @@
   "Predict ovulation": "Eisprung schätzen",
   "Predict ovulation too?": "Auch Eisprung vorhersagen?",
   "Adds a smaller risk bump around mid-cycle.": "Kleiner Risikoanstieg um die Zyklusmitte.",
-  "Ovulation decay": "Eisprung-Abklingkurve"
+  "Ovulation decay": "Eisprung-Abklingkurve",
+  "Ovulation Risk Curve": "Eisprung-Risikokurve",
+  "Tap a bar to edit · Risk points per day relative to predicted ovulation": "Balken zum Ändern tippen · Risikopunkte je Tag zum erwarteten Eisprung",
+  "Before Ovulation": "Vor Eisprung",
+  "Ovulation Day": "Eisprungtag",
+  "After Ovulation": "Nach Eisprung",
+  "Before Period": "Vor Periode",
+  "Period Day": "Periodentag",
+  "After Period": "Nach Periode"
 }

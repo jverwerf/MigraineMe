@@ -1086,7 +1086,7 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:579",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:163",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1710",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:569",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:653",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:1114"
     ],
     "max_len": 14,
@@ -3370,7 +3370,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2000",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:496"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:587"
     ],
     "max_len": 14,
     "count": 2
@@ -3600,7 +3600,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1988",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:494"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:585"
     ],
     "max_len": 14,
     "count": 2
@@ -3746,6 +3746,16 @@
     "count": 2
   },
   {
+    "en": "Decay weights saved",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:129",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:146"
+    ],
+    "max_len": 22,
+    "count": 2
+  },
+  {
     "en": "Device check-ins",
     "class": "hard",
     "sites": [
@@ -3873,6 +3883,16 @@
       "app/src/main/java/com/migraineme/MonitorScreen.kt:532"
     ],
     "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Failed to save weights.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:130",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:147"
+    ],
+    "max_len": 33,
     "count": 2
   },
   {
@@ -4569,7 +4589,7 @@
     "en": "Reset Defaults",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:512",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:603",
       "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:236"
     ],
     "max_len": 17,
@@ -4700,7 +4720,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:176",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:120"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:112"
     ],
     "max_len": 17,
     "count": 2
@@ -7587,6 +7607,24 @@
     "count": 1
   },
   {
+    "en": "After Ovulation",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "After Period",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
     "en": "After a trigger, how quickly does the migraine come?",
     "class": "soft",
     "sites": [
@@ -9114,6 +9152,24 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Before Ovulation",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+    ],
+    "max_len": 19,
+    "count": 1
+  },
+  {
+    "en": "Before Period",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
+    ],
+    "max_len": 16,
     "count": 1
   },
   {
@@ -11295,15 +11351,6 @@
     "count": 1
   },
   {
-    "en": "Decay weights saved",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:146"
-    ],
-    "max_len": 22,
-    "count": 1
-  },
-  {
     "en": "Deep Sleep",
     "class": "hard",
     "sites": [
@@ -13113,19 +13160,10 @@
     "count": 1
   },
   {
-    "en": "Failed to save weights.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:147"
-    ],
-    "max_len": 33,
-    "count": 1
-  },
-  {
     "en": "Failed to save.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:121"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:113"
     ],
     "max_len": 18,
     "count": 1
@@ -17254,11 +17292,11 @@
   },
   {
     "en": "Menstruation Risk Curve",
-    "class": "soft",
+    "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:356"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:353"
     ],
-    "max_len": 33,
+    "max_len": 26,
     "count": 1
   },
   {
@@ -19701,6 +19739,24 @@
     "count": 1
   },
   {
+    "en": "Ovulation Day",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "Ovulation Risk Curve",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:371"
+    ],
+    "max_len": 23,
+    "count": 1
+  },
+  {
     "en": "Ovulation decay",
     "class": "soft",
     "sites": [
@@ -20169,10 +20225,10 @@
     "count": 1
   },
   {
-    "en": "Period",
+    "en": "Period Day",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:495"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
     ],
     "max_len": 14,
     "count": 1
@@ -22116,7 +22172,7 @@
     "en": "Risk points contributed on this day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:454"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:545"
     ],
     "max_len": 50,
     "count": 1
@@ -22242,7 +22298,7 @@
     "en": "Save Weights",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:520"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:611"
     ],
     "max_len": 15,
     "count": 1
@@ -24876,12 +24932,21 @@
     "count": 1
   },
   {
-    "en": "Tap a bar to edit · Risk points per day relative to predicted period",
-    "class": "soft",
+    "en": "Tap a bar to edit · Risk points per day relative to predicted ovulation",
+    "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:358"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:372"
     ],
-    "max_len": 98,
+    "max_len": 78,
+    "count": 1
+  },
+  {
+    "en": "Tap a bar to edit · Risk points per day relative to predicted period",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:354"
+    ],
+    "max_len": 74,
     "count": 1
   },
   {
@@ -32916,7 +32981,7 @@
     "en": "✓ Saved successfully",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:501"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:592"
     ],
     "max_len": 23,
     "count": 1

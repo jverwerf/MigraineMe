@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4154 entries.
+ * 4162 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -404,6 +404,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Adjustable via the app" to "Über die App einstellbar",
     "Adjusting…" to "Passe an…",
     "After" to "Danach",
+    "After Ovulation" to "Nach Eisprung",
+    "After Period" to "Nach Periode",
     "After a trigger, how quickly does the migraine come?" to "Wie schnell kommt die Migräne nach einem Auslöser?",
     "After stress ENDS" to "Wenn Stress ENDET",
     "After the Attack" to "Nach der Attacke",
@@ -645,6 +647,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Bedtime late" to "Spät ins Bett",
     "Beer" to "Bier",
     "Before" to "Davor",
+    "Before Ovulation" to "Vor Eisprung",
+    "Before Period" to "Vor Periode",
     "Before a migraine, do you notice physical changes?" to "Bemerkst du vor einer Migräne körperliche Veränderungen?",
     "Before storms" to "Vor Gewittern",
     "Behind Left Ear" to "Hinterm linken Ohr",
@@ -2289,6 +2293,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Overuse can trigger a headache" to "Zu viel davon löst Kopfschmerz aus",
     "Overwhelming, I couldn't function" to "Überwältigend, ich konnte nichts tun",
     "Ovulation" to "Eisprung",
+    "Ovulation Day" to "Eisprungtag",
+    "Ovulation Risk Curve" to "Eisprung-Risikokurve",
     "Ovulation decay" to "Eisprung-Abklingkurve",
     "Oxygen saturation" to "Sauerstoffsättigung",
     "Oxygen therapy" to "Sauerstofftherapie",
@@ -2360,6 +2366,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Per-regimen efficacy, baseline vs the most recent 28 days" to "Wirksamkeit je Therapie, Ausgangswert gegen die letzten 28 Tage",
     "Percentages compare days after the trigger with your ordinary days." to "Prozente vergleichen Tage nach dem Auslöser mit gewöhnlichen Tagen.",
     "Period" to "Periode",
+    "Period Day" to "Periodentag",
     "Period dates and cycle settings" to "Zyklusdaten und -einstellungen",
     "Period dates and cycle settings." to "Zyklusdaten und -einstellungen.",
     "Period logged" to "Periode erfasst",
@@ -3070,6 +3077,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Tap Full Report for the PDF, or AI Recommendations to review and accept or reject each suggestion with one tap." to "Tippe auf Bericht für das PDF, oder auf KI-Empfehlungen, um jeden Vorschlag mit einem Tipp anzunehmen oder abzulehnen.",
     "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nPick Aura as a symptom anywhere and a short sheet opens so you can mark where in your vision it appeared and how long it lasted. You can skip it, and you can change it later by tapping Aura again.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack." to "Tippe auf Migräne erfassen für den vollen 13-Schritte-Wizard (Zeit, Symptome, Schmerz, Prodrome, Auslöser, Medikamente, Linderung, Orte, Aktivitäten, Postdrome, verpasste Aktivitäten, Notizen, Prüfung).\n\nWenn du mitten in einer Attacke steckst, gibt es im Zeit-Schritt die Abkürzung \"Es passiert gerade\", die den Eintrag mit einem Tipp sichert, damit du nicht 12 weitere Fragen mit Schmerzen beantworten musst.\n\nUnter der Hauptkarte liegt Schnell: ein Tipp für eine einzelne Migräne, ein Prodrom, einen Auslöser, ein Medikament, eine Linderung oder ein Symptom, ganz ohne Wizard.\n\nWählst du irgendwo Aura als Symptom, öffnet sich ein kurzes Blatt, in dem du markierst, wo im Sichtfeld sie auftrat und wie lange sie dauerte. Du kannst es überspringen und später über Aura wieder ändern.\n\nDer Tages-Check am Abend fasst zusammen, was die App automatisch erfasst hat (Schlaf, Wetter, Ernährung, Aktivität) und du bestätigst es, dazu erfasst du Postdrom-Symptome zur heutigen Attacke.",
     "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit." to "Tipp auf „Migräne eintragen“ oder sprich einfach. Auslöser von Uhr und Handy sind schon angehakt, mit Uhrzeit.",
+    "Tap a bar to edit · Risk points per day relative to predicted ovulation" to "Balken zum Ändern tippen · Risikopunkte je Tag zum erwarteten Eisprung",
     "Tap a bar to edit · Risk points per day relative to predicted period" to "Balken zum Ändern tippen · Risikopunkte je Tag zur erwarteten Periode",
     "Tap a favourite to log it now" to "Tippe einen Favoriten zum Erfassen",
     "Tap all that apply" to "Tippe an, was passt",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4154 entries.
+ * 4162 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -404,6 +404,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Adjustable via the app" to "Instelbaar via de app",
     "Adjusting…" to "Bijstellen…",
     "After" to "Erna",
+    "After Ovulation" to "Na eisprong",
+    "After Period" to "Na menstruatie",
     "After a trigger, how quickly does the migraine come?" to "Hoe snel komt de migraine na een trigger?",
     "After stress ENDS" to "Als stress STOPT",
     "After the Attack" to "Na de aanval",
@@ -645,6 +647,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Bedtime late" to "Laat naar bed",
     "Beer" to "Bier",
     "Before" to "Ervoor",
+    "Before Ovulation" to "Voor eisprong",
+    "Before Period" to "Voor menstruatie",
     "Before a migraine, do you notice physical changes?" to "Merk je lichamelijke veranderingen voor een migraine?",
     "Before storms" to "Voor onweer",
     "Behind Left Ear" to "Achter linkeroor",
@@ -2289,6 +2293,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Overuse can trigger a headache" to "Te veel gebruik geeft hoofdpijn",
     "Overwhelming, I couldn't function" to "Overweldigend, ik kon niets",
     "Ovulation" to "Eisprong",
+    "Ovulation Day" to "Eisprongdag",
+    "Ovulation Risk Curve" to "Risicocurve eisprong",
     "Ovulation decay" to "Eisprongcurve",
     "Oxygen saturation" to "Zuurstofverzadiging",
     "Oxygen therapy" to "Zuurstoftherapie",
@@ -2360,6 +2366,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Per-regimen efficacy, baseline vs the most recent 28 days" to "Werking per behandeling, basislijn tegenover de laatste 28 dagen",
     "Percentages compare days after the trigger with your ordinary days." to "De percentages zetten dagen na de trigger naast gewone dagen.",
     "Period" to "Menstruatie",
+    "Period Day" to "Menstruatiedag",
     "Period dates and cycle settings" to "Menstruatiedata en cyclusinstellingen",
     "Period dates and cycle settings." to "Menstruatiedata en cyclusinstellingen.",
     "Period logged" to "Periode gelogd",
@@ -3070,6 +3077,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Tap Full Report for the PDF, or AI Recommendations to review and accept or reject each suggestion with one tap." to "Tik op Rapport voor de PDF, of op AI-tips om elk voorstel met één tik aan te nemen of af te wijzen.",
     "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nPick Aura as a symptom anywhere and a short sheet opens so you can mark where in your vision it appeared and how long it lasted. You can skip it, and you can change it later by tapping Aura again.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack." to "Tik op Migraine noteren voor de volledige wizard van 13 stappen (tijd, klachten, pijn, prodromen, triggers, medicijnen, verlichting, plekken, activiteiten, postdromen, gemiste activiteiten, notities, controle).\n\nZit je midden in een aanval, dan staat op de tijdstap een snelknop \"Het gebeurt nu\" die de invoer in één tik opslaat, zodat je niet nog 12 vragen hoeft te beantwoorden met pijn.\n\nOnder de hoofdkaart zit Snel noteren: met één tik één migraine, prodroom, trigger, medicijn, verlichting of klacht, zonder wizard.\n\nKies je ergens Aura als klacht, dan opent een kort blad om te markeren waar in je zicht die verscheen en hoe lang die duurde. Je mag het overslaan en later wijzigen door opnieuw op Aura te tikken.\n\nDe dagcheck is de avondopsomming waarin de app alles toont wat ze automatisch ving (slaap, weer, voeding, activiteit) en jij bevestigt, plus postdroomklachten bij de aanval van vandaag.",
     "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit." to "Tik op Migraine loggen, of praat gewoon. Triggers van je horloge en telefoon staan al aangevinkt, met tijd.",
+    "Tap a bar to edit · Risk points per day relative to predicted ovulation" to "Tik op een balk · Risicopunten per dag t.o.v. de verwachte eisprong",
     "Tap a bar to edit · Risk points per day relative to predicted period" to "Tik op een balk · Risicopunten per dag t.o.v. de verwachte menstruatie",
     "Tap a favourite to log it now" to "Tik een favoriet aan om te noteren",
     "Tap all that apply" to "Tik aan wat past",

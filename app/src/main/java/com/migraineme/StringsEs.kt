@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4154 entries.
+ * 4162 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -404,6 +404,8 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Adjustable via the app" to "Se ajusta desde la app",
     "Adjusting…" to "Ajustando…",
     "After" to "Después",
+    "After Ovulation" to "Tras ovulación",
+    "After Period" to "Tras la regla",
     "After a trigger, how quickly does the migraine come?" to "Tras un factor, ¿cuánto tarda en llegar la migraña?",
     "After stress ENDS" to "Al ACABAR el estrés",
     "After the Attack" to "Tras el ataque",
@@ -645,6 +647,8 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Bedtime late" to "Acostarse tarde",
     "Beer" to "Cerveza",
     "Before" to "Antes",
+    "Before Ovulation" to "Antes ovulación",
+    "Before Period" to "Antes de regla",
     "Before a migraine, do you notice physical changes?" to "¿Notas cambios físicos antes de una migraña?",
     "Before storms" to "Antes de tormentas",
     "Behind Left Ear" to "Detrás oreja izq.",
@@ -2289,6 +2293,8 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Overuse can trigger a headache" to "Abusar puede dar dolor",
     "Overwhelming, I couldn't function" to "Insoportable, no podía con nada",
     "Ovulation" to "Ovulación",
+    "Ovulation Day" to "Día de ovulación",
+    "Ovulation Risk Curve" to "Curva de ovulación",
     "Ovulation decay" to "Curva de la ovulación",
     "Oxygen saturation" to "Saturación de oxígeno",
     "Oxygen therapy" to "Oxigenoterapia",
@@ -2360,6 +2366,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Per-regimen efficacy, baseline vs the most recent 28 days" to "Eficacia por pauta, base frente a los últimos 28 días",
     "Percentages compare days after the trigger with your ordinary days." to "Los porcentajes comparan los días tras el factor con los normales.",
     "Period" to "Regla",
+    "Period Day" to "Día de regla",
     "Period dates and cycle settings" to "Fechas de regla y ajustes de ciclo",
     "Period dates and cycle settings." to "Fechas de regla y ajustes de ciclo.",
     "Period logged" to "Regla anotada",
@@ -3070,6 +3077,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Tap Full Report for the PDF, or AI Recommendations to review and accept or reject each suggestion with one tap." to "Toca Informe completo para el PDF, o Consejos de la IA para aceptar o rechazar cada propuesta con un toque.",
     "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nPick Aura as a symptom anywhere and a short sheet opens so you can mark where in your vision it appeared and how long it lasted. You can skip it, and you can change it later by tapping Aura again.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack." to "Toca Anotar migraña para el asistente completo de 13 pasos (hora, síntomas, dolor, pródromos, factores, medicinas, alivios, lugares, actividades, postdromos, actividades perdidas, notas, repaso).\n\nSi estás en pleno ataque, en el paso de la hora hay un atajo «Está pasando ahora» que guarda la entrada de un toque, para no responder 12 preguntas más con dolor.\n\nBajo la tarjeta principal está el registro ágil: una sola migraña, pródromo, factor, medicina, alivio o síntoma de un toque, sin asistente.\n\nElige Aura como síntoma en cualquier sitio y se abre una hoja corta para marcar dónde apareció en tu visión y cuánto duró. Puedes saltarla y cambiarla luego tocando Aura otra vez.\n\nEl repaso diario es el resumen de la noche: la app lista todo lo que ha captado sola (sueño, tiempo, comida, actividad) y tú confirmas, además de recoger los síntomas del postdromo ligados al ataque de hoy.",
     "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit." to "Toca Registrar migraña o simplemente habla. Los desencadenantes de tu reloj y móvil ya están marcados, con su hora.",
+    "Tap a bar to edit · Risk points per day relative to predicted ovulation" to "Toca una barra · Puntos por día respecto a la ovulación prevista",
     "Tap a bar to edit · Risk points per day relative to predicted period" to "Toca una barra · Puntos por día respecto a la regla prevista",
     "Tap a favourite to log it now" to "Toca un favorito para registrarlo",
     "Tap all that apply" to "Marca lo que proceda",
