@@ -339,6 +339,17 @@ async function calculateRiskForUser(
   const menstruationWeights: MenstruationDecayWeight | null =
     (mDecayRows && mDecayRows.length > 0) ? mDecayRows[0] as MenstruationDecayWeight : null;
 
+  // 1c. Ovulation decay weights (centered curve for ovulation_predicted,
+  // the system row the DB keeps 14 days before the predicted period)
+  const { data: oDecayRows } = await supabase
+    .from("ovulation_decay_weights")
+    .select("*")
+    .eq("user_id", userId)
+    .limit(1);
+
+  const ovulationWeights: MenstruationDecayWeight | null =
+    (oDecayRows && oDecayRows.length > 0) ? oDecayRows[0] as unknown as MenstruationDecayWeight : null;
+
   // 2. Gauge thresholds
   const { data: thresholdRows } = await supabase
     .from("risk_gauge_thresholds")
@@ -402,6 +413,7 @@ async function calculateRiskForUser(
   // 7. Build scored events
   const events: ScoredEvent[] = [];
   const menstruationPredictedEvents: { eventDate: string; severity: string }[] = [];
+  const ovulationPredictedEvents: { eventDate: string; severity: string }[] = [];
 
   for (const t of (triggerEvents || []) as EventRow[]) {
     if (!t.type || !t.start_at) continue;
@@ -413,6 +425,19 @@ async function calculateRiskForUser(
       const eventDate = toLocalDate(t.start_at);
       if (!eventDate) continue;
       menstruationPredictedEvents.push({ eventDate, severity });
+      continue;
+    }
+
+    // ovulation_predicted: same centered treatment, its own curve. Severity
+    // comes from the ovulation_predicted pool entry, falling back to the
+    // user's manual Ovulation trigger severity.
+    if (t.type === "ovulation_predicted") {
+      let severity = severityFor(t.type, triggerMaps);
+      if (severity === "NONE") severity = severityFor("ovulation", triggerMaps);
+      if (severity === "NONE") continue;
+      const eventDate = toLocalDate(t.start_at);
+      if (!eventDate) continue;
+      ovulationPredictedEvents.push({ eventDate, severity });
       continue;
     }
 
@@ -462,6 +487,18 @@ async function calculateRiskForUser(
         if (weight > 0) {
           dayScore += weight;
           contributions.push({ name: "menstruation_predicted", contribution: weight, severity: mp.severity });
+        }
+      }
+    }
+
+    // Ovulation predicted — same centered decay, its own (smaller) curve
+    if (ovulationWeights) {
+      for (const op of ovulationPredictedEvents) {
+        const offset = daysBetween(op.eventDate, perspectiveDate);
+        const weight = getMenstruationWeight(ovulationWeights, offset);
+        if (weight > 0) {
+          dayScore += weight;
+          contributions.push({ name: "ovulation_predicted", contribution: weight, severity: op.severity });
         }
       }
     }

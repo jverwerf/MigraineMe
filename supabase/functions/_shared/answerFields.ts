@@ -124,6 +124,7 @@ export const ANSWER_FIELDS: AnswerField[] = [
   M("exercise_pattern", "exercisePattern", "exercise", "Which pattern?", ["During or after intense exercise", "When I haven't exercised"]),
   S("tracks_cycle", "tracksCycle", "exercise", "Do you track your menstrual cycle?", ["Yes", "No", "Not applicable"], false),
   MAP("cycle_patterns", "cyclePatterns", "exercise", "Do {noun} relate to your cycle?", ["Around my period", "Around ovulation"]),
+  S("predict_ovulation", "predictOvulation", "exercise", "Predict ovulation too?", ["Yes", "No"], false),
   S("cycle_length", "cycleLength", "exercise", "How long is your average cycle?", ["< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular"], false),
   M("cycle_migraine_timing", "cycleMigraineTiming", "exercise", "When relative to your period?", ["1-2 days before", "3-5 days before", "During my period", "1-2 days after"]),
   S("uses_contraception", "usesContraception", "exercise", "Do you use hormonal contraception?", ["Yes", "No"], false),

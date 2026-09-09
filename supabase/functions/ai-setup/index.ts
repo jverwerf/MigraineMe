@@ -439,6 +439,7 @@ Exercise & hormones:
 - exercise_pattern: array, subset of ["During or after intense exercise", "When I haven't exercised"]
 - tracks_cycle: "Yes" | "No" | "Not applicable"
 - cycle_patterns: map, keys from ["Around my period", "Around ovulation"] → <certainty>
+- predict_ovulation: "Yes" | "No"  (set "Yes" whenever cycle_patterns contains "Around ovulation" with any certainty other than NO, or the user asks to predict/track ovulation; otherwise omit)
 - cycle_length: "< 25 days" | "25-28 days" | "28-32 days" | "32-35 days" | "> 35 days" | "Irregular"
 - cycle_migraine_timing: array, subset of ["1-2 days before", "3-5 days before", "During my period", "1-2 days after"]
 - last_period_date: ISO date string "YYYY-MM-DD" (only if the user gave an explicit date — otherwise omit)

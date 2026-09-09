@@ -495,9 +495,15 @@ serve(async (req: Request) => {
       .eq("user_id", userId)
       .maybeSingle();
 
+    const { data: ovulationDecayRow } = await supabase
+      .from("ovulation_decay_weights")
+      .select("day_m7, day_m6, day_m5, day_m4, day_m3, day_m2, day_m1, day_0, day_p1, day_p2, day_p3, day_p4, day_p5, day_p6, day_p7")
+      .eq("user_id", userId)
+      .maybeSingle();
+
     const { data: menstruationConfig } = await supabase
       .from("menstruation_settings")
-      .select("last_menstruation_date, avg_cycle_length, auto_update_average")
+      .select("last_menstruation_date, avg_cycle_length, auto_update_average, predict_ovulation")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -902,6 +908,11 @@ serve(async (req: Request) => {
     let offsetHistogram: Record<number, number> = {};
     let onCycleCount = 0;
     let offCycleCount = 0;
+    // Second histogram, relative to estimated ovulation (14 days before
+    // each logged period). Only built when the user predicts ovulation.
+    const predictOvulation = menstruationConfig?.predict_ovulation === true;
+    let ovulationHistogram: Record<number, number> = {};
+    let onOvulationCount = 0;
 
     const eligibleForCall3 =
       mode === "full" &&
@@ -934,12 +945,31 @@ serve(async (req: Request) => {
         }
       }
 
+      if (predictOvulation) {
+        for (let i = -7; i <= 7; i++) ovulationHistogram[i] = 0;
+        const ovulationDates = eventDates.map((t: number) => t - 14 * 86400000);
+        for (const m of migraines) {
+          if (!m.start_at) continue;
+          const mTime = new Date(m.start_at.substring(0, 10) + "T00:00:00Z").getTime();
+          let nearestOffset = Number.POSITIVE_INFINITY;
+          for (const oTime of ovulationDates) {
+            const offset = Math.round((mTime - oTime) / 86400000);
+            if (Math.abs(offset) < Math.abs(nearestOffset)) nearestOffset = offset;
+          }
+          if (Math.abs(nearestOffset) <= 7) {
+            ovulationHistogram[nearestOffset] = (ovulationHistogram[nearestOffset] ?? 0) + 1;
+            onOvulationCount++;
+          }
+        }
+      }
+
       // Need a meaningful sample to fit the curve.
       if (onCycleCount >= 3) {
         runCall3 = true;
         const call3UserMessage = buildCall3Message(
           profile, mc, onCycleCount, offCycleCount,
           offsetHistogram, menstrualDecayRow, menstruationConfig,
+          predictOvulation ? { histogram: ovulationHistogram, onCount: onOvulationCount, current: ovulationDecayRow } : null,
         );
         call3Result = await callOpenAI(CALL3_SYSTEM_PROMPT + modelLanguageDirective(lang), call3UserMessage);
       }
@@ -1114,13 +1144,34 @@ serve(async (req: Request) => {
       });
     }
 
+    // Ovulation decay weights (Call 3, only for users who predict ovulation)
+    if (runCall3 && predictOvulation && call3Result.ovulation_weights) {
+      const w = call3Result.ovulation_weights;
+      proposals.push({
+        user_id: userId, type: "ovulation_decay", label: "ovulation",
+        from_value: ovulationDecayRow ? JSON.stringify(ovulationDecayRow) : "{}",
+        to_value: JSON.stringify({
+          day_m7: w.day_m7, day_m6: w.day_m6, day_m5: w.day_m5, day_m4: w.day_m4,
+          day_m3: w.day_m3, day_m2: w.day_m2, day_m1: w.day_m1, day_0: w.day_0,
+          day_p1: w.day_p1, day_p2: w.day_p2, day_p3: w.day_p3, day_p4: w.day_p4,
+          day_p5: w.day_p5, day_p6: w.day_p6, day_p7: w.day_p7,
+        }),
+        reasoning: call3Result.ovulation_reasoning ?? call3Result.reasoning ?? "",
+        status: "pending",
+        metadata: {
+          on_ovulation_migraines: onOvulationCount,
+          histogram: ovulationHistogram,
+        },
+      });
+    }
+
     // ── No-op filter ──
     // The AI sometimes proposes a "change" to the value already in place.
     // from == to can never be worth a banner, so drop it deterministically.
     const isNoop = (p: any) => {
       if (p.from_value == null || p.to_value == null) return false;
       if (String(p.from_value) === String(p.to_value)) return true;
-      if (p.type === "gauge_decay" || p.type === "menstruation_decay") {
+      if (p.type === "gauge_decay" || p.type === "menstruation_decay" || p.type === "ovulation_decay") {
         try {
           const a = JSON.parse(p.from_value), b = JSON.parse(p.to_value);
           const keys = Object.keys(b);
@@ -1766,6 +1817,10 @@ The scoring engine looks forward up to 7 days from today. So a weight at day_m5 
 
 This curve is severity-agnostic — only ONE curve per user, not three (unlike risk_decay_weights).
 
+=== OPTIONAL SECOND CURVE: OVULATION ===
+
+Some patients also predict ovulation. For them the app keeps a second synthetic event, "ovulation_predicted", 14 days before the predicted period, with its OWN 15-day curve (ovulation_weights, default peak 3 at day_0 with 1.5 either side, much smaller than the period curve). When the input contains an "=== OVULATION ===" section, treat it exactly like the period curve with the same rules: match ITS histogram, preserve ITS scale (within ±30% of its current peak, default 3 when no curve is set), nudge by at most 1 day and 20%, whole integers, and return null when it already fits. When the section is absent, omit "ovulation_weights" entirely.
+
 The daily gauge = sum of (menstruation curve contribution at the right offset) + (every active trigger × its decay weight) + (every active prodrome × its decay weight). So this curve STACKS with everything else. If you collapse it from peak=6 to peak=0.8, you've effectively removed menstruation from the patient's gauge entirely.
 
 === WHAT YOU RECEIVE ===
@@ -1817,6 +1872,8 @@ Respond with ONLY valid JSON (no markdown fences). "menstrual_weights" may be nu
     "day_p1": N, "day_p2": N, "day_p3": N, "day_p4": N, "day_p5": N, "day_p6": N, "day_p7": N
   },
   "reasoning": "Plain-English 1-2 sentence explanation, no jargon, no field names, kind clinician tone.",
+  "ovulation_weights": { same 15 keys as menstrual_weights } | null   (ONLY when an OVULATION section was provided),
+  "ovulation_reasoning": "Plain-English 1-2 sentences about the ovulation change"   (ONLY when ovulation_weights is not null),
   "menstrual_notes": "Patient-facing 2-3 paragraph explanation following the structure above",
   "summary": "1-2 sentence summary of what changed in plain English"
 }`;
@@ -1826,6 +1883,7 @@ function buildCall3Message(
   histogram: Record<number, number>,
   currentWeights: any,
   config: any,
+  ovulation: { histogram: Record<number, number>; onCount: number; current: any } | null = null,
 ): string {
   const L: string[] = [];
 
@@ -1860,6 +1918,26 @@ function buildCall3Message(
     }
   } else {
     L.push("(no curve set yet — propose a starting curve)");
+  }
+
+  if (ovulation) {
+    L.push("");
+    L.push("=== OVULATION ===");
+    L.push(`Predicted ovulation is 14 days before each predicted period. Migraines within ±7 days of estimated ovulation: ${ovulation.onCount} of ${mc}`);
+    L.push("Histogram (offset days from estimated ovulation → migraine count):");
+    for (let i = -7; i <= 7; i++) {
+      const key = i === 0 ? "day_0" : i < 0 ? `day_m${Math.abs(i)}` : `day_p${i}`;
+      L.push(`${key.padEnd(6, " ")} (offset ${i >= 0 ? "+" : ""}${i}): ${ovulation.histogram[i] ?? 0}`);
+    }
+    L.push("Current ovulation curve:");
+    if (ovulation.current) {
+      for (let i = -7; i <= 7; i++) {
+        const key = i === 0 ? "day_0" : i < 0 ? `day_m${Math.abs(i)}` : `day_p${i}`;
+        L.push(`${key}: ${ovulation.current[key]}`);
+      }
+    } else {
+      L.push("(no curve set yet — defaults are day_m1 1.5, day_0 3, day_p1 1.5, rest 0)");
+    }
   }
 
   return L.join("\n");

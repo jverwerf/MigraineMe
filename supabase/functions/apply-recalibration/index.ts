@@ -448,6 +448,18 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
       return true;
     }
 
+    // ── Ovulation decay curve (15-day, centred on predicted ovulation) ──
+    case "ovulation_decay": {
+      check(await supabase
+        .from("ovulation_decay_weights")
+        .upsert({
+          user_id: userId,
+          ...weightColumns(p.to_value, MENSTRUAL_COLUMNS),
+        }, { onConflict: "user_id" }), "upsert ovulation_decay_weights");
+
+      return true;
+    }
+
     // ── Clinical assessment update ──
     case "clinical_assessment": {
       // Upsert, not update: a user who skipped onboarding has no row yet, and
