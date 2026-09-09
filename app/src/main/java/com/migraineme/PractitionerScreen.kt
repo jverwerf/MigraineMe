@@ -1049,7 +1049,7 @@ fun PractitionerCard(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
                     ) {
                         Text(
-                            if (granted.isEmpty()) t("Share your data") else t("%1\$s shared", granted.size),
+                            t("Share your data"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                         )
@@ -1146,7 +1146,7 @@ fun PractitionerDetailSheet(
                                         )
                                 )
                                 Text(
-                                    t("In her words"),
+                                    t("In their words"),
                                     fontSize = 9.5.sp,
                                     letterSpacing = 1.4.sp,
                                     color = AppTheme.SubtleTextColor,
