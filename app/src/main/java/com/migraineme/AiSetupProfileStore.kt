@@ -59,6 +59,7 @@ object AiSetupProfileStore {
             put("trajectory", answers.trajectory)
             put("seasonal_pattern", answers.seasonalPattern)
             put("tracks_cycle", answers.tracksCycle == "Yes")
+            put("predict_ovulation", answers.predictOvulation)
             put("clinical_assessment", config.clinicalAssessment)
             put("summary", config.summary)
 
@@ -214,6 +215,7 @@ object AiSetupProfileStore {
             exercisePattern = strSet("exercise_pattern", "exercisePattern"),
             tracksCycle = str("tracks_cycle", "tracksCycle"),
             cyclePatterns = certMap("cycle_patterns", "cyclePatterns"),
+            predictOvulation = str("predict_ovulation", "predictOvulation"),
             cycleLength = str("cycle_length", "cycleLength"),
             cycleMigraineTiming = strSet("cycle_migraine_timing", "cycleMigraineTiming"),
             lastPeriodDate = str("last_period_date", "lastPeriodDate"),
@@ -297,6 +299,7 @@ object AiSetupProfileStore {
             put("exercise_pattern", JsonArray(a.exercisePattern.map { JsonPrimitive(it) }))
             put("tracks_cycle", a.tracksCycle)
             put("cycle_patterns", certaintyMapToJson(a.cyclePatterns))
+            put("predict_ovulation", a.predictOvulation)
             // cycle_length / last_period_date / cycle_migraine_timing and the
             // trigger / prodrome / location / postdrome picks below were
             // collected, sent to the AI and then never written, so an

@@ -4197,6 +4197,14 @@
       "max_len": 42
     },
     {
+      "en": "Ovulation decay",
+      "class": "soft",
+      "sites": [
+        "RecalibrationReviewScreen.kt:variable-render"
+      ],
+      "max_len": 30
+    },
+    {
       "en": "Menstrual Cycle",
       "class": "soft",
       "sites": [

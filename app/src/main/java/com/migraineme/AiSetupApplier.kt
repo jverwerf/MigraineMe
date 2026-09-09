@@ -260,7 +260,8 @@ object AiSetupApplier {
                     val lastPeriod = answers.lastPeriodDate?.takeIf { it.isNotBlank() }
                     val lastPeriodLocalDate = lastPeriod?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
                     val menstruationService = SupabaseMenstruationService(appCtx)
-                    menstruationService.updateSettings(accessToken, lastPeriodLocalDate, avgCycle, true)
+                    val predictOvulation = answers.predictOvulation == "Yes"
+                    menstruationService.updateSettings(accessToken, lastPeriodLocalDate, avgCycle, true, predictOvulation)
 
                     // 2. Enable menstruation metric
                     edge.upsertMetricSetting(appCtx, "menstruation", true, null)
@@ -271,6 +272,16 @@ object AiSetupApplier {
                         it.label.equals("menstruation_predicted", ignoreCase = true)
                     }?.severity ?: "MILD"
                     db.upsertTriggerToPool(accessToken, "menstruation_predicted", "Menstrual Cycle", predictedSev)
+
+                    // 3b. Predicted ovulation: pool entry + default ovulation curve (ignore-duplicates).
+                    // The ovulation_predicted trigger row itself is created by the DB from menstruation_settings.
+                    if (predictOvulation) {
+                        val ovulationSev = config.triggers.firstOrNull {
+                            it.label.equals("ovulation_predicted", ignoreCase = true)
+                        }?.severity ?: "MILD"
+                        db.upsertTriggerToPool(accessToken, "ovulation_predicted", "Menstrual Cycle", ovulationSev)
+                        edge.seedDefaultOvulationDecayWeights(appCtx)
+                    }
 
                     // 4. Save menstruation decay weights
                     val decayWeights = DeterministicMapper.buildMenstruationDecayWeights(answers)

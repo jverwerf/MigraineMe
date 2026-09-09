@@ -16,19 +16,19 @@
     "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Failed to add: %1\\$s\", e.message ?: tSync(\"error\"))) }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:680",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:682",
     "line": "                    if (editMode) t(\"Edit — %1\\$s\", AiSetupEntry.title(startPage ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:681",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:683",
     "line": "                    else t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:701",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:703",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:702",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:704",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
@@ -384,31 +384,31 @@
     "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:181",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:183",
     "line": "                        daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:184",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:186",
     "line": "                        else -> t(\"In %1\\$s days\", daysUntil.toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:200",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:202",
     "line": "                        MStatColumn(t(\"Cycle\"), t(\"%1\\$s days\", s.avgCycleLength.toString()))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:215",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:220",
     "line": "                        t(\"Your predicted period date gets a single trigger. The risk curve controls \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:216",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:221",
     "line": "                        t(\"how many points it contributes on each day relative to the predicted date. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:217",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:222",
     "line": "                        t(\"When the predicted date arrives, it auto-converts to a real period log and \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:218",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:223",
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {
@@ -628,10 +628,6 @@
     "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1052",
-    "line": "                            if (granted.isEmpty()) t(\"Share your data\") else t(\"%1\\$s shared\", granted.size),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:135",
     "line": "            else -> t(\"%1\\$s days ago\", days)"
   },
@@ -756,11 +752,11 @@
     "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294",
     "line": "                    Text((if (acceptedCount == 1) t(\"Apply 1 change\") else t(\"Apply %s changes\", acceptedCount)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:295",
     "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
   },
   {

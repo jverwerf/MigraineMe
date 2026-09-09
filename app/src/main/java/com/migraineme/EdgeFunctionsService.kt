@@ -1910,6 +1910,95 @@ class EdgeFunctionsService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Ovulation Decay Weights (centered curve for ovulation_predicted).
+    // Same 15-day shape as menstruation_decay_weights, different defaults.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun getOvulationDecayWeights(context: Context): MenstruationDecayWeightResponse? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val userId = SessionStore.readUserId(appCtx) ?: return null
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ovulation_decay_weights?user_id=eq.$userId&select=*&limit=1"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<MenstruationDecayWeightResponse>>().firstOrNull()
+            } else {
+                Log.e("EdgeFunctionsService", "getOvulationDecayWeights failed: ${res.status}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getOvulationDecayWeights error: ${e.message}", e)
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertOvulationDecayWeights(
+        context: Context,
+        weights: MenstruationDecayWeights
+    ): Boolean = postOvulationDecayWeights(context, weights, "resolution=merge-duplicates", "upsertOvulationDecayWeights")
+
+    suspend fun seedDefaultOvulationDecayWeights(context: Context): Boolean =
+        postOvulationDecayWeights(context, MenstruationDecayWeights.OVULATION_DEFAULT, "resolution=ignore-duplicates", "seedDefaultOvulationDecayWeights")
+
+    private suspend fun postOvulationDecayWeights(
+        context: Context,
+        weights: MenstruationDecayWeights,
+        prefer: String,
+        tag: String
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MenstruationDecayWeightUpsertBody(
+            userId = userId,
+            dayM7 = weights.dayM7, dayM6 = weights.dayM6, dayM5 = weights.dayM5,
+            dayM4 = weights.dayM4, dayM3 = weights.dayM3, dayM2 = weights.dayM2,
+            dayM1 = weights.dayM1, day0 = weights.day0,
+            dayP1 = weights.dayP1, dayP2 = weights.dayP2, dayP3 = weights.dayP3,
+            dayP4 = weights.dayP4, dayP5 = weights.dayP5, dayP6 = weights.dayP6,
+            dayP7 = weights.dayP7,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ovulation_decay_weights?on_conflict=user_id"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", prefer)
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.w("EdgeFunctionsService", "$tag failed: ${res.status} - ${res.bodyAsText()}")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "$tag exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Correlation Stats
     // ─────────────────────────────────────────────────────────────────────────
 

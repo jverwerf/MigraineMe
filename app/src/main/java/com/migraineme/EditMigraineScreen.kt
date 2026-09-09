@@ -647,7 +647,7 @@ private fun TriggersPage(
         item { Text(t("Triggers"), style = MaterialTheme.typography.titleMedium) }
         items(linked, key = { it.id }) { t ->
             val mark = deleteIds.contains(t.id)
-            val isPredicted = t.type == "menstruation_predicted"
+            val isPredicted = t.type == "menstruation_predicted" || t.type == "ovulation_predicted"
             
             ElevatedCard(Modifier.fillMaxWidth()) {
                 Row(

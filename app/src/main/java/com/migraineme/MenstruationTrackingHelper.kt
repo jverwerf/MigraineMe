@@ -52,14 +52,15 @@ object MenstruationTrackingHelper {
         lastDate: LocalDate?,
         avgCycle: Int,
         autoUpdate: Boolean,
-        preferredSource: String?
+        preferredSource: String?,
+        predictOvulation: Boolean? = null
     ): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate)
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation)
 
             ensureManualMenstruationTrigger(accessToken, lastDate)
             ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
@@ -71,6 +72,7 @@ object MenstruationTrackingHelper {
             val edge = EdgeFunctionsService()
             edge.seedDefaultRiskDecayWeights(context.applicationContext)
             edge.seedDefaultMenstruationDecayWeights(context.applicationContext)
+            if (predictOvulation == true) edge.seedDefaultOvulationDecayWeights(context.applicationContext)
             edge.upsertMetricSetting(
                 context = context.applicationContext,
                 metric = "menstruation",
@@ -85,14 +87,15 @@ object MenstruationTrackingHelper {
         context: Context,
         lastDate: LocalDate?,
         avgCycle: Int,
-        autoUpdate: Boolean
+        autoUpdate: Boolean,
+        predictOvulation: Boolean? = null
     ): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate)
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation)
 
             ensureManualMenstruationTrigger(accessToken, lastDate)
             ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
@@ -106,6 +109,9 @@ object MenstruationTrackingHelper {
             val edge = EdgeFunctionsService()
             edge.seedDefaultRiskDecayWeights(context.applicationContext)
             edge.seedDefaultMenstruationDecayWeights(context.applicationContext)
+            // ovulation_predicted scores through ovulation_decay_weights; seed the
+            // default bump (ignore-duplicates) the first time the switch goes on.
+            if (predictOvulation == true) edge.seedDefaultOvulationDecayWeights(context.applicationContext)
 
             true
         }.onFailure { Log.e(TAG, "updateSettingsOnly failed: ${it.message}", it) }

@@ -29,6 +29,11 @@ object PredictedMenstruationHelper {
             val settings = menstruationService.getSettings(accessToken)
                 ?: MenstruationSettings(null, 28, true)
 
+            // ovulation_predicted rows are created, moved and retired by the DB
+            // trigger on menstruation_settings. The app only keeps the pool entry
+            // that gives the row its severity.
+            if (settings.predictOvulation) ensureOvulationPoolEntry(db, accessToken)
+
             // Case-insensitive: a pool-logged period arrives as capital-M
             // "Menstruation" and counts as a period log too.
             val lastPeriod = allTriggers
@@ -110,7 +115,7 @@ object PredictedMenstruationHelper {
             // Any source: legacy rows may carry 'manual'. DELETE is blocked by
             // the server guard, so retire with active=false instead.
             val predicted = allTriggers.filter { trigger ->
-                trigger.type == "menstruation_predicted" && trigger.active
+                (trigger.type == "menstruation_predicted" || trigger.type == "ovulation_predicted") && trigger.active
             }
 
             for (trigger in predicted) {
@@ -121,6 +126,27 @@ object PredictedMenstruationHelper {
             Log.d(TAG, "Retired ${predicted.size} predicted trigger(s)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete predicted triggers", e)
+        }
+    }
+
+    /**
+     * Pool entry for the system ovulation row. Severity mirrors the user's own
+     * "Ovulation" pool entry when present (and not NONE), else MILD.
+     */
+    private suspend fun ensureOvulationPoolEntry(db: SupabaseDbService, accessToken: String) {
+        try {
+            val pool = db.getAllTriggerPool(accessToken)
+            val ovulationEntry = pool.firstOrNull { it.label.equals("Ovulation", ignoreCase = true) }
+            val severity = ovulationEntry?.predictionValue?.takeIf { it != "NONE" } ?: "MILD"
+            db.upsertTriggerToPool(
+                accessToken = accessToken,
+                label = "ovulation_predicted",
+                category = "Menstrual Cycle",
+                predictionValue = severity
+            )
+            Log.d(TAG, "Ensured ovulation_predicted pool entry with severity=$severity")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to ensure ovulation_predicted pool entry: ${e.message}")
         }
     }
 }

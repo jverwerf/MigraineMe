@@ -231,6 +231,7 @@ fun AiSetupScreen(
     var exercisePattern by remember { mutableStateOf(setOf<String>()) }
     var tracksCycle by remember { mutableStateOf<String?>(null) }
     var cyclePatterns by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
+    var predictOvulation by remember { mutableStateOf<String?>(null) }
     var cycleLength by remember { mutableStateOf<String?>(null) }
     var cycleMigraineTiming by remember { mutableStateOf(setOf<String>()) }
     var lastPeriodDate by remember { mutableStateOf<String?>(null) }
@@ -318,7 +319,7 @@ fun AiSetupScreen(
         exerciseFrequency = exerciseFrequency,
         exerciseTriggers = exerciseTriggers ?: DeterministicMapper.Certainty.NO,
         exercisePattern = exercisePattern,
-        tracksCycle = tracksCycle, cyclePatterns = cyclePatterns,
+        tracksCycle = tracksCycle, cyclePatterns = cyclePatterns, predictOvulation = predictOvulation,
         cycleLength = cycleLength, cycleMigraineTiming = cycleMigraineTiming,
         lastPeriodDate = lastPeriodDate,
         usesContraception = usesContraception, contraceptionEffect = contraceptionEffect,
@@ -387,6 +388,7 @@ fun AiSetupScreen(
         if (pf.exercisePattern.isNotEmpty()) { exercisePattern = exercisePattern + pf.exercisePattern; filled.add("exercisePattern") }
         pf.tracksCycle?.let { tracksCycle = it; filled.add("tracksCycle") }
         if (pf.cyclePatterns.isNotEmpty()) { cyclePatterns = cyclePatterns + pf.cyclePatterns; filled.add("cyclePatterns") }
+        pf.predictOvulation?.let { predictOvulation = it; filled.add("predictOvulation") }
         pf.cycleLength?.let { cycleLength = it; filled.add("cycleLength") }
         if (pf.cycleMigraineTiming.isNotEmpty()) { cycleMigraineTiming = cycleMigraineTiming + pf.cycleMigraineTiming; filled.add("cycleMigraineTiming") }
         pf.lastPeriodDate?.let { lastPeriodDate = it; filled.add("lastPeriodDate") }
@@ -745,7 +747,13 @@ fun AiSetupScreen(
                         AiPage.Q3 -> AiQuestionsPage3(stressLevel, { stressLevel = it }, stressChangeTriggers, { stressChangeTriggers = it }, emotionalPatterns, { emotionalPatterns = it }, screenTimeDaily, { screenTimeDaily = it }, screenTimeTriggers, { screenTimeTriggers = it }, lateScreenTriggers, { lateScreenTriggers = it })
                         AiPage.Q4 -> AiQuestionsPage4(caffeineIntake, { caffeineIntake = it }, caffeineDirection, { caffeineDirection = it }, caffeineCertainty, { caffeineCertainty = it }, alcoholFrequency, { alcoholFrequency = it }, alcoholTriggers, { alcoholTriggers = it }, specificDrinks, { d -> specificDrinks = if (d in specificDrinks) specificDrinks - d else specificDrinks + d }, tyramineFoods, { tyramineFoods = it }, histamineFoods, { histamineFoods = it }, glutenSensitivity, { glutenSensitivity = it }, glutenTriggers, { glutenTriggers = it }, eatingPatterns, { eatingPatterns = it }, waterIntake, { waterIntake = it }, tracksNutrition, { tracksNutrition = it })
                         AiPage.Q5 -> AiQuestionsPage5(weatherTriggers, { weatherTriggers = it }, specificWeather, { specificWeather = it }, environmentSensitivities, { environmentSensitivities = it }, physicalFactors, { physicalFactors = it })
-                        AiPage.Q6 -> AiQuestionsPage6(exerciseFrequency, { exerciseFrequency = it }, exerciseTriggers, { exerciseTriggers = it }, exercisePattern, { p -> exercisePattern = if (p in exercisePattern) exercisePattern - p else exercisePattern + p }, tracksCycle, { tracksCycle = it }, cyclePatterns, { cyclePatterns = it }, cycleLength, { cycleLength = it }, cycleMigraineTiming, { t -> cycleMigraineTiming = if (t in cycleMigraineTiming) cycleMigraineTiming - t else cycleMigraineTiming + t }, lastPeriodDate, { lastPeriodDate = it }, usesContraception, { usesContraception = it }, contraceptionEffect, { contraceptionEffect = it })
+                        AiPage.Q6 -> AiQuestionsPage6(exerciseFrequency, { exerciseFrequency = it }, exerciseTriggers, { exerciseTriggers = it }, exercisePattern, { p -> exercisePattern = if (p in exercisePattern) exercisePattern - p else exercisePattern + p }, tracksCycle, { tracksCycle = it }, cyclePatterns, { new ->
+                            // Marking "Around ovulation" (any certainty but No) flips the ovulation switch on; the user can still turn it off.
+                            val before = cyclePatterns["Around ovulation"]
+                            val after = new["Around ovulation"]
+                            cyclePatterns = new
+                            if ((before == null || before == DeterministicMapper.Certainty.NO) && after != null && after != DeterministicMapper.Certainty.NO) predictOvulation = "Yes"
+                        }, predictOvulation, { predictOvulation = it }, cycleLength, { cycleLength = it }, cycleMigraineTiming, { t -> cycleMigraineTiming = if (t in cycleMigraineTiming) cycleMigraineTiming - t else cycleMigraineTiming + t }, lastPeriodDate, { lastPeriodDate = it }, usesContraception, { usesContraception = it }, contraceptionEffect, { contraceptionEffect = it })
                         AiPage.Q7 -> AiQuestionsPage7(physicalProdromes, { physicalProdromes = it }, moodProdromes, { moodProdromes = it }, sensoryProdromes, { sensoryProdromes = it })
                         AiPage.TRIGGERS -> AiQuestionsPageTriggers(
                             triggerPool = availableItems?.triggers ?: emptyList(),

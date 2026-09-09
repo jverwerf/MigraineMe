@@ -5,7 +5,9 @@ import java.time.LocalDate
 data class MenstruationSettings(
     val lastMenstruationDate: LocalDate?,
     val avgCycleLength: Int,
-    val autoUpdateAverage: Boolean
+    val autoUpdateAverage: Boolean,
+    /** Adds a smaller risk bump around predicted ovulation (last period + cycle − 14). */
+    val predictOvulation: Boolean = false
 )
 
 /**
@@ -33,5 +35,10 @@ data class MenstruationDecayWeights(
 ) {
     companion object {
         val DEFAULT = MenstruationDecayWeights()
+
+        /** Default curve for ovulation_predicted (ovulation_decay_weights): a small mid-cycle bump. */
+        val OVULATION_DEFAULT = MenstruationDecayWeights(
+            dayM2 = 0.0, dayM1 = 1.5, day0 = 3.0, dayP1 = 1.5, dayP2 = 0.0
+        )
     }
 }

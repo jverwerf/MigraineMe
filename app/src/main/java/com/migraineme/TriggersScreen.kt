@@ -56,7 +56,7 @@ fun TriggersScreen(
         // menstruation_predicted is the system row backing the prediction
         // curve, not a loggable trigger; attributing a migraine to it would
         // insert a phantom prediction. The actual "Menstruation" pill stays.
-        val visible = rawPool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+        val visible = rawPool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
         val standalone = visible.filter { it.displayGroup == null }
         val grouped = visible.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }

@@ -68,7 +68,7 @@ fun QuickLogTriggerScreen(
     // menstruation_predicted row (logging it creates a phantom prediction).
     val pool = remember(rawPool) {
         rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
-            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
     }
     
     // Load trigger options

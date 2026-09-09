@@ -55,6 +55,7 @@ object AiSetupService {
         val stressLevel: String? = null,
         val trackCycle: String? = null,
         val cycleRelated: String? = null,
+        val predictOvulation: String? = null,
         val cycleLength: String? = null,
         val cycleMigraineTiming: String? = null,
         val waterIntake: String? = null,
@@ -310,6 +311,7 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         answers.waterIntake?.let { appendLine("- Water intake: $it") }
         answers.trackCycle?.let { appendLine("- Tracks menstrual cycle: $it") }
         answers.cycleRelated?.let { appendLine("- Migraines cycle-related: $it") }
+        answers.predictOvulation?.let { appendLine("- Predict ovulation: $it") }
         answers.cycleLength?.let { appendLine("- Average cycle length: $it") }
         answers.cycleMigraineTiming?.let { appendLine("- Migraines relative to period: $it") }
         appendLine()

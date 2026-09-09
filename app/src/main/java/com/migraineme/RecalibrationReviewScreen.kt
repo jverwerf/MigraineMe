@@ -212,6 +212,7 @@ fun RecalibrationReviewScreen(
                 "gauge_threshold" to "Gauge thresholds",
                 "gauge_decay" to "Decay curves",
                 "menstruation_decay" to "Menstrual cycle decay",
+                "ovulation_decay" to "Ovulation decay",
                 "data_warning" to "Data warnings",
             )
 
@@ -365,8 +366,8 @@ private fun ProposalRow(
                 DecayCurveComparison(proposal.fromValue, proposal.toValue, proposal.accepted)
             }
 
-            // Menstrual cycle decay visualization (15 days m7..0..p7)
-            if (proposal.type == "menstruation_decay" && proposal.fromValue != null && proposal.toValue != null
+            // Menstrual cycle / ovulation decay visualization (15 days m7..0..p7)
+            if ((proposal.type == "menstruation_decay" || proposal.type == "ovulation_decay") && proposal.fromValue != null && proposal.toValue != null
                 && proposal.fromValue.contains("day_")) {
                 Spacer(Modifier.height(4.dp))
                 MenstrualDecayComparison(proposal.fromValue, proposal.toValue, proposal.accepted)

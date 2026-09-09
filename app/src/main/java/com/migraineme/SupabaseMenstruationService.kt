@@ -110,19 +110,32 @@ class SupabaseMenstruationService(private val context: Context) {
                 MenstruationSettings(
                     lastMenstruationDate = it.last_menstruation_date?.let { d -> LocalDate.parse(d) },
                     avgCycleLength = it.avg_cycle_length ?: 28,
-                    autoUpdateAverage = it.auto_update_average ?: true
+                    autoUpdateAverage = it.auto_update_average ?: true,
+                    predictOvulation = it.predict_ovulation ?: false
                 )
             }
         }
     }
 
-    suspend fun updateSettings(accessToken: String, lastMenstruationDate: LocalDate?, avgCycleLength: Int, autoUpdateAverage: Boolean) {
+    /**
+     * Upsert the settings row. [predictOvulation] is only written when non-null:
+     * a caller that does not know the current value must omit it so the merge
+     * upsert never silently drops the switch back to false.
+     */
+    suspend fun updateSettings(
+        accessToken: String,
+        lastMenstruationDate: LocalDate?,
+        avgCycleLength: Int,
+        autoUpdateAverage: Boolean,
+        predictOvulation: Boolean? = null
+    ) {
         val userId = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: throw Exception("Failed to extract user_id")
         val body = buildJsonObject {
             put("user_id", userId)
             if (lastMenstruationDate != null) put("last_menstruation_date", lastMenstruationDate.toString()) else put("last_menstruation_date", JsonNull)
             put("avg_cycle_length", avgCycleLength)
             put("auto_update_average", autoUpdateAverage)
+            if (predictOvulation != null) put("predict_ovulation", predictOvulation)
         }
         val req = Request.Builder().url("$SUPABASE_URL/rest/v1/menstruation_settings?on_conflict=user_id")
             .post(body.toString().toRequestBody("application/json".toMediaType()))
@@ -161,7 +174,8 @@ data class MenstruationSettingsDto(
     val user_id: String,
     val last_menstruation_date: String?,
     val avg_cycle_length: Int?,
-    val auto_update_average: Boolean?
+    val auto_update_average: Boolean?,
+    val predict_ovulation: Boolean? = null
 )
 
 @Serializable

@@ -55,6 +55,7 @@ fun MenstruationSettingsScreen(
     var lastDateText by remember { mutableStateOf("") }
     var avgCycleText by remember { mutableStateOf("28") }
     var autoUpdateAvg by remember { mutableStateOf(true) }
+    var predictOvulation by remember { mutableStateOf(false) }
 
     // Add period
     var addPeriodDate by remember { mutableStateOf("") }
@@ -83,6 +84,7 @@ fun MenstruationSettingsScreen(
                     lastDateText = s.lastMenstruationDate?.toString() ?: ""
                     avgCycleText = s.avgCycleLength.toString()
                     autoUpdateAvg = s.autoUpdateAverage
+                    predictOvulation = s.predictOvulation
                 }
 
                 val edge = EdgeFunctionsService()
@@ -107,13 +109,13 @@ fun MenstruationSettingsScreen(
             val (parsedLast, parsedAvg, err) = validateMenstrInputs(lastDateText, avgCycleText)
             if (err != null) { saving = false; Toast.makeText(context, err, Toast.LENGTH_LONG).show(); return@launch }
             val ok = withContext(Dispatchers.IO) {
-                val saved = MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg)
+                val saved = MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg, predictOvulation)
                 if (saved) EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
                 saved
             }
             saving = false
             if (ok) {
-                settings = MenstruationSettings(parsedLast, parsedAvg, autoUpdateAvg)
+                settings = MenstruationSettings(parsedLast, parsedAvg, autoUpdateAvg, predictOvulation)
                 saveSuccess = true
                 Toast.makeText(context, tSync("Settings saved"), Toast.LENGTH_SHORT).show()
             } else Toast.makeText(context, tSync("Failed to save."), Toast.LENGTH_LONG).show()
@@ -198,6 +200,9 @@ fun MenstruationSettingsScreen(
                         MStatColumn(t("Last Period"), s.lastMenstruationDate.toString())
                         MStatColumn(t("Predicted"), nextExpected.toString())
                         MStatColumn(t("Cycle"), t("%1\$s days", s.avgCycleLength.toString()))
+                        if (s.predictOvulation) {
+                            MStatColumn(t("Ovulation"), nextExpected.minusDays(14).toString())
+                        }
                     }
                 }
             }
@@ -315,6 +320,20 @@ fun MenstruationSettingsScreen(
                     }
                     Switch(
                         checked = autoUpdateAvg, onCheckedChange = { autoUpdateAvg = it }, enabled = !saving,
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+
+                HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+
+                // Predict ovulation toggle (ovulation_predicted system row, tuned by recalibration)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(t("Predict ovulation"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Adds a smaller risk bump around mid-cycle."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Switch(
+                        checked = predictOvulation, onCheckedChange = { predictOvulation = it }, enabled = !saving,
                         colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
                     )
                 }

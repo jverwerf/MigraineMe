@@ -70,6 +70,7 @@ data class OnboardingPreFill(
     val exercisePattern: Set<String> = emptySet(),
     val tracksCycle: String? = null,
     val cyclePatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val predictOvulation: String? = null,
     val cycleLength: String? = null,
     val cycleMigraineTiming: Set<String> = emptySet(),
     val lastPeriodDate: String? = null,
@@ -122,6 +123,7 @@ object AiOnboardingParser {
     private val CYCLE_TIMING_VALUES = setOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after")
     private val USES_CONTRACEPTION_VALUES = setOf("Yes", "No")
     private val TRACKS_CYCLE_VALUES = AiSetupOptions.TRACKS_CYCLE.toSet()
+    private val PREDICT_OVULATION_VALUES = setOf("Yes", "No")
     // Note: em-dash (—), not hyphen — must match AiSetupQuestions.kt:479 exactly.
     private val CONTRACEPTION_EFFECT_VALUES = AiSetupOptions.CONTRACEPTION_EFFECT.toSet()
     private val PHYSICAL_PRODROMES_KEYS = setOf("Neck stiffness", "Yawning", "Urination", "Stuffy nose", "Watery eyes", "Muscle tension")
@@ -215,6 +217,9 @@ object AiOnboardingParser {
             else -> null
         }
 
+        // Mentioning ovulation as a migraine window is enough to want the mid-cycle prediction.
+        val predictOvulation = if (tracksCycle == "Yes" && (lower.contains("ovulat") || lower.contains("mid-cycle") || lower.contains("mid cycle"))) "Yes" else null
+
         val gender = when {
             lower.contains("i'm female") || lower.contains("i am female") || lower.contains("i'm a woman") || lower.contains("woman") && lower.contains("i am") -> "Female"
             lower.contains("i'm male") || lower.contains("i am male") || lower.contains("i'm a man") || lower.contains("man") && lower.contains("i am") -> "Male"
@@ -231,6 +236,7 @@ object AiOnboardingParser {
             alcoholFrequency = alcoholFrequency,
             exerciseFrequency = exerciseFrequency,
             tracksCycle = tracksCycle,
+            predictOvulation = predictOvulation,
             matchedTriggers = matchPool(triggerLabels),
             matchedProdromes = matchPool(prodromeLabels),
             matchedSymptoms = matchPool(symptomLabels),
@@ -283,6 +289,7 @@ object AiOnboardingParser {
             deterministicResult.alcoholFrequency?.let { append("alcohol_frequency=$it, ") }
             deterministicResult.exerciseFrequency?.let { append("exercise_frequency=$it, ") }
             deterministicResult.tracksCycle?.let { append("tracks_cycle=$it, ") }
+            deterministicResult.predictOvulation?.let { append("predict_ovulation=$it, ") }
             if (deterministicResult.matchedTriggers.isNotEmpty()) append("triggers=${deterministicResult.matchedTriggers}, ")
             if (deterministicResult.matchedProdromes.isNotEmpty()) append("prodromes=${deterministicResult.matchedProdromes}, ")
             if (deterministicResult.matchedSymptoms.isNotEmpty()) append("symptoms=${deterministicResult.matchedSymptoms}, ")
@@ -497,6 +504,7 @@ object AiOnboardingParser {
             exercisePattern = optStrSet("exercise_pattern", EXERCISE_PATTERN_VALUES),
             tracksCycle = optStrIn("tracks_cycle", TRACKS_CYCLE_VALUES),
             cyclePatterns = optCertMap("cycle_patterns", CYCLE_PATTERNS_KEYS),
+            predictOvulation = optStrIn("predict_ovulation", PREDICT_OVULATION_VALUES),
             cycleLength = optStrIn("cycle_length", CYCLE_LENGTH_VALUES),
             cycleMigraineTiming = optStrSet("cycle_migraine_timing", CYCLE_TIMING_VALUES),
             lastPeriodDate = optStr("last_period_date")?.takeIf { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) },
@@ -593,6 +601,7 @@ object AiOnboardingParser {
             exercisePattern = deter.exercisePattern + gpt.exercisePattern,
             tracksCycle = gpt.tracksCycle ?: deter.tracksCycle,
             cyclePatterns = deter.cyclePatterns + gpt.cyclePatterns,
+            predictOvulation = gpt.predictOvulation ?: deter.predictOvulation,
             cycleLength = gpt.cycleLength ?: deter.cycleLength,
             cycleMigraineTiming = deter.cycleMigraineTiming + gpt.cycleMigraineTiming,
             lastPeriodDate = gpt.lastPeriodDate ?: deter.lastPeriodDate,

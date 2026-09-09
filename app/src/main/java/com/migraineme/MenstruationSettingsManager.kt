@@ -40,6 +40,8 @@ class MenstruationSettingsManager(private val context: Context) {
                 val token = SessionStore.getValidAccessToken(context)
                     ?: return@withContext Result.failure(Exception("No access token"))
 
+                // predict_ovulation is omitted from the body on purpose: this
+                // caller doesn't know it, and the merge upsert keeps the stored value.
                 service.updateSettings(
                     accessToken = token,
                     lastMenstruationDate = lastDate,

@@ -531,6 +531,7 @@ fun AiQuestionsPage6(
     exercisePattern: Set<String>, onToggleExercisePattern: (String) -> Unit,
     tracksCycle: String?, onTracksCycle: (String) -> Unit,
     cyclePatterns: Map<String, DeterministicMapper.Certainty>, onCyclePatterns: (Map<String, DeterministicMapper.Certainty>) -> Unit,
+    predictOvulation: String?, onPredictOvulation: (String) -> Unit,
     cycleLength: String?, onCycleLength: (String) -> Unit,
     cycleMigraineTiming: Set<String>, onToggleCycleMigraineTiming: (String) -> Unit,
     lastPeriodDate: String?, onLastPeriodDate: (String) -> Unit,
@@ -549,6 +550,16 @@ fun AiQuestionsPage6(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 QCard(t("Do migraines relate to your cycle?"), Icons.Outlined.Loop, t("Select all, set certainty"), fieldKey = "cycle_patterns") {
                     CertaintyMultiSelect(items = listOf(CertaintyItem("Around my period", "Around my period"), CertaintyItem("Around ovulation", "Around ovulation (mid-cycle)")), selections = cyclePatterns, onSelectionChanged = onCyclePatterns, showNoneOption = true)
+                }
+                QCard(t("Predict ovulation too?"), Icons.Outlined.Female, t("Adds a smaller risk bump around mid-cycle."), fieldKey = "predict_ovulation") {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Predict ovulation"), style = ObStyle.body(14.sp).copy(color = ObStyle.Body))
+                        Switch(
+                            checked = predictOvulation == "Yes",
+                            onCheckedChange = { onPredictOvulation(if (it) "Yes" else "No") },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ObStyle.Pink)
+                        )
+                    }
                 }
                 QCard(t("How long is your average cycle?"), Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
                 QCard(t("When did your last period start?"), Icons.Outlined.DateRange, t("Helps us predict your next one")) {

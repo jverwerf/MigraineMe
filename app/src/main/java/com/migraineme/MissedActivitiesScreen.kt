@@ -105,7 +105,7 @@ fun MissedActivitiesScreen(
     val triggerReasonItems = remember(triggerPool, triggerFavIds) {
         triggerPool
             .filter { it.metricTable == null }
-            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
             .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }

@@ -131,7 +131,7 @@ fun EveningCheckInScreen(
         triggerPool
             // System pool row backing the prediction curve — tapping it would
             // log a phantom prediction, never a period. Not user-loggable.
-            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
             .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
     // Reasons come from what a person actually chooses. A pool row that names
@@ -142,7 +142,7 @@ fun EveningCheckInScreen(
     val triggerReasonItems = remember(triggerPool, triggerFavIds) {
         triggerPool
             .filter { it.metricTable == null }
-            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
             .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }

@@ -427,6 +427,8 @@ object DeterministicMapper {
         val exercisePattern: Set<String> = emptySet(),
         val tracksCycle: String? = null,
         val cyclePatterns: Map<String, Certainty> = emptyMap(),
+        /** "Yes" | "No" — ovulation_predicted system row + ovulation_decay_weights. */
+        val predictOvulation: String? = null,
         val cycleLength: String? = null,
         val cycleMigraineTiming: Set<String> = emptySet(),
         val lastPeriodDate: String? = null,
@@ -924,6 +926,12 @@ object DeterministicMapper {
         if (a.tracksCycle == "Yes" && "menstruation_predicted" !in out) {
             out["menstruation_predicted"] = TriggerSetting("menstruation_predicted", "LOW")
         }
+        // Predicted ovulation: severity follows the "Around ovulation" certainty, LOW when absent.
+        if (a.tracksCycle == "Yes" && a.predictOvulation == "Yes") {
+            val ovCert = a.cyclePatterns["Around ovulation"] ?: Certainty.NO
+            val ovSev = if (ovCert == Certainty.NO) "LOW" else certaintyToSeverity(ovCert)
+            out["ovulation_predicted"] = TriggerSetting("ovulation_predicted", ovSev)
+        }
         when (a.contraceptionEffect) {
             AiSetupOptions.CONTRACEPTION_WORSE_EVERY_TIME -> out["Contraceptive"] = trigManual("Contraceptive", "HIGH")
             AiSetupOptions.CONTRACEPTION_WORSE_SOMETIMES  -> out["Contraceptive"] = trigManual("Contraceptive", "MILD")
@@ -1157,6 +1165,7 @@ object DeterministicMapper {
         answers.environmentSensitivities.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
         answers.physicalFactors.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
         if (answers.tracksCycle == "Yes") add("menstruation_predicted")
+        if (answers.tracksCycle == "Yes" && answers.predictOvulation == "Yes") add("ovulation_predicted")
         return out
     }
 

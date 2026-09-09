@@ -177,7 +177,7 @@ fun JournalEditScreen(
                             // one entry stored under the group name.
                             val prefs = runCatching { db.getTriggerPrefs(token) }.getOrNull().orEmpty()
                             val pool = runCatching { db.getAllTriggerPool(token) }.getOrNull().orEmpty()
-                            val visible = pool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+                            val visible = pool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) || it.label.equals("ovulation_predicted", ignoreCase = true) }
                             val options = visible.filter { it.displayGroup == null }
                                 .map { Triple(it.label.trim(), it.iconKey, it.category) } +
                                 visible.mapNotNull { it.displayGroup }.distinct().map { g ->
