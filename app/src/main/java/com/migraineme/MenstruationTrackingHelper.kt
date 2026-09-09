@@ -171,20 +171,29 @@ object MenstruationTrackingHelper {
         val day = lastDate.toString()
         // Case-insensitive: a pool-logged period arrives as capital-M
         // "Menstruation" and counts as a period log too.
+        // Any period row on that day counts, whatever wrote it (manual, health
+        // sync, auto-convert, demo seed): the DB has a unique index on
+        // (user_id, start_at, type), so inserting a second one aborts the save.
         val alreadyLogged = db.getAllTriggers(accessToken).any { t ->
-            t.type.equals("menstruation", ignoreCase = true) &&
-                    (t.source ?: "manual") == "manual" &&
-                    t.startAt.startsWith(day)
+            t.type.equals("menstruation", ignoreCase = true) && t.startAt.startsWith(day)
         }
 
         if (alreadyLogged) return
 
-        db.insertTrigger(
-            accessToken = accessToken,
-            migraineId = null,
-            type = "menstruation",
-            startAt = "${day}T09:00:00Z",
-            notes = "Logged via menstruation settings"
-        )
+        try {
+            db.insertTrigger(
+                accessToken = accessToken,
+                migraineId = null,
+                type = "menstruation",
+                startAt = "${day}T09:00:00Z",
+                notes = "Logged via menstruation settings"
+            )
+        } catch (e: Exception) {
+            // 23505 = a period row landed on that timestamp between the read and
+            // the insert (sync or DB trigger). It exists, which is all we wanted.
+            if (e.message?.contains("23505") == true) {
+                Log.d(TAG, "Period already logged for $day, skipping insert")
+            } else throw e
+        }
     }
 }
