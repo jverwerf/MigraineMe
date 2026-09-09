@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4162 entries.
+ * 4166 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -951,6 +951,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Cycle" to "Ciclo",
     "Cycle Length" to "Durata ciclo",
     "Cycle Settings" to "Ciclo",
+    "Cycle day, where day 1 is the first day of your period" to "Giorno del ciclo, dove il giorno 1 è il primo giorno delle mestruazioni",
     "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment." to "Fase del ciclo e mestruazioni previste. Fino al 60% delle donne con emicrania riferisce attacchi legati al ciclo, soprattutto nei 2 giorni prima e nei primi 3 di flusso, quando gli estrogeni crollano.\n\nInserisci l'ultimo ciclo per avere le previsioni. Se vedi attacchi raggruppati in quella finestra, tu e il medico potete pianificare una terapia preventiva.",
     "Cycle-aware: hormonal windows feed straight into your risk score." to "Attenta al ciclo: le finestre ormonali entrano dritte nel tuo rischio.",
     "Cycle: %s days" to "Ciclo: %s giorni",
@@ -2295,6 +2296,9 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Ovulation" to "Ovulazione",
     "Ovulation Day" to "Ovulazione",
     "Ovulation Risk Curve" to "Curva ovulazione",
+    "Ovulation day" to "Ovulazione",
+    "Ovulation day must be a number." to "Giorno di ovulazione: serve un numero.",
+    "Ovulation day should be between cycle day 5 and 40." to "Il giorno di ovulazione deve essere tra il giorno 5 e il 40 del ciclo.",
     "Ovulation decay" to "Curva dell'ovulazione",
     "Oxygen saturation" to "Saturazione di ossigeno",
     "Oxygen therapy" to "Ossigenoterapia",

@@ -4160,5 +4160,9 @@
   "After Ovulation": "Na eisprong",
   "Before Period": "Voor menstruatie",
   "Period Day": "Menstruatiedag",
-  "After Period": "Na menstruatie"
+  "After Period": "Na menstruatie",
+  "Ovulation day": "Eisprongdag",
+  "Cycle day, where day 1 is the first day of your period": "Cyclusdag, waarbij dag 1 de eerste dag van je menstruatie is",
+  "Ovulation day must be a number.": "Eisprongdag moet een getal zijn.",
+  "Ovulation day should be between cycle day 5 and 40.": "Eisprongdag moet tussen cyclusdag 5 en 40 liggen."
 }

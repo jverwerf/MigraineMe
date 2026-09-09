@@ -902,7 +902,7 @@
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:355",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:445",
       "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:140",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:185",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:191",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:312",
       "... 1 more"
     ],
@@ -1086,7 +1086,7 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:579",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:163",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1710",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:653",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:688",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:1114"
     ],
     "max_len": 14,
@@ -1514,7 +1514,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/DataSettingsComponents.kt:91",
       "app/src/main/java/com/migraineme/DataSettingsSections.kt:86",
-      "app/src/main/java/com/migraineme/MenstruationTrackingHelper.kt:144",
+      "app/src/main/java/com/migraineme/MenstruationTrackingHelper.kt:146",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:774"
     ],
     "max_len": 15,
@@ -2202,7 +2202,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:486",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:405",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:200"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:206"
     ],
     "max_len": 14,
     "count": 3
@@ -2486,7 +2486,7 @@
     "en": "Saving…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:346",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:381",
       "app/src/main/java/com/migraineme/QuickLogStrip.kt:553",
       "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:310"
     ],
@@ -3349,7 +3349,7 @@
     "en": "Adds a smaller risk bump around mid-cycle.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:333",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:343",
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:554"
     ],
     "max_len": 60,
@@ -3370,7 +3370,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2000",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:587"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:622"
     ],
     "max_len": 14,
     "count": 2
@@ -3510,7 +3510,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:590",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:318"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:328"
     ],
     "max_len": 22,
     "count": 2
@@ -3600,7 +3600,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1988",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:585"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:620"
     ],
     "max_len": 14,
     "count": 2
@@ -3749,8 +3749,8 @@
     "en": "Decay weights saved",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:129",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:146"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:135",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:152"
     ],
     "max_len": 22,
     "count": 2
@@ -3889,8 +3889,8 @@
     "en": "Failed to save weights.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:130",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:147"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:136",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:153"
     ],
     "max_len": 33,
     "count": 2
@@ -4069,7 +4069,7 @@
     "en": "Last Period Start Date",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:285",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:295",
       "app/src/main/java/com/migraineme/MenstruationSetupDialog.kt:154"
     ],
     "max_len": 32,
@@ -4460,7 +4460,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:556",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:332"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:342"
     ],
     "max_len": 20,
     "count": 2
@@ -4470,7 +4470,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:666",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:201"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:207"
     ],
     "max_len": 14,
     "count": 2
@@ -4520,7 +4520,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:595",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:319"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:329"
     ],
     "max_len": 44,
     "count": 2
@@ -4589,7 +4589,7 @@
     "en": "Reset Defaults",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:603",
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:638",
       "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:236"
     ],
     "max_len": 17,
@@ -4720,7 +4720,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:176",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:112"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:118"
     ],
     "max_len": 17,
     "count": 2
@@ -5030,7 +5030,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:575",
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:299"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:309"
     ],
     "max_len": 36,
     "count": 2
@@ -7610,7 +7610,7 @@
     "en": "After Ovulation",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:408"
     ],
     "max_len": 18,
     "count": 1
@@ -7619,7 +7619,7 @@
     "en": "After Period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:390"
     ],
     "max_len": 15,
     "count": 1
@@ -8807,7 +8807,7 @@
     "en": "Average Cycle Length",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:298"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:308"
     ],
     "max_len": 23,
     "count": 1
@@ -9158,7 +9158,7 @@
     "en": "Before Ovulation",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:408"
     ],
     "max_len": 19,
     "count": 1
@@ -9167,7 +9167,7 @@
     "en": "Before Period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:390"
     ],
     "max_len": 16,
     "count": 1
@@ -10445,7 +10445,7 @@
     "en": "Configure your cycle settings below to get started.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:175"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:181"
     ],
     "max_len": 73,
     "count": 1
@@ -11021,7 +11021,7 @@
     "en": "Cycle",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:202"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:208"
     ],
     "max_len": 14,
     "count": 1
@@ -11039,7 +11039,7 @@
     "en": "Cycle Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:281"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:291"
     ],
     "max_len": 17,
     "count": 1
@@ -11051,6 +11051,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:432"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Cycle day, where day 1 is the first day of your period",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:360"
+    ],
+    "max_len": 78,
     "count": 1
   },
   {
@@ -13163,7 +13172,7 @@
     "en": "Failed to save.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:113"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:119"
     ],
     "max_len": 18,
     "count": 1
@@ -16493,7 +16502,7 @@
     "en": "Log a Period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:235"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:242"
     ],
     "max_len": 15,
     "count": 1
@@ -17294,7 +17303,7 @@
     "en": "Menstruation Risk Curve",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:353"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:388"
     ],
     "max_len": 26,
     "count": 1
@@ -18248,7 +18257,7 @@
     "en": "Next Period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:194"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:200"
     ],
     "max_len": 14,
     "count": 1
@@ -18473,7 +18482,7 @@
     "en": "No cycle data yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:174"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:180"
     ],
     "max_len": 20,
     "count": 1
@@ -19733,7 +19742,7 @@
     "en": "Ovulation",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:204"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:211"
     ],
     "max_len": 14,
     "count": 1
@@ -19742,7 +19751,7 @@
     "en": "Ovulation Day",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:373"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:408"
     ],
     "max_len": 16,
     "count": 1
@@ -19751,9 +19760,36 @@
     "en": "Ovulation Risk Curve",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:371"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:406"
     ],
     "max_len": 23,
+    "count": 1
+  },
+  {
+    "en": "Ovulation day",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:359"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "Ovulation day must be a number.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:704"
+    ],
+    "max_len": 44,
+    "count": 1
+  },
+  {
+    "en": "Ovulation day should be between cycle day 5 and 40.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:705"
+    ],
+    "max_len": 73,
     "count": 1
   },
   {
@@ -20228,7 +20264,7 @@
     "en": "Period Day",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:355"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:390"
     ],
     "max_len": 14,
     "count": 1
@@ -20255,7 +20291,7 @@
     "en": "Period logged",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:262"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:272"
     ],
     "max_len": 16,
     "count": 1
@@ -22172,7 +22208,7 @@
     "en": "Risk points contributed on this day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:545"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:580"
     ],
     "max_len": 50,
     "count": 1
@@ -22289,7 +22325,7 @@
     "en": "Save Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:346"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:381"
     ],
     "max_len": 16,
     "count": 1
@@ -22298,7 +22334,7 @@
     "en": "Save Weights",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:611"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:646"
     ],
     "max_len": 15,
     "count": 1
@@ -24935,7 +24971,7 @@
     "en": "Tap a bar to edit · Risk points per day relative to predicted ovulation",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:372"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:407"
     ],
     "max_len": 78,
     "count": 1
@@ -24944,7 +24980,7 @@
     "en": "Tap a bar to edit · Risk points per day relative to predicted period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:354"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:389"
     ],
     "max_len": 74,
     "count": 1
@@ -29138,7 +29174,7 @@
     "en": "When the predicted date arrives, it auto-converts to a real period log and ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:222"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:229"
     ],
     "max_len": 108,
     "count": 1
@@ -30227,7 +30263,7 @@
     "en": "Your predicted period date gets a single trigger. The risk curve controls ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:220"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:227"
     ],
     "max_len": 107,
     "count": 1
@@ -31280,7 +31316,7 @@
     "en": "how many points it contributes on each day relative to the predicted date. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:221"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:228"
     ],
     "max_len": 108,
     "count": 1
@@ -32234,7 +32270,7 @@
     "en": "the next prediction moves forward by one cycle.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:223"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:230"
     ],
     "max_len": 68,
     "count": 1
@@ -32981,7 +33017,7 @@
     "en": "✓ Saved successfully",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:592"
+      "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:627"
     ],
     "max_len": 23,
     "count": 1

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4162 entries.
+ * 4166 entries.
  */
 internal val PT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos os dados",
@@ -951,6 +951,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Cycle" to "Ciclo",
     "Cycle Length" to "Duração ciclo",
     "Cycle Settings" to "Ciclo",
+    "Cycle day, where day 1 is the first day of your period" to "Dia do ciclo, em que o dia 1 é o primeiro dia da menstruação",
     "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment." to "Fase do ciclo e período previsto. Até 60% das mulheres com enxaqueca referem crises ligadas ao ciclo, sobretudo nos 2 dias antes e nos 3 primeiros dias de fluxo, quando o estrogénio cai a pique.\n\nAnota o teu último período para teres previsões. Se vires crises agrupadas nessa janela, tu e o médico podem planear tratamento antecipado.",
     "Cycle-aware: hormonal windows feed straight into your risk score." to "Atenta ao ciclo: as janelas hormonais entram direto no teu risco.",
     "Cycle: %s days" to "Ciclo: %s dias",
@@ -2295,6 +2296,9 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Ovulation" to "Ovulação",
     "Ovulation Day" to "Dia da ovulação",
     "Ovulation Risk Curve" to "Curva da ovulação",
+    "Ovulation day" to "Dia da ovulação",
+    "Ovulation day must be a number." to "O dia da ovulação tem de ser um número.",
+    "Ovulation day should be between cycle day 5 and 40." to "O dia da ovulação deve estar entre o dia 5 e o dia 40 do ciclo.",
     "Ovulation decay" to "Curva da ovulação",
     "Oxygen saturation" to "Saturação de oxigénio",
     "Oxygen therapy" to "Oxigenoterapia",

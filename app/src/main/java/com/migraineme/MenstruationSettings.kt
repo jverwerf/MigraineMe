@@ -6,8 +6,10 @@ data class MenstruationSettings(
     val lastMenstruationDate: LocalDate?,
     val avgCycleLength: Int,
     val autoUpdateAverage: Boolean,
-    /** Adds a smaller risk bump around predicted ovulation (last period + cycle − 14). */
-    val predictOvulation: Boolean = false
+    /** Adds a smaller risk bump around predicted ovulation (last period + ovulationCycleDay − 1). */
+    val predictOvulation: Boolean = false,
+    /** Cycle day of ovulation, day 1 = first day of the period. Server allows 5..40. */
+    val ovulationCycleDay: Int = 14
 )
 
 /**

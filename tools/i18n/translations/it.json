@@ -4160,5 +4160,9 @@
   "After Ovulation": "Dopo ovulazione",
   "Before Period": "Prima del ciclo",
   "Period Day": "Giorno ciclo",
-  "After Period": "Dopo il ciclo"
+  "After Period": "Dopo il ciclo",
+  "Ovulation day": "Ovulazione",
+  "Cycle day, where day 1 is the first day of your period": "Giorno del ciclo, dove il giorno 1 è il primo giorno delle mestruazioni",
+  "Ovulation day must be a number.": "Giorno di ovulazione: serve un numero.",
+  "Ovulation day should be between cycle day 5 and 40.": "Il giorno di ovulazione deve essere tra il giorno 5 e il 40 del ciclo."
 }

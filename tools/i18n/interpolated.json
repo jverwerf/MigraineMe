@@ -384,31 +384,31 @@
     "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:183",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:189",
     "line": "                        daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:186",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:192",
     "line": "                        else -> t(\"In %1\\$s days\", daysUntil.toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:202",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:208",
     "line": "                        MStatColumn(t(\"Cycle\"), t(\"%1\\$s days\", s.avgCycleLength.toString()))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:220",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:227",
     "line": "                        t(\"Your predicted period date gets a single trigger. The risk curve controls \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:221",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:228",
     "line": "                        t(\"how many points it contributes on each day relative to the predicted date. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:222",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:229",
     "line": "                        t(\"When the predicted date arrives, it auto-converts to a real period log and \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:223",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:230",
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {

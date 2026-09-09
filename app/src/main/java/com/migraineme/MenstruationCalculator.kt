@@ -81,6 +81,19 @@ object MenstruationCalculator {
     fun predictOvulation(nextPeriodDate: LocalDate): LocalDate {
         return nextPeriodDate.minusDays(14)
     }
+
+    /**
+     * Next ovulation on or after [today], from the user-set ovulation cycle day
+     * (menstruation_settings.ovulation_cycle_day). Cycle day 1 is the first day of
+     * the period, so the first candidate is lastPeriod + (cycleDay − 1); while that
+     * is in the past it rolls forward one average cycle at a time.
+     */
+    fun nextOvulation(lastPeriod: LocalDate, cycleDay: Int, cycleLength: Int, today: LocalDate = LocalDate.now()): LocalDate {
+        var date = lastPeriod.plusDays((cycleDay - 1).toLong())
+        val step = cycleLength.coerceAtLeast(1).toLong()
+        while (date.isBefore(today)) date = date.plusDays(step)
+        return date
+    }
     
     /**
      * Calculate cycle day (which day of cycle user is currently on)

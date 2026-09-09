@@ -56,6 +56,7 @@ fun MenstruationSettingsScreen(
     var avgCycleText by remember { mutableStateOf("28") }
     var autoUpdateAvg by remember { mutableStateOf(true) }
     var predictOvulation by remember { mutableStateOf(false) }
+    var ovulationDayText by remember { mutableStateOf("14") }
 
     // Add period
     var addPeriodDate by remember { mutableStateOf("") }
@@ -82,6 +83,7 @@ fun MenstruationSettingsScreen(
                     avgCycleText = s.avgCycleLength.toString()
                     autoUpdateAvg = s.autoUpdateAverage
                     predictOvulation = s.predictOvulation
+                    ovulationDayText = s.ovulationCycleDay.toString()
                 }
 
                 val edge = EdgeFunctionsService()
@@ -100,14 +102,18 @@ fun MenstruationSettingsScreen(
             saving = true; saveSuccess = false
             val (parsedLast, parsedAvg, err) = validateMenstrInputs(lastDateText, avgCycleText)
             if (err != null) { saving = false; Toast.makeText(context, err, Toast.LENGTH_LONG).show(); return@launch }
+            // Ovulation day is only editable while the switch is on; when it is off,
+            // keep whatever the row already holds (omitting the column keeps it).
+            val (parsedOvDay, ovErr) = validateOvulationDay(ovulationDayText, predictOvulation)
+            if (ovErr != null) { saving = false; Toast.makeText(context, ovErr, Toast.LENGTH_LONG).show(); return@launch }
             val ok = withContext(Dispatchers.IO) {
-                val saved = MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg, predictOvulation)
+                val saved = MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg, predictOvulation, parsedOvDay)
                 if (saved) EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
                 saved
             }
             saving = false
             if (ok) {
-                settings = MenstruationSettings(parsedLast, parsedAvg, autoUpdateAvg, predictOvulation)
+                settings = MenstruationSettings(parsedLast, parsedAvg, autoUpdateAvg, predictOvulation, parsedOvDay ?: settings?.ovulationCycleDay ?: 14)
                 saveSuccess = true
                 Toast.makeText(context, tSync("Settings saved"), Toast.LENGTH_SHORT).show()
             } else Toast.makeText(context, tSync("Failed to save."), Toast.LENGTH_LONG).show()
@@ -201,7 +207,8 @@ fun MenstruationSettingsScreen(
                         MStatColumn(t("Predicted"), nextExpected.toString())
                         MStatColumn(t("Cycle"), t("%1\$s days", s.avgCycleLength.toString()))
                         if (s.predictOvulation) {
-                            MStatColumn(t("Ovulation"), nextExpected.minusDays(14).toString())
+                            // Next ovulation on or after today: last period + (day − 1), rolled forward by cycle length
+                            MStatColumn(t("Ovulation"), MenstruationCalculator.nextOvulation(s.lastMenstruationDate, s.ovulationCycleDay, s.avgCycleLength, today).toString())
                         }
                     }
                 }
@@ -251,7 +258,10 @@ fun MenstruationSettingsScreen(
                                         val currentLast = currentSettings?.lastMenstruationDate
                                         if (currentLast == null || startDate.isAfter(currentLast)) {
                                             MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, startDate, currentSettings?.avgCycleLength ?: 28, currentSettings?.autoUpdateAverage ?: true)
-                                            settings = MenstruationSettings(startDate, currentSettings?.avgCycleLength ?: 28, currentSettings?.autoUpdateAverage ?: true)
+                                            settings = MenstruationSettings(
+                                                startDate, currentSettings?.avgCycleLength ?: 28, currentSettings?.autoUpdateAverage ?: true,
+                                                currentSettings?.predictOvulation ?: false, currentSettings?.ovulationCycleDay ?: 14
+                                            )
                                             lastDateText = startDate.toString()
                                         }
                                         EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
@@ -336,6 +346,31 @@ fun MenstruationSettingsScreen(
                         checked = predictOvulation, onCheckedChange = { predictOvulation = it }, enabled = !saving,
                         colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
                     )
+                }
+
+                // Ovulation cycle day (menstruation_settings.ovulation_cycle_day, 5..40).
+                // Only shown while the switch is on; the DB moves the ovulation_predicted
+                // row to last period + (day − 1) whenever the settings row changes.
+                if (predictOvulation) {
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(t("Ovulation day"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Cycle day, where day 1 is the first day of your period"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                        OutlinedTextField(
+                            value = ovulationDayText,
+                            onValueChange = { new -> if (new.isEmpty() || new.all { it.isDigit() }) ovulationDayText = new },
+                            placeholder = { Text("14", color = Color.White.copy(alpha = 0.4f)) },
+                            modifier = Modifier.width(80.dp), singleLine = true, enabled = !saving,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center, color = Color.White),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
                 }
 
                 Button(
@@ -661,6 +696,14 @@ private fun validateMenstrInputs(lastDateText: String, avgCycleText: String): Tr
     val avg = avgCycleText.trim().toIntOrNull() ?: return Triple(null, 0, "Average cycle length must be a number.")
     if (avg < 15 || avg > 60) return Triple(null, 0, "Cycle length should be between 15 and 60 days.")
     return Triple(lastDate, avg, null)
+}
+
+/** Returns (day, error). Day is null when the switch is off (column omitted on save). */
+private fun validateOvulationDay(text: String, predictOvulation: Boolean): Pair<Int?, String?> {
+    if (!predictOvulation) return Pair(null, null)
+    val day = text.trim().toIntOrNull() ?: return Pair(null, tSync("Ovulation day must be a number."))
+    if (day < 5 || day > 40) return Pair(null, tSync("Ovulation day should be between cycle day 5 and 40."))
+    return Pair(day, null)
 }
 
 private fun fmt(v: Double): String =

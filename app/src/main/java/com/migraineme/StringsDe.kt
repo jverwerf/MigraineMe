@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4162 entries.
+ * 4166 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -951,6 +951,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Cycle" to "Zyklus",
     "Cycle Length" to "Zykluslänge",
     "Cycle Settings" to "Zyklus",
+    "Cycle day, where day 1 is the first day of your period" to "Zyklustag, wobei Tag 1 der erste Tag deiner Periode ist",
     "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment." to "Zyklusphase und erwartete Periode. Bis zu 60% der Frauen mit Migräne berichten zyklusgebundene Attacken — am häufigsten in den 2 Tagen vor und den ersten 3 Tagen der Blutung, wenn das Östrogen stark fällt.\n\nErfasse deine letzte Periode für Prognosen. Häufen sich Attacken in diesem Fenster, kannst du mit deiner Ärztin oder deinem Arzt vorbeugende Behandlung planen.",
     "Cycle-aware: hormonal windows feed straight into your risk score." to "Zyklusbewusst: hormonelle Phasen fließen direkt in deinen Risikoscore ein.",
     "Cycle: %s days" to "Zyklus: %s Tage",
@@ -2295,6 +2296,9 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Ovulation" to "Eisprung",
     "Ovulation Day" to "Eisprungtag",
     "Ovulation Risk Curve" to "Eisprung-Risikokurve",
+    "Ovulation day" to "Eisprungtag",
+    "Ovulation day must be a number." to "Der Eisprungtag muss eine Zahl sein.",
+    "Ovulation day should be between cycle day 5 and 40." to "Der Eisprungtag sollte zwischen Zyklustag 5 und 40 liegen.",
     "Ovulation decay" to "Eisprung-Abklingkurve",
     "Oxygen saturation" to "Sauerstoffsättigung",
     "Oxygen therapy" to "Sauerstofftherapie",

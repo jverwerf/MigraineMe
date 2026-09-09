@@ -4160,5 +4160,9 @@
   "After Ovulation": "Nach Eisprung",
   "Before Period": "Vor Periode",
   "Period Day": "Periodentag",
-  "After Period": "Nach Periode"
+  "After Period": "Nach Periode",
+  "Ovulation day": "Eisprungtag",
+  "Cycle day, where day 1 is the first day of your period": "Zyklustag, wobei Tag 1 der erste Tag deiner Periode ist",
+  "Ovulation day must be a number.": "Der Eisprungtag muss eine Zahl sein.",
+  "Ovulation day should be between cycle day 5 and 40.": "Der Eisprungtag sollte zwischen Zyklustag 5 und 40 liegen."
 }

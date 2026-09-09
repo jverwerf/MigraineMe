@@ -53,14 +53,15 @@ object MenstruationTrackingHelper {
         avgCycle: Int,
         autoUpdate: Boolean,
         preferredSource: String?,
-        predictOvulation: Boolean? = null
+        predictOvulation: Boolean? = null,
+        ovulationCycleDay: Int? = null
     ): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation)
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation, ovulationCycleDay)
 
             ensureManualMenstruationTrigger(accessToken, lastDate)
             ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
@@ -88,14 +89,15 @@ object MenstruationTrackingHelper {
         lastDate: LocalDate?,
         avgCycle: Int,
         autoUpdate: Boolean,
-        predictOvulation: Boolean? = null
+        predictOvulation: Boolean? = null,
+        ovulationCycleDay: Int? = null
     ): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation)
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate, predictOvulation, ovulationCycleDay)
 
             ensureManualMenstruationTrigger(accessToken, lastDate)
             ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)

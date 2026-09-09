@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4162 entries.
+ * 4166 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -951,6 +951,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Cycle" to "Cyclus",
     "Cycle Length" to "Cycluslengte",
     "Cycle Settings" to "Cyclus",
+    "Cycle day, where day 1 is the first day of your period" to "Cyclusdag, waarbij dag 1 de eerste dag van je menstruatie is",
     "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment." to "Cyclusfase en verwachte menstruatie. Tot 60% van de vrouwen met migraine meldt aanvallen die met de cyclus meelopen, meestal in de 2 dagen ervoor en de eerste 3 dagen van de bloeding, als oestrogeen scherp daalt.\n\nNoteer je laatste menstruatie voor voorspellingen. Zie je clustering rond dat venster, dan kun je met je arts vooraf behandelen.",
     "Cycle-aware: hormonal windows feed straight into your risk score." to "Cyclusbewust: hormonale vensters tellen direct mee in je risicoscore.",
     "Cycle: %s days" to "Cyclus: %s dgn",
@@ -2295,6 +2296,9 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Ovulation" to "Eisprong",
     "Ovulation Day" to "Eisprongdag",
     "Ovulation Risk Curve" to "Risicocurve eisprong",
+    "Ovulation day" to "Eisprongdag",
+    "Ovulation day must be a number." to "Eisprongdag moet een getal zijn.",
+    "Ovulation day should be between cycle day 5 and 40." to "Eisprongdag moet tussen cyclusdag 5 en 40 liggen.",
     "Ovulation decay" to "Eisprongcurve",
     "Oxygen saturation" to "Zuurstofverzadiging",
     "Oxygen therapy" to "Zuurstoftherapie",

@@ -111,23 +111,25 @@ class SupabaseMenstruationService(private val context: Context) {
                     lastMenstruationDate = it.last_menstruation_date?.let { d -> LocalDate.parse(d) },
                     avgCycleLength = it.avg_cycle_length ?: 28,
                     autoUpdateAverage = it.auto_update_average ?: true,
-                    predictOvulation = it.predict_ovulation ?: false
+                    predictOvulation = it.predict_ovulation ?: false,
+                    ovulationCycleDay = it.ovulation_cycle_day ?: 14
                 )
             }
         }
     }
 
     /**
-     * Upsert the settings row. [predictOvulation] is only written when non-null:
-     * a caller that does not know the current value must omit it so the merge
-     * upsert never silently drops the switch back to false.
+     * Upsert the settings row. [predictOvulation] and [ovulationCycleDay] are only
+     * written when non-null: a caller that does not know the current value must
+     * omit them so the merge upsert never silently resets the switch or the day.
      */
     suspend fun updateSettings(
         accessToken: String,
         lastMenstruationDate: LocalDate?,
         avgCycleLength: Int,
         autoUpdateAverage: Boolean,
-        predictOvulation: Boolean? = null
+        predictOvulation: Boolean? = null,
+        ovulationCycleDay: Int? = null
     ) {
         val userId = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: throw Exception("Failed to extract user_id")
         val body = buildJsonObject {
@@ -136,6 +138,7 @@ class SupabaseMenstruationService(private val context: Context) {
             put("avg_cycle_length", avgCycleLength)
             put("auto_update_average", autoUpdateAverage)
             if (predictOvulation != null) put("predict_ovulation", predictOvulation)
+            if (ovulationCycleDay != null) put("ovulation_cycle_day", ovulationCycleDay)
         }
         val req = Request.Builder().url("$SUPABASE_URL/rest/v1/menstruation_settings?on_conflict=user_id")
             .post(body.toString().toRequestBody("application/json".toMediaType()))
@@ -175,7 +178,8 @@ data class MenstruationSettingsDto(
     val last_menstruation_date: String?,
     val avg_cycle_length: Int?,
     val auto_update_average: Boolean?,
-    val predict_ovulation: Boolean? = null
+    val predict_ovulation: Boolean? = null,
+    val ovulation_cycle_day: Int? = null
 )
 
 @Serializable
