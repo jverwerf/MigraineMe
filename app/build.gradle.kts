@@ -33,8 +33,8 @@ android {
         applicationId = if (legacyPackage) "com.migraineme" else "app.migraineme"
         minSdk = 26
         targetSdk = 36
-        versionCode = 67
-        versionName = "5.0.18"
+        versionCode = 68
+        versionName = "5.0.19"
 
         // ── All keys loaded from local.properties ──
         buildConfigField("String", "SUPABASE_URL",
