@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 
 /**
  * A practice we found near the patient.
@@ -89,6 +94,12 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                // The picture is drawn over the initials, so a share image
+                // with a transparent background would otherwise show the
+                // letters through its gaps. They stand in only until the
+                // image is really on screen; a broken or slow one leaves them
+                // showing rather than an empty box.
+                var shown by remember(place.image_url) { mutableStateOf(false) }
                 Box(
                     Modifier
                         .size(72.dp)
@@ -97,20 +108,20 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
                         .border(2.dp, Color(0xFF220C33), RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // Initials underneath, their own share image on top when
-                    // the site had one. A broken or slow image leaves the
-                    // initials showing rather than an empty box.
-                    Text(
-                        place.initials,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppTheme.AccentPurple,
-                    )
+                    if (!shown) {
+                        Text(
+                            place.initials,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AppTheme.AccentPurple,
+                        )
+                    }
                     if (!place.image_url.isNullOrBlank()) {
                         AsyncImage(
                             model = place.image_url,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
+                            onState = { shown = it is AsyncImagePainter.State.Success },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
