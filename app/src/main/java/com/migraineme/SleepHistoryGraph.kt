@@ -64,6 +64,26 @@ data class SleepGraphResult(
     val allTimeMax: Map<String, Float>
 )
 
+// The selector's grouping: the same GRAPHABLE_METRICS, split into the families
+// they come from so a nine-row list reads at a glance.
+private val sleepMetricGroups = listOf(
+    "Sleep" to listOf(
+        SleepCardConfig.METRIC_DURATION,
+        SleepCardConfig.METRIC_SCORE,
+        SleepCardConfig.METRIC_EFFICIENCY,
+        SleepCardConfig.METRIC_DISTURBANCES
+    ),
+    "Stages" to listOf(
+        SleepCardConfig.METRIC_STAGES_DEEP,
+        SleepCardConfig.METRIC_STAGES_REM,
+        SleepCardConfig.METRIC_STAGES_LIGHT
+    ),
+    "Times" to listOf(
+        SleepCardConfig.METRIC_FELL_ASLEEP,
+        SleepCardConfig.METRIC_WOKE_UP
+    )
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SleepHistoryGraph(
@@ -99,27 +119,61 @@ fun SleepHistoryGraph(
     val daysWithData: List<SleepGraphDay> = historyData.filter { it.duration != null && it.duration > 0.0 }
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = t("%s-Day Sleep History", days),
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-            )
-            if (onClick != null) {
-                Text(t("View Full →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-            }
+        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val rangeLabel = if (historyData.isNotEmpty()) {
+            val from = try { LocalDate.parse(historyData.first().date).format(dateFmt) } catch (_: Exception) { historyData.first().date }
+            val to = try { LocalDate.parse(historyData.last().date).format(dateFmt) } catch (_: Exception) { historyData.last().date }
+            "$from – $to"
+        } else ""
+
+        // A metric's own average over the days that carry data. Feeds both the
+        // header reading and the value column of the checklist.
+        fun averageOf(metric: String): Float? {
+            val values = daysWithData.mapNotNull { getSleepDayValue(it, metric) }
+            return if (values.isEmpty()) null else values.average().toFloat()
         }
+
+        val singleMetric = selectedMetrics.singleOrNull()
+        val subtitle: String
+        val readout: String
+        val readoutUnit: String
+        val readoutColor: Color
+        val readoutCaption: String
+        if (singleMetric != null) {
+            val unit = SleepCardConfig.unitFor(singleMetric)
+            val avg = averageOf(singleMetric)
+            subtitle = listOf(SleepCardConfig.labelFor(singleMetric), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = if (avg != null) formatSleepValue(avg, "") else "-"
+            readoutUnit = unit
+            readoutColor = SleepCardConfig.colorFor(singleMetric)
+            readoutCaption = t("%s-day average", days)
+        } else if (selectedMetrics.size >= 2) {
+            subtitle = listOf(t("%s metrics", selectedMetrics.size), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = "0–1"
+            readoutUnit = ""
+            readoutColor = GraphNormalisedColor
+            readoutCaption = t("normalised scale")
+        } else {
+            subtitle = rangeLabel
+            readout = "-"
+            readoutUnit = ""
+            readoutColor = AppTheme.SubtleTextColor
+            readoutCaption = ""
+        }
+
+        GraphCardHeader(
+            title = t("Sleep History"),
+            subtitle = subtitle,
+            readout = readout,
+            readoutUnit = readoutUnit,
+            readoutColor = readoutColor,
+            readoutCaption = readoutCaption
+        )
 
         if (sources.isNotEmpty()) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             SourceBadgeRow(sources)
         }
-
-        Spacer(Modifier.height(8.dp))
 
         if (isLoading) {
             Row(
@@ -146,68 +200,20 @@ fun SleepHistoryGraph(
                 textAlign = TextAlign.Center
             )
         } else {
-            // Legend
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                for (metric in selectedMetrics) {
-                    val color = SleepCardConfig.colorFor(metric)
-                    val label = SleepCardConfig.labelFor(metric)
-                    val unit = SleepCardConfig.unitFor(metric)
-                    val values: List<Float> = daysWithData.mapNotNull { getSleepDayValue(it, metric) }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(8.dp)) { drawCircle(color) }
-                        Spacer(Modifier.width(4.dp))
-                        if (isNormalized) {
-                            val minVal = allTimeMin[metric] ?: 0f
-                            val maxVal = allTimeMax[metric] ?: 1f
-                            Text(
-                                text = "$label [${formatSleepValue(minVal, unit)}-${formatSleepValue(maxVal, unit)}]",
-                                color = color,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        } else {
-                            val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text(
-                                text = t("%1\$s (avg: %2\$s)", label, formatSleepValue(avg, unit)),
-                                color = color,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
-                }
-            }
-
+            // Per-metric ranges, the only way to read a normalised line back to
+            // real units.
             if (isNormalized) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = t("⚠️ Normalized 0-1 scale • Dotted = %s days avg", days),
-                    color = Color(0xFFFFB74D),
-                    style = MaterialTheme.typography.labelSmall
+                Spacer(Modifier.height(10.dp))
+                MetricRangeKeys(
+                    selectedMetrics.map { metric ->
+                        val unit = SleepCardConfig.unitFor(metric)
+                        Triple(
+                            SleepCardConfig.labelFor(metric),
+                            "${formatSleepValue(allTimeMin[metric] ?: 0f, unit)}–${formatSleepValue(allTimeMax[metric] ?: 1f, unit)}",
+                            SleepCardConfig.colorFor(metric)
+                        )
+                    }
                 )
-            } else if (daysWithData.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = t("Dotted line = %s-day average", days),
-                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-
-            if (migraineDates.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = t("Red bands = migraine days"),
-                        color = Color(0xFFE57373),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -220,7 +226,7 @@ fun SleepHistoryGraph(
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             } else {
-                val yAxisWidth = 50.dp
+                val yAxisWidth = 44.dp
 
                 val yTop: String
                 val yMid: String
@@ -232,31 +238,23 @@ fun SleepHistoryGraph(
                     yBot = "0.0"
                 } else {
                     val metric = selectedMetrics.first()
-                    val unit = SleepCardConfig.unitFor(metric)
                     val values: List<Float> = daysWithData.mapNotNull { getSleepDayValue(it, metric) }
                     val max = values.maxOrNull() ?: 1f
                     val min = values.minOrNull() ?: 0f
-                    yTop = formatSleepValue(max, unit)
-                    yMid = formatSleepValue((max + min) / 2, unit)
-                    yBot = formatSleepValue(min, unit)
+                    yTop = formatSleepValue(max, "")
+                    yMid = formatSleepValue((max + min) / 2, "")
+                    yBot = formatSleepValue(min, "")
                 }
 
-                Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-                    Column(
-                        modifier = Modifier.width(yAxisWidth).fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(text = yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(text = yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    }
-
+                Row(modifier = Modifier.fillMaxWidth().height(168.dp)) {
                     Canvas(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         val padding = 8.dp.toPx()
                         val graphWidth = size.width - padding * 2
                         val graphHeight = size.height - padding * 2
                         val dashWidth = 6.dp.toPx()
                         val gapWidth = 4.dp.toPx()
+
+                        drawGraphGrid(padding, graphHeight, 1.dp.toPx())
 
                         // Draw migraine bands (behind everything)
                         with(MigraineOverlayHelper) {
@@ -296,47 +294,58 @@ fun SleepHistoryGraph(
                                 Pair(idx, ((value - minVal) / range).coerceIn(0f, 1f))
                             }
 
+                            // Screen points once, then the shared curve: the same
+                            // Catmull-Rom the Migraine Timeline draws.
+                            val offsets = plotPoints.map { pair ->
+                                Offset(
+                                    padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth,
+                                    padding + graphHeight - (pair.second * graphHeight)
+                                )
+                            }
+
+                            if (!isNormalized) {
+                                drawSeriesFill(offsets, color, padding, graphHeight)
+                            }
+
                             // Dotted average
                             if (plotPoints.isNotEmpty()) {
                                 val avgNormalized = plotPoints.map { it.second }.average().toFloat()
-                                val avgY = padding + graphHeight - (avgNormalized * graphHeight)
-                                var x = padding
-                                while (x < size.width - padding) {
-                                    drawLine(
-                                        color.copy(alpha = 0.5f),
-                                        Offset(x, avgY),
-                                        Offset((x + dashWidth).coerceAtMost(size.width - padding), avgY),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
-                                    x += dashWidth + gapWidth
-                                }
+                                drawDashedAverage(
+                                    color,
+                                    padding + graphHeight - (avgNormalized * graphHeight),
+                                    padding, dashWidth, gapWidth, 1.5.dp.toPx()
+                                )
                             }
 
-                            // Line
-                            if (plotPoints.size > 1) {
-                                val path = Path()
-                                plotPoints.forEachIndexed { i, pair ->
-                                    val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                    val y = padding + graphHeight - (pair.second * graphHeight)
-                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                                }
-                                drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                            }
+                            drawSeriesCurve(
+                                offsets,
+                                color,
+                                (if (isNormalized) 1.9f else 2.2f).dp.toPx(),
+                                (if (isNormalized) 5f else 6f).dp.toPx()
+                            )
 
-                            // Dots
-                            for (pair in plotPoints) {
-                                val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                val y = padding + graphHeight - (pair.second * graphHeight)
-                                drawCircle(color, 4.dp.toPx(), Offset(x, y))
+                            offsets.forEach { o ->
+                                drawCircle(color, (if (isNormalized) 2.6f else 3.2f).dp.toPx(), o)
                             }
                         }
+                    }
+
+                    // Y-axis labels
+                    Column(
+                        modifier = Modifier.width(yAxisWidth).fillMaxHeight().padding(start = 6.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(text = yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
                 // Date labels
                 Spacer(Modifier.height(4.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = yAxisWidth),
+                    modifier = Modifier.fillMaxWidth().padding(end = yAxisWidth),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     val fmt = DateTimeFormatter.ofPattern("MMM d")
@@ -347,53 +356,37 @@ fun SleepHistoryGraph(
                         Text(text = lastLabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
-            }
-        }
 
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = t("Select Metrics") + if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else "",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelMedium
-        )
-        Spacer(Modifier.height(8.dp))
-
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            for (metric in SleepCardConfig.GRAPHABLE_METRICS) {
-                val isSelected = metric in selectedMetrics
-                val chipColor = SleepCardConfig.colorFor(metric)
-                val chipLabel = SleepCardConfig.labelFor(metric)
-
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        selectedMetrics = if (isSelected) {
-                            selectedMetrics.minus(metric)
-                        } else {
-                            selectedMetrics.plus(metric)
-                        }
-                    },
-                    label = { Text(text = chipLabel, style = MaterialTheme.typography.labelSmall) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = chipColor.copy(alpha = 0.3f),
-                        selectedLabelColor = chipColor,
-                        containerColor = AppTheme.BaseCardContainer,
-                        labelColor = AppTheme.SubtleTextColor
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        borderColor = if (isSelected) chipColor else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                        selectedBorderColor = chipColor,
-                        enabled = true,
-                        selected = isSelected
-                    )
+                GraphKeyRow(
+                    averageLabel = if (isNormalized) t("each line's average") else t("history average"),
+                    averageColor = if (isNormalized) Color.White.copy(alpha = 0.55f)
+                        else SleepCardConfig.colorFor(selectedMetrics.first()),
+                    showMigraineDays = migraineDates.isNotEmpty(),
+                    showForecast = false
                 )
             }
         }
+
+        // Metric selector: grouped checklist, every metric carrying its own
+        // average for the window.
+        MetricChecklist(
+            groups = sleepMetricGroups.map { (group, metrics) ->
+                group to metrics.map { metric ->
+                    val unit = SleepCardConfig.unitFor(metric)
+                    GraphMetricRow(
+                        key = metric,
+                        label = SleepCardConfig.labelFor(metric),
+                        value = averageOf(metric)?.let { formatSleepValue(it, unit) },
+                        color = SleepCardConfig.colorFor(metric)
+                    )
+                }
+            },
+            selected = selectedMetrics,
+            onToggle = { metric ->
+                selectedMetrics = if (metric in selectedMetrics) selectedMetrics.minus(metric)
+                    else selectedMetrics.plus(metric)
+            }
+        )
     }
 }
 

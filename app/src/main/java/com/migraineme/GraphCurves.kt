@@ -81,3 +81,31 @@ internal fun smoothPath(points: List<Offset>): Path {
     return path
 }
 
+
+/**
+ * One segment of [smoothPath], as its own Path.
+ *
+ * The Cognitive graph colours each noise segment by its band (quiet, moderate,
+ * loud, very loud), which a single path cannot express. This hands back the
+ * cubic for segment [i] using the same control points as the whole curve, so a
+ * per-segment colour and the shared curve are not mutually exclusive.
+ */
+internal fun smoothSegment(points: List<Offset>, i: Int): Path {
+    val path = Path()
+    if (i < 0 || i >= points.size - 1) return path
+    val p1 = points[i]
+    val p2 = points[i + 1]
+    path.moveTo(p1.x, p1.y)
+    if (points.size == 2) {
+        path.lineTo(p2.x, p2.y)
+        return path
+    }
+    val p0 = points.getOrElse(i - 1) { p1 }
+    val p3 = points.getOrElse(i + 2) { p2 }
+    path.cubicTo(
+        p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f,
+        p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f,
+        p2.x, p2.y,
+    )
+    return path
+}

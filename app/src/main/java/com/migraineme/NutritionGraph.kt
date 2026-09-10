@@ -99,6 +99,59 @@ private fun getDayValue(day: NutritionDayData, metric: String): Float {
     }
 }
 
+// The selector's grouping: the same ALL_NUTRITION_METRICS, split into the
+// families a person thinks in, because thirty-nine rows in one alphabetical
+// list is a haystack. Migraine-relevant exposures lead, since those are the
+// ones this app exists to correlate.
+private val nutritionMetricGroups = listOf(
+    "Trigger exposure" to listOf(
+        MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE,
+        MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE,
+        MonitorCardConfig.METRIC_GLUTEN_EXPOSURE,
+        MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE,
+        MonitorCardConfig.METRIC_CAFFEINE
+    ),
+    "Energy and macros" to listOf(
+        MonitorCardConfig.METRIC_CALORIES,
+        MonitorCardConfig.METRIC_PROTEIN,
+        MonitorCardConfig.METRIC_CARBS,
+        MonitorCardConfig.METRIC_SUGAR,
+        MonitorCardConfig.METRIC_FIBER,
+        MonitorCardConfig.METRIC_FAT,
+        MonitorCardConfig.METRIC_SATURATED_FAT,
+        MonitorCardConfig.METRIC_UNSATURATED_FAT,
+        MonitorCardConfig.METRIC_TRANS_FAT,
+        MonitorCardConfig.METRIC_CHOLESTEROL
+    ),
+    "Minerals" to listOf(
+        MonitorCardConfig.METRIC_SODIUM,
+        MonitorCardConfig.METRIC_POTASSIUM,
+        MonitorCardConfig.METRIC_MAGNESIUM,
+        MonitorCardConfig.METRIC_CALCIUM,
+        MonitorCardConfig.METRIC_IRON,
+        MonitorCardConfig.METRIC_ZINC,
+        MonitorCardConfig.METRIC_PHOSPHORUS,
+        MonitorCardConfig.METRIC_COPPER,
+        MonitorCardConfig.METRIC_MANGANESE,
+        MonitorCardConfig.METRIC_SELENIUM
+    ),
+    "Vitamins" to listOf(
+        MonitorCardConfig.METRIC_VITAMIN_A,
+        MonitorCardConfig.METRIC_VITAMIN_B6,
+        MonitorCardConfig.METRIC_VITAMIN_B12,
+        MonitorCardConfig.METRIC_VITAMIN_C,
+        MonitorCardConfig.METRIC_VITAMIN_D,
+        MonitorCardConfig.METRIC_VITAMIN_E,
+        MonitorCardConfig.METRIC_VITAMIN_K,
+        MonitorCardConfig.METRIC_THIAMIN,
+        MonitorCardConfig.METRIC_RIBOFLAVIN,
+        MonitorCardConfig.METRIC_NIACIN,
+        MonitorCardConfig.METRIC_FOLATE,
+        MonitorCardConfig.METRIC_PANTOTHENIC_ACID,
+        MonitorCardConfig.METRIC_BIOTIN
+    )
+)
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NutritionHistoryGraph(
@@ -146,23 +199,58 @@ fun NutritionHistoryGraph(
     }
     
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                t("%s-Day History", days),
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-            )
-            if (onClick != null) {
-                Text(t("View Full →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-            }
+        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val rangeLabel = if (historyData.isNotEmpty()) {
+            val from = try { LocalDate.parse(historyData.first().date).format(dateFmt) } catch (_: Exception) { historyData.first().date }
+            val to = try { LocalDate.parse(historyData.last().date).format(dateFmt) } catch (_: Exception) { historyData.last().date }
+            "$from – $to"
+        } else ""
+
+        // A metric's own average over the logged days. Feeds both the header
+        // reading and the value column of the checklist.
+        fun averageOf(metric: String): Float? {
+            val values = daysWithLogs.map { getDayValue(it, metric) }
+            return if (values.isEmpty()) null else values.average().toFloat()
         }
-        
-        Spacer(Modifier.height(8.dp))
-        
+        fun labelOf(metric: String) = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
+        fun unitOf(metric: String) = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+
+        val singleMetric = selectedMetrics.singleOrNull()
+        val subtitle: String
+        val readout: String
+        val readoutUnit: String
+        val readoutColor: Color
+        val readoutCaption: String
+        if (singleMetric != null) {
+            val avg = averageOf(singleMetric)
+            subtitle = listOf(labelOf(singleMetric), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = if (avg != null) "${avg.toInt()}" else "-"
+            readoutUnit = unitOf(singleMetric)
+            readoutColor = metricColors[singleMetric] ?: AppTheme.AccentPurple
+            readoutCaption = t("%s-day average", days)
+        } else if (selectedMetrics.size >= 2) {
+            subtitle = listOf(t("%s metrics", selectedMetrics.size), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = "0–1"
+            readoutUnit = ""
+            readoutColor = GraphNormalisedColor
+            readoutCaption = t("normalised scale")
+        } else {
+            subtitle = rangeLabel
+            readout = "-"
+            readoutUnit = ""
+            readoutColor = AppTheme.SubtleTextColor
+            readoutCaption = ""
+        }
+
+        GraphCardHeader(
+            title = t("Diet History"),
+            subtitle = subtitle,
+            readout = readout,
+            readoutUnit = readoutUnit,
+            readoutColor = readoutColor,
+            readoutCaption = readoutCaption
+        )
+
         if (isLoading) {
             Row(
                 modifier = Modifier.fillMaxWidth().height(150.dp),
@@ -188,53 +276,25 @@ fun NutritionHistoryGraph(
                 textAlign = TextAlign.Center
             )
         } else {
-            // Legend
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                selectedMetrics.forEach { metric ->
-                    val color = metricColors[metric] ?: AppTheme.AccentPurple
-                    val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
-                    val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                    val values = daysWithLogs.map { getDayValue(it, metric) }
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(8.dp)) { drawCircle(color) }
-                        Spacer(Modifier.width(4.dp))
-                        if (isNormalized) {
-                            val key = metricKey(metric)
-                            val minVal = allTimeMin[key] ?: 0f
-                            val maxVal = allTimeMax[key] ?: 1f
-                            Text("$label [${minVal.toInt()}-${maxVal.toInt()}$unit]", color = color, style = MaterialTheme.typography.labelSmall)
-                        } else {
-                            val avg = values.average().toInt()
-                            Text(t("%1\$s (avg: %2\$s%3\$s)", label, avg, unit), color = color, style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
-            
+            // Per-metric ranges, the only way to read a normalised line back to
+            // real units.
             if (isNormalized) {
-                Spacer(Modifier.height(4.dp))
-                Text(t("⚠️ Normalized 0-1 scale • Dotted = last %s days avg", days), color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
-            } else if (daysWithLogs.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                Text(t("Dotted line = last %s days average", days), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(10.dp))
+                MetricRangeKeys(
+                    selectedMetrics.map { metric ->
+                        val key = metricKey(metric)
+                        val unit = unitOf(metric)
+                        Triple(
+                            labelOf(metric),
+                            "${(allTimeMin[key] ?: 0f).toInt()}–${(allTimeMax[key] ?: 1f).toInt()}$unit",
+                            metricColors[metric] ?: AppTheme.AccentPurple
+                        )
+                    }
+                )
             }
 
-            if (migraineDates.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
-                    Spacer(Modifier.width(4.dp))
-                    Text(t("Red bands = migraine days"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
-                }
-            }
-            
-            Spacer(Modifier.height(8.dp))
-            
+            Spacer(Modifier.height(10.dp))
+
             if (daysWithLogs.isEmpty()) {
                 Text(
                     t("No logged days in this period"),
@@ -243,7 +303,7 @@ fun NutritionHistoryGraph(
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             } else {
-                val yAxisWidth = 50.dp
+                val yAxisWidth = 44.dp
                 
                 // Y-axis values depend on normalization
                 val yTop: String
@@ -256,26 +316,15 @@ fun NutritionHistoryGraph(
                     yBot = "0.0"
                 } else {
                     val metric = selectedMetrics.first()
-                    val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                     val values = daysWithLogs.map { getDayValue(it, metric) }
                     val max = values.maxOrNull() ?: 1f
                     val min = values.minOrNull() ?: 0f
-                    yTop = "${max.toInt()}$unit"
-                    yMid = "${((max + min) / 2).toInt()}$unit"
-                    yBot = "${min.toInt()}$unit"
+                    yTop = "${max.toInt()}"
+                    yMid = "${((max + min) / 2).toInt()}"
+                    yBot = "${min.toInt()}"
                 }
                 
-                Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-                    // Y-axis labels
-                    Column(
-                        modifier = Modifier.width(yAxisWidth).fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    }
-                    
+                Row(modifier = Modifier.fillMaxWidth().height(168.dp)) {
                     // Graph canvas
                     Canvas(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         val padding = 8.dp.toPx()
@@ -283,6 +332,8 @@ fun NutritionHistoryGraph(
                         val graphHeight = size.height - padding * 2
                         val dashWidth = 6.dp.toPx()
                         val gapWidth = 4.dp.toPx()
+
+                        drawGraphGrid(padding, graphHeight, 1.dp.toPx())
 
                         // Draw migraine bands (behind everything)
                         with(MigraineOverlayHelper) {
@@ -326,101 +377,91 @@ fun NutritionHistoryGraph(
                                 idx to ((value - minVal) / range).coerceIn(0f, 1f)
                             }
                             
-                            // Draw dotted average line (always show)
+                            // Screen points once, then the shared curve: the same
+                            // Catmull-Rom the Migraine Timeline draws.
+                            val offsets = plotPoints.map { (dayIdx, normalizedValue) ->
+                                Offset(
+                                    padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth,
+                                    padding + graphHeight - (normalizedValue * graphHeight)
+                                )
+                            }
+
+                            if (!isNormalized) {
+                                drawSeriesFill(offsets, color, padding, graphHeight)
+                            }
+
                             if (plotPoints.isNotEmpty()) {
                                 val avgNormalized = plotPoints.map { it.second }.average().toFloat()
-                                val avgY = padding + graphHeight - (avgNormalized * graphHeight)
-                                
-                                var x = padding
-                                while (x < size.width - padding) {
-                                    drawLine(
-                                        color.copy(alpha = 0.5f),
-                                        Offset(x, avgY),
-                                        Offset((x + dashWidth).coerceAtMost(size.width - padding), avgY),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
-                                    x += dashWidth + gapWidth
-                                }
+                                drawDashedAverage(
+                                    color,
+                                    padding + graphHeight - (avgNormalized * graphHeight),
+                                    padding, dashWidth, gapWidth, 1.5.dp.toPx()
+                                )
                             }
-                            
-                            // Draw line
-                            if (plotPoints.size > 1) {
-                                val path = Path()
-                                plotPoints.forEachIndexed { i, (dayIdx, normalizedValue) ->
-                                    val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                    val y = padding + graphHeight - (normalizedValue * graphHeight)
-                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                                }
-                                drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                            }
-                            
-                            // Draw dots
-                            plotPoints.forEach { (dayIdx, normalizedValue) ->
-                                val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                val y = padding + graphHeight - (normalizedValue * graphHeight)
-                                drawCircle(color, 4.dp.toPx(), Offset(x, y))
+
+                            drawSeriesCurve(
+                                offsets,
+                                color,
+                                (if (isNormalized) 1.9f else 2.2f).dp.toPx(),
+                                (if (isNormalized) 5f else 6f).dp.toPx()
+                            )
+
+                            offsets.forEach { o ->
+                                drawCircle(color, (if (isNormalized) 2.6f else 3.2f).dp.toPx(), o)
                             }
                         }
+                    }
+
+                    // Y-axis labels
+                    Column(
+                        modifier = Modifier.width(yAxisWidth).fillMaxHeight().padding(start = 6.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 
                 // Date labels
                 Spacer(Modifier.height(4.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = yAxisWidth),
+                    modifier = Modifier.fillMaxWidth().padding(end = yAxisWidth),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    val fmt = DateTimeFormatter.ofPattern("MMM d")
-                    Text(LocalDate.parse(historyData.first().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Text(LocalDate.parse(historyData.last().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(LocalDate.parse(historyData.first().date).format(dateFmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(LocalDate.parse(historyData.last().date).format(dateFmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
-            }
-        }
-        
-        Spacer(Modifier.height(12.dp))
-        
-        // Metric selector - multi-select
-        Text(
-            t("Select Metrics") + (if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else ""),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelMedium
-        )
-        Spacer(Modifier.height(8.dp))
-        
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                val isSelected = metric in selectedMetrics
-                val chipColor = metricColors[metric] ?: AppTheme.AccentPurple
-                val chipLabel = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
-                
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        selectedMetrics = if (isSelected) {
-                            selectedMetrics - metric
-                        } else {
-                            selectedMetrics + metric
-                        }
-                    },
-                    label = { Text(chipLabel, style = MaterialTheme.typography.labelSmall) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = chipColor.copy(alpha = 0.3f),
-                        selectedLabelColor = chipColor,
-                        containerColor = AppTheme.BaseCardContainer,
-                        labelColor = AppTheme.SubtleTextColor
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        borderColor = if (isSelected) chipColor else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                        selectedBorderColor = chipColor,
-                        enabled = true,
-                        selected = isSelected
-                    )
+
+                GraphKeyRow(
+                    averageLabel = if (isNormalized) t("each line's average") else t("history average"),
+                    averageColor = if (isNormalized) Color.White.copy(alpha = 0.55f)
+                        else metricColors[selectedMetrics.first()] ?: AppTheme.AccentPurple,
+                    showMigraineDays = migraineDates.isNotEmpty(),
+                    showForecast = false
                 )
             }
         }
+        
+        // Metric selector: grouped checklist, every metric carrying its own
+        // average for the window.
+        MetricChecklist(
+            groups = nutritionMetricGroups.map { (group, metrics) ->
+                group to metrics.map { metric ->
+                    GraphMetricRow(
+                        key = metric,
+                        label = labelOf(metric),
+                        value = averageOf(metric)?.let { "${it.toInt()}${unitOf(metric)}" },
+                        color = metricColors[metric] ?: AppTheme.AccentPurple
+                    )
+                }
+            },
+            selected = selectedMetrics,
+            onToggle = { metric ->
+                selectedMetrics = if (metric in selectedMetrics) selectedMetrics - metric
+                    else selectedMetrics + metric
+            }
+        )
     }
 }

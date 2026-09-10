@@ -27,7 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -289,4 +294,65 @@ fun MetricChecklist(
             HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
         }
     }
+}
+
+// ── Plot furniture ───────────────────────────────────────────────────────────
+// Each history graph keeps its own value extraction and its own scaling, but
+// the drawing below is identical everywhere, so it lives here once.
+
+/** Three faint gridlines, at the same heights as the three y labels. */
+fun DrawScope.drawGraphGrid(padding: Float, graphHeight: Float, strokePx: Float) {
+    listOf(0f, 0.5f, 1f).forEach { f ->
+        val y = padding + graphHeight * f
+        drawLine(
+            Color.White.copy(alpha = 0.07f),
+            Offset(padding, y),
+            Offset(size.width - padding, y),
+            strokeWidth = strokePx
+        )
+    }
+}
+
+/** The dotted average line, spanning the full plot width. */
+fun DrawScope.drawDashedAverage(color: Color, y: Float, padding: Float, dashPx: Float, gapPx: Float, strokePx: Float) {
+    var x = padding
+    while (x < size.width - padding) {
+        drawLine(
+            color.copy(alpha = 0.5f),
+            Offset(x, y),
+            Offset((x + dashPx).coerceAtMost(size.width - padding), y),
+            strokeWidth = strokePx
+        )
+        x += dashPx + gapPx
+    }
+}
+
+/**
+ * A series line: the Migraine Timeline's Catmull-Rom curve, stroked twice —
+ * a wide faint pass under a solid one, which keeps a thin curve legible on the
+ * dark card.
+ */
+fun DrawScope.drawSeriesCurve(offsets: List<Offset>, color: Color, widthPx: Float, glowPx: Float) {
+    if (offsets.size < 2) return
+    val path = smoothPath(offsets)
+    drawPath(path, color.copy(alpha = 0.12f), style = Stroke(glowPx, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    drawPath(path, color, style = Stroke(widthPx, cap = StrokeCap.Round, join = StrokeJoin.Round))
+}
+
+/** Soft gradient under a single series, for depth without another colour. */
+fun DrawScope.drawSeriesFill(offsets: List<Offset>, color: Color, padding: Float, graphHeight: Float) {
+    if (offsets.size < 2) return
+    val fill = smoothPath(offsets)
+    fill.lineTo(offsets.last().x, padding + graphHeight)
+    fill.lineTo(offsets.first().x, padding + graphHeight)
+    fill.close()
+    drawPath(
+        fill,
+        Brush.verticalGradient(
+            0f to color.copy(alpha = 0.26f),
+            1f to color.copy(alpha = 0f),
+            startY = padding,
+            endY = padding + graphHeight
+        )
+    )
 }

@@ -60,6 +60,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 private data class RiskGraphDay(val date: String, val values: Map<String, Float>)
 private data class MetricTemplate(
@@ -230,11 +231,52 @@ fun RiskHistoryGraph(
     val isNormalized = selectedMetrics.size >= 2
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(t("%s-Day Risk History", days), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-            if (onClick != null) Text(t("View Full \u2192"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val rangeLabel = if (daysWithData.isNotEmpty()) {
+            val from = try { LocalDate.parse(daysWithData.first().date).format(dateFmt) } catch (_: Exception) { daysWithData.first().date }
+            val to = try { LocalDate.parse(daysWithData.last().date).format(dateFmt) } catch (_: Exception) { daysWithData.last().date }
+            "$from – $to"
+        } else ""
+
+        // A metric's own average over the days that carry it. Feeds both the
+        // header reading and the value column of the checklist.
+        fun averageOf(key: String): Float? {
+            val values = daysWithData.mapNotNull { it.values[key] }
+            return if (values.isEmpty()) null else values.average().toFloat()
         }
-        Spacer(Modifier.height(8.dp))
+
+        val singleMetric = selectedMetrics.singleOrNull()
+        val subtitle: String
+        val readout: String
+        val readoutColor: Color
+        val readoutCaption: String
+        if (singleMetric != null) {
+            val chip = allChips.find { it.key == singleMetric }
+            val avg = averageOf(singleMetric)
+            subtitle = listOf(chip?.label?.let { t(it) } ?: "", rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = if (avg != null) fmtV(avg) else "-"
+            readoutColor = chip?.color ?: AppTheme.AccentPurple
+            readoutCaption = t("%s-day average", days)
+        } else if (selectedMetrics.size >= 2) {
+            subtitle = listOf(t("%s metrics", selectedMetrics.size), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = "0–1"
+            readoutColor = GraphNormalisedColor
+            readoutCaption = t("normalised scale")
+        } else {
+            subtitle = rangeLabel
+            readout = "-"
+            readoutColor = AppTheme.SubtleTextColor
+            readoutCaption = ""
+        }
+
+        GraphCardHeader(
+            title = t("Risk History"),
+            subtitle = subtitle,
+            readout = readout,
+            readoutUnit = "",
+            readoutColor = readoutColor,
+            readoutCaption = readoutCaption
+        )
 
         if (isLoading) {
             Row(Modifier.fillMaxWidth().height(180.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
@@ -247,25 +289,24 @@ fun RiskHistoryGraph(
             Text(t("Select a metric below"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(180.dp).padding(vertical = 70.dp), textAlign = TextAlign.Center)
         } else {
-            // Legend
-            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                selectedMetrics.forEach { key ->
-                    val chip = allChips.find { it.key == key } ?: return@forEach
-                    val values = daysWithData.mapNotNull { it.values[key] }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(8.dp)) { drawCircle(chip.color) }
-                        Spacer(Modifier.width(4.dp))
-                        if (isNormalized) {
-                            val mn = allMin[key] ?: 0f; val mx = allMax[key] ?: 1f
-                            Text("${t(chip.label)} [${fmtV(mn)}\u2013${fmtV(mx)}]", color = chip.color, style = MaterialTheme.typography.labelSmall)
-                        } else {
-                            val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text(t("%1\$s (avg %2\$s)", t(chip.label), fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)
-                        }
+            // Per-metric ranges, the only way to read a normalised line back to
+            // real units.
+            if (isNormalized) {
+                Spacer(Modifier.height(10.dp))
+                MetricRangeKeys(
+                    selectedMetrics.mapNotNull { key ->
+                        val chip = allChips.find { it.key == key } ?: return@mapNotNull null
+                        Triple(
+                            t(chip.label),
+                            "${fmtV(allMin[key] ?: 0f)}–${fmtV(allMax[key] ?: 1f)}",
+                            chip.color
+                        )
                     }
-                }
-                Spacer(Modifier.weight(1f))
+                )
             }
+
+            Spacer(Modifier.height(8.dp))
+
             // Hub icons legend row — tap to toggle visibility
             FlowRow(
                 Modifier.fillMaxWidth(),
@@ -512,7 +553,10 @@ fun RiskHistoryGraph(
                     val isRiskScore = metricKey == "risk:score"
                     val isNoise = metricKey == "mental:noise_avg" || metricKey == "mental:noise_high" || metricKey == "mental:noise_low"
 
-                    // Draw lines between consecutive points
+                    // Draw the line as the app's curve. Risk score and noise
+                    // carry meaning in their per-segment colour, so each segment
+                    // is drawn as its own slice of the same curve.
+                    val curveOffsets = points.map { Offset(it.first, it.second) }
                     if (points.size >= 2) {
                         for (i in 0 until points.size - 1) {
                             val lineColor = when {
@@ -526,7 +570,9 @@ fun RiskHistoryGraph(
                                 }
                                 else -> chip.color.copy(alpha = 0.8f)
                             }
-                            drawLine(lineColor, Offset(points[i].first, points[i].second), Offset(points[i + 1].first, points[i + 1].second), strokeWidth = 2.5f, cap = StrokeCap.Round)
+                            val seg = smoothSegment(curveOffsets, i)
+                            drawPath(seg, lineColor.copy(alpha = 0.12f), style = Stroke(7f, cap = StrokeCap.Round))
+                            drawPath(seg, lineColor, style = Stroke(2.5f, cap = StrokeCap.Round))
                         }
                     }
                     // Draw dots for all points (including single day)
@@ -689,37 +735,10 @@ fun RiskHistoryGraph(
             }
         }
 
-        // Chips — Favs first, divider, then grouped by category
-        Spacer(Modifier.height(12.dp))
-        Text(t("Select Metrics") + if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-        Spacer(Modifier.height(8.dp))
-
-        // Favourites section — only Risk Score + the user's 3 fav-of-favs in the
-        // top row. Everything else (favPool + templates) goes into the grouped
-        // category sections below.
+        // Metric selector: the same favourites-then-category structure the chip
+        // wall had, as a checklist that also states each metric's own average.
         val favChipKeys = remember(effectiveFavs) { mutableSetOf("risk:score").apply { effectiveFavs.forEach { add(it.key) } } }
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            allChips.filter { it.key in favChipKeys }.forEach { chip ->
-                val sel = chip.key in selectedMetrics
-                FilterChip(
-                    selected = sel,
-                    onClick = { selectedMetrics = if (sel) selectedMetrics - chip.key else selectedMetrics + chip.key },
-                    label = { Text(t(chip.label), style = MaterialTheme.typography.labelSmall) },
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = chip.color.copy(alpha = 0.3f), selectedLabelColor = chip.color, containerColor = AppTheme.BaseCardContainer, labelColor = AppTheme.SubtleTextColor),
-                    border = FilterChipDefaults.filterChipBorder(borderColor = if (sel) chip.color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), selectedBorderColor = chip.color, enabled = true, selected = sel)
-                )
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-        HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
-        Spacer(Modifier.height(6.dp))
-
-        // Grouped by category — merges the hard-coded favorites pool with the
-        // DB-driven templates, then excludes anything already shown in the top
-        // fav-of-favs row, so every metric appears exactly once.
-        data class CatGroup(val name: String, val color: Color, val keys: List<String>)
-        val groups = remember(templates, favPool, favChipKeys) {
+        val checklistGroups = remember(templates, favPool, favChipKeys, allChips) {
             val catOrder = listOf("Sleep", "Weather", "Physical", "Cognitive", "Diet")
             val byCat = linkedMapOf<String, MutableList<String>>()
             val seenPerCat = mutableMapOf<String, MutableSet<String>>()
@@ -730,28 +749,29 @@ fun RiskHistoryGraph(
             }
             favPool.forEach { add(it.category, it.key) }
             templates.forEach { add(it.category, it.chipKey) }
-            byCat.entries
-                .map { (cat, keys) -> CatGroup(cat, catColor(cat), keys) }
-                .sortedBy { catOrder.indexOf(it.name).let { i -> if (i < 0) 99 else i } }
+            val cats = byCat.entries
+                .map { (cat, keys) -> cat to keys.toList() }
+                .sortedBy { catOrder.indexOf(it.first).let { i -> if (i < 0) 99 else i } }
+            listOf("Favourites" to allChips.filter { it.key in favChipKeys }.map { it.key }) + cats
         }
-        groups.forEach { group ->
-            Text(t(group.name), color = group.color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(4.dp))
-            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                group.keys.forEach { key ->
-                    val chip = allChips.find { it.key == key } ?: return@forEach
-                    val sel = key in selectedMetrics
-                    FilterChip(
-                        selected = sel,
-                        onClick = { selectedMetrics = if (sel) selectedMetrics - key else selectedMetrics + key },
-                        label = { Text(t(chip.label), style = MaterialTheme.typography.labelSmall) },
-                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = group.color.copy(alpha = 0.3f), selectedLabelColor = group.color, containerColor = AppTheme.BaseCardContainer, labelColor = AppTheme.SubtleTextColor),
-                        border = FilterChipDefaults.filterChipBorder(borderColor = if (sel) group.color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), selectedBorderColor = group.color, enabled = true, selected = sel)
+
+        MetricChecklist(
+            groups = checklistGroups.map { (group, keys) ->
+                group to keys.mapNotNull { key ->
+                    val chip = allChips.find { it.key == key } ?: return@mapNotNull null
+                    GraphMetricRow(
+                        key = key,
+                        label = t(chip.label),
+                        value = averageOf(key)?.let { fmtV(it) },
+                        color = chip.color
                     )
                 }
+            },
+            selected = selectedMetrics,
+            onToggle = { key ->
+                selectedMetrics = if (key in selectedMetrics) selectedMetrics - key else selectedMetrics + key
             }
-            Spacer(Modifier.height(8.dp))
-        }
+        )
     }
 }
 
