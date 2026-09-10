@@ -87,7 +87,14 @@ private data class WeatherRowGeneric(
     @SerialName("wind_speed_mps_mean") val windSpeedMean: Double? = null,
     @SerialName("uv_index_max") val uvIndexMax: Double? = null,
     @SerialName("is_thunderstorm_day") val isThunderstormDay: Boolean? = null,
-    @SerialName("weather_code") val weatherCode: Int? = null
+    @SerialName("weather_code") val weatherCode: Int? = null,
+    @SerialName("pollen_overall_index") val pollenOverall: Double? = null,
+    @SerialName("pollen_tree_index") val pollenTree: Double? = null,
+    @SerialName("pollen_grass_index") val pollenGrass: Double? = null,
+    @SerialName("pollen_weed_index") val pollenWeed: Double? = null,
+    @SerialName("pm2_5_mean") val pm25Mean: Double? = null,
+    @SerialName("pm10_mean") val pm10Mean: Double? = null,
+    @SerialName("ozone_max") val ozoneMax: Double? = null
 )
 
 // ─── Supabase helpers ────────────────────────────────────────────────────────
@@ -102,7 +109,14 @@ private val weatherFields = listOf(
     Triple("humidity_pct_mean", "Humidity", "%"),
     Triple("wind_speed_mps_mean", "Wind Speed", "m/s"),
     Triple("uv_index_max", "UV Index", ""),
-    Triple("is_thunderstorm_day", "Thunderstorm", "")
+    Triple("is_thunderstorm_day", "Thunderstorm", ""),
+    Triple("pollen_overall_index", "Pollen", ""),
+    Triple("pollen_tree_index", "Tree Pollen", ""),
+    Triple("pollen_grass_index", "Grass Pollen", ""),
+    Triple("pollen_weed_index", "Weed Pollen", ""),
+    Triple("pm2_5_mean", "PM2.5", "µg/m³"),
+    Triple("pm10_mean", "PM10", "µg/m³"),
+    Triple("ozone_max", "Ozone", "µg/m³")
 )
 
 private suspend fun fetchWeatherEntriesForDate(
@@ -119,7 +133,7 @@ private suspend fun fetchWeatherEntriesForDate(
             header("apikey", BuildConfig.SUPABASE_ANON_KEY)
             parameter("user_id", "eq.$userId")
             parameter("date", "eq.$date")
-            parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,is_thunderstorm_day")
+            parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,is_thunderstorm_day,pollen_overall_index,pollen_tree_index,pollen_grass_index,pollen_weed_index,pm2_5_mean,pm10_mean,ozone_max")
         }.body()
 
         for (row in rows) {
@@ -142,6 +156,28 @@ private suspend fun fetchWeatherEntriesForDate(
             }
             row.isThunderstormDay?.let {
                 entries.add(WeatherDataEntry("user_weather_daily", "Thunderstorm", if (it) "Yes" else "No", "", src))
+            }
+            // Pollen bands print whole 0-5; a missing reading adds no row at all.
+            row.pollenOverall?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "Pollen", String.format("%.0f", it), "", src))
+            }
+            row.pollenTree?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "Tree Pollen", String.format("%.0f", it), "", src))
+            }
+            row.pollenGrass?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "Grass Pollen", String.format("%.0f", it), "", src))
+            }
+            row.pollenWeed?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "Weed Pollen", String.format("%.0f", it), "", src))
+            }
+            row.pm25Mean?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "PM2.5", String.format("%.1f", it), "µg/m³", src))
+            }
+            row.pm10Mean?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "PM10", String.format("%.1f", it), "µg/m³", src))
+            }
+            row.ozoneMax?.let {
+                entries.add(WeatherDataEntry("user_weather_daily", "Ozone", String.format("%.1f", it), "µg/m³", src))
             }
         }
     } catch (e: Exception) {
@@ -382,16 +418,10 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                     }
                 } else {
-                    // Map labels to metric keys
-                    val labelToMetric = mapOf(
-                        "Temperature" to WeatherCardConfig.METRIC_TEMPERATURE,
-                        "Pressure" to WeatherCardConfig.METRIC_PRESSURE,
-                        "Humidity" to WeatherCardConfig.METRIC_HUMIDITY,
-                        "Wind Speed" to WeatherCardConfig.METRIC_WIND_SPEED,
-                        "UV Index" to WeatherCardConfig.METRIC_UV_INDEX,
-                        "Altitude" to WeatherCardConfig.METRIC_ALTITUDE,
-                        "Altitude Change" to WeatherCardConfig.METRIC_ALTITUDE_CHANGE
-                    )
+                    // Every label fetchWeatherEntriesForDate can produce has a metric
+                    // key here, so a reading that exists never falls through to "-".
+                    val labelToMetric = WeatherCardConfig.WEATHER_METRIC_LABELS
+                        .entries.associate { (metric, label) -> label to metric }
 
                     // Best value per metric (prefer non-manual)
                     val bestByMetric = mutableMapOf<String, WeatherDataEntry>()
@@ -430,68 +460,44 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
-                    // Show ALL metrics with "-" for missing
-                    WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
-                        if (metric !in selectedMetrics) {
-                            val entry = bestByMetric[metric]
-                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "-"
-                            val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                                Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                            }
+                    // Metrics with a reading for this date lead the list; the ones with
+                    // nothing recorded follow as "-". Favourites stay in the top row.
+                    val remaining = WeatherCardConfig.ALL_WEATHER_METRICS.filter { it !in selectedMetrics }
+                    val ordered = remaining.filter { bestByMetric[it] != null } +
+                        remaining.filter { bestByMetric[it] == null }
+
+                    ordered.forEach { metric ->
+                        val entry = bestByMetric[metric]
+                        val value = if (entry == null) "-"
+                            else "${entry.value}${if (entry.unit.isNotEmpty()) " ${entry.unit}" else ""}"
+                        val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                            Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
 
-                    // All entries flat (no source grouping)
-                    if (entries.isNotEmpty()) {
+                    // Show edit button if manual entries exist
+                    if (entries.any { it.source == "manual" }) {
                         Spacer(Modifier.height(8.dp))
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
-
-                        // Deduplicate: prefer non-manual source
-                        val dedupedByLabel = mutableMapOf<String, WeatherDataEntry>()
-                        entries.forEach { entry ->
-                            val existing = dedupedByLabel[entry.label]
-                            if (existing == null || (existing.source == "manual" && entry.source != "manual")) {
-                                dedupedByLabel[entry.label] = entry
+                        Text(
+                            t("✎ Edit manual entry"),
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.clickable {
+                                editTemp = entries.find { it.label == "Temperature" }?.value ?: ""
+                                editPressure = entries.find { it.label == "Pressure" }?.value ?: ""
+                                editHumidity = entries.find { it.label == "Humidity" }?.value ?: ""
+                                editWind = entries.find { it.label == "Wind Speed" }?.value ?: ""
+                                editUv = entries.find { it.label == "UV Index" }?.value ?: ""
+                                showEditDialog = true
                             }
-                        }
-
-                        dedupedByLabel.values.forEach { entry ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(t(entry.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    "${entry.value}${if (entry.unit.isNotEmpty()) " ${entry.unit}" else ""}",
-                                    color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-
-                        // Show edit button if manual entries exist
-                        if (entries.any { it.source == "manual" }) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                t("✎ Edit manual entry"),
-                                color = AppTheme.AccentPurple,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.clickable {
-                                    editTemp = entries.find { it.label == "Temperature" }?.value ?: ""
-                                    editPressure = entries.find { it.label == "Pressure" }?.value ?: ""
-                                    editHumidity = entries.find { it.label == "Humidity" }?.value ?: ""
-                                    editWind = entries.find { it.label == "Wind Speed" }?.value ?: ""
-                                    editUv = entries.find { it.label == "UV Index" }?.value ?: ""
-                                    showEditDialog = true
-                                }
-                            )
-                        }
+                        )
                     }
                 }
             }
