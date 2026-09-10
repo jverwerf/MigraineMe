@@ -201,14 +201,10 @@ fun InsightsDetailScreen(
                 onClear = { vm.clearFilters() }
             )
 
-            // ========== 1b. YOUR MONTHS ==========
-            // Free / pain / migraine days per calendar month, and the way into
-            // the frequency screen, which nothing linked to before this.
-            // Spec: docs/day-classification-spec.md
-            val dayMix by vm.dayMixByMonth.collectAsState()
+            // ========== 1b. FREQUENCY LINK ==========
+            // Your months lives on the frequency screen; this page is about one
+            // attack, so it only carries the way in. Spec: docs/day-classification-spec.md
             BaseCard {
-                DayMixMonthlyChart(months = dayMix)
-                Spacer(Modifier.height(10.dp))
                 Text(
                     t("More frequency and trends →"),
                     color = AppTheme.AccentPurple,
