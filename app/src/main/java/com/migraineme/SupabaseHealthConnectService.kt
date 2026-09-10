@@ -198,6 +198,7 @@ class SupabaseHealthConnectService(context: Context) {
             HealthConnectRecordTypes.RESPIRATORY_RATE -> "respiratory_rate_daily"
             HealthConnectRecordTypes.SKIN_TEMP -> "skin_temp_daily"
             HealthConnectRecordTypes.ACTIVE_CALORIES -> "strain_daily"
+            HealthConnectRecordTypes.BLOOD_GLUCOSE -> "blood_glucose_daily"
             else -> null
         }
     }
@@ -618,6 +619,22 @@ class SupabaseHealthConnectService(context: Context) {
 
     suspend fun upsertSpo2(accessToken: String, date: String, valuePct: Double, sourceId: String): Boolean {
         return upsertDailyCompat(accessToken, "spo2_daily", Spo2Row(date, valuePct, SOURCE, sourceId))
+    }
+
+    // ============================================================
+    // Blood glucose
+    // ============================================================
+
+    @Serializable
+    private data class BloodGlucoseRow(
+        val date: String,
+        val value_mmol_l: Double,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
+
+    suspend fun upsertBloodGlucose(accessToken: String, date: String, valueMmolL: Double, sourceId: String): Boolean {
+        return upsertDailyCompat(accessToken, "blood_glucose_daily", BloodGlucoseRow(date, valueMmolL, SOURCE, sourceId))
     }
 
     // ============================================================

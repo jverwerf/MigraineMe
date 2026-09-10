@@ -13,11 +13,13 @@ object PhysicalCardConfig {
     const val METRIC_STRAIN = "strain"
     const val METRIC_HIGH_HR_ZONES = "high_hr_zones"
     const val METRIC_STEPS = "steps"
+    const val METRIC_BLOOD_GLUCOSE = "blood_glucose"
 
     val ALL_PHYSICAL_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS
+        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
+        METRIC_BLOOD_GLUCOSE
     )
 
     val DEFAULT_DISPLAY_METRICS: List<String> = listOf(
@@ -27,7 +29,8 @@ object PhysicalCardConfig {
     val GRAPHABLE_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS
+        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
+        METRIC_BLOOD_GLUCOSE
     )
 
     fun labelFor(metric: String): String = tSync(rawLabelFor(metric))
@@ -41,6 +44,7 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "Strain"
         METRIC_HIGH_HR_ZONES -> "High HR Zones"
         METRIC_STEPS -> "Steps"
+        METRIC_BLOOD_GLUCOSE -> "Blood glucose"
         else -> metric
     }
 
@@ -54,6 +58,7 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "kJ"
         METRIC_HIGH_HR_ZONES -> "min"
         METRIC_STEPS -> ""
+        METRIC_BLOOD_GLUCOSE -> "mmol/L"
         else -> ""
     }
 
@@ -67,6 +72,7 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> Color(0xFFFF8A80)
         METRIC_HIGH_HR_ZONES -> Color(0xFFFF7043)
         METRIC_STEPS -> Color(0xFF66BB6A)
+        METRIC_BLOOD_GLUCOSE -> Color(0xFFF06292)
         else -> Color(0xFF81C784)
     }
 
@@ -81,6 +87,7 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "strain_daily"
         METRIC_HIGH_HR_ZONES -> "time_in_high_hr_zones_daily"
         METRIC_STEPS -> "steps_daily"
+        METRIC_BLOOD_GLUCOSE -> "blood_glucose_daily"
         else -> ""
     }
 }

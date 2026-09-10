@@ -2196,6 +2196,62 @@
    "sites": [
     "build-report-html/render.ts"
    ]
+  },
+  {
+   "en": "Pollen",
+   "class": "soft",
+   "max_len": 12,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "Tree pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "Grass pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "Weed pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "PM2.5",
+   "class": "soft",
+   "max_len": 8,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "PM10",
+   "class": "soft",
+   "max_len": 8,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "Ozone",
+   "class": "soft",
+   "max_len": 12,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
   }
  ]
 }

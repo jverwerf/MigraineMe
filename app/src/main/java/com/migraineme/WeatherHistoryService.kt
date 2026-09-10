@@ -27,7 +27,16 @@ data class WeatherDayData(
     val weatherCode: Int,
     val isThunderstormDay: Boolean,
     val altitudeMaxM: Double? = null,
-    val altitudeChangeM: Double? = null
+    val altitudeChangeM: Double? = null,
+    // Pollen + air quality. Nullable on purpose: null means no reading for this
+    // city/day, which is not the same as a reading of zero.
+    val pollenOverall: Double? = null,
+    val pollenTree: Double? = null,
+    val pollenGrass: Double? = null,
+    val pollenWeed: Double? = null,
+    val pm25Mean: Double? = null,
+    val pm10Mean: Double? = null,
+    val ozoneMax: Double? = null
 )
 
 /**
@@ -63,7 +72,14 @@ class WeatherHistoryService(context: Context) {
         @SerialName("wind_speed_mps_mean") val windSpeedMean: Double? = null,
         @SerialName("uv_index_max") val uvIndexMax: Double? = null,
         @SerialName("weather_code") val weatherCode: Int? = null,
-        @SerialName("is_thunderstorm_day") val isThunderstormDay: Boolean? = null
+        @SerialName("is_thunderstorm_day") val isThunderstormDay: Boolean? = null,
+        @SerialName("pollen_overall_index") val pollenOverall: Double? = null,
+        @SerialName("pollen_tree_index") val pollenTree: Double? = null,
+        @SerialName("pollen_grass_index") val pollenGrass: Double? = null,
+        @SerialName("pollen_weed_index") val pollenWeed: Double? = null,
+        @SerialName("pm2_5_mean") val pm25Mean: Double? = null,
+        @SerialName("pm10_mean") val pm10Mean: Double? = null,
+        @SerialName("ozone_max") val ozoneMax: Double? = null
     )
 
     @Serializable
@@ -100,7 +116,7 @@ class WeatherHistoryService(context: Context) {
                 parameter("user_id", "eq.$userId")
                 parameter("date", "gte.${startDate}")
                 parameter("date", "lte.${endDate}")
-                parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,weather_code,is_thunderstorm_day")
+                parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,weather_code,is_thunderstorm_day,pollen_overall_index,pollen_tree_index,pollen_grass_index,pollen_weed_index,pm2_5_mean,pm10_mean,ozone_max")
                 parameter("order", "date.asc")
             }
 
@@ -118,7 +134,7 @@ class WeatherHistoryService(context: Context) {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 header("apikey", supabaseKey)
                 parameter("user_id", "eq.$userId")
-                parameter("select", "temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max")
+                parameter("select", "temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,pollen_overall_index,pollen_tree_index,pollen_grass_index,pollen_weed_index,pm2_5_mean,pm10_mean,ozone_max")
                 parameter("order", "date.asc")
             }
 
@@ -173,6 +189,22 @@ class WeatherHistoryService(context: Context) {
                 allTimeMin["uv_index_max"] = uvValues.minOrNull() ?: 0f
                 allTimeMax["uv_index_max"] = uvValues.maxOrNull() ?: 1f
             }
+            // Pollen bands are a fixed 0-5 scale, so they get fixed bounds rather
+            // than all-time ones: a quiet season should not stretch to full height.
+            for (k in listOf("pollen_overall_index", "pollen_tree_index", "pollen_grass_index", "pollen_weed_index")) {
+                allTimeMin[k] = 0f
+                allTimeMax[k] = 5f
+            }
+            for ((k, vs) in listOf(
+                "pm2_5_mean" to allRows.mapNotNull { it.pm25Mean?.toFloat() },
+                "pm10_mean" to allRows.mapNotNull { it.pm10Mean?.toFloat() },
+                "ozone_max" to allRows.mapNotNull { it.ozoneMax?.toFloat() }
+            )) {
+                if (vs.isNotEmpty()) {
+                    allTimeMin[k] = vs.minOrNull() ?: 0f
+                    allTimeMax[k] = vs.maxOrNull() ?: 1f
+                }
+            }
             if (altMaxValues.isNotEmpty()) {
                 allTimeMin["altitude_m"] = altMaxValues.minOrNull() ?: 0f
                 allTimeMax["altitude_m"] = altMaxValues.maxOrNull() ?: 1f
@@ -194,7 +226,14 @@ class WeatherHistoryService(context: Context) {
                     weatherCode = row.weatherCode ?: 0,
                     isThunderstormDay = row.isThunderstormDay ?: false,
                     altitudeMaxM = altitudeMap[row.date]?.maxM,
-                    altitudeChangeM = altitudeMap[row.date]?.changeM
+                    altitudeChangeM = altitudeMap[row.date]?.changeM,
+                    pollenOverall = row.pollenOverall,
+                    pollenTree = row.pollenTree,
+                    pollenGrass = row.pollenGrass,
+                    pollenWeed = row.pollenWeed,
+                    pm25Mean = row.pm25Mean,
+                    pm10Mean = row.pm10Mean,
+                    ozoneMax = row.ozoneMax
                 )
             }
 
@@ -223,7 +262,7 @@ class WeatherHistoryService(context: Context) {
                 header("apikey", supabaseKey)
                 parameter("user_id", "eq.$userId")
                 parameter("date", "eq.$today")
-                parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,weather_code,is_thunderstorm_day")
+                parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,weather_code,is_thunderstorm_day,pollen_overall_index,pollen_tree_index,pollen_grass_index,pollen_weed_index,pm2_5_mean,pm10_mean,ozone_max")
                 parameter("limit", "1")
             }
 
@@ -246,7 +285,14 @@ class WeatherHistoryService(context: Context) {
                 weatherCode = row.weatherCode ?: 0,
                 isThunderstormDay = row.isThunderstormDay ?: false,
                 altitudeMaxM = altAgg?.maxM,
-                altitudeChangeM = altAgg?.changeM
+                altitudeChangeM = altAgg?.changeM,
+                pollenOverall = row.pollenOverall,
+                pollenTree = row.pollenTree,
+                pollenGrass = row.pollenGrass,
+                pollenWeed = row.pollenWeed,
+                pm25Mean = row.pm25Mean,
+                pm10Mean = row.pm10Mean,
+                ozoneMax = row.ozoneMax
             )
         } catch (e: Exception) {
             android.util.Log.e("WeatherHistoryService", "Error fetching today's weather", e)

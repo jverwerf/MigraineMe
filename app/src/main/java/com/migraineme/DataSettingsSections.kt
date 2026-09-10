@@ -18,7 +18,9 @@ object DataSettingsSections {
         "humidity_daily",
         "wind_daily",
         "uv_daily",
-        "thunderstorm_daily"
+        "thunderstorm_daily",
+        "pollen_daily",
+        "air_quality_daily"
     )
 
     /**
@@ -73,7 +75,9 @@ object DataSettingsSections {
                 referenceRow("humidity_daily", "Humidity"),
                 referenceRow("wind_daily", "Wind"),
                 referenceRow("uv_daily", "UV index"),
-                referenceRow("thunderstorm_daily", "Thunderstorms")
+                referenceRow("thunderstorm_daily", "Thunderstorms"),
+                referenceRow("pollen_daily", "Pollen"),
+                referenceRow("air_quality_daily", "Air quality")
             )
         ),
         DataSection(

@@ -86,6 +86,7 @@ const TABLE: Record<string, string> = {
   "Biotin": "Biotine",
   "Biotin high": "Biotine hoog",
   "Biotin low": "Biotine laag",
+  "Blood glucose": "Bloedsuiker",
   "Blood glucose high": "Bloedsuiker hoog",
   "Blood glucose low": "Bloedsuiker laag",
   "Blood pressure high": "Bloeddruk hoog",

@@ -74,4 +74,5 @@ object HealthConnectRecordTypes {
     const val RESPIRATORY_RATE = "respiratory_rate"
     const val SKIN_TEMP = "skin_temp"
     const val ACTIVE_CALORIES = "active_calories"
+    const val BLOOD_GLUCOSE = "blood_glucose"
 }

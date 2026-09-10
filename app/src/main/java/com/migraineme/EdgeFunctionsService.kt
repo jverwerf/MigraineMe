@@ -1318,7 +1318,9 @@ class EdgeFunctionsService {
             "humidity_daily",
             "wind_daily",
             "uv_daily",
-            "thunderstorm_daily"
+            "thunderstorm_daily",
+            "pollen_daily",
+            "air_quality_daily"
         )
 
         val client = buildClient()

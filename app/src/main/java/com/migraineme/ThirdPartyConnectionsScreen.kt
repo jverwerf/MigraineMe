@@ -42,6 +42,7 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
@@ -69,7 +70,7 @@ fun ThirdPartyConnectionsScreen(
 
     val connectionsInfoText = "Link your existing health platforms and wearables so MigraineMe can pull data automatically and you don't have to log everything manually.\n\n" +
         "Health Connect: pulls health metrics from any app on your phone that's set up to share with it. If you log food in MyFitnessPal or Cronometer, sleep in Samsung Health, or activity from a Fitbit / Garmin / Wear OS watch through their official apps, all of that lands in MigraineMe through here.\n\n" +
-        "Wearables (Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n" +
+        "Wearables (WHOOP, Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n" +
         "Calendar: granted via the permissions step at onboarding rather than here. Once enabled, the Daily Check-In's \"From your calendar\" page suggests your day's events as triggers, reliefs, or activities.\n\n" +
         "Tap any provider card to connect or disconnect. Connecting opens the provider's own login screen; disconnecting stops the data pull but keeps everything you've already imported."
 
@@ -78,17 +79,6 @@ fun ThirdPartyConnectionsScreen(
     val hasWhoop = remember { mutableStateOf(tokenStore.load() != null) }
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
     val showWhoopDisconnectDialog = remember { mutableStateOf(false) }
-
-    // WHOOP access gate
-    val whoopAccessStatus = remember { mutableStateOf<WhoopAccessGate.AccessStatus?>(null) }
-    val showWhoopAccessDialog = remember { mutableStateOf(false) }
-    val whoopAccessRequesting = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        if (!hasWhoop.value) {
-            whoopAccessStatus.value = WhoopAccessGate.checkAccess(context)
-        }
-    }
 
     // Oura state
     val ouraTokenStore = remember { OuraTokenStore(context) }
@@ -140,11 +130,13 @@ fun ThirdPartyConnectionsScreen(
     val exercisePermission = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
     val respiratoryRatePermission = HealthPermission.getReadPermission(RespiratoryRateRecord::class)
     val bodyTempPermission = HealthPermission.getReadPermission(BodyTemperatureRecord::class)
+    val bloodGlucosePermission = HealthPermission.getReadPermission(BloodGlucoseRecord::class)
 
     val allHealthConnectPermissions = setOf(
         nutritionPermission, menstruationPermission, sleepPermission, hrvPermission,
         stepsPermission, restingHrPermission, spo2Permission,
-        exercisePermission, respiratoryRatePermission, bodyTempPermission
+        exercisePermission, respiratoryRatePermission, bodyTempPermission,
+        bloodGlucosePermission
     )
 
     val anyWearablePermissionGranted = remember {
@@ -658,53 +650,6 @@ fun ThirdPartyConnectionsScreen(
 
     // Dialogs
 
-    // WHOOP access request dialog
-    if (showWhoopAccessDialog.value) {
-        val isPending = whoopAccessStatus.value == WhoopAccessGate.AccessStatus.PENDING
-        AlertDialog(
-            onDismissRequest = { showWhoopAccessDialog.value = false },
-            title = { Text(t("WHOOP Integration")) },
-            text = {
-                Text(
-                    if (isPending)
-                        t("Your request is being reviewed. We\u2019ll enable WHOOP for your account shortly.")
-                    else
-                        t("WHOOP integration is currently invite-only. Request access and we\u2019ll enable it for your account.")
-                )
-            },
-            confirmButton = {
-                if (!isPending) {
-                    TextButton(
-                        onClick = {
-                            whoopAccessRequesting.value = true
-                            scope.launch {
-                                val ok = WhoopAccessGate.requestAccess(context)
-                                if (ok) whoopAccessStatus.value = WhoopAccessGate.AccessStatus.PENDING
-                                whoopAccessRequesting.value = false
-                                showWhoopAccessDialog.value = false
-                                if (ok) {
-                                    withContext(Dispatchers.Main) {
-                                        android.widget.Toast.makeText(context, tSync("Access requested!"), android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
-                        },
-                        enabled = !whoopAccessRequesting.value
-                    ) {
-                        Text(if (whoopAccessRequesting.value) t("Requesting\u2026") else t("Request Access"))
-                    }
-                } else {
-                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text(t("OK")) }
-                }
-            },
-            dismissButton = {
-                if (!isPending) {
-                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text(t("Cancel")) }
-                }
-            }
-        )
-    }
-
     whoopErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { whoopErrorDialog.value = null },
@@ -1062,40 +1007,18 @@ fun ThirdPartyConnectionsScreen(
 
             // WHOOP Row
             Column(Modifier.spotlightTarget("wearables_group")) {
-            // WHOOP intentionally hidden unless already connected (WHOOP never
-            // responded to our API access request). The auth service, access gate,
-            // token sync, and disconnect flows all stay wired in code; connected
-            // users keep the row so they can disconnect. To re-enable for
-            // everyone, remove this hasWhoop gate.
-            if (hasWhoop.value) {
             Box(Modifier.spotlightTarget("whoop_card")) {
                 ConnectionRowLogoOnly(
                     logoResId = whoopLogoResId,
                     fallbackLetter = "W",
                     isConnected = hasWhoop.value,
-                    statusLabel = if (!hasWhoop.value) {
-                        when (whoopAccessStatus.value) {
-                            WhoopAccessGate.AccessStatus.PENDING -> "Requested"
-                            WhoopAccessGate.AccessStatus.NONE -> "Request Access"
-                            else -> null
-                        }
-                    } else null,
                     onClick = {
                         if (!hasWhoop.value) {
-                            when (whoopAccessStatus.value) {
-                                WhoopAccessGate.AccessStatus.APPROVED -> {
-                                    // Access granted — proceed with OAuth
-                                    if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
-                                        context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
-                                            .edit().putBoolean("return_to_setup", true).apply()
-                                    }
-                                    activity?.let { WhoopAuthService().startAuth(it) }
-                                }
-                                else -> {
-                                    // Not approved yet — show request dialog
-                                    showWhoopAccessDialog.value = true
-                                }
+                            if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                                context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                                    .edit().putBoolean("return_to_setup", true).apply()
                             }
+                            activity?.let { WhoopAuthService().startAuth(it) }
                         }
                     },
                     onLongClick = {
@@ -1105,7 +1028,6 @@ fun ThirdPartyConnectionsScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-            }
 
             // Oura Row
             ConnectionRowLogoOnly(

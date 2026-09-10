@@ -180,6 +180,8 @@ async function upsertUserWeatherDay(
   const windOn    = enabledWeatherMetrics.has("wind_daily");
   const uvOn      = enabledWeatherMetrics.has("uv_daily");
   const thunderOn = enabledWeatherMetrics.has("thunderstorm_daily");
+  const pollenOn  = enabledWeatherMetrics.has("pollen_daily");
+  const airOn     = enabledWeatherMetrics.has("air_quality_daily");
 
   const { error } = await supabase
     .from("user_weather_daily")
@@ -202,16 +204,16 @@ async function upsertUserWeatherDay(
         weather_code: cityWeather.weather_code,
         is_thunderstorm_day: thunderOn ? cityWeather.is_thunderstorm_day : null,
         // pollen + air quality from env-fetcher city tables (null = no data, never 0)
-        pollen_tree_index:    pollenRow?.tree_index    ?? null,
-        pollen_grass_index:   pollenRow?.grass_index   ?? null,
-        pollen_weed_index:    pollenRow?.weed_index    ?? null,
-        pollen_overall_index: pollenRow?.overall_index ?? null,
-        pm2_5_mean: airRow?.pm2_5_mean ?? null,
-        pm10_mean:  airRow?.pm10_mean  ?? null,
-        dust_max:   airRow?.dust_max   ?? null,
-        ozone_max:  airRow?.ozone_max  ?? null,
-        no2_mean:   airRow?.no2_mean   ?? null,
-        so2_mean:   airRow?.so2_mean   ?? null,
+        pollen_tree_index:    pollenOn ? (pollenRow?.tree_index    ?? null) : null,
+        pollen_grass_index:   pollenOn ? (pollenRow?.grass_index   ?? null) : null,
+        pollen_weed_index:    pollenOn ? (pollenRow?.weed_index    ?? null) : null,
+        pollen_overall_index: pollenOn ? (pollenRow?.overall_index ?? null) : null,
+        pm2_5_mean: airOn ? (airRow?.pm2_5_mean ?? null) : null,
+        pm10_mean:  airOn ? (airRow?.pm10_mean  ?? null) : null,
+        dust_max:   airOn ? (airRow?.dust_max   ?? null) : null,
+        ozone_max:  airOn ? (airRow?.ozone_max  ?? null) : null,
+        no2_mean:   airOn ? (airRow?.no2_mean   ?? null) : null,
+        so2_mean:   airOn ? (airRow?.so2_mean   ?? null) : null,
         city_id: cityId,
         timezone: timezone,
         updated_at: nowIso,
@@ -280,7 +282,8 @@ serve(async (req) => {
         // Fetch user's enabled weather sub-metrics
         const WEATHER_SUB_METRICS = [
           "temperature_daily", "pressure_daily", "humidity_daily",
-          "wind_daily", "uv_daily", "thunderstorm_daily"
+          "wind_daily", "uv_daily", "thunderstorm_daily",
+          "pollen_daily", "air_quality_daily"
         ];
 
         const { data: metricRows, error: metricErr } = await supabase

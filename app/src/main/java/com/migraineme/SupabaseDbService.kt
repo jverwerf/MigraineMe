@@ -3063,6 +3063,13 @@ class SupabaseDbService(
             "user_weather_daily|humidity_pct_mean" to "weather:humidity_pct_mean",
             "user_weather_daily|wind_speed_mps_mean" to "weather:wind_speed_mps_mean",
             "user_weather_daily|uv_index_max" to "weather:uv_index_max",
+            "user_weather_daily|pollen_overall_index" to "weather:pollen_overall_index",
+            "user_weather_daily|pollen_tree_index" to "weather:pollen_tree_index",
+            "user_weather_daily|pollen_grass_index" to "weather:pollen_grass_index",
+            "user_weather_daily|pollen_weed_index" to "weather:pollen_weed_index",
+            "user_weather_daily|pm2_5_mean" to "weather:pm2_5_mean",
+            "user_weather_daily|pm10_mean" to "weather:pm10_mean",
+            "user_weather_daily|ozone_max" to "weather:ozone_max",
             "user_location_daily|altitude_max_m" to "weather:altitude_m",
             "user_location_daily|altitude_change_m" to "weather:altitude_change_m",
             // Physical

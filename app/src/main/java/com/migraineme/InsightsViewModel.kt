@@ -1006,6 +1006,7 @@ class InsightsViewModel : ViewModel() {
             "hrv_daily" to "hrv",
             "resting_hr_daily" to "rhr",
             "spo2_daily" to "spo2",
+            "blood_glucose_daily" to "glucose",
             "skin_temp_daily" to "skin_temp",
             "respiratory_rate_daily" to "resp_rate",
             // Environment
@@ -1529,6 +1530,7 @@ class InsightsViewModel : ViewModel() {
         map["stress"] = fetchAndParse(client, base, key, token, userId, "stress_index_daily", "value", cutoff)
         map["high_hr"] = fetchAndParse(client, base, key, token, userId, "time_in_high_hr_zones_daily", "value_minutes", cutoff)
         map["steps"] = fetchAndParseInt(client, base, key, token, userId, "steps_daily", "value_count", cutoff)
+        map["glucose"] = fetchAndParse(client, base, key, token, userId, "blood_glucose_daily", "value_mmol_l", cutoff)
 
         //  Sleep metrics
         map["sleep_dur"] = fetchAndParse(client, base, key, token, userId, "sleep_duration_daily", "value_hours", cutoff)

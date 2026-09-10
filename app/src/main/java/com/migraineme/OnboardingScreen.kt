@@ -500,7 +500,7 @@ private val LOADING_FACTS = listOf(
     "See which treatments are actually working — efficacy scored against your data.",
     "AI recommendations every month based on what your data actually shows.",
     "30+ migraine signals tracked automatically.",
-    "Connect Oura, Polar, Garmin and Health Connect.",
+    "Connect WHOOP, Oura, Polar, Garmin and Health Connect.",
     "Your full migraine profile, AI-configured in under a minute.",
     "Cycle-aware: hormonal windows feed straight into your risk score.",
     "Watch your risk gauge fill in real time.",
@@ -683,7 +683,7 @@ private fun SetupLandingPage() {
         Spacer(Modifier.height(22.dp))
         SetupStepPreview(Icons.Outlined.Lock, t("1. Permissions"), t("Location, notifications, microphone, calendar"))
         Spacer(Modifier.height(8.dp))
-        SetupStepPreview(Icons.Outlined.Link, t("2. Connect"), t("Health Connect, Oura, Polar, Garmin"))
+        SetupStepPreview(Icons.Outlined.Link, t("2. Connect"), t("Health Connect, WHOOP, Oura, Polar, Garmin"))
         Spacer(Modifier.height(8.dp))
         SetupStepPreview(Icons.Outlined.Storage, t("3. Configure"), t("Choose which data to collect"))
         Spacer(Modifier.height(8.dp))

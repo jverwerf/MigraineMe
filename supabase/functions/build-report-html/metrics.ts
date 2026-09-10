@@ -43,6 +43,7 @@ export const METRICS: MetricDef[] = [
   { key: "stress",     label: "Stress index",   unit: "",   color: "#FFB74D", table: "stress_index_daily",    column: "value",       group: "Body" },
   { key: "steps",      label: "Steps",          unit: "",   color: "#AED581", table: "steps_daily",           column: "value_count", group: "Body" },
   { key: "strain",     label: "Strain",         unit: "kJ", color: "#FF7043", table: "strain_daily",          column: "value_kilojoule", group: "Body" },
+  { key: "glucose",    label: "Blood glucose",  unit: "mmol/L", color: "#8D6E63", table: "blood_glucose_daily", column: "value_mmol_l", group: "Body" },
   { key: "high_hr",    label: "High HR zones",  unit: "min", color: "#F06292", table: "time_in_high_hr_zones_daily", column: "value_minutes", group: "Body" },
 
   // Environment
@@ -54,6 +55,13 @@ export const METRICS: MetricDef[] = [
   { key: "thunderstorm", label: "Thunderstorm", unit: "",    color: "#FFD54F", table: "user_weather_daily", column: "is_thunderstorm_day", group: "Environment" },
   { key: "altitude",   label: "Altitude",       unit: "m",   color: "#CE93D8", table: "user_location_daily", column: "altitude_max_m",   group: "Environment" },
   { key: "alt_change", label: "Altitude change", unit: "m",  color: "#BA68C8", table: "user_location_daily", column: "altitude_change_m", group: "Environment" },
+  { key: "pollen",     label: "Pollen",         unit: "",    color: "#7CB342", table: "user_weather_daily", column: "pollen_overall_index", group: "Environment" },
+  { key: "pollen_tree", label: "Tree pollen",   unit: "",    color: "#33691E", table: "user_weather_daily", column: "pollen_tree_index",  group: "Environment" },
+  { key: "pollen_grass", label: "Grass pollen", unit: "",    color: "#9CCC65", table: "user_weather_daily", column: "pollen_grass_index", group: "Environment" },
+  { key: "pollen_weed", label: "Weed pollen",   unit: "",    color: "#AED581", table: "user_weather_daily", column: "pollen_weed_index",  group: "Environment" },
+  { key: "pm2_5",      label: "PM2.5",          unit: "µg/m³", color: "#8D6E63", table: "user_weather_daily", column: "pm2_5_mean",       group: "Environment" },
+  { key: "pm10",       label: "PM10",           unit: "µg/m³", color: "#A1887F", table: "user_weather_daily", column: "pm10_mean",        group: "Environment" },
+  { key: "ozone",      label: "Ozone",          unit: "µg/m³", color: "#90A4AE", table: "user_weather_daily", column: "ozone_max",        group: "Environment" },
 
   // Mind / phone
   { key: "screen_time", label: "Screen time",   unit: "h",  color: "#64B5F6", table: "screen_time_daily",        column: "total_hours",   group: "Cognitive" },

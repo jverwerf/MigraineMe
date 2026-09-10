@@ -37,6 +37,7 @@ object MetricPalette {
         "stress_index_daily" to Color(0xFFE57373),
         "time_in_high_hr_zones_daily" to Color(0xFFFF7043),
         "steps_daily" to Color(0xFF66BB6A),
+        "blood_glucose_daily" to Color(0xFFF06292),
 
         // ── Mental (from MentalCardConfig) ───────────────────────────────────
         "screen_time_daily" to Color(0xFF4FC3F7),
@@ -56,6 +57,14 @@ object MetricPalette {
         "user_weather_daily::is_thunderstorm_day" to Color(0xFFFFD54F),
         "user_location_daily::altitude_max_m" to Color(0xFFCE93D8),
         "user_location_daily::altitude_change_m" to Color(0xFFBA68C8),
+        // Pollen greens stay distinct from wind green; air quality goes grey-brown.
+        "user_weather_daily::pollen_overall_index" to Color(0xFF7CB342),
+        "user_weather_daily::pollen_tree_index" to Color(0xFF33691E),
+        "user_weather_daily::pollen_grass_index" to Color(0xFF9CCC65),
+        "user_weather_daily::pollen_weed_index" to Color(0xFFAED581),
+        "user_weather_daily::pm2_5_mean" to Color(0xFF8D6E63),
+        "user_weather_daily::pm10_mean" to Color(0xFFA1887F),
+        "user_weather_daily::ozone_max" to Color(0xFF90A4AE),
 
         // ── Nutrition (from NutritionGraph colors) ───────────────────────────
         "nutrition_daily::total_calories" to Color(0xFFFFB74D),

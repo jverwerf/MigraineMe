@@ -329,7 +329,7 @@ val AllMetricDefs = listOf(
     MetricDef("weight", "Weight", "kg", Color(0xFFBCAAA4), "Physical"),
     MetricDef("body_fat", "Body Fat", "%", Color(0xFFFFCC80), "Physical"),
     MetricDef("bp_sys", "BP Systolic", "mmHg", Color(0xFFEF9A9A), "Physical"),
-    MetricDef("glucose", "Glucose", "mg/dL", Color(0xFFFFE082), "Physical"),
+    MetricDef("glucose", "Blood glucose", "mmol/L", Color(0xFFF06292), "Physical"),
     // Sleep
     MetricDef("sleep_dur", "Sleep", "hrs", Color(0xFF90CAF9), "Sleep"),
     MetricDef("sleep_score", "Sleep Score", "%", Color(0xFF64B5F6), "Sleep"),

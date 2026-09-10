@@ -88,6 +88,13 @@ private fun getWeatherValue(day: WeatherDayData, metric: String): Double? {
         WeatherCardConfig.METRIC_HUMIDITY -> day.humidityMean
         WeatherCardConfig.METRIC_WIND_SPEED -> day.windSpeedMean
         WeatherCardConfig.METRIC_UV_INDEX -> day.uvIndexMax
+        WeatherCardConfig.METRIC_POLLEN -> day.pollenOverall
+        WeatherCardConfig.METRIC_POLLEN_TREE -> day.pollenTree
+        WeatherCardConfig.METRIC_POLLEN_GRASS -> day.pollenGrass
+        WeatherCardConfig.METRIC_POLLEN_WEED -> day.pollenWeed
+        WeatherCardConfig.METRIC_PM25 -> day.pm25Mean
+        WeatherCardConfig.METRIC_PM10 -> day.pm10Mean
+        WeatherCardConfig.METRIC_OZONE -> day.ozoneMax
         else -> null
     }
 }

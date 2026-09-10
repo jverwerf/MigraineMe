@@ -28,6 +28,7 @@ import kotlinx.serialization.json.Json
  * - hrv_daily
  * - skin_temp_daily
  * - spo2_daily
+ * - blood_glucose_daily
  * - stress_index_daily
  * - time_in_high_hr_zones_daily
  *
@@ -79,6 +80,12 @@ class SupabasePhysicalHealthService(context: Context) {
     data class Spo2DailyRead(
         val date: String,
         @SerialName("value_pct") val value_pct: Double
+    )
+
+    @Serializable
+    data class BloodGlucoseDailyRead(
+        val date: String,
+        @SerialName("value_mmol_l") val value_mmol_l: Double
     )
 
     @Serializable
@@ -205,6 +212,9 @@ class SupabasePhysicalHealthService(context: Context) {
 
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
+
+    suspend fun fetchBloodGlucoseDaily(access: String, days: Int = 14): List<BloodGlucoseDailyRead> =
+        getList("$supabaseUrl/rest/v1/blood_glucose_daily", access, "date,value_mmol_l", days)
 
     suspend fun fetchStressIndexDaily(access: String, days: Int = 14): List<StressIndexDailyRead> =
         getList("$supabaseUrl/rest/v1/stress_index_daily", access, "date,value,computed_at", days)

@@ -47,7 +47,8 @@ object MetricSourceSupport {
         "respiratory_rate_daily",
         "stress_index_daily",
         "strain_daily",
-        "recovery_score_daily"
+        "recovery_score_daily",
+        "blood_glucose_daily"
     )
 
     // Metrics that Oura provides

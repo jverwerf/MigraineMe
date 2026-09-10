@@ -159,7 +159,8 @@ fun PhysicalDataHistoryScreen(
                     "skin_temp_daily" to PhysicalCardConfig.METRIC_SKIN_TEMP,
                     "respiratory_rate_daily" to PhysicalCardConfig.METRIC_RESPIRATORY_RATE,
                     "time_in_high_hr_zones_daily" to PhysicalCardConfig.METRIC_HIGH_HR_ZONES,
-                    "steps_daily" to PhysicalCardConfig.METRIC_STEPS
+                    "steps_daily" to PhysicalCardConfig.METRIC_STEPS,
+                    "blood_glucose_daily" to PhysicalCardConfig.METRIC_BLOOD_GLUCOSE
                 )
 
                 // Best value per metric (prefer non-manual first, fallback manual)
@@ -289,7 +290,8 @@ private suspend fun fetchPhysicalEntriesForDate(
         // `noSourceTables` set in MonitorDataHistory.swift.
         TableDef("stress_index_daily", "Stress", "date,value"),
         TableDef("time_in_high_hr_zones_daily", "High HR Zones", "date,source,value_minutes"),
-        TableDef("steps_daily", "Steps", "date,source,value_count")
+        TableDef("steps_daily", "Steps", "date,source,value_count"),
+        TableDef("blood_glucose_daily", "Blood glucose", "date,source,value_mmol_l")
     )
 
     for (td in tables) {
@@ -334,6 +336,10 @@ private fun formatPhysicalEntryValue(table: String, obj: org.json.JSONObject): S
         "spo2_daily" -> {
             val v = obj.optDouble("value_pct")
             if (!v.isNaN()) "${v.toInt()}%" else "-"
+        }
+        "blood_glucose_daily" -> {
+            val v = obj.optDouble("value_mmol_l")
+            if (!v.isNaN()) String.format("%.1f mmol/L", v) else "-"
         }
         "skin_temp_daily" -> {
             val v = obj.optDouble("value_celsius")

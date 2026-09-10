@@ -161,6 +161,13 @@ object MetricRegistry {
         "user_weather_daily::wind_speed_mps_mean" to "wind_daily",
         "user_weather_daily::uv_index_max"        to "uv_daily",
         "user_weather_daily::is_thunderstorm_day" to "thunderstorm_daily",
+        "user_weather_daily::pollen_overall_index" to "pollen_daily",
+        "user_weather_daily::pollen_tree_index"    to "pollen_daily",
+        "user_weather_daily::pollen_grass_index"   to "pollen_daily",
+        "user_weather_daily::pollen_weed_index"    to "pollen_daily",
+        "user_weather_daily::pm2_5_mean"           to "air_quality_daily",
+        "user_weather_daily::pm10_mean"            to "air_quality_daily",
+        "user_weather_daily::ozone_max"            to "air_quality_daily",
         "user_location_daily::altitude_max_m"     to "user_location_daily",
         "user_location_daily::altitude_change_m"  to "user_location_daily",
         // Mental: noise index table differs from settings key
@@ -326,6 +333,13 @@ object MetricRegistry {
         "user_weather_daily::is_thunderstorm_day" to 6,
         "user_location_daily::altitude_max_m" to 7,
         "user_location_daily::altitude_change_m" to 8,
+        "user_weather_daily::pollen_overall_index" to 9,
+        "user_weather_daily::pollen_tree_index" to 10,
+        "user_weather_daily::pollen_grass_index" to 11,
+        "user_weather_daily::pollen_weed_index" to 12,
+        "user_weather_daily::pm2_5_mean" to 13,
+        "user_weather_daily::pm10_mean" to 14,
+        "user_weather_daily::ozone_max" to 15,
         // Nutrition. The four food-risk exposures lead the group: they are the
         // reason this screen exists for a migraine patient, they share one
         // legend, and they are read as a set. Tyramine was already first while

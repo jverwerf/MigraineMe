@@ -15,6 +15,7 @@ import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RespiratoryRateRecord
@@ -73,7 +74,8 @@ class HealthConnectChangesWorker(
             OxygenSaturationRecord::class to HealthConnectRecordTypes.SPO2,
             RespiratoryRateRecord::class to HealthConnectRecordTypes.RESPIRATORY_RATE,
             BodyTemperatureRecord::class to HealthConnectRecordTypes.SKIN_TEMP,
-            ActiveCaloriesBurnedRecord::class to HealthConnectRecordTypes.ACTIVE_CALORIES
+            ActiveCaloriesBurnedRecord::class to HealthConnectRecordTypes.ACTIVE_CALORIES,
+            BloodGlucoseRecord::class to HealthConnectRecordTypes.BLOOD_GLUCOSE
         )
 
         /**
@@ -421,6 +423,13 @@ class HealthConnectChangesWorker(
                 date to payload
             }
             
+            is BloodGlucoseRecord -> {
+                val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
+                // Health Connect stores glucose as a BloodGlucose unit; the column is mmol/L.
+                val payload = """{"value_mmol_l":${record.level.inMillimolesPerLiter}}"""
+                date to payload
+            }
+
             is RespiratoryRateRecord -> {
                 val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
                 val payload = """{"value_bpm":${record.rate}}"""

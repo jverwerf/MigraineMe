@@ -375,6 +375,14 @@ object DemoDataSeeder {
                         put("uv_index_max", if (bad) 1.0+Random.nextDouble(2.0) else 3.0+Random.nextDouble(6.0))
                         put("weather_code", if (bad) listOf(45,61,63,80,95).random() else listOf(0,1,2,3).random())
                         put("is_thunderstorm_day", bad && Random.nextFloat() < 0.3f)
+                        // Pollen bands 0-5; higher on bad days so the demo shows a signal.
+                        put("pollen_tree_index", if (bad) (2+Random.nextInt(4)).toDouble() else Random.nextInt(3).toDouble())
+                        put("pollen_grass_index", if (bad) (2+Random.nextInt(4)).toDouble() else Random.nextInt(3).toDouble())
+                        put("pollen_weed_index", if (bad) (1+Random.nextInt(4)).toDouble() else Random.nextInt(2).toDouble())
+                        put("pollen_overall_index", if (bad) (3+Random.nextInt(3)).toDouble() else Random.nextInt(3).toDouble())
+                        put("pm2_5_mean", if (bad) 20.0+Random.nextDouble(25.0) else 4.0+Random.nextDouble(12.0))
+                        put("pm10_mean", if (bad) 35.0+Random.nextDouble(30.0) else 8.0+Random.nextDouble(18.0))
+                        put("ozone_max", if (bad) 90.0+Random.nextDouble(60.0) else 40.0+Random.nextDouble(40.0))
                     })
             }
         } finally { client.close() }

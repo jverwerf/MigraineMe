@@ -207,7 +207,7 @@ val setupSteps = listOf(
         "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.",
         "Tap Connect on yours below.",
         interactive = true, spotlightKey = "wearables_group", brainy = R.drawable.brainy_detective_small,
-        headline = "Connect your *wearable.*", sub = "Oura, Polar, Garmin"),
+        headline = "Connect your *wearable.*", sub = "WHOOP, Oura, Polar, Garmin"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
         "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.",
         "Use search at the top to jump to a specific metric.",

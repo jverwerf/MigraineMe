@@ -254,6 +254,7 @@ private fun physicalDisplayByKey(detail: PhysicalDetailData, key: String): Strin
         "strain_daily" -> detail.strain?.let { "%.0f kJ".format(it) }
         "time_in_high_hr_zones_daily" -> detail.highHrZonesMinutes?.let { "${it.toInt()} min" }
         "steps_daily" -> detail.steps?.let { "%,d".format(it) }
+        "blood_glucose_daily" -> detail.bloodGlucose?.let { String.format("%.1f mmol/L", it) }
         else -> null
     }
 }
@@ -270,7 +271,8 @@ private data class PhysicalDetailData(
     val stress: Double?,
     val strain: Double?,
     val highHrZonesMinutes: Double?,
-    val steps: Int?
+    val steps: Int?,
+    val bloodGlucose: Double?
 )
 
 // ─── Data loading ────────────────────────────────────────────────────────────
@@ -287,6 +289,7 @@ private suspend fun loadPhysicalDetailData(
     val rhr = try { physService.fetchRestingHrDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val spo2 = try { physService.fetchSpo2Daily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val skinTemp = try { physService.fetchSkinTempDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
+    val glucose = try { physService.fetchBloodGlucoseDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val stress = try { physService.fetchStressIndexDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val highHr = try { physService.fetchHighHrDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
 
@@ -299,7 +302,7 @@ private suspend fun loadPhysicalDetailData(
 
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
         stress == null && highHr == null && steps == null &&
-        respiratoryRate == null && strain == null) {
+        respiratoryRate == null && strain == null && glucose == null) {
         return@withContext null
     }
 
@@ -313,7 +316,8 @@ private suspend fun loadPhysicalDetailData(
         stress = stress?.value,
         strain = strain,
         highHrZonesMinutes = highHr?.value_minutes,
-        steps = steps
+        steps = steps,
+        bloodGlucose = glucose?.value_mmol_l
     )
 }
 

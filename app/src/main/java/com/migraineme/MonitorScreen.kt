@@ -1127,7 +1127,9 @@ private val WEATHER_METRIC_KEYS = setOf(
     "pressure_daily",
     "humidity_daily",
     "wind_daily",
-    "uv_daily"
+    "uv_daily",
+    "pollen_daily",
+    "air_quality_daily"
 )
 
 internal fun filterWeatherDisplayMetrics(
@@ -1142,6 +1144,13 @@ internal fun filterWeatherDisplayMetrics(
             WeatherCardConfig.METRIC_HUMIDITY -> "humidity_daily" in enabledMetrics
             WeatherCardConfig.METRIC_WIND_SPEED -> "wind_daily" in enabledMetrics
             WeatherCardConfig.METRIC_UV_INDEX -> "uv_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_POLLEN,
+            WeatherCardConfig.METRIC_POLLEN_TREE,
+            WeatherCardConfig.METRIC_POLLEN_GRASS,
+            WeatherCardConfig.METRIC_POLLEN_WEED -> "pollen_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_PM25,
+            WeatherCardConfig.METRIC_PM10,
+            WeatherCardConfig.METRIC_OZONE -> "air_quality_daily" in enabledMetrics
             WeatherCardConfig.METRIC_ALTITUDE,
             WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> "user_location_daily" in enabledMetrics
             else -> true
@@ -1213,6 +1222,13 @@ private fun favEntryToTable(key: String): String? {
             WeatherCardConfig.METRIC_HUMIDITY -> "humidity_daily"
             WeatherCardConfig.METRIC_WIND_SPEED -> "wind_daily"
             WeatherCardConfig.METRIC_UV_INDEX -> "uv_daily"
+            WeatherCardConfig.METRIC_POLLEN,
+            WeatherCardConfig.METRIC_POLLEN_TREE,
+            WeatherCardConfig.METRIC_POLLEN_GRASS,
+            WeatherCardConfig.METRIC_POLLEN_WEED -> "pollen_daily"
+            WeatherCardConfig.METRIC_PM25,
+            WeatherCardConfig.METRIC_PM10,
+            WeatherCardConfig.METRIC_OZONE -> "air_quality_daily"
             WeatherCardConfig.METRIC_ALTITUDE,
             WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> "user_location_daily"
             else -> null

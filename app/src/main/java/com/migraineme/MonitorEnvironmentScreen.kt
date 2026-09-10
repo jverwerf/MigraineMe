@@ -381,6 +381,12 @@ fun MonitorEnvironmentScreen(
     }
 }
 
+private val POLLEN_AIR_ZERO_IS_REAL = setOf(
+    "user_weather_daily::pm2_5_mean",
+    "user_weather_daily::pm10_mean",
+    "user_weather_daily::ozone_max"
+)
+
 /**
  * Bridge: extract a value from WeatherDayData using a MetricRegistry key.
  */
@@ -392,11 +398,26 @@ private fun weatherValueByKey(weather: WeatherDayData, key: String): Double? {
         "user_weather_daily::wind_speed_mps_mean" -> weather.windSpeedMean
         "user_weather_daily::uv_index_max" -> weather.uvIndexMax
         "user_weather_daily::is_thunderstorm_day" -> if (weather.isThunderstormDay) 1.0 else 0.0
+        "user_weather_daily::pollen_overall_index" -> weather.pollenOverall
+        "user_weather_daily::pollen_tree_index" -> weather.pollenTree
+        "user_weather_daily::pollen_grass_index" -> weather.pollenGrass
+        "user_weather_daily::pollen_weed_index" -> weather.pollenWeed
+        "user_weather_daily::pm2_5_mean" -> weather.pm25Mean
+        "user_weather_daily::pm10_mean" -> weather.pm10Mean
+        "user_weather_daily::ozone_max" -> weather.ozoneMax
         "user_location_daily::altitude_max_m" -> weather.altitudeMaxM
         "user_location_daily::altitude_change_m" -> weather.altitudeChangeM
         else -> null
     }
-    return v?.takeIf { it != 0.0 || key == "user_weather_daily::uv_index_max" || key == "user_weather_daily::is_thunderstorm_day" || key == "user_location_daily::altitude_max_m" }
+    return v?.takeIf {
+        it != 0.0 ||
+            key == "user_weather_daily::uv_index_max" ||
+            key == "user_weather_daily::is_thunderstorm_day" ||
+            key == "user_location_daily::altitude_max_m" ||
+            // 0 is a real pollen/air reading ("none today"), not a missing value.
+            key.startsWith("user_weather_daily::pollen_") ||
+            key in POLLEN_AIR_ZERO_IS_REAL
+    }
 }
 
 private fun weatherCodeToCondition(code: Int): String {

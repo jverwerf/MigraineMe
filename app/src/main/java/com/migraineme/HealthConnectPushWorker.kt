@@ -446,6 +446,12 @@ class HealthConnectPushWorker(
                 service.upsertSpo2(accessToken, item.date, valuePct, item.healthConnectId)
             }
 
+            HealthConnectRecordTypes.BLOOD_GLUCOSE -> {
+                val valueMmolL = payload["value_mmol_l"]?.jsonPrimitive?.double
+                    ?: return ProcessResult.PermanentFailure("Missing value_mmol_l")
+                service.upsertBloodGlucose(accessToken, item.date, valueMmolL, item.healthConnectId)
+            }
+
             HealthConnectRecordTypes.RESPIRATORY_RATE -> {
                 val valueBpm = payload["value_bpm"]?.jsonPrimitive?.double
                     ?: return ProcessResult.PermanentFailure("Missing value_bpm")

@@ -67,6 +67,8 @@ val dataCollectionGroups = listOf(
         DataCollectionItem("humidity_daily", "Humidity", "Local humidity levels", "reference", requiresLocation = true),
         DataCollectionItem("wind_daily", "Wind", "Wind speed", "reference", requiresLocation = true),
         DataCollectionItem("uv_daily", "UV index", "UV radiation level", "reference", requiresLocation = true),
+        DataCollectionItem("pollen_daily", "Pollen", "Tree, grass and weed pollen", "reference", requiresLocation = true),
+        DataCollectionItem("air_quality_daily", "Air quality", "Particles, dust and ozone", "reference", requiresLocation = true),
     )),
     DataCollectionGroup("Diet", listOf(
         DataCollectionItem("nutrition", "Nutrition tracking", "Log meals and track nutrients, caffeine, alcohol", "phone"),
