@@ -390,13 +390,17 @@ fun WeatherHistoryGraph(
                                     padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
                                 fun yOf(normalized: Float) = padding + graphHeight - (normalized * graphHeight)
 
+                                // Screen points once, then the curve: smoothPath is
+                                // the same Catmull-Rom the Migraine Timeline draws, so
+                                // a line reads the same wherever it appears.
+                                val offsets = plotPoints.map { (dayIdx, v) -> Offset(xOf(dayIdx), yOf(v)) }
+
                                 // Soft fill under a single line, so the plot has
                                 // some depth without another colour in play.
                                 if (!isNormalized && plotPoints.size > 1) {
-                                    val fill = Path()
-                                    fill.moveTo(xOf(plotPoints.first().first), padding + graphHeight)
-                                    plotPoints.forEach { (dayIdx, v) -> fill.lineTo(xOf(dayIdx), yOf(v)) }
-                                    fill.lineTo(xOf(plotPoints.last().first), padding + graphHeight)
+                                    val fill = smoothPath(offsets)
+                                    fill.lineTo(offsets.last().x, padding + graphHeight)
+                                    fill.lineTo(offsets.first().x, padding + graphHeight)
                                     fill.close()
                                     drawPath(
                                         fill,
@@ -430,14 +434,20 @@ fun WeatherHistoryGraph(
                                     }
                                 }
 
-                                // Draw line
+                                // Draw line: a wide, faint pass under a solid one,
+                                // the same double stroke the timeline uses to keep a
+                                // thin curve legible on the dark card.
                                 if (plotPoints.size > 1) {
-                                    val path = Path()
-                                    plotPoints.forEachIndexed { i, (dayIdx, normalizedValue) ->
-                                        val x = xOf(dayIdx)
-                                        val y = yOf(normalizedValue)
-                                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                                    }
+                                    val path = smoothPath(offsets)
+                                    drawPath(
+                                        path,
+                                        color.copy(alpha = 0.12f),
+                                        style = Stroke(
+                                            (if (isNormalized) 5f else 6f).dp.toPx(),
+                                            cap = StrokeCap.Round,
+                                            join = StrokeJoin.Round
+                                        )
+                                    )
                                     drawPath(
                                         path,
                                         color,
