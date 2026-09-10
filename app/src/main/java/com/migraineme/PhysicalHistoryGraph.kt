@@ -74,7 +74,7 @@ private val physicalMetricGroups = listOf(
         PhysicalCardConfig.METRIC_RESTING_HR,
         PhysicalCardConfig.METRIC_STRAIN
     ),
-    "Body" to listOf(
+    "Body signals" to listOf(
         PhysicalCardConfig.METRIC_SPO2,
         PhysicalCardConfig.METRIC_SKIN_TEMP,
         PhysicalCardConfig.METRIC_RESPIRATORY_RATE,

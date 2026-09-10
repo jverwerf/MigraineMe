@@ -71,14 +71,14 @@ private val mentalMetricGroups = listOf(
     "Mind" to listOf(
         MentalCardConfig.METRIC_STRESS
     ),
-    "Screen" to listOf(
+    "Screen use" to listOf(
         MentalCardConfig.METRIC_SCREEN_TIME,
         MentalCardConfig.METRIC_LATE_SCREEN_TIME,
         MentalCardConfig.METRIC_BRIGHTNESS,
         MentalCardConfig.METRIC_DARK_MODE,
         MentalCardConfig.METRIC_UNLOCKS
     ),
-    "Sound" to listOf(
+    "Noise" to listOf(
         MentalCardConfig.METRIC_VOLUME,
         MentalCardConfig.METRIC_NOISE_AVG,
         MentalCardConfig.METRIC_NOISE_HIGH,

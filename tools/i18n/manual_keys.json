@@ -1,6 +1,62 @@
 {
   "entries": [
     {
+      "en": "%1$s covers %2$s.",
+      "class": "soft",
+      "sites": [
+        "CompanionsScreen.kt:companion-description"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "A check-in *each evening.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "AI Calibration",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "AI tracks triggers based on what's in your calendar",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 102
+    },
+    {
+      "en": "Activities",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Activity",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Activity favorites",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Acupressure",
       "class": "hard",
       "sites": [
@@ -17,6 +73,14 @@
       "max_len": 32
     },
     {
+      "en": "Air quality",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
       "en": "Alcohol exposure high",
       "class": "hard",
       "sites": [
@@ -31,6 +95,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "All your *health data.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Allay Lamp",
@@ -97,12 +169,28 @@
       "max_len": 32
     },
     {
+      "en": "And there's\n*much more*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "Anger",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Answer updates",
+      "class": "soft",
+      "sites": [
+        "RecalibrationReviewScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Anxiety",
@@ -127,6 +215,30 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Ask *MigraineMe.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Ask MigraineMe",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 190
     },
     {
       "en": "Aspirin",
@@ -265,6 +377,14 @@
       "max_len": 32
     },
     {
+      "en": "Blood oxygen (SpO2)",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Blood pressure high",
       "class": "hard",
       "sites": [
@@ -289,6 +409,14 @@
       "max_len": 32
     },
     {
+      "en": "Body",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Body aches lingering",
       "class": "hard",
       "sites": [
@@ -311,6 +439,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Body signals",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
     },
     {
       "en": "Botox",
@@ -345,6 +481,15 @@
       "max_len": 32
     },
     {
+      "en": "Breakfast",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
+    },
+    {
       "en": "Brightness high",
       "class": "hard",
       "sites": [
@@ -375,6 +520,22 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "CBT",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "CGRP treatments",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
     },
     {
       "en": "Caffeine",
@@ -537,6 +698,14 @@
       "max_len": 32
     },
     {
+      "en": "Choose what to *collect.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "Chores",
       "class": "hard",
       "sites": [
@@ -601,6 +770,14 @@
       "max_len": 32
     },
     {
+      "en": "Cognitive",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Cold pack",
       "class": "hard",
       "sites": [
@@ -647,6 +824,30 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Connect *Health Connect.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Connect your *wearable.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Connect your calendar",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Constipation",
@@ -713,6 +914,14 @@
       "max_len": 32
     },
     {
+      "en": "Dark mode usage",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Dark room",
       "class": "hard",
       "sites": [
@@ -721,12 +930,28 @@
       "max_len": 32
     },
     {
+      "en": "Data warnings",
+      "class": "soft",
+      "sites": [
+        "RecalibrationReviewScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Date",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Decay curves",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Deep breathing",
@@ -777,6 +1002,14 @@
       "max_len": 32
     },
     {
+      "en": "Diet",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Difficulty concentrating",
       "class": "hard",
       "sites": [
@@ -807,6 +1040,15 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Dinner",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
     },
     {
       "en": "Dizziness",
@@ -889,6 +1131,22 @@
       "max_len": 32
     },
     {
+      "en": "Energy and macros",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 23
+    },
+    {
+      "en": "Environment",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Eptinezumab (Vyepti)",
       "class": "hard",
       "sites": [
@@ -919,6 +1177,38 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Every Monday\nit *learns* you.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every Monday it *learns.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 214
+    },
+    {
+      "en": "Every trigger counts {Low}, {Mild} or {High} towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 304
     },
     {
       "en": "Excedrin",
@@ -961,6 +1251,14 @@
       "max_len": 32
     },
     {
+      "en": "FL-41 glasses",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
       "en": "Family event",
       "class": "hard",
       "sites": [
@@ -991,6 +1289,22 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Favourite",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Fell asleep time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Feverfew",
@@ -1153,6 +1467,22 @@
       "max_len": 32
     },
     {
+      "en": "Garmin, Apple Watch, Polar, Oura, WHOOP and more",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
+      "en": "Gauge thresholds",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Gentle walk",
       "class": "hard",
       "sites": [
@@ -1193,6 +1523,30 @@
       "max_len": 32
     },
     {
+      "en": "HIGH",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "HRT",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "HRV",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "HRV high",
       "class": "hard",
       "sites": [
@@ -1207,6 +1561,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "HRV tracking",
+      "class": "soft",
+      "sites": [
+        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+      ],
+      "max_len": 48
     },
     {
       "en": "Hangover feeling",
@@ -1321,6 +1683,14 @@
       "max_len": 32
     },
     {
+      "en": "Humidity",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Humidity high",
       "class": "hard",
       "sites": [
@@ -1385,6 +1755,14 @@
       "max_len": 32
     },
     {
+      "en": "Interested in %1$s.",
+      "class": "soft",
+      "sites": [
+        "CompanionsScreen.kt:companion-description"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Iron high",
       "class": "hard",
       "sites": [
@@ -1401,12 +1779,28 @@
       "max_len": 32
     },
     {
+      "en": "Irregular sleep",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Irritability",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "It estimates\n*7 days* ahead.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Jet lag",
@@ -1417,12 +1811,28 @@
       "max_len": 32
     },
     {
+      "en": "LOW",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Lasmiditan (Reyvow)",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Late night screen time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 44
     },
     {
       "en": "Late screen time high",
@@ -1521,6 +1931,38 @@
       "max_len": 32
     },
     {
+      "en": "Location",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Log an *attack.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Log and track from your wearable",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 64
+    },
+    {
+      "en": "Logged items",
+      "class": "hard",
+      "sites": [
+        "InsightsSectionConfig.kt:SECTION_LABELS"
+      ],
+      "max_len": 24
+    },
+    {
       "en": "Loss of appetite",
       "class": "hard",
       "sites": [
@@ -1543,6 +1985,23 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Lunch",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
+    },
+    {
+      "en": "MILD",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Magnesium",
@@ -1601,6 +2060,22 @@
       "max_len": 32
     },
     {
+      "en": "Medicine",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Medicine favorites",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Meditation",
       "class": "hard",
       "sites": [
@@ -1633,12 +2108,36 @@
       "max_len": 32
     },
     {
+      "en": "Menstrual Cycle",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Menstrual cycle decay",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 42
+    },
+    {
       "en": "Menstrual migraine",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Menstruation",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Mental clarity",
@@ -1655,6 +2154,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Migraine type",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
     },
     {
       "en": "Migraine with aura",
@@ -1679,6 +2186,38 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Mind",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Minerals",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Missed activity",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Missed activity favorites",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 50
     },
     {
       "en": "Mood change",
@@ -1753,6 +2292,14 @@
       "max_len": 32
     },
     {
+      "en": "NONE",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Nap",
       "class": "hard",
       "sites": [
@@ -1791,6 +2338,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Near the top?\nIt says *HIGH.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Neck massage",
@@ -1857,6 +2412,22 @@
       "max_len": 32
     },
     {
+      "en": "Noise",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Noise Sampling",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Noise cancelling headphones",
       "class": "hard",
       "sites": [
@@ -1889,6 +2460,14 @@
       "max_len": 32
     },
     {
+      "en": "Not a favourite",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Numbness",
       "class": "hard",
       "sites": [
@@ -1913,12 +2492,36 @@
       "max_len": 32
     },
     {
+      "en": "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 184
+    },
+    {
       "en": "Ondansetron",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Other",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Oura, Polar, Garmin",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Outdoors",
@@ -1929,12 +2532,28 @@
       "max_len": 32
     },
     {
+      "en": "Oversleep",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Ovulation",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Ovulation decay",
+      "class": "soft",
+      "sites": [
+        "RecalibrationReviewScreen.kt:variable-render"
+      ],
+      "max_len": 30
     },
     {
       "en": "Oxygen therapy",
@@ -2001,6 +2620,30 @@
       "max_len": 32
     },
     {
+      "en": "Phone brightness",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Phone screen time tracking",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 52
+    },
+    {
+      "en": "Phone unlocks",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Phone unlocks high",
       "class": "hard",
       "sites": [
@@ -2015,6 +2658,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Phone volume",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Phosphorus high",
@@ -2033,6 +2684,14 @@
       "max_len": 32
     },
     {
+      "en": "Physical",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Pizotifen",
       "class": "hard",
       "sites": [
@@ -2047,6 +2706,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Poor sleep",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Potassium high",
@@ -2065,6 +2732,14 @@
       "max_len": 32
     },
     {
+      "en": "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 226
+    },
+    {
       "en": "Prednisone",
       "class": "hard",
       "sites": [
@@ -2079,6 +2754,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Pressure",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Pressure high",
@@ -2103,6 +2786,38 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Prodrome",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Prodrome adjustments",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Profile",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Profile snapshot",
+      "class": "soft",
+      "sites": [
+        "RecalibrationReviewScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Progressive relaxation",
@@ -2135,6 +2850,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 232
     },
     {
       "en": "Quell",
@@ -2201,12 +2924,36 @@
       "max_len": 32
     },
     {
+      "en": "Recovery score",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Regular Migraine",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Relief",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Relief favorites",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
     },
     {
       "en": "Reliefband",
@@ -2263,6 +3010,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Resting heart rate",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Riboflavin (B2)",
@@ -2377,6 +3132,14 @@
       "max_len": 32
     },
     {
+      "en": "Screen use",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
       "en": "Seeing spots",
       "class": "hard",
       "sites": [
@@ -2433,12 +3196,44 @@
       "max_len": 32
     },
     {
+      "en": "Set up trigger alarms",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Set your last period and cycle length. Risk rises around the predicted date.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 152
+    },
+    {
+      "en": "Settings menu (top left) › {Risk Model}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
       "en": "Sexual activity",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Share a report",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "Shop",
@@ -2497,6 +3292,14 @@
       "max_len": 32
     },
     {
+      "en": "Skin temperature",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Skipped meals",
       "class": "hard",
       "sites": [
@@ -2505,12 +3308,28 @@
       "max_len": 32
     },
     {
+      "en": "Sleep",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Sleep apnea",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Sleep disturbances",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Sleep disturbances high",
@@ -2529,6 +3348,14 @@
       "max_len": 32
     },
     {
+      "en": "Sleep duration",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Sleep duration high",
       "class": "hard",
       "sites": [
@@ -2543,6 +3370,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Sleep efficiency",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Sleep efficiency high",
@@ -2561,6 +3396,14 @@
       "max_len": 32
     },
     {
+      "en": "Sleep score",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Sleep score high",
       "class": "hard",
       "sites": [
@@ -2575,6 +3418,38 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Sleep stages",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Sleep times",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 202
+    },
+    {
+      "en": "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 156
     },
     {
       "en": "Sleeping",
@@ -2599,6 +3474,15 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Snack",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
     },
     {
       "en": "Social plans",
@@ -2673,6 +3557,22 @@
       "max_len": 32
     },
     {
+      "en": "Started a treatment?",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Steps",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Steps high",
       "class": "hard",
       "sites": [
@@ -2689,6 +3589,14 @@
       "max_len": 32
     },
     {
+      "en": "Strain",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Stress",
       "class": "hard",
       "sites": [
@@ -2703,6 +3611,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Stress index",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Stress low",
@@ -2801,6 +3717,22 @@
       "max_len": 32
     },
     {
+      "en": "Symptom",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Symptom favorites",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "TV / film",
       "class": "hard",
       "sites": [
@@ -2809,12 +3741,44 @@
       "max_len": 32
     },
     {
+      "en": "Tap Connect on the Health Connect card above.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 90
+    },
+    {
+      "en": "Tap Connect on yours below.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 224
+    },
+    {
       "en": "Tearing",
       "class": "hard",
       "sites": [
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Temperature",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Temperature high",
@@ -2847,6 +3811,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "The gauge shows how full your bucket is: {Low}, {Mild} or {High}. Under it: the 7 day outlook.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 176
     },
     {
       "en": "TheraSpecs",
@@ -2895,6 +3867,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Thunderstorms",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Tingling",
@@ -2977,6 +3957,46 @@
       "max_len": 32
     },
     {
+      "en": "Trigger",
+      "class": "hard",
+      "sites": [
+        "tagCategoryLabel:community-browse-heading"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Trigger adjustments",
+      "class": "soft",
+      "sites": [
+        "ManagePoolScreen.kt:variable-render"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Trigger exposure",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 22
+    },
+    {
+      "en": "Triggers fill\nyour *bucket.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Triggers, medicines, reliefs, how you felt. One pass through your day, tap what applies, done.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 188
+    },
+    {
       "en": "Tyramine exposure high",
       "class": "hard",
       "sites": [
@@ -2991,6 +4011,22 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 140
+    },
+    {
+      "en": "UV index",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "UV index high",
@@ -3185,6 +4221,14 @@
       "max_len": 32
     },
     {
+      "en": "Vitamins",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
       "en": "Vivid dreams",
       "class": "hard",
       "sites": [
@@ -3273,6 +4317,14 @@
       "max_len": 32
     },
     {
+      "en": "Weather",
+      "class": "hard",
+      "sites": [
+        "group:metric-checklist"
+      ],
+      "max_len": 20
+    },
+    {
       "en": "Weight high",
       "class": "hard",
       "sites": [
@@ -3289,6 +4341,46 @@
       "max_len": 32
     },
     {
+      "en": "What you *eat.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "What your data *says.*",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Where *HIGH* starts.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "Which triggers really matter, what helped, and a report you can hand your doctor.",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 162
+    },
+    {
+      "en": "Wind",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Wind speed high",
       "class": "hard",
       "sites": [
@@ -3303,6 +4395,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Woke up time",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
     },
     {
       "en": "Word-finding trouble",
@@ -3337,6 +4437,14 @@
       "max_len": 32
     },
     {
+      "en": "Workout HR zones",
+      "class": "soft",
+      "sites": [
+        "DataSettingsSections.kt:table"
+      ],
+      "max_len": 40
+    },
+    {
       "en": "Yawning",
       "class": "hard",
       "sites": [
@@ -3351,426 +4459,6 @@
         "pool:seeded-template"
       ],
       "max_len": 32
-    },
-    {
-      "en": "Zavzpret",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "Zinc high",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "Zinc low",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "Zolmitriptan",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "gammaCore",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "sTMS (SAVI Dual)",
-      "class": "hard",
-      "sites": [
-        "pool:seeded-template"
-      ],
-      "max_len": 32
-    },
-    {
-      "en": "Logged items",
-      "class": "hard",
-      "sites": [
-        "InsightsSectionConfig.kt:SECTION_LABELS"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Activity",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Location",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Medicine",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Migraine type",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Missed activity",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Other",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Prodrome",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Profile",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Relief",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Symptom",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Trigger",
-      "class": "hard",
-      "sites": [
-        "tagCategoryLabel:community-browse-heading"
-      ],
-      "max_len": 24
-    },
-    {
-      "en": "Breakfast",
-      "class": "hard",
-      "sites": [
-        "NutritionDialogs.kt:mealType",
-        "BarcodeAddFoodDialog.kt:mealType"
-      ],
-      "max_len": 16
-    },
-    {
-      "en": "Lunch",
-      "class": "hard",
-      "sites": [
-        "NutritionDialogs.kt:mealType",
-        "BarcodeAddFoodDialog.kt:mealType"
-      ],
-      "max_len": 16
-    },
-    {
-      "en": "Dinner",
-      "class": "hard",
-      "sites": [
-        "NutritionDialogs.kt:mealType",
-        "BarcodeAddFoodDialog.kt:mealType"
-      ],
-      "max_len": 16
-    },
-    {
-      "en": "Snack",
-      "class": "hard",
-      "sites": [
-        "NutritionDialogs.kt:mealType",
-        "BarcodeAddFoodDialog.kt:mealType"
-      ],
-      "max_len": 16
-    },
-    {
-      "en": "A check-in *each evening.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "AI tracks triggers based on what's in your calendar",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 102
-    },
-    {
-      "en": "All your *health data.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Ask *MigraineMe.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 190
-    },
-    {
-      "en": "Connect your calendar",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Every Monday\nit *learns* you.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Every Monday it *learns.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Every trigger counts {Low}, {Mild} or {High} towards your score, and fades over the days after. Cross a line and your level changes. Adjust any of it by hand.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 304
-    },
-    {
-      "en": "Garmin, Apple Watch, Polar, Oura, WHOOP and more",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 96
-    },
-    {
-      "en": "It estimates\n*7 days* ahead.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Log an *attack.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Log and track from your wearable",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 64
-    },
-    {
-      "en": "Near the top?\nIt says *HIGH.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 184
-    },
-    {
-      "en": "Set up trigger alarms",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Set your last period and cycle length. Risk rises around the predicted date.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 152
-    },
-    {
-      "en": "Share a report",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 226
-    },
-    {
-      "en": "Sleep, HRV, weather, cycle, food. Tap any card for the detail and the history.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 156
-    },
-    {
-      "en": "Started a treatment?",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Tap Log Migraine, or just talk. Triggers your watch and phone caught are already ticked, with the time they hit.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 224
-    },
-    {
-      "en": "The gauge shows how full your bucket is: {Low}, {Mild} or {High}. Under it: the 7 day outlook.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 176
-    },
-    {
-      "en": "Triggers fill\nyour *bucket.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Triggers, medicines, reliefs, how you felt. One pass through your day, tap what applies, done.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 188
-    },
-    {
-      "en": "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 140
-    },
-    {
-      "en": "What you *eat.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "What your data *says.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Where *HIGH* starts.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Which triggers really matter, what helped, and a report you can hand your doctor.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 162
     },
     {
       "en": "You are *not alone.*",
@@ -3821,6 +4509,38 @@
       "max_len": 60
     },
     {
+      "en": "Zavzpret",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zinc high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zinc low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zolmitriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
       "en": "a PDF from your own data",
       "class": "soft",
       "sites": [
@@ -3851,886 +4571,6 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 60
-    },
-    {
-      "en": "everything you logged, tap to fix what's missing",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 96
-    },
-    {
-      "en": "for anything you want to log yourself",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 74
-    },
-    {
-      "en": "get warned when pressure drops or sleep goes off",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 96
-    },
-    {
-      "en": "guidance, articles, forum",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "look here every morning",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "one place, one card each",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "questions about your own data",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "risk rises around your period",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "scan it, or search it",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "see how it's going, from your own logs",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 76
-    },
-    {
-      "en": "sleep, weather, stress, food...\nmost of it added automatically",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 124
-    },
-    {
-      "en": "so you can plan around it",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "take it from here",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "that is the only thing you have to do",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 74
-    },
-    {
-      "en": "the AI sets the lines, you can move them",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "the more you log, the sharper it gets",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 74
-    },
-    {
-      "en": "the one thing you have to do",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "your risk, checked every morning",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 64
-    },
-    {
-      "en": "And there's\n*much more*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Connect *Health Connect.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "phone data in, nothing to type",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 232
-    },
-    {
-      "en": "Tap Connect on the Health Connect card above.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 90
-    },
-    {
-      "en": "Connect your *wearable.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Oura, Polar, Garmin",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Sleep, HRV, skin temperature and more come in on their own. Garmin? Pair watch unlocks our watch app.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 202
-    },
-    {
-      "en": "Tap Connect on yours below.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Choose what to *collect.*",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "you are in control",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Every metric is a switch. Some ask for a permission first. We already switched on what your wearable provides.",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:setupSteps-table"
-      ],
-      "max_len": 214
-    },
-    {
-      "en": "Irregular sleep",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Poor sleep",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Oversleep",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Gauge thresholds",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Decay curves",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Trigger adjustments",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Prodrome adjustments",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Medicine favorites",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Relief favorites",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Symptom favorites",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Activity favorites",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Missed activity favorites",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 50
-    },
-    {
-      "en": "Menstrual cycle decay",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 42
-    },
-    {
-      "en": "Ovulation decay",
-      "class": "soft",
-      "sites": [
-        "RecalibrationReviewScreen.kt:variable-render"
-      ],
-      "max_len": 30
-    },
-    {
-      "en": "Menstrual Cycle",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Body",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Favourite",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Not a favourite",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "HIGH",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "MILD",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "LOW",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "NONE",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Environment",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Physical",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Cognitive",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Diet",
-      "class": "soft",
-      "sites": [
-        "ManagePoolScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Data warnings",
-      "class": "soft",
-      "sites": [
-        "RecalibrationReviewScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Answer updates",
-      "class": "soft",
-      "sites": [
-        "RecalibrationReviewScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Profile snapshot",
-      "class": "soft",
-      "sites": [
-        "RecalibrationReviewScreen.kt:variable-render"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "AI Calibration",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Ask MigraineMe",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep duration",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep score",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep efficiency",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep stages",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Sleep disturbances",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Fell asleep time",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Woke up time",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Recovery score",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Resting heart rate",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "HRV",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Skin temperature",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Blood oxygen (SpO2)",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Activities",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Workout HR zones",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Steps",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Strain",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Stress index",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Phone screen time tracking",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 52
-    },
-    {
-      "en": "Late night screen time",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 44
-    },
-    {
-      "en": "Noise Sampling",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Phone brightness",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Phone volume",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Dark mode usage",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Phone unlocks",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Temperature",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Pressure",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Humidity",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Wind",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "UV index",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Thunderstorms",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Menstruation",
-      "class": "soft",
-      "sites": [
-        "DataSettingsSections.kt:table"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "{Home} tab",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "Settings menu (top left) › {Risk Model}",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Log} tab › {Log Migraine}",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Home} tab › {Ask MigraineMe} card",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Monitor} tab › {Sleep} card",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Insights} tab",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Log} tab › {Daily Check-In}",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Home} › “{MigraineMe has suggestions for you}” banner",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "{Community} icon (top right)",
-      "class": "soft",
-      "sites": [
-        "OnboardingCoach.kt:tourSteps-table"
-      ],
-      "max_len": 80
-    },
-    {
-      "en": "%1$s covers %2$s.",
-      "class": "soft",
-      "sites": [
-        "CompanionsScreen.kt:companion-description"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "Interested in %1$s.",
-      "class": "soft",
-      "sites": [
-        "CompanionsScreen.kt:companion-description"
-      ],
-      "max_len": 40
-    },
-    {
-      "en": "CBT",
-      "class": "soft",
-      "sites": [
-        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
-      ],
-      "max_len": 48
-    },
-    {
-      "en": "CGRP treatments",
-      "class": "soft",
-      "sites": [
-        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
-      ],
-      "max_len": 48
-    },
-    {
-      "en": "FL-41 glasses",
-      "class": "soft",
-      "sites": [
-        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
-      ],
-      "max_len": 48
-    },
-    {
-      "en": "HRT",
-      "class": "soft",
-      "sites": [
-        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
-      ],
-      "max_len": 48
-    },
-    {
-      "en": "HRV tracking",
-      "class": "soft",
-      "sites": [
-        "ai_companions:triggers/interests (DB rows, rendered via tSync)"
-      ],
-      "max_len": 48
     },
     {
       "en": "alcohol",
@@ -4853,6 +4693,14 @@
       "max_len": 48
     },
     {
+      "en": "everything you logged, tap to fix what's missing",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
       "en": "exercise intensity",
       "class": "soft",
       "sites": [
@@ -4869,6 +4717,22 @@
       "max_len": 48
     },
     {
+      "en": "for anything you want to log yourself",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "gammaCore",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
       "en": "gepants",
       "class": "soft",
       "sites": [
@@ -4877,12 +4741,28 @@
       "max_len": 48
     },
     {
+      "en": "get warned when pressure drops or sleep goes off",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 96
+    },
+    {
       "en": "graded exercise",
       "class": "soft",
       "sites": [
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "guidance, articles, forum",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "heart rate zones",
@@ -4947,6 +4827,14 @@
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "look here every morning",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "loud noise",
@@ -5021,6 +4909,14 @@
       "max_len": 48
     },
     {
+      "en": "one place, one card each",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "overexertion",
       "class": "soft",
       "sites": [
@@ -5059,6 +4955,14 @@
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "phone data in, nothing to type",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "physical strain",
@@ -5109,6 +5013,14 @@
       "max_len": 48
     },
     {
+      "en": "questions about your own data",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "rebound headaches",
       "class": "soft",
       "sites": [
@@ -5141,6 +5053,30 @@
       "max_len": 48
     },
     {
+      "en": "risk rises around your period",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "sTMS (SAVI Dual)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "scan it, or search it",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "screen filters",
       "class": "soft",
       "sites": [
@@ -5155,6 +5091,14 @@
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "see how it's going, from your own logs",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 76
     },
     {
       "en": "sensory management",
@@ -5205,6 +5149,22 @@
       "max_len": 48
     },
     {
+      "en": "sleep, weather, stress, food...\nmost of it added automatically",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 124
+    },
+    {
+      "en": "so you can plan around it",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "stress",
       "class": "soft",
       "sites": [
@@ -5237,12 +5197,52 @@
       "max_len": 48
     },
     {
+      "en": "take it from here",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
       "en": "temperature changes",
       "class": "soft",
       "sites": [
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "that is the only thing you have to do",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "the AI sets the lines, you can move them",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "the more you log, the sharper it gets",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 74
+    },
+    {
+      "en": "the one thing you have to do",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 60
     },
     {
       "en": "therapy",
@@ -5315,6 +5315,94 @@
         "ai_companions:triggers/interests (DB rows, rendered via tSync)"
       ],
       "max_len": 48
+    },
+    {
+      "en": "you are in control",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:setupSteps-table"
+      ],
+      "max_len": 60
+    },
+    {
+      "en": "your risk, checked every morning",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 64
+    },
+    {
+      "en": "{Community} icon (top right)",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Home} tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Home} tab › {Ask MigraineMe} card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Home} › “{MigraineMe has suggestions for you}” banner",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Insights} tab",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Log} tab › {Daily Check-In}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Log} tab › {Log Migraine}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
+    },
+    {
+      "en": "{Monitor} tab › {Sleep} card",
+      "class": "soft",
+      "sites": [
+        "OnboardingCoach.kt:tourSteps-table"
+      ],
+      "max_len": 80
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

@@ -8,10 +8,10 @@
       "app/src/main/java/com/migraineme/AiSetupScreen.kt:851",
       "app/src/main/java/com/migraineme/AiSetupScreen.kt:891",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:155",
-      "... 82 more"
+      "... 81 more"
     ],
     "max_len": 14,
-    "count": 87
+    "count": 86
   },
   {
     "en": "Back",
@@ -64,10 +64,10 @@
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:174",
       "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:134",
       "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:733",
-      "... 22 more"
+      "... 21 more"
     ],
     "max_len": 14,
-    "count": 27
+    "count": 26
   },
   {
     "en": "Remove",
@@ -283,7 +283,7 @@
     "en": "Today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:353",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:389",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:444",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:108",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:165",
@@ -356,7 +356,7 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:581",
       "app/src/main/java/com/migraineme/DataSettingsScreen.kt:254",
       "app/src/main/java/com/migraineme/HelpScreen.kt:276",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:396",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:392",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1385",
       "... 6 more"
     ],
@@ -368,7 +368,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:813",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:764",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:760",
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:349",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1903",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1378",
@@ -451,7 +451,7 @@
     "en": "All Metrics",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:430",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:460",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:183",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:271",
       "app/src/main/java/com/migraineme/MonitorMentalScreen.kt:214",
@@ -507,7 +507,7 @@
     "en": "Next day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:368",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:404",
       "app/src/main/java/com/migraineme/HomeScreen.kt:615",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:122",
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1190",
@@ -521,7 +521,7 @@
     "en": "Previous day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:348",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:384",
       "app/src/main/java/com/migraineme/HomeScreen.kt:602",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:103",
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1182",
@@ -620,13 +620,41 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:830",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:781",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:777",
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:363",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1920",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1395",
       "... 2 more"
     ],
     "max_len": 15,
+    "count": 7
+  },
+  {
+    "en": "%s metrics",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ManagePoolScreen.kt:365",
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:149",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:232",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:154",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:261",
+      "... 2 more"
+    ],
+    "max_len": 14,
+    "count": 7
+  },
+  {
+    "en": "%s selected",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:782",
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:806",
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:832",
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:860",
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:901",
+      "... 2 more"
+    ],
+    "max_len": 14,
     "count": 7
   },
   {
@@ -672,20 +700,6 @@
     "count": 7
   },
   {
-    "en": "Select Metrics",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1375",
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:372",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:384",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:359",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:694",
-      "... 2 more"
-    ],
-    "max_len": 17,
-    "count": 7
-  },
-  {
     "en": "Skip for now",
     "class": "hard",
     "sites": [
@@ -703,7 +717,7 @@
     "en": "Yesterday",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:354",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:390",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:109",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:166",
       "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:115",
@@ -712,20 +726,6 @@
     ],
     "max_len": 14,
     "count": 7
-  },
-  {
-    "en": " (%s selected)",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:372",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:384",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:359",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:694",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:356",
-      "... 1 more"
-    ],
-    "max_len": 17,
-    "count": 6
   },
   {
     "en": "%s min",
@@ -742,17 +742,17 @@
     "count": 6
   },
   {
-    "en": "%s selected",
+    "en": "%s-day average",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:782",
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:806",
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:832",
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:860",
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:901",
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:147",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:230",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:152",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:259",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:149",
       "... 1 more"
     ],
-    "max_len": 14,
+    "max_len": 17,
     "count": 6
   },
   {
@@ -774,7 +774,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/BlogDetailScreen.kt:179",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:408",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:404",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1397",
       "app/src/main/java/com/migraineme/ManagePoolScreen.kt:309",
       "app/src/main/java/com/migraineme/ManagePoolScreen.kt:371",
@@ -857,11 +857,11 @@
     "en": "Select a metric below",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:135",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:184",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:145",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:247",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:142",
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:190",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:272",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:199",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:289",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:196",
       "... 1 more"
     ],
     "max_len": 31,
@@ -886,7 +886,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:826",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:777",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:773",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1916",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1391",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:793",
@@ -899,7 +899,7 @@
     "en": "Tomorrow",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:355",
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:391",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:445",
       "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:140",
       "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:191",
@@ -924,11 +924,25 @@
     "count": 6
   },
   {
+    "en": "normalised scale",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:153",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:236",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:158",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:264",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:155",
+      "... 1 more"
+    ],
+    "max_len": 19,
+    "count": 6
+  },
+  {
     "en": "%1$s%2$sm • Severity: %3$s/10",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:823",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:774",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:770",
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:359",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1913",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1388"
@@ -979,11 +993,11 @@
     "en": "Disconnect",
     "class": "hard",
     "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:701",
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:756",
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:811",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:866",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:920",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1002"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:865",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:947"
     ],
     "max_len": 14,
     "count": 5
@@ -1031,26 +1045,13 @@
     "en": "No logged days in this period",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:210",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:240",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:220",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:217",
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:203"
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:217",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:300",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:226",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:223",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:275"
     ],
     "max_len": 42,
-    "count": 5
-  },
-  {
-    "en": "Red bands = migraine days",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:199",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:232",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:209",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:206",
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:186"
-    ],
-    "max_len": 36,
     "count": 5
   },
   {
@@ -1110,7 +1111,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:394",
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:29",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:31",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:680",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:80",
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:225"
@@ -1158,19 +1159,6 @@
     "count": 5
   },
   {
-    "en": "View Full →",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:111",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:160",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:116",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:235",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:113"
-    ],
-    "max_len": 14,
-    "count": 5
-  },
-  {
     "en": "Voice",
     "class": "hard",
     "sites": [
@@ -1181,6 +1169,19 @@
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:436"
     ],
     "max_len": 14,
+    "count": 5
+  },
+  {
+    "en": "each line's average",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:375",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:438",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:364",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:361",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:528"
+    ],
+    "max_len": 22,
     "count": 5
   },
   {
@@ -1197,6 +1198,19 @@
     "count": 5
   },
   {
+    "en": "history average",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:375",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:438",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:364",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:361",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:528"
+    ],
+    "max_len": 18,
+    "count": 5
+  },
+  {
     "en": "  Based on all time data",
     "class": "soft",
     "sites": [
@@ -1206,18 +1220,6 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:974"
     ],
     "max_len": 34,
-    "count": 4
-  },
-  {
-    "en": "%1$s (avg: %2$s)",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:168",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:178",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:175",
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:166"
-    ],
-    "max_len": 19,
     "count": 4
   },
   {
@@ -1345,9 +1347,9 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PairGarminScreen.kt:98",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1303",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1387",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1237"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1225",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1309",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1159"
     ],
     "max_len": 14,
     "count": 4
@@ -1357,9 +1359,9 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PairGarminScreen.kt:98",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1303",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1387",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1235"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1225",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1309",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1157"
     ],
     "max_len": 14,
     "count": 4
@@ -1513,7 +1515,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/DataSettingsComponents.kt:91",
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:86",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:90",
       "app/src/main/java/com/migraineme/MenstruationTrackingHelper.kt:146",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:774"
     ],
@@ -1537,7 +1539,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:834",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:785",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:781",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1924",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1399"
     ],
@@ -1561,7 +1563,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:807",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:758",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:754",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1897",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1372"
     ],
@@ -1586,7 +1588,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:290",
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:511",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:305",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:301",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1589"
     ],
     "max_len": 18,
@@ -1721,6 +1723,17 @@
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:305"
     ],
     "max_len": 20,
+    "count": 3
+  },
+  {
+    "en": "%s days",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:455",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:518",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:169"
+    ],
+    "max_len": 14,
     "count": 3
   },
   {
@@ -2021,17 +2034,6 @@
     "count": 3
   },
   {
-    "en": "Dotted line = %s-day average",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:187",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:197",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:194"
-    ],
-    "max_len": 40,
-    "count": 3
-  },
-  {
     "en": "Drag to reorder",
     "class": "soft",
     "sites": [
@@ -2112,7 +2114,7 @@
     "en": "From",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:485",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:481",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1484",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:827"
     ],
@@ -2332,9 +2334,9 @@
     "en": "No data available",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:176",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:244",
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:130"
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:264",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:286",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:239"
     ],
     "max_len": 20,
     "count": 3
@@ -2344,7 +2346,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:227",
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:229",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:225",
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:99"
     ],
     "max_len": 33,
@@ -2356,7 +2358,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:464",
       "app/src/main/java/com/migraineme/MonitorRiskScreen.kt:236",
-      "app/src/main/java/com/migraineme/MonitorScreen.kt:1688"
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:1704"
     ],
     "max_len": 19,
     "count": 3
@@ -2464,7 +2466,7 @@
     "en": "Risk",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorScreen.kt:1681",
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:1697",
       "app/src/main/java/com/migraineme/HomeScreen.kt:541",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:117"
     ],
@@ -2824,6 +2826,17 @@
     "count": 3
   },
   {
+    "en": "today",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:511",
+      "app/src/main/java/com/migraineme/AttackForecastSheet.kt:74",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:133"
+    ],
+    "max_len": 14,
+    "count": 3
+  },
+  {
     "en": "user",
     "class": "hard",
     "sites": [
@@ -2832,17 +2845,6 @@
       "app/src/main/java/com/migraineme/ForumScreen.kt:588"
     ],
     "max_len": 14,
-    "count": 3
-  },
-  {
-    "en": "⚠️ Normalized 0-1 scale • Dotted = %s days avg",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:180",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:190",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:187"
-    ],
-    "max_len": 66,
     "count": 3
   },
   {
@@ -2879,7 +2881,7 @@
     "en": "%1$s of %2$s migraines",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:390",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:386",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1379"
     ],
     "max_len": 32,
@@ -2919,7 +2921,7 @@
     "en": "%s activities",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:237",
+      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:238",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1275"
     ],
     "max_len": 16,
@@ -2941,16 +2943,6 @@
     "sites": [
       "app/src/main/java/com/migraineme/NutritionDialogs.kt:334",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:435"
-    ],
-    "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "%s days",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:455",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:518"
     ],
     "max_len": 14,
     "count": 2
@@ -3003,16 +2995,6 @@
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2514"
     ],
     "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "%s-Day History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:155",
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:109"
-    ],
-    "max_len": 17,
     "count": 2
   },
   {
@@ -3099,8 +3081,8 @@
     "en": "About Connections",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1179",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1039"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1101",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:984"
     ],
     "max_len": 20,
     "count": 2
@@ -3679,7 +3661,7 @@
     "en": "Cognitive",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:55",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:57",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:725"
     ],
     "max_len": 14,
@@ -3769,7 +3751,7 @@
     "en": "Diet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:80",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:84",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:480"
     ],
     "max_len": 14,
@@ -3879,7 +3861,7 @@
     "en": "Environment",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:68",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:70",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:532"
     ],
     "max_len": 14,
@@ -3919,7 +3901,7 @@
     "en": "Filter",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:379",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:375",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1367"
     ],
     "max_len": 16,
@@ -3931,6 +3913,16 @@
     "sites": [
       "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:179",
       "app/src/main/java/com/migraineme/NutritionDialogs.kt:226"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Forecast",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:186",
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:477"
     ],
     "max_len": 14,
     "count": 2
@@ -4169,7 +4161,7 @@
     "en": "Migraine Timeline",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:224",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:220",
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:92"
     ],
     "max_len": 20,
@@ -4429,7 +4421,7 @@
     "en": "Physical Health",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:41",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:43",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:624"
     ],
     "max_len": 18,
@@ -4626,6 +4618,16 @@
     "count": 2
   },
   {
+    "en": "Risk History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:89",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:273"
+    ],
+    "max_len": 15,
+    "count": 2
+  },
+  {
     "en": "Risk today",
     "class": "hard",
     "sites": [
@@ -4806,6 +4808,16 @@
     "count": 2
   },
   {
+    "en": "Sleep History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:86",
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:165"
+    ],
+    "max_len": 16,
+    "count": 2
+  },
+  {
     "en": "Snack",
     "class": "hard",
     "sites": [
@@ -4969,7 +4981,7 @@
     "en": "Time Range",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:453",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:449",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1442"
     ],
     "max_len": 14,
@@ -4979,7 +4991,7 @@
     "en": "To",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:505",
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:501",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1504"
     ],
     "max_len": 14,
@@ -5406,16 +5418,6 @@
     "count": 2
   },
   {
-    "en": "today",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AttackForecastSheet.kt:74",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:133"
-    ],
-    "max_len": 14,
-    "count": 2
-  },
-  {
     "en": "today only",
     "class": "hard",
     "sites": [
@@ -5534,24 +5536,6 @@
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:524"
     ],
     "max_len": 15,
-    "count": 1
-  },
-  {
-    "en": "%1$s (avg %2$s)",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:263"
-    ],
-    "max_len": 18,
-    "count": 1
-  },
-  {
-    "en": "%1$s (avg: %2$s%3$s)",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:213"
-    ],
-    "max_len": 23,
     "count": 1
   },
   {
@@ -5720,7 +5704,7 @@
     "en": "%1$s · %2$s pts",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:672"
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:718"
     ],
     "max_len": 18,
     "count": 1
@@ -6041,15 +6025,6 @@
     "count": 1
   },
   {
-    "en": "%s metrics",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ManagePoolScreen.kt:365"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
     "en": "%s migraine days",
     "class": "hard",
     "sites": [
@@ -6311,48 +6286,21 @@
     "count": 1
   },
   {
+    "en": "%s-Day History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:148"
+    ],
+    "max_len": 17,
+    "count": 1
+  },
+  {
     "en": "%s-Day Medicines History",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1387"
     ],
     "max_len": 34,
-    "count": 1
-  },
-  {
-    "en": "%s-Day Mental Health History",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:106"
-    ],
-    "max_len": 40,
-    "count": 1
-  },
-  {
-    "en": "%s-Day Physical Health History",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:111"
-    ],
-    "max_len": 43,
-    "count": 1
-  },
-  {
-    "en": "%s-Day Risk History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:234"
-    ],
-    "max_len": 22,
-    "count": 1
-  },
-  {
-    "en": "%s-Day Sleep History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:108"
-    ],
-    "max_len": 23,
     "count": 1
   },
   {
@@ -6422,7 +6370,7 @@
     "en": "+ %s more",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:645"
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:691"
     ],
     "max_len": 14,
     "count": 1
@@ -6521,7 +6469,7 @@
     "en": "1 activity",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:237"
+      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:238"
     ],
     "max_len": 14,
     "count": 1
@@ -7184,15 +7132,6 @@
     "count": 1
   },
   {
-    "en": "Access requested!",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:687"
-    ],
-    "max_len": 20,
-    "count": 1
-  },
-  {
     "en": "Across %s attacks where you logged more than one pain entry",
     "class": "soft",
     "sites": [
@@ -7685,6 +7624,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:252"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Air quality",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
     "count": 1
   },
   {
@@ -8447,7 +8395,7 @@
     "en": "Are you sure you want to disconnect Garmin?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:885"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:830"
     ],
     "max_len": 62,
     "count": 1
@@ -8456,7 +8404,7 @@
     "en": "Are you sure you want to disconnect Oura?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:776"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:721"
     ],
     "max_len": 59,
     "count": 1
@@ -8465,7 +8413,7 @@
     "en": "Are you sure you want to disconnect Polar?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:831"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:776"
     ],
     "max_len": 60,
     "count": 1
@@ -8474,7 +8422,7 @@
     "en": "Are you sure you want to disconnect WHOOP?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:721"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:666"
     ],
     "max_len": 60,
     "count": 1
@@ -9344,15 +9292,6 @@
     "count": 1
   },
   {
-    "en": "Blue zone = forecast",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:195"
-    ],
-    "max_len": 23,
-    "count": 1
-  },
-  {
     "en": "Blurred vision",
     "class": "hard",
     "sites": [
@@ -9404,6 +9343,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Body signals",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
     "count": 1
   },
   {
@@ -10307,6 +10255,15 @@
     "count": 1
   },
   {
+    "en": "Cognitive History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:163"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Cold day",
     "class": "hard",
     "sites": [
@@ -10454,7 +10411,7 @@
     "en": "Confirm",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1589"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1511"
     ],
     "max_len": 14,
     "count": 1
@@ -10589,7 +10546,7 @@
     "en": "Connected Services",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1028"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:973"
     ],
     "max_len": 21,
     "count": 1
@@ -11462,7 +11419,7 @@
     "en": "Delete manual entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:285"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:321"
     ],
     "max_len": 22,
     "count": 1
@@ -11567,6 +11524,15 @@
     "count": 1
   },
   {
+    "en": "Diet History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:246"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
     "en": "Difficulty concentrating",
     "class": "hard",
     "sites": [
@@ -11633,7 +11599,7 @@
     "en": "Disconnect Garmin?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:884"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:829"
     ],
     "max_len": 21,
     "count": 1
@@ -11642,7 +11608,7 @@
     "en": "Disconnect Oura?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:775"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:720"
     ],
     "max_len": 19,
     "count": 1
@@ -11651,7 +11617,7 @@
     "en": "Disconnect Polar?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:830"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:775"
     ],
     "max_len": 20,
     "count": 1
@@ -11660,7 +11626,7 @@
     "en": "Disconnect WHOOP?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:720"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:665"
     ],
     "max_len": 20,
     "count": 1
@@ -11669,7 +11635,7 @@
     "en": "Disconnect?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:947"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:892"
     ],
     "max_len": 14,
     "count": 1
@@ -11678,7 +11644,7 @@
     "en": "Disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1001"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:946"
     ],
     "max_len": 16,
     "count": 1
@@ -11999,15 +11965,6 @@
     "count": 1
   },
   {
-    "en": "Dotted line = last %s days average",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:224"
-    ],
-    "max_len": 49,
-    "count": 1
-  },
-  {
     "en": "Download Report",
     "class": "hard",
     "sites": [
@@ -12182,7 +12139,7 @@
     "en": "Edit Environment Data",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:270"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:306"
     ],
     "max_len": 31,
     "count": 1
@@ -12563,6 +12520,15 @@
       "app/src/main/java/com/migraineme/OnboardingPages.kt:154"
     ],
     "max_len": 72,
+    "count": 1
+  },
+  {
+    "en": "Energy and macros",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 23,
     "count": 1
   },
   {
@@ -13316,7 +13282,7 @@
     "en": "Filter Migraines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:386"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:382"
     ],
     "max_len": 19,
     "count": 1
@@ -13334,7 +13300,7 @@
     "en": "Filters (%s)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:385"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:381"
     ],
     "max_len": 15,
     "count": 1
@@ -13544,15 +13510,6 @@
       "app/src/main/java/com/migraineme/NutritionBackfillUtility.kt:24"
     ],
     "max_len": 28,
-    "count": 1
-  },
-  {
-    "en": "Forecast",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:186"
-    ],
-    "max_len": 14,
     "count": 1
   },
   {
@@ -13928,7 +13885,7 @@
     "en": "Garmin connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:875"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:820"
     ],
     "max_len": 34,
     "count": 1
@@ -13937,7 +13894,7 @@
     "en": "Garmin disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:917"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:862"
     ],
     "max_len": 23,
     "count": 1
@@ -14240,6 +14197,15 @@
     "count": 1
   },
   {
+    "en": "Grass pollen",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
     "en": "Group regimens together (e.g. titration of the same drug) so the chart spans the journey.",
     "class": "soft",
     "sites": [
@@ -14405,7 +14371,7 @@
     "en": "Health Connect",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1288"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1210"
     ],
     "max_len": 17,
     "count": 1
@@ -14414,7 +14380,7 @@
     "en": "Health Connect not available.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1050"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:995"
     ],
     "max_len": 42,
     "count": 1
@@ -14423,25 +14389,25 @@
     "en": "Health Connect wearables connected!",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:277"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:269"
     ],
     "max_len": 50,
     "count": 1
   },
   {
-    "en": "Health Connect, Oura, Polar, Garmin",
+    "en": "Health Connect, WHOOP, Oura, Polar, Garmin",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/OnboardingScreen.kt:686"
     ],
-    "max_len": 50,
+    "max_len": 60,
     "count": 1
   },
   {
     "en": "Health Data Sync",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:109"
+      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:111"
     ],
     "max_len": 19,
     "count": 1
@@ -14702,7 +14668,7 @@
     "en": "History + Forecast",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:109"
+      "app/src/main/java/com/migraineme/WeatherGraph.kt:148"
     ],
     "max_len": 21,
     "count": 1
@@ -15242,7 +15208,7 @@
     "en": "Humidity (%)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:275"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:311"
     ],
     "max_len": 15,
     "count": 1
@@ -17321,7 +17287,7 @@
     "en": "Menstruation connected.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:264"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:256"
     ],
     "max_len": 33,
     "count": 1
@@ -17351,6 +17317,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Metrics",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/GraphCardParts.kt:229"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -17696,12 +17671,30 @@
     "count": 1
   },
   {
+    "en": "Mind",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Mindfulness",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Minerals",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
     "count": 1
   },
   {
@@ -17888,7 +17881,7 @@
     "en": "More frequency and trends →",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:213"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:209"
     ],
     "max_len": 39,
     "count": 1
@@ -18455,7 +18448,7 @@
     "en": "No cognitive data available",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:127"
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:182"
     ],
     "max_len": 39,
     "count": 1
@@ -18725,7 +18718,7 @@
     "en": "No migraines match filters",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:230"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:226"
     ],
     "max_len": 37,
     "count": 1
@@ -18779,7 +18772,7 @@
     "en": "No physical health data available",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:137"
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:191"
     ],
     "max_len": 47,
     "count": 1
@@ -18923,7 +18916,7 @@
     "en": "No sleep data available",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:134"
+      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:188"
     ],
     "max_len": 33,
     "count": 1
@@ -19004,9 +18997,9 @@
     "en": "Noise",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "group:metric-checklist"
     ],
-    "max_len": 14,
+    "max_len": 20,
     "count": 1
   },
   {
@@ -19409,7 +19402,7 @@
     "en": "Nutrition connected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:239"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:231"
     ],
     "max_len": 23,
     "count": 1
@@ -19679,7 +19672,7 @@
     "en": "Oura connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:766"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:711"
     ],
     "max_len": 32,
     "count": 1
@@ -19688,7 +19681,7 @@
     "en": "Oura disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:808"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:753"
     ],
     "max_len": 21,
     "count": 1
@@ -19811,6 +19804,15 @@
     "count": 1
   },
   {
+    "en": "Ozone",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 12,
+    "count": 1
+  },
+  {
     "en": "PDF error: %s",
     "class": "hard",
     "sites": [
@@ -19826,6 +19828,24 @@
       "app/src/main/java/com/migraineme/FreeTrialGiftScreen.kt:77"
     ],
     "max_len": 39,
+    "count": 1
+  },
+  {
+    "en": "PM10",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 8,
+    "count": 1
+  },
+  {
+    "en": "PM2.5",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 8,
     "count": 1
   },
   {
@@ -20450,6 +20470,15 @@
     "count": 1
   },
   {
+    "en": "Physical Health History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:168"
+    ],
+    "max_len": 26,
+    "count": 1
+  },
+  {
     "en": "Physical activity and hormonal triggers",
     "class": "hard",
     "sites": [
@@ -20642,7 +20671,7 @@
     "en": "Polar connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:821"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:766"
     ],
     "max_len": 33,
     "count": 1
@@ -20651,9 +20680,18 @@
     "en": "Polar disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:863"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:808"
     ],
     "max_len": 22,
+    "count": 1
+  },
+  {
+    "en": "Pollen",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 12,
     "count": 1
   },
   {
@@ -20948,7 +20986,7 @@
     "en": "Pressure (hPa)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:274"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:310"
     ],
     "max_len": 17,
     "count": 1
@@ -21407,7 +21445,7 @@
     "en": "Reading data from Health Connect...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:129"
+      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:131"
     ],
     "max_len": 50,
     "count": 1
@@ -21791,28 +21829,10 @@
     "count": 1
   },
   {
-    "en": "Request Access",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:694"
-    ],
-    "max_len": 17,
-    "count": 1
-  },
-  {
-    "en": "Requesting…",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:694"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
     "en": "Requires location",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingQuestions.kt:316"
+      "app/src/main/java/com/migraineme/OnboardingQuestions.kt:318"
     ],
     "max_len": 20,
     "count": 1
@@ -21821,7 +21841,7 @@
     "en": "Requires wearable",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingQuestions.kt:316"
+      "app/src/main/java/com/migraineme/OnboardingQuestions.kt:318"
     ],
     "max_len": 20,
     "count": 1
@@ -22169,15 +22189,6 @@
     "count": 1
   },
   {
-    "en": "Risk History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:89"
-    ],
-    "max_len": 15,
-    "count": 1
-  },
-  {
     "en": "Risk gauge",
     "class": "hard",
     "sites": [
@@ -22511,6 +22522,15 @@
     "count": 1
   },
   {
+    "en": "Screen use",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Screens late at night",
     "class": "soft",
     "sites": [
@@ -22586,7 +22606,7 @@
     "en": "Search models",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1538"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1460"
     ],
     "max_len": 16,
     "count": 1
@@ -22769,6 +22789,15 @@
       "app/src/main/java/com/migraineme/NutritionConfigScreen.kt:116"
     ],
     "max_len": 19,
+    "count": 1
+  },
+  {
+    "en": "Select Metrics",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1375"
+    ],
+    "max_len": 17,
     "count": 1
   },
   {
@@ -23423,7 +23452,7 @@
     "en": "Shown on your Monitor badges per Garmin's brand guidelines.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1527"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1449"
     ],
     "max_len": 85,
     "count": 1
@@ -23600,15 +23629,6 @@
     "count": 1
   },
   {
-    "en": "Sleep History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:86"
-    ],
-    "max_len": 16,
-    "count": 1
-  },
-  {
     "en": "Sleep Score",
     "class": "hard",
     "sites": [
@@ -23768,6 +23788,15 @@
       "DataSettingsSections.kt:table"
     ],
     "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Sleep times",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
     "count": 1
   },
   {
@@ -24800,7 +24829,7 @@
     "en": "Syncing Health Data",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:128"
+      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:130"
     ],
     "max_len": 22,
     "count": 1
@@ -24809,7 +24838,7 @@
     "en": "Syncing health data from Health Connect",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:112"
+      "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:114"
     ],
     "max_len": 56,
     "count": 1
@@ -25241,7 +25270,7 @@
     "en": "Tap to toggle metric lines. Highlighted chips were logged with this attack.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:308"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:304"
     ],
     "max_len": 108,
     "count": 1
@@ -25934,7 +25963,7 @@
     "en": "This will stop syncing Health Connect data. To fully disconnect, revoke permissions in Health Connect settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:948"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:893"
     ],
     "max_len": 160,
     "count": 1
@@ -26516,6 +26545,15 @@
     "count": 1
   },
   {
+    "en": "Tree pollen",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
     "en": "Tremor",
     "class": "hard",
     "sites": [
@@ -26597,6 +26635,15 @@
     "count": 1
   },
   {
+    "en": "Trigger exposure",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 22,
+    "count": 1
+  },
+  {
     "en": "Trigger logged!",
     "class": "hard",
     "sites": [
@@ -26663,7 +26710,7 @@
     "en": "Triggers today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorScreen.kt:1718"
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:1734"
     ],
     "max_len": 17,
     "count": 1
@@ -26861,7 +26908,7 @@
     "en": "UV Index",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:277"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:313"
     ],
     "max_len": 14,
     "count": 1
@@ -27554,7 +27601,7 @@
     "en": "View →",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:242"
+      "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:243"
     ],
     "max_len": 14,
     "count": 1
@@ -27749,6 +27796,15 @@
     "count": 1
   },
   {
+    "en": "Vitamins",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Vivid dreams",
     "class": "hard",
     "sites": [
@@ -27821,15 +27877,6 @@
     "count": 1
   },
   {
-    "en": "WHOOP Integration",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:666"
-    ],
-    "max_len": 20,
-    "count": 1
-  },
-  {
     "en": "WHOOP auth error: %1$s",
     "class": "soft",
     "sites": [
@@ -27851,7 +27898,7 @@
     "en": "WHOOP connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:711"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:656"
     ],
     "max_len": 33,
     "count": 1
@@ -27860,18 +27907,9 @@
     "en": "WHOOP disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:753"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:698"
     ],
     "max_len": 22,
-    "count": 1
-  },
-  {
-    "en": "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:672"
-    ],
-    "max_len": 139,
     "count": 1
   },
   {
@@ -28217,6 +28255,15 @@
     "count": 1
   },
   {
+    "en": "Weather",
+    "class": "hard",
+    "sites": [
+      "group:metric-checklist"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Weather & surroundings",
     "class": "soft",
     "sites": [
@@ -28295,6 +28342,15 @@
       "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "Weed pollen",
+    "class": "soft",
+    "sites": [
+      "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+    ],
+    "max_len": 18,
     "count": 1
   },
   {
@@ -29300,7 +29356,7 @@
     "en": "Which Garmin device?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1522"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1444"
     ],
     "max_len": 23,
     "count": 1
@@ -29471,7 +29527,7 @@
     "en": "Wind Speed (m/s)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:276"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:312"
     ],
     "max_len": 19,
     "count": 1
@@ -29498,7 +29554,7 @@
     "en": "Window around migraine",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:294"
+      "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:290"
     ],
     "max_len": 32,
     "count": 1
@@ -30155,7 +30211,7 @@
     "en": "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorScreen.kt:1682"
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:1698"
     ],
     "max_len": 1135,
     "count": 1
@@ -30302,15 +30358,6 @@
       "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:214"
     ],
     "max_len": 84,
-    "count": 1
-  },
-  {
-    "en": "Your request is being reviewed. We’ll enable WHOOP for your account shortly.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:670"
-    ],
-    "max_len": 110,
     "count": 1
   },
   {
@@ -31169,6 +31216,15 @@
     "count": 1
   },
   {
+    "en": "forecast",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/GraphCardParts.kt:207"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "free days so far this month",
     "class": "soft",
     "sites": [
@@ -31574,6 +31630,15 @@
     "count": 1
   },
   {
+    "en": "migraine days",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/GraphCardParts.kt:200"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
     "en": "migraine specialist",
     "class": "hard",
     "sites": [
@@ -31739,7 +31804,7 @@
     "en": "onset",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2867"
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2800"
     ],
     "max_len": 14,
     "count": 1
@@ -32969,28 +33034,10 @@
     "count": 1
   },
   {
-    "en": "⚠️ Normalized 0-1 scale • %s",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/WeatherGraph.kt:175"
-    ],
-    "max_len": 40,
-    "count": 1
-  },
-  {
-    "en": "⚠️ Normalized 0-1 scale • Dotted = last %s days avg",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:221"
-    ],
-    "max_len": 73,
-    "count": 1
-  },
-  {
     "en": "✎ Edit manual entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:482"
+      "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:489"
     ],
     "max_len": 22,
     "count": 1

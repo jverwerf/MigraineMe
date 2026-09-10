@@ -73,12 +73,12 @@ private val sleepMetricGroups = listOf(
         SleepCardConfig.METRIC_EFFICIENCY,
         SleepCardConfig.METRIC_DISTURBANCES
     ),
-    "Stages" to listOf(
+    "Sleep stages" to listOf(
         SleepCardConfig.METRIC_STAGES_DEEP,
         SleepCardConfig.METRIC_STAGES_REM,
         SleepCardConfig.METRIC_STAGES_LIGHT
     ),
-    "Times" to listOf(
+    "Sleep times" to listOf(
         SleepCardConfig.METRIC_FELL_ASLEEP,
         SleepCardConfig.METRIC_WOKE_UP
     )

@@ -156,12 +156,8 @@
     "line": "        Text(t(\"Add → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", adds.first, adds.second, adds.third))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:273",
+    "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:309",
     "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:471",
-    "line": "                                    \"${entry.value}${if (entry.unit.isNotEmpty()) \" ${entry.unit}\" else \"\"}\","
   },
   {
     "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1307",
@@ -212,15 +208,15 @@
     "line": "            t(\"%1\\$s logged • %2\\$s types\", spider.totalLogged, spider.axes.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:390",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:386",
     "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:774",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:770",
     "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:781",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:777",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
@@ -412,14 +408,6 @@
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:168",
-    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatMentalValue(avg, unit)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:372",
-    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
-  },
-  {
     "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:249",
     "line": "            tSync(\"%1\\$s suggested changes to your profile. Tap to review.\").replace(\"%1\\$s\", count.toString())"
   },
@@ -596,14 +584,6 @@
     "line": "                            t(\"1 serving = %1\\$s %2\\$s\", food.servingSize.toInt(), food.servingSizeUnit),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:213",
-    "line": "                            Text(t(\"%1\\$s (avg: %2\\$s%3\\$s)\", label, avg, unit), color = color, style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:384",
-    "line": "            t(\"Select Metrics\") + (if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\"),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:435",
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
@@ -618,14 +598,6 @@
   {
     "site": "app/src/main/java/com/migraineme/PairGarminScreen.kt:213",
     "line": "                    if (remaining > 0) t(\"Expires in %1\\$s:%2\\$s\", mins, \"%02d\".format(secs)) else t(\"Expired\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:178",
-    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatPhysicalValue(avg, unit)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:359",
-    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
   },
   {
     "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:135",
@@ -760,16 +732,8 @@
     "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:263",
-    "line": "                            Text(t(\"%1\\$s (avg %2\\$s)\", t(chip.label), fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:672",
+    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:718",
     "line": "                            Text(t(\"%1\\$s · %2\\$s pts\", bar.trigger.severity.uppercase(), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:694",
-    "line": "        Text(t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)"
   },
   {
     "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:23",
@@ -798,14 +762,6 @@
   {
     "site": "app/src/main/java/com/migraineme/ShopScreen.kt:367",
     "line": "                t(\"We earn a commission on links to devices.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:175",
-    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatSleepValue(avg, unit)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:356",
-    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
   },
   {
     "site": "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:50",
@@ -882,13 +838,5 @@
   {
     "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:116",
     "line": "                    t(\"be added to your journal when conditions are met.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/WeatherGraph.kt:166",
-    "line": "                            Text(t(\"%1\\$s (avg: %2\\$s)\", label, formatValue(avg, unit)), color = color, style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/WeatherGraph.kt:378",
-    "line": "            t(\"Select Metrics\") + (if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\"),"
   }
 ]
