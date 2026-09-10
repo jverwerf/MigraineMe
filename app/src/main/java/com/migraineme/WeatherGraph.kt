@@ -2,6 +2,10 @@ package com.migraineme
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -15,8 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -53,8 +56,35 @@ private val metricColors = mapOf(
     WeatherCardConfig.METRIC_ALTITUDE_CHANGE to Color(0xFFBA68C8)
 )
 
+// The selector's grouping. Same metrics, same order as
+// WeatherCardConfig.ALL_WEATHER_METRICS, split into the three families they
+// come from so a fifteen-row list stays readable.
+private val weatherMetricGroups = listOf(
+    "Weather" to listOf(
+        WeatherCardConfig.METRIC_TEMPERATURE,
+        WeatherCardConfig.METRIC_PRESSURE,
+        WeatherCardConfig.METRIC_HUMIDITY,
+        WeatherCardConfig.METRIC_WIND_SPEED,
+        WeatherCardConfig.METRIC_UV_INDEX,
+        WeatherCardConfig.METRIC_THUNDERSTORM
+    ),
+    "Location" to listOf(
+        WeatherCardConfig.METRIC_ALTITUDE,
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE
+    ),
+    "Air quality" to listOf(
+        WeatherCardConfig.METRIC_POLLEN,
+        WeatherCardConfig.METRIC_POLLEN_TREE,
+        WeatherCardConfig.METRIC_POLLEN_GRASS,
+        WeatherCardConfig.METRIC_POLLEN_WEED,
+        WeatherCardConfig.METRIC_PM25,
+        WeatherCardConfig.METRIC_PM10,
+        WeatherCardConfig.METRIC_OZONE
+    )
+)
+
 // Get metric value from day data
-private fun getDayValue(day: WeatherDayData, metric: String): Float {
+private fun getDayValue(day: WeatherDayData, metric: String): Float? {
     return when (metric) {
         WeatherCardConfig.METRIC_TEMPERATURE -> day.tempMean.toFloat()
         WeatherCardConfig.METRIC_PRESSURE -> day.pressureMean.toFloat()
@@ -63,6 +93,15 @@ private fun getDayValue(day: WeatherDayData, metric: String): Float {
         WeatherCardConfig.METRIC_UV_INDEX -> day.uvIndexMax.toFloat()
         WeatherCardConfig.METRIC_ALTITUDE -> (day.altitudeMaxM ?: 0.0).toFloat()
         WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> (day.altitudeChangeM ?: 0.0).toFloat()
+        // Pollen + air quality can be absent for a covered day; null keeps the
+        // point off the line rather than dropping it to zero.
+        WeatherCardConfig.METRIC_POLLEN -> day.pollenOverall?.toFloat()
+        WeatherCardConfig.METRIC_POLLEN_TREE -> day.pollenTree?.toFloat()
+        WeatherCardConfig.METRIC_POLLEN_GRASS -> day.pollenGrass?.toFloat()
+        WeatherCardConfig.METRIC_POLLEN_WEED -> day.pollenWeed?.toFloat()
+        WeatherCardConfig.METRIC_PM25 -> day.pm25Mean?.toFloat()
+        WeatherCardConfig.METRIC_PM10 -> day.pm10Mean?.toFloat()
+        WeatherCardConfig.METRIC_OZONE -> day.ozoneMax?.toFloat()
         else -> 0f
     }
 }
@@ -109,13 +148,83 @@ fun WeatherHistoryGraph(
     val title = if (forecastStartDate != null) t("History + Forecast") else t("%s-Day History", days)
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Text(
-            title,
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-        )
+        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val rangeLabel = if (historyData.isNotEmpty()) {
+            val from = LocalDate.parse(historyData.first().date).format(dateFmt)
+            val to = LocalDate.parse(historyData.last().date).format(dateFmt)
+            "$from – $to"
+        } else ""
 
-        Spacer(Modifier.height(8.dp))
+        // A metric's own average over the days that carry data. Feeds both the
+        // header reading and the value column of the checklist.
+        fun averageOf(metric: String): Float? {
+            val values = daysWithData.mapNotNull { getDayValue(it, metric) }
+            return if (values.isEmpty()) null else values.average().toFloat()
+        }
+
+        // What a checklist row shows on the right. Thunderstorm is a flag, so
+        // it counts days rather than averaging to a meaningless decimal, and a
+        // missing altitude stays "-" instead of the 0.0 getDayValue coerces to.
+        val stormDays = daysWithData.count { it.isThunderstormDay }
+        val stormDaysText = if (stormDays == 0) null else t("%s days", stormDays)
+
+        fun rowValue(metric: String): String? {
+            val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
+            return when (metric) {
+                WeatherCardConfig.METRIC_THUNDERSTORM -> stormDaysText
+                WeatherCardConfig.METRIC_ALTITUDE -> {
+                    val values = daysWithData.mapNotNull { it.altitudeMaxM?.toFloat() }
+                    if (values.isEmpty()) null else formatValue(values.average().toFloat(), unit)
+                }
+                WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> {
+                    val values = daysWithData.mapNotNull { it.altitudeChangeM?.toFloat() }
+                    if (values.isEmpty()) null else formatValue(values.average().toFloat(), unit)
+                }
+                else -> averageOf(metric)?.let { formatValue(it, unit) }
+            }
+        }
+
+        val singleMetric = selectedMetrics.singleOrNull()
+
+        // Header. One metric reads as its own average in its own unit; two or
+        // more share a normalised plot, where no single number is honest, so
+        // the reading states the scale instead.
+        val subtitle: String
+        val readout: String
+        val readoutUnit: String
+        val readoutColor: Color
+        val readoutCaption: String
+        if (singleMetric != null) {
+            val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[singleMetric] ?: singleMetric)
+            val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[singleMetric] ?: ""
+            val avg = averageOf(singleMetric)
+            subtitle = listOf(t(label), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = if (avg != null) formatValue(avg, "") else "-"
+            readoutUnit = unit
+            readoutColor = metricColors[singleMetric] ?: AppTheme.AccentPurple
+            readoutCaption = t("%s-day average", days)
+        } else if (selectedMetrics.size >= 2) {
+            subtitle = listOf(t("%s metrics", selectedMetrics.size), rangeLabel).filter { it.isNotEmpty() }.joinToString(" · ")
+            readout = "0–1"
+            readoutUnit = ""
+            readoutColor = GraphNormalisedColor
+            readoutCaption = t("normalised scale")
+        } else {
+            subtitle = rangeLabel
+            readout = "-"
+            readoutUnit = ""
+            readoutColor = AppTheme.SubtleTextColor
+            readoutCaption = ""
+        }
+
+        GraphCardHeader(
+            title = title,
+            subtitle = subtitle,
+            readout = readout,
+            readoutUnit = readoutUnit,
+            readoutColor = readoutColor,
+            readoutCaption = readoutCaption
+        )
 
         if (isLoading) {
             Row(
@@ -142,61 +251,24 @@ fun WeatherHistoryGraph(
                 textAlign = TextAlign.Center
             )
         } else {
-            // Legend
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                selectedMetrics.forEach { metric ->
-                    val color = metricColors[metric] ?: AppTheme.AccentPurple
-                    val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
-                    val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-                    val values = daysWithData.map { getDayValue(it, metric) }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(8.dp)) { drawCircle(color) }
-                        Spacer(Modifier.width(4.dp))
-                        if (isNormalized) {
-                            val minVal = allTimeMin[metric] ?: 0f
-                            val maxVal = allTimeMax[metric] ?: 1f
-                            Text("$label [${formatValue(minVal, unit)}-${formatValue(maxVal, unit)}]", color = color, style = MaterialTheme.typography.labelSmall)
-                        } else {
-                            val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text(t("%1\$s (avg: %2\$s)", label, formatValue(avg, unit)), color = color, style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
-
-            val avgLabel = if (forecastStartDate != null) "Dotted = history average" else "Dotted line = $days-day average"
+            // Per-metric ranges, the only way to read a normalised line back to
+            // real units.
             if (isNormalized) {
-                Spacer(Modifier.height(4.dp))
-                Text(t("⚠️ Normalized 0-1 scale • %s", avgLabel), color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
-            } else if (daysWithData.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                Text(avgLabel, color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(10.dp))
+                MetricRangeKeys(
+                    selectedMetrics.map { metric ->
+                        val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
+                        val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
+                        Triple(
+                            t(label),
+                            "${formatValue(allTimeMin[metric] ?: 0f, unit)}–${formatValue(allTimeMax[metric] ?: 1f, unit)}",
+                            metricColors[metric] ?: AppTheme.AccentPurple
+                        )
+                    }
+                )
             }
 
-            if (migraineDates.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
-                    Spacer(Modifier.width(4.dp))
-                    Text(t("Red bands = migraine days"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
-                }
-            }
-
-            if (forecastStartDate != null) {
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFF4FC3F7).copy(alpha = 0.15f)) }
-                    Spacer(Modifier.width(4.dp))
-                    Text(t("Blue zone = forecast"), color = Color(0xFF4FC3F7), style = MaterialTheme.typography.labelSmall)
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp))
 
             if (daysWithData.isEmpty()) {
                 Text(
@@ -206,7 +278,7 @@ fun WeatherHistoryGraph(
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             } else {
-                val yAxisWidth = 50.dp
+                val yAxisWidth = 44.dp
 
                 // Y-axis values depend on normalization
                 val yTop: String
@@ -219,52 +291,59 @@ fun WeatherHistoryGraph(
                     yBot = "0.0"
                 } else {
                     val metric = selectedMetrics.first()
-                    val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-                    val values = daysWithData.map { getDayValue(it, metric) }
+                    val values = daysWithData.mapNotNull { getDayValue(it, metric) }
                     val max = values.maxOrNull() ?: 1f
                     val min = values.minOrNull() ?: 0f
-                    yTop = formatValue(max, unit)
-                    yMid = formatValue((max + min) / 2, unit)
-                    yBot = formatValue(min, unit)
+                    yTop = formatValue(max, "")
+                    yMid = formatValue((max + min) / 2, "")
+                    yBot = formatValue(min, "")
                 }
 
-                Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-                    // Y-axis labels
-                    Column(
-                        modifier = Modifier.width(yAxisWidth).fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    }
+                val forecastIdx = if (forecastStartDate != null) {
+                    historyData.indexOfFirst { it.date >= forecastStartDate }
+                } else -1
 
-                    // Graph canvas
-                    Canvas(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                        val padding = 8.dp.toPx()
-                        val graphWidth = size.width - padding * 2
-                        val graphHeight = size.height - padding * 2
-                        val dashWidth = 6.dp.toPx()
-                        val gapWidth = 4.dp.toPx()
+                Row(modifier = Modifier.fillMaxWidth().height(168.dp)) {
+                    // Graph canvas. The y labels sit on the right so the line
+                    // starts at the card edge instead of behind a gutter.
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val padding = 8.dp.toPx()
+                            val graphWidth = size.width - padding * 2
+                            val graphHeight = size.height - padding * 2
+                            val dashWidth = 6.dp.toPx()
+                            val gapWidth = 4.dp.toPx()
 
-                        // Draw migraine bands (behind everything)
-                        with(MigraineOverlayHelper) {
-                            drawMigraineBands(
-                                dateList = historyData.map { it.date },
-                                migraineDates = migraineDates,
-                                padding = padding,
-                                graphWidth = graphWidth,
-                                graphHeight = graphHeight
-                            )
-                        }
+                            // Gridlines at the three y values
+                            listOf(0f, 0.5f, 1f).forEach { f ->
+                                val y = padding + graphHeight * f
+                                drawLine(
+                                    Color.White.copy(alpha = 0.07f),
+                                    Offset(padding, y),
+                                    Offset(size.width - padding, y),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
 
-                        // Draw forecast divider line
-                        if (forecastStartDate != null && historyData.isNotEmpty()) {
-                            val forecastIdx = historyData.indexOfFirst { it.date >= forecastStartDate }
+                            // Draw migraine bands (behind everything)
+                            with(MigraineOverlayHelper) {
+                                drawMigraineBands(
+                                    dateList = historyData.map { it.date },
+                                    migraineDates = migraineDates,
+                                    padding = padding,
+                                    graphWidth = graphWidth,
+                                    graphHeight = graphHeight
+                                )
+                            }
+
+                            // Forecast zone and the divider that opens it
                             if (forecastIdx > 0) {
-                                // Position between the last history day and first forecast day
                                 val divX = padding + ((forecastIdx - 0.5f) / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                // Dashed vertical line
+                                drawRect(
+                                    Color(0xFF4FC3F7).copy(alpha = 0.10f),
+                                    topLeft = Offset(divX, padding),
+                                    size = androidx.compose.ui.geometry.Size(size.width - padding - divX, graphHeight)
+                                )
                                 var yPos = padding
                                 while (yPos < padding + graphHeight) {
                                     drawLine(
@@ -275,147 +354,195 @@ fun WeatherHistoryGraph(
                                     )
                                     yPos += dashWidth + gapWidth
                                 }
-                                // "Forecast →" label background
-                                drawRect(
-                                    Color(0xFF4FC3F7).copy(alpha = 0.08f),
-                                    topLeft = Offset(divX, padding),
-                                    size = androidx.compose.ui.geometry.Size(size.width - padding - divX, graphHeight)
-                                )
-                            }
-                        }
-
-                        selectedMetrics.forEach { metric ->
-                            val color = metricColors[metric] ?: Color.White
-
-                            // Get indexed values for X positioning
-                            val indexedValues = historyData.mapIndexedNotNull { i, day ->
-                                if (hasData(day)) i to getDayValue(day, metric) else null
                             }
 
-                            if (indexedValues.isEmpty()) return@forEach
+                            selectedMetrics.forEach { metric ->
+                                val color = metricColors[metric] ?: Color.White
 
-                            val values = indexedValues.map { it.second }
+                                // Get indexed values for X positioning
+                                val indexedValues = historyData.mapIndexedNotNull { i, day ->
+                                    if (hasData(day)) getDayValue(day, metric)?.let { i to it } else null
+                                }
 
-                            // For single metric: use window min/max (actual values)
-                            // For multi metric: use all-time min/max (normalized)
-                            val minVal: Float
-                            val maxVal: Float
-                            if (isNormalized) {
-                                minVal = allTimeMin[metric] ?: 0f
-                                maxVal = (allTimeMax[metric] ?: 1f).coerceAtLeast(minVal + 0.1f)
-                            } else {
-                                minVal = values.minOrNull() ?: 0f
-                                maxVal = (values.maxOrNull() ?: 1f).coerceAtLeast(minVal + 0.1f)
-                            }
-                            val range = maxVal - minVal
+                                if (indexedValues.isEmpty()) return@forEach
 
-                            // Normalize values to 0-1 scale for plotting
-                            val plotPoints = indexedValues.map { (idx, value) ->
-                                idx to ((value - minVal) / range).coerceIn(0f, 1f)
-                            }
+                                val values = indexedValues.map { it.second }
 
-                            // Draw dotted average line (always show)
-                            // When forecast is shown, only average history points (not forecast)
-                            if (plotPoints.isNotEmpty()) {
-                                val avgPoints = if (forecastStartDate != null) {
-                                    val forecastIdx = historyData.indexOfFirst { it.date >= forecastStartDate }
-                                    if (forecastIdx > 0) plotPoints.filter { it.first < forecastIdx }
-                                    else plotPoints
-                                } else plotPoints
-                                val avgNormalized = (if (avgPoints.isNotEmpty()) avgPoints else plotPoints).map { it.second }.average().toFloat()
-                                val avgY = padding + graphHeight - (avgNormalized * graphHeight)
+                                // For single metric: use window min/max (actual values)
+                                // For multi metric: use all-time min/max (normalized)
+                                val minVal: Float
+                                val maxVal: Float
+                                if (isNormalized) {
+                                    minVal = allTimeMin[metric] ?: 0f
+                                    maxVal = (allTimeMax[metric] ?: 1f).coerceAtLeast(minVal + 0.1f)
+                                } else {
+                                    minVal = values.minOrNull() ?: 0f
+                                    maxVal = (values.maxOrNull() ?: 1f).coerceAtLeast(minVal + 0.1f)
+                                }
+                                val range = maxVal - minVal
 
-                                var x = padding
-                                while (x < size.width - padding) {
-                                    drawLine(
-                                        color.copy(alpha = 0.5f),
-                                        Offset(x, avgY),
-                                        Offset((x + dashWidth).coerceAtMost(size.width - padding), avgY),
-                                        strokeWidth = 1.5.dp.toPx()
+                                // Normalize values to 0-1 scale for plotting
+                                val plotPoints = indexedValues.map { (idx, value) ->
+                                    idx to ((value - minVal) / range).coerceIn(0f, 1f)
+                                }
+
+                                fun xOf(dayIdx: Int) =
+                                    padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                fun yOf(normalized: Float) = padding + graphHeight - (normalized * graphHeight)
+
+                                // Soft fill under a single line, so the plot has
+                                // some depth without another colour in play.
+                                if (!isNormalized && plotPoints.size > 1) {
+                                    val fill = Path()
+                                    fill.moveTo(xOf(plotPoints.first().first), padding + graphHeight)
+                                    plotPoints.forEach { (dayIdx, v) -> fill.lineTo(xOf(dayIdx), yOf(v)) }
+                                    fill.lineTo(xOf(plotPoints.last().first), padding + graphHeight)
+                                    fill.close()
+                                    drawPath(
+                                        fill,
+                                        Brush.verticalGradient(
+                                            0f to color.copy(alpha = 0.26f),
+                                            1f to color.copy(alpha = 0f),
+                                            startY = padding,
+                                            endY = padding + graphHeight
+                                        )
                                     )
-                                    x += dashWidth + gapWidth
                                 }
-                            }
 
-                            // Draw line
-                            if (plotPoints.size > 1) {
-                                val path = Path()
-                                plotPoints.forEachIndexed { i, (dayIdx, normalizedValue) ->
-                                    val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                    val y = padding + graphHeight - (normalizedValue * graphHeight)
-                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                // Draw dotted average line (always show)
+                                // When forecast is shown, only average history points (not forecast)
+                                if (plotPoints.isNotEmpty()) {
+                                    val avgPoints = if (forecastIdx > 0) {
+                                        plotPoints.filter { it.first < forecastIdx }.ifEmpty { plotPoints }
+                                    } else plotPoints
+                                    val avgNormalized = avgPoints.map { it.second }.average().toFloat()
+                                    val avgY = yOf(avgNormalized)
+
+                                    var x = padding
+                                    while (x < size.width - padding) {
+                                        drawLine(
+                                            color.copy(alpha = 0.5f),
+                                            Offset(x, avgY),
+                                            Offset((x + dashWidth).coerceAtMost(size.width - padding), avgY),
+                                            strokeWidth = 1.5.dp.toPx()
+                                        )
+                                        x += dashWidth + gapWidth
+                                    }
                                 }
-                                drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                            }
 
-                            // Draw dots
-                            plotPoints.forEach { (dayIdx, normalizedValue) ->
-                                val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                val y = padding + graphHeight - (normalizedValue * graphHeight)
-                                drawCircle(color, 4.dp.toPx(), Offset(x, y))
+                                // Draw line
+                                if (plotPoints.size > 1) {
+                                    val path = Path()
+                                    plotPoints.forEachIndexed { i, (dayIdx, normalizedValue) ->
+                                        val x = xOf(dayIdx)
+                                        val y = yOf(normalizedValue)
+                                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                    }
+                                    drawPath(
+                                        path,
+                                        color,
+                                        style = Stroke(
+                                            (if (isNormalized) 1.9f else 2.2f).dp.toPx(),
+                                            cap = StrokeCap.Round,
+                                            join = StrokeJoin.Round
+                                        )
+                                    )
+                                }
+
+                                // Draw dots. Forecast days sit at lower opacity
+                                // so a prediction never reads as a measurement.
+                                plotPoints.forEach { (dayIdx, normalizedValue) ->
+                                    val isForecast = forecastIdx > 0 && dayIdx >= forecastIdx
+                                    drawCircle(
+                                        color.copy(alpha = if (isForecast) 0.55f else 1f),
+                                        (if (isNormalized) 2.6f else 3.2f).dp.toPx(),
+                                        Offset(xOf(dayIdx), yOf(normalizedValue))
+                                    )
+                                }
                             }
                         }
+
+                        if (forecastIdx > 0) {
+                            Text(
+                                t("Forecast"),
+                                color = Color(0xFF4FC3F7),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 4.dp, end = 8.dp)
+                            )
+                        }
+                    }
+
+                    // Y-axis labels
+                    Column(
+                        modifier = Modifier.width(yAxisWidth).fillMaxHeight().padding(start = 6.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
-                // Date labels
+                // Date labels, with today marked where the forecast opens.
                 Spacer(Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = yAxisWidth),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    val fmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
-                    Text(LocalDate.parse(historyData.first().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Text(LocalDate.parse(historyData.last().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Metric selector - multi-select
-        Text(
-            t("Select Metrics") + (if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else ""),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelMedium
-        )
-        Spacer(Modifier.height(8.dp))
-
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
-                val isSelected = metric in selectedMetrics
-                val chipColor = metricColors[metric] ?: AppTheme.AccentPurple
-                val chipLabel = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
-
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        selectedMetrics = if (isSelected) {
-                            selectedMetrics - metric
-                        } else {
-                            selectedMetrics + metric
-                        }
-                    },
-                    label = { Text(chipLabel, style = MaterialTheme.typography.labelSmall) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = chipColor.copy(alpha = 0.3f),
-                        selectedLabelColor = chipColor,
-                        containerColor = AppTheme.BaseCardContainer,
-                        labelColor = AppTheme.SubtleTextColor
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        borderColor = if (isSelected) chipColor else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                        selectedBorderColor = chipColor,
-                        enabled = true,
-                        selected = isSelected
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(end = yAxisWidth)) {
+                    Text(
+                        LocalDate.parse(historyData.first().date).format(dateFmt),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.align(Alignment.CenterStart)
                     )
+                    if (forecastIdx > 0) {
+                        val fraction = (forecastIdx - 0.5f) / (historyData.size - 1).coerceAtLeast(1)
+                        Text(
+                            t("today"),
+                            color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .offset(x = maxWidth * fraction - 14.dp)
+                        )
+                    }
+                    Text(
+                        LocalDate.parse(historyData.last().date).format(dateFmt),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    )
+                }
+
+                GraphKeyRow(
+                    averageLabel = if (isNormalized) t("each line's average") else t("history average"),
+                    averageColor = if (isNormalized) Color.White.copy(alpha = 0.55f)
+                        else metricColors[selectedMetrics.first()] ?: AppTheme.AccentPurple,
+                    showMigraineDays = migraineDates.isNotEmpty(),
+                    showForecast = forecastIdx > 0
                 )
             }
         }
+
+        // Metric selector: grouped checklist, every metric carrying its own
+        // value for the window.
+        MetricChecklist(
+            groups = weatherMetricGroups.map { (group, metrics) ->
+                group to metrics.map { metric ->
+                    GraphMetricRow(
+                        key = metric,
+                        label = t(tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)),
+                        value = rowValue(metric),
+                        color = metricColors[metric] ?: AppTheme.AccentPurple
+                    )
+                }
+            },
+            selected = selectedMetrics,
+            onToggle = { metric ->
+                selectedMetrics = if (metric in selectedMetrics) selectedMetrics - metric
+                    else selectedMetrics + metric
+            }
+        )
     }
 }
 
