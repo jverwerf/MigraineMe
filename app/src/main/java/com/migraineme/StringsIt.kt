@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4195 entries.
+ * 4197 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -1275,6 +1275,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Facebook sign-in unavailable." to "Accesso Facebook non disponibile.",
     "Failed to add: %1\$s" to "Aggiunta fallita: %1\$s",
     "Failed to change password." to "Cambio password non riuscito.",
+    "Failed to delete account. Please try again." to "Impossibile eliminare l'account. Riprova.",
     "Failed to generate PDF" to "Generazione PDF non riuscita",
     "Failed to load proposals" to "Proposte non caricate",
     "Failed to log period" to "Ciclo non segnato",
@@ -2433,6 +2434,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Please enter your information manually below." to "Scrivi qui sotto i tuoi dati.",
     "Please fill in all password fields." to "Compila tutti i campi.",
     "Please go to Monitor to complete setup." to "Vai nel Monitor per finire.",
+    "Please type %1\$s to confirm." to "Scrivi %1\$s per confermare.",
     "Polar auth error: %1\$s" to "Errore di accesso Polar: %1\$s",
     "Polar callback opened." to "Callback Polar aperto.",
     "Polar connection failed" to "Collegamento fallito",

@@ -463,6 +463,13 @@ fun ProfileScreen(
 
         // Delete account confirmation dialog
         if (showDeleteDialog) {
+            // The confirmation word is translated (BORRAR, LOSCHEN, ELIMINA...), so
+            // match what the prompt above actually asks for. English DELETE stays
+            // valid in every language for anyone following a support email.
+            val deleteWord = t("DELETE")
+            val deleteConfirmed = deleteConfirmText.trim().uppercase().let {
+                it == deleteWord.trim().uppercase() || it == "DELETE"
+            }
             AlertDialog(
                 onDismissRequest = { if (!deleteBusy) { showDeleteDialog = false; deleteError = null } },
                 containerColor = Color(0xFF1E0A2E),
@@ -511,13 +518,13 @@ fun ProfileScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            if (deleteConfirmText.trim().uppercase() != "DELETE") {
-                                deleteError = "Please type DELETE to confirm."
+                            if (!deleteConfirmed) {
+                                deleteError = tSync("Please type %1\$s to confirm.", deleteWord)
                                 return@Button
                             }
                             val token = auth.accessToken
                             if (token.isNullOrBlank()) {
-                                deleteError = "Not signed in."
+                                deleteError = tSync("Not signed in.")
                                 return@Button
                             }
                             deleteBusy = true
@@ -552,16 +559,16 @@ fun ProfileScreen(
                                         showDeleteDialog = false
                                         onLoggedOut()
                                     } else {
-                                        deleteError = "Failed to delete account. Please try again."
+                                        deleteError = tSync("Failed to delete account. Please try again.")
                                     }
-                                } catch (t: Throwable) {
-                                    deleteError = t.message ?: "Failed to delete account."
+                                } catch (th: Throwable) {
+                                    deleteError = th.message ?: tSync("Failed to delete account. Please try again.")
                                 } finally {
                                     deleteBusy = false
                                 }
                             }
                         },
-                        enabled = !deleteBusy && deleteConfirmText.trim().uppercase() == "DELETE",
+                        enabled = !deleteBusy && deleteConfirmed,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFE57373),
                             disabledContainerColor = Color(0xFFE57373).copy(alpha = 0.3f)
