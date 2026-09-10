@@ -393,11 +393,19 @@ private fun sha256Hex(input: String): String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
+/**
+ * A dismissal is identified by category and name only.
+ *
+ * It used to include a hash of the recommendation's evidence prose, but that
+ * prose is rewritten in every daily_insights row, so the hash changed
+ * overnight and the dismissal stopped matching: the row the user had removed
+ * came back the next day, and dismissing it again just added another row.
+ * "Noise low" had accumulated five dismissals with five different hashes.
+ */
 fun buildRecommendationSections(recs: InsightsViewModel.AiRecommendations, dismissedKeys: Set<String>): List<RecommendationsSection> {
     fun toRows(category: String, m: Map<String, InsightsViewModel.AiRecommendationItem>): List<RecommendationRow> =
         m.mapNotNull { (name, item) ->
-            val key = "$category|$name|${sha256Hex(item.evidence)}"
-            if (dismissedKeys.contains(key)) null
+            if (dismissedKeys.contains("$category|$name")) null
             else RecommendationRow(category, name, item.text, item.evidence)
         }
     return listOf(

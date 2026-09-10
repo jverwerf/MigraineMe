@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -894,7 +895,18 @@ internal fun MetricTile(value: String, label: String, valueColor: Color, modifie
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(value, color = valueColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), maxLines = 1)
-        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        // A third of the card's width is not enough for "avg sev this week" on
+        // one line, and a single clipped line cut it mid-word. The label wraps
+        // to two and only then ellipsises, which also covers the longer
+        // translations of the same labels.
+        Text(
+            t(label),
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

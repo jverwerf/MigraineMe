@@ -334,8 +334,12 @@ class InsightsViewModel : ViewModel() {
     val dismissedRecommendationKeys: StateFlow<Set<String>> = _dismissedRecommendationKeys
 
     fun dismissRecommendation(context: Context, category: String, name: String, evidence: String) {
+        // The stored row still records which evidence the user was looking at,
+        // but the identity of a dismissal is category + name. Keying it on the
+        // evidence hash made every dismissal expire with the next daily
+        // insight, because that prose is regenerated daily.
         val hash = sha256Hex(evidence)
-        val key = "$category|$name|$hash"
+        val key = "$category|$name"
         // Update local state immediately so the UI hides the row right away.
         _dismissedRecommendationKeys.value = _dismissedRecommendationKeys.value + key
         viewModelScope.launch {
@@ -2625,7 +2629,7 @@ class InsightsViewModel : ViewModel() {
                     val dismissed = mutableSetOf<String>()
                     for (i in 0 until dismissArr.length()) {
                         val row = dismissArr.getJSONObject(i)
-                        dismissed.add("${row.optString("category")}|${row.optString("name")}|${row.optString("evidence_hash")}")
+                        dismissed.add("${row.optString("category")}|${row.optString("name")}")
                     }
                     Pair(recs, dismissed.toSet())
                 }
