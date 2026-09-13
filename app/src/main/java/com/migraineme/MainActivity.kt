@@ -2481,7 +2481,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
                                         OnboardingPrefs.isCompletedFromSupabase(loginCtx)
                                     }
-                                    val dest = if (completed != false) Routes.HOME else Routes.ONBOARDING
+                                    // Not onboarded but a first-run AI setup draft exists
+                                    // for this user (process died mid-questionnaire):
+                                    // resume the setup instead of restarting onboarding.
+                                    val resumeSetup = completed == false && kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        AiSetupDraftStore.exists(loginCtx)
+                                    }
+                                    val dest = if (completed != false) Routes.HOME else if (resumeSetup) Routes.AI_SETUP else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -2504,7 +2510,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
                                         OnboardingPrefs.isCompletedFromSupabase(loginCtx)
                                     }
-                                    val dest = if (completed != false) Routes.HOME else Routes.ONBOARDING
+                                    // Not onboarded but a first-run AI setup draft exists
+                                    // for this user (process died mid-questionnaire):
+                                    // resume the setup instead of restarting onboarding.
+                                    val resumeSetup = completed == false && kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        AiSetupDraftStore.exists(loginCtx)
+                                    }
+                                    val dest = if (completed != false) Routes.HOME else if (resumeSetup) Routes.AI_SETUP else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -2785,6 +2797,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 }
                             },
                             onSkip = {
+                                AiSetupDraftStore.clear(appCtx)
                                 scope.launch(Dispatchers.IO) {
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
                                 }
@@ -2951,6 +2964,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         LaunchedEffect(Unit) {
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 OnboardingPrefs.setCompletedInSupabase(appCtx)
+                                AiSetupDraftStore.clear(appCtx)
                             }
                         }
                         FreeTrialGiftScreen(

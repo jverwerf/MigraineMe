@@ -59,7 +59,7 @@ object AiSetupProfileStore {
             put("trajectory", answers.trajectory)
             put("seasonal_pattern", answers.seasonalPattern)
             put("tracks_cycle", answers.tracksCycle == "Yes")
-            put("predict_ovulation", answers.predictOvulation)
+            put("predict_ovulation", answers.predictOvulation == "Yes")
             put("clinical_assessment", config.clinicalAssessment)
             put("summary", config.summary)
 
@@ -160,6 +160,19 @@ object AiSetupProfileStore {
             return c.takeIf { it != DeterministicMapper.Certainty.NO }
         }
         fun certOf(snake: String, camel: String) = cert(str(snake, camel))
+        // Yes/No questions. The questionnaire stores the answer as a string
+        // ("Yes"/"No") but the extracted columns and other writers may hold a
+        // real boolean, so both spellings map back to the chip's value.
+        fun yesNo(snake: String, camel: String): String? {
+            val p = el(snake, camel) as? JsonPrimitive ?: return null
+            if (!p.isString) p.booleanOrNull?.let { return if (it) "Yes" else "No" }
+            val v = str(snake, camel) ?: return null
+            return when (v.lowercase()) {
+                "true" -> "Yes"
+                "false" -> "No"
+                else -> v
+            }
+        }
         fun strSet(snake: String, camel: String): Set<String> =
             (el(snake, camel) as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }?.toSet()
                 ?: emptySet()
@@ -213,9 +226,9 @@ object AiSetupProfileStore {
             exerciseFrequency = str("exercise_frequency", "exerciseFrequency"),
             exerciseTriggers = certOf("exercise_triggers", "exerciseTriggers"),
             exercisePattern = strSet("exercise_pattern", "exercisePattern"),
-            tracksCycle = str("tracks_cycle", "tracksCycle"),
+            tracksCycle = yesNo("tracks_cycle", "tracksCycle"),
             cyclePatterns = certMap("cycle_patterns", "cyclePatterns"),
-            predictOvulation = str("predict_ovulation", "predictOvulation"),
+            predictOvulation = yesNo("predict_ovulation", "predictOvulation"),
             cycleLength = str("cycle_length", "cycleLength"),
             cycleMigraineTiming = strSet("cycle_migraine_timing", "cycleMigraineTiming"),
             lastPeriodDate = str("last_period_date", "lastPeriodDate"),
@@ -242,7 +255,7 @@ object AiSetupProfileStore {
 
     // ── Build a JSON representation of all questionnaire answers ──
 
-    private fun buildAnswersJson(a: DeterministicMapper.QuestionnaireAnswers): String {
+    internal fun buildAnswersJson(a: DeterministicMapper.QuestionnaireAnswers): String {
         val obj = buildJsonObject {
             // Page 1
             put("gender", a.gender)

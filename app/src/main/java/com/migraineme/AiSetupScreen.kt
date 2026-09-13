@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -275,6 +278,9 @@ fun AiSetupScreen(
         mutableStateOf(if (editMode) setOf("triggers", "symptoms", "reliefs", "activities", "locations") else setOf<String>())
     }
     var savedAnswersLoaded by remember { mutableStateOf(false) }
+    // First-run local draft (AiSetupDraftStore). Set once apply has run so
+    // the page switch to COMPANIONS does not write a new draft after the clear.
+    var draftClosed by remember { mutableStateOf(false) }
     var additionalNotes by remember { mutableStateOf<String?>(null) }
 
     // AI state
@@ -424,15 +430,57 @@ fun AiSetupScreen(
     // Runs before anything else can be tapped; a first-time user has no row
     // and this is a no-op. Not routed through the parse-summary banner: these
     // are the user's own answers, not something the AI inferred.
+    //
+    // A local draft (first-run flow interrupted by a process death) wins over
+    // the server row: it is newer, and the row only exists after apply.
     LaunchedEffect(Unit) {
-        val saved = AiSetupProfileStore.load(appCtx)
-        val answers = saved?.answers
-        if (answers != null) {
-            applyPreFill(AiSetupProfileStore.preFillFromAnswers(answers))
-            AiSetupProfileStore.freeText(answers)?.let { additionalNotes = it }
+        val draft = if (editMode) null else withContext(Dispatchers.IO) { AiSetupDraftStore.load(appCtx) }
+        if (draft != null) {
+            applyPreFill(AiSetupProfileStore.preFillFromAnswers(draft.answers))
+            AiSetupProfileStore.freeText(draft.answers)?.let { additionalNotes = it }
             preFilledFields = emptySet()
+            storyText = draft.storyText
+            storyParsed = draft.storyParsed
+            val page = runCatching { AiPage.valueOf(draft.page) }.getOrNull() ?: AiPage.STORY
+            // Died while calibrating / on results / after apply: back to NOTES,
+            // the user just presses the button again.
+            currentPage = if (page == AiPage.PROCESSING || page == AiPage.RESULTS || page == AiPage.COMPANIONS) AiPage.NOTES else page
+            Log.d("AiSetup", "Resumed first-run draft at ${draft.page} -> $currentPage")
+        } else {
+            val saved = AiSetupProfileStore.load(appCtx)
+            val answers = saved?.answers
+            if (answers != null) {
+                applyPreFill(AiSetupProfileStore.preFillFromAnswers(answers))
+                AiSetupProfileStore.freeText(answers)?.let { additionalNotes = it }
+                preFilledFields = emptySet()
+            }
         }
         savedAnswersLoaded = true
+    }
+
+    // ── Local draft: keep the first-run flow across a process death ──
+    // Runs only after the load above so the initial snapshot is the restored
+    // state. Both flows drop that initial value: an untouched screen never
+    // creates a draft, and nothing is written until the user has typed a story
+    // or moved past the story page. Page changes write immediately; answer
+    // changes are debounced (collectLatest + short delay). Not in edit mode.
+    LaunchedEffect(savedAnswersLoaded) {
+        if (editMode || !savedAnswersLoaded) return@LaunchedEffect
+        fun eligible() = !draftClosed && (currentPage != AiPage.STORY || storyText.isNotBlank())
+        suspend fun write() {
+            if (!eligible()) return
+            val story = storyText; val parsed = storyParsed; val page = currentPage.name
+            val answersJson = AiSetupProfileStore.buildAnswersJson(buildAnswers())
+            withContext(Dispatchers.IO) { AiSetupDraftStore.save(appCtx, story, parsed, page, answersJson) }
+        }
+        launch {
+            snapshotFlow { currentPage }.drop(1).collect { write() }
+        }
+        launch {
+            snapshotFlow { Triple(storyText, storyParsed, AiSetupProfileStore.buildAnswersJson(buildAnswers())) }
+                .drop(1)
+                .collectLatest { delay(400); write() }
+        }
     }
 
     fun parseStory() {
@@ -579,6 +627,12 @@ fun AiSetupScreen(
             val save = async(Dispatchers.IO) {
                 runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
                     .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
+                // Apply is done and the answers have reached (or been offered
+                // to) the server: the local first-run draft has served its
+                // purpose. Cleared here, after the save, so a process death
+                // between apply and save still resumes on NOTES with the
+                // answers instead of restarting from scratch.
+                if (!editMode) AiSetupDraftStore.clear(appCtx)
             }
             if (editMode) {
                 save.await()
@@ -586,6 +640,7 @@ fun AiSetupScreen(
                 isApplying = false
                 onEditDone(outcome)
             } else {
+                draftClosed = true
                 isApplying = false; currentPage = AiPage.COMPANIONS
             }
         }
