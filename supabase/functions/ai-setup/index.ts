@@ -430,7 +430,7 @@ Diet & substances:
 Weather, environment, physical:
 - weather_triggers: <certainty>
 - specific_weather: map, keys from ["Pressure changes", "Hot weather", "Cold weather", "Humidity", "Dry air", "Wind", "Sunshine", "Thunderstorms", "Not sure which"] → <certainty>
-- environment_sensitivities: map, keys from ["Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Altitude"] → <certainty>
+- environment_sensitivities: map, keys from ["Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Pollen", "Air quality", "Altitude"] → <certainty>
 - physical_factors: map, keys from ["Allergies", "Being ill", "Low blood sugar", "Medication change", "Motion sickness", "Tobacco", "Sexual activity"] → <certainty>
 
 Exercise & hormones:

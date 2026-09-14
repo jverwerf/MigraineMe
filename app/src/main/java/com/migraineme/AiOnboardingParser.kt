@@ -115,7 +115,7 @@ object AiOnboardingParser {
     private val WATER_INTAKE_VALUES = setOf("< 1L", "1-2L", "2-3L", "3L+")
     private val TRACKS_NUTRITION_VALUES = setOf("Yes, regularly", "Sometimes", "No")
     private val SPECIFIC_WEATHER_KEYS = setOf("Pressure changes", "Hot weather", "Cold weather", "Humidity", "Dry air", "Wind", "Sunshine", "Thunderstorms", "Not sure which")
-    private val ENVIRONMENT_SENSITIVITIES_KEYS = setOf("Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Altitude")
+    private val ENVIRONMENT_SENSITIVITIES_KEYS = setOf("Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Pollen", "Air quality", "Altitude")
     private val PHYSICAL_FACTORS_KEYS = setOf("Allergies", "Being ill", "Low blood sugar", "Medication change", "Motion sickness", "Tobacco", "Sexual activity")
     private val EXERCISE_PATTERN_VALUES = AiSetupOptions.EXERCISE_PATTERN.toSet()
     private val CYCLE_PATTERNS_KEYS = setOf("Around my period", "Around ovulation")

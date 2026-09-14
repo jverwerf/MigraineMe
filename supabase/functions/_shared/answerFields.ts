@@ -116,7 +116,7 @@ export const ANSWER_FIELDS: AnswerField[] = [
   // ── weather ──
   C("weather_triggers", "weatherTriggers", "weather", "Does weather affect your {noun}?"),
   MAP("specific_weather", "specificWeather", "weather", "Which weather changes?", ["Pressure changes", "Hot weather", "Cold weather", "Humidity", "Dry air", "Wind", "Sunshine", "Thunderstorms", "Not sure which"]),
-  MAP("environment_sensitivities", "environmentSensitivities", "weather", "Are you sensitive to any of these?", ["Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Visual motion", "Altitude"]),
+  MAP("environment_sensitivities", "environmentSensitivities", "weather", "Are you sensitive to any of these?", ["Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Pollen", "Air quality", "Visual motion", "Altitude"]),
   MAP("physical_factors", "physicalFactors", "weather", "Do any physical factors trigger {noun}?", ["Allergies", "Being ill", "Low blood sugar", "Medication change", "Motion sickness", "Tobacco", "Sexual activity"]),
   // ── exercise (and cycle) ──
   S("exercise_frequency", "exerciseFrequency", "exercise", "How often do you exercise?", ["Daily", "Few times/week", "Weekly", "Rarely", "Never"]),

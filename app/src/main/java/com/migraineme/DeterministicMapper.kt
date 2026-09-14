@@ -123,12 +123,19 @@ object DeterministicMapper {
         "Vitamin K high" to 200.0, "Vitamin K low" to 20.0,
         "Zinc high" to 15.0, "Zinc low" to 3.0,
         // Environment
+        "Air quality poor" to 25.0,
         "Altitude change high" to 500.0, "Altitude change low" to 0.0,
         "Altitude high" to 2500.0, "Altitude low" to 0.0,
+        "Coarse dust high" to 50.0,
+        "Grass pollen high" to 3.0,
+        "Ozone high" to 120.0,
+        "Pollen high" to 3.0,
         "Humidity high" to 80.0, "Humidity low" to 20.0,
         "Pressure high" to 1030.0, "Pressure low" to 990.0,
         "Temperature high" to 35.0, "Temperature low" to 5.0,
+        "Tree pollen high" to 3.0,
         "UV index high" to 8.0, "UV index low" to 1.0,
+        "Weed pollen high" to 3.0,
         "Wind speed high" to 15.0, "Wind speed low" to 1.0,
         // Sleep
         "Bedtime early" to 21.0, "Bedtime late" to 1.0,
@@ -859,6 +866,15 @@ object DeterministicMapper {
                 "Strong smells"      -> out["Strong smell"] = trigManual("Strong smell", sev)
                 "Loud noise"         -> out["Noise high"] = trigHigh("Noise high", sev, d, cert)
                 "Smoke"              -> out["Smoke"] = trigManual("Smoke", sev)
+                "Pollen"             -> {
+                    out["Pollen high"] = trigHigh("Pollen high", sev, d, cert, fav = true)
+                    for (l in listOf("Tree pollen high", "Grass pollen high", "Weed pollen high")) out[l] = TriggerSetting(l, "LOW", d[l])
+                }
+                "Air quality"        -> {
+                    // Label has no " high" suffix, so resolve the default directly rather than via trigHigh
+                    out["Air quality poor"] = TriggerSetting("Air quality poor", sev, d["Air quality poor"], favorite = true)
+                    for (l in listOf("Coarse dust high", "Ozone high")) out[l] = TriggerSetting(l, "LOW", d[l])
+                }
                 "Altitude"           -> {
                     out["Altitude high"] = trigHigh("Altitude high", sev, d, cert)
                     out["Altitude change high"] = trigHigh("Altitude change high", sev, d, cert)
@@ -1121,6 +1137,13 @@ object DeterministicMapper {
         "fluorescent lights" to setOf("Bright lights", "Fluorescent lights"),
         "strong smells" to setOf("Strong odours", "Strong smells"),
         "loud noise" to setOf("Noise high", "Loud noise"),
+        "pollen" to setOf("Pollen high", "Pollen"),
+        "hay fever" to setOf("Pollen high", "Pollen"),
+        "hayfever" to setOf("Pollen high", "Pollen"),
+        "air quality" to setOf("Air quality poor", "Air quality"),
+        "smog" to setOf("Air quality poor", "Air quality"),
+        "pollution" to setOf("Air quality poor", "Air quality"),
+        "polluted air" to setOf("Air quality poor", "Air quality"),
     )
 
     private val prodromeAliases = mapOf(
