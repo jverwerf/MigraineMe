@@ -74,6 +74,8 @@ fun sourceDisplayLabel(raw: String, context: android.content.Context? = null): S
     "phone" -> "Phone"
     "health_connect" -> "Health Connect"
     "manual_usda" -> "Manual"
+    "barcode_off" -> "Barcode"
+    "photo_ai" -> "Photo"
     else -> raw.replaceFirstChar { it.uppercase() }
 }
 

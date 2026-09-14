@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Lock
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
@@ -55,12 +56,16 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
 
 @Composable
 fun MonitorNutritionScreen(
@@ -75,6 +80,7 @@ fun MonitorNutritionScreen(
     
     val searchService = remember { USDAFoodSearchService(context) }
     val offService = remember { OpenFoodFactsService() }
+    val photoService = remember { FoodPhotoService(context) }
 
     // Display metrics from shared MetricRegistry
     val displayKeys = remember { MetricDisplayStore.getDisplayMetrics(context, "nutrition") }
@@ -116,7 +122,44 @@ fun MonitorNutritionScreen(
     var isAddingScan by remember { mutableStateOf(false) }
     var scanRisks by remember { mutableStateOf<FoodRiskResult?>(null) }
     var isClassifyingScanRisks by remember { mutableStateOf(false) }
+
+    // Meal photo state. The photo itself is never kept: it is written to the
+    // cache, sent once, and deleted as soon as the model has answered.
+    var photoDrafts by remember { mutableStateOf<List<PhotoFoodDraft>?>(null) }
+    var photoMealType by remember { mutableStateOf("lunch") }
+    var isIdentifyingPhoto by remember { mutableStateOf(false) }
+    var isAddingPhoto by remember { mutableStateOf(false) }
+    var photoAddedCount by remember { mutableStateOf(0) }
+    var photoNoFood by remember { mutableStateOf(false) }
+    var photoAddSuccess by remember { mutableStateOf<Int?>(null) }
+    var photoSearchResults by remember { mutableStateOf<List<USDAFoodSearchResult>>(emptyList()) }
+    var isSearchingPhotoName by remember { mutableStateOf(false) }
+    var photoSearchJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    // Exposure flags per photo item, keyed by the lowercased food name so an
+    // edit that lands back on an earlier name is free.
+    var photoRisks by remember { mutableStateOf<Map<String, FoodRiskResult>>(emptyMap()) }
+    var photoClassifying by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var pendingPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
+    // Classify every name in the photo list, and re-classify when an edit
+    // changes one. Debounced so typing does not fire a call per keystroke.
+    val photoNames = photoDrafts?.map { it.name.trim().lowercase() }?.filter { it.isNotEmpty() }
+    LaunchedEffect(photoNames) {
+        val names = photoNames ?: return@LaunchedEffect
+        val todo = names.distinct().filter { it !in photoRisks && it !in photoClassifying }
+        if (todo.isEmpty()) return@LaunchedEffect
+        kotlinx.coroutines.delay(400)
+        val token = authState.accessToken ?: return@LaunchedEffect
+        photoClassifying = photoClassifying + todo
+        todo.forEach { name ->
+            val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try { FoodRiskClassifierService().classify(token, name) } catch (_: Exception) { null }
+            }
+            if (result != null) photoRisks = photoRisks + (name to result)
+            photoClassifying = photoClassifying - name
+        }
+    }
+
     // Load today's items
     LaunchedEffect(Unit) {
         scope.launch {
@@ -195,6 +238,138 @@ fun MonitorNutritionScreen(
         }
     }
     
+    // The system camera app writes into our own cache dir through the
+    // FileProvider already used for PDF reports, so no CAMERA permission is
+    // needed: we never open the camera ourselves.
+    val photoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        val uri = pendingPhotoUri
+        pendingPhotoUri = null
+        if (!success || uri == null) return@rememberLauncherForActivityResult
+
+        val token = authState.accessToken ?: return@rememberLauncherForActivityResult
+        isIdentifyingPhoto = true
+        scope.launch {
+            val items = photoService.identify(token, uri)
+            isIdentifyingPhoto = false
+
+            // Delete the photo the moment we have an answer. It was only ever
+            // a carrier for the request.
+            try { context.contentResolver.delete(uri, null, null) } catch (_: Exception) {}
+
+            if (items.isEmpty()) {
+                photoNoFood = true
+            } else {
+                photoAddedCount = 0
+                photoDrafts = items.map {
+                    PhotoFoodDraft(
+                        name = it.name,
+                        grams = it.grams,
+                        confidence = it.confidence,
+                        alternates = it.alternates
+                    )
+                }
+            }
+        }
+    }
+
+    fun startFoodPhoto() {
+        try {
+            val dir = File(context.cacheDir, "food_photos").apply { mkdirs() }
+            val file = File(dir, "meal_${System.currentTimeMillis()}.jpg")
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+            pendingPhotoUri = uri
+            photoLauncher.launch(uri)
+        } catch (e: Exception) {
+            android.util.Log.e("NutritionScreen", "Could not start camera: ${e.message}", e)
+            addError = tSync("Could not open the camera")
+        }
+    }
+
+    /**
+     * Log every ticked food. Each one goes down the ordinary USDA path so a
+     * photo-logged food ends up identical to a searched one; anything USDA has
+     * no match for is written name-only, carrying its risk flags but no
+     * invented macros.
+     */
+    /**
+     * Search the food database for whatever they are typing into a photo row's
+     * name box. Debounced, because this fires on every keystroke.
+     */
+    fun searchPhotoName(query: String) {
+        photoSearchJob?.cancel()
+        val q = query.trim()
+        if (q.length < 2) {
+            photoSearchResults = emptyList()
+            isSearchingPhotoName = false
+            return
+        }
+        isSearchingPhotoName = true
+        photoSearchJob = scope.launch {
+            kotlinx.coroutines.delay(350)
+            val hits = try { searchService.searchFoods(q) } catch (_: Exception) { emptyList() }
+            photoSearchResults = hits.take(5)
+            isSearchingPhotoName = false
+        }
+    }
+
+    fun confirmPhotoFoods() {
+        val drafts = photoDrafts?.filter { it.checked && it.name.isNotBlank() } ?: return
+        if (drafts.isEmpty()) return
+        isAddingPhoto = true
+        photoAddedCount = 0
+        scope.launch {
+            var added = 0
+            var lastError: String? = null
+            drafts.forEach { draft ->
+                // A pinned fdcId means they picked this exact row out of the
+                // database, so never second-guess it with another search.
+                val fdcId = draft.fdcId ?: try {
+                    searchService.searchFoods(draft.name).firstOrNull()?.fdcId
+                } catch (_: Exception) { null }
+
+                val details = fdcId?.let {
+                    try { searchService.getFoodDetails(it) } catch (_: Exception) { null }
+                }
+
+                val result = if (details != null) {
+                    // USDA nutrient amounts are per 100g, and addFoodFromDetails
+                    // multiplies by servings, so grams/100 is the scale factor.
+                    searchService.addFoodFromDetails(
+                        foodDetails = details,
+                        foodName = draft.name,
+                        mealType = photoMealType,
+                        servings = (draft.grams.takeIf { it > 0 } ?: 100.0) / 100.0,
+                        source = "photo_ai"
+                    )
+                } else {
+                    searchService.addFoodByName(
+                        foodName = draft.name,
+                        mealType = photoMealType,
+                        source = "photo_ai"
+                    )
+                }
+
+                if (result.first) added++ else lastError = result.second
+                photoAddedCount = added
+            }
+
+            isAddingPhoto = false
+            photoDrafts = null
+            photoSearchResults = emptyList()
+            reloadTodayItems()
+
+            // "3 foods has been added" reads wrong, so a multi-add gets its
+            // own plural dialog and a single one keeps the usual message.
+            if (added == 1) addSuccess = drafts.first().name
+            else if (added > 1) photoAddSuccess = added
+            if (added < drafts.size) {
+                addError = lastError ?: tSync("Some foods could not be added")
+            }
+        }
+    }
+
     fun startBarcodeScan() {
         scope.launch {
             try {
@@ -387,6 +562,62 @@ fun MonitorNutritionScreen(
         )
     }
 
+    photoDrafts?.let { drafts ->
+        PhotoFoodConfirmDialog(
+            drafts = drafts,
+            onDraftsChange = { photoDrafts = it },
+            mealType = photoMealType,
+            onMealTypeChange = { photoMealType = it },
+            isAdding = isAddingPhoto,
+            addedCount = photoAddedCount,
+            searchResults = photoSearchResults,
+            isSearching = isSearchingPhotoName,
+            onSearchQueryChange = { searchPhotoName(it) },
+            risks = photoRisks,
+            classifying = photoClassifying,
+            onDismiss = { photoDrafts = null; photoSearchResults = emptyList() },
+            onConfirm = { confirmPhotoFoods() }
+        )
+    }
+
+    photoAddSuccess?.let { count ->
+        AlertDialog(
+            onDismissRequest = { photoAddSuccess = null },
+            title = { Text(t("Foods Added!"), color = AppTheme.TitleColor) },
+            text = {
+                Text(
+                    t("%s foods have been added to your nutrition log.", count),
+                    color = AppTheme.BodyTextColor
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { photoAddSuccess = null }) {
+                    Text(t("OK"), color = AppTheme.AccentPurple)
+                }
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
+    }
+
+    if (photoNoFood) {
+        AlertDialog(
+            onDismissRequest = { photoNoFood = false },
+            title = { Text(t("No food spotted"), color = AppTheme.TitleColor) },
+            text = {
+                Text(
+                    t("We could not make out any food in that photo. Try again in better light with the whole plate in frame, or search for it by name."),
+                    color = AppTheme.BodyTextColor
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { photoNoFood = false }) {
+                    Text(t("OK"), color = AppTheme.AccentPurple)
+                }
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
+    }
+
     if (barcodeNotFound != null) {
         AlertDialog(
             onDismissRequest = { barcodeNotFound = null },
@@ -492,7 +723,7 @@ fun MonitorNutritionScreen(
             BaseCard {
                 Text(t("Add Food"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
-                Text(t("Search USDA database or scan a barcode"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Search the USDA database, scan a barcode, or photograph your meal"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(12.dp))
 
                 Row(
@@ -535,6 +766,26 @@ fun MonitorNutritionScreen(
                             Icon(
                                 Icons.Outlined.QrCodeScanner,
                                 contentDescription = t("Scan barcode"),
+                                tint = AppTheme.AccentPurple,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.18f))
+                            .clickable(enabled = !isIdentifyingPhoto) { startFoodPhoto() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isIdentifyingPhoto) {
+                            CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
+                        } else {
+                            Icon(
+                                Icons.Outlined.PhotoCamera,
+                                contentDescription = t("Photograph your meal"),
                                 tint = AppTheme.AccentPurple,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -632,8 +883,8 @@ fun MonitorNutritionScreen(
                         todayItems.forEach { item ->
                             TodayLogItem(
                                 item = item,
-                                onEdit = if (item.source == "manual_usda" || item.source == "barcode_off") {{ editingItem = item; editMealType = item.mealType }} else null,
-                                onDelete = if (item.source == "manual_usda" || item.source == "barcode_off") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
+                                onEdit = if (item.source == "manual_usda" || item.source == "barcode_off" || item.source == "photo_ai") {{ editingItem = item; editMealType = item.mealType }} else null,
+                                onDelete = if (item.source == "manual_usda" || item.source == "barcode_off" || item.source == "photo_ai") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
                             )
                         }
 

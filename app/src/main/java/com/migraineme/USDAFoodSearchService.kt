@@ -321,7 +321,8 @@ class USDAFoodSearchService(private val context: Context) {
         foodDetails: USDAFoodDetailsFull,
         foodName: String,
         mealType: String,
-        servings: Double = 1.0
+        servings: Double = 1.0,
+        source: String = "manual_usda"
     ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
         try {
             val token = SessionStore.readAccessToken(context) ?: run {
@@ -355,7 +356,7 @@ class USDAFoodSearchService(private val context: Context) {
                 append("\"timestamp\":\"${Instant.now()}\",")
                 append("\"food_name\":\"${foodName.replace("\"", "\\\"").replace("\n", " ")}\",")
                 append("\"meal_type\":\"$mealType\",")
-                append("\"source\":\"manual_usda\",")
+                append("\"source\":\"$source\",")
 
                 // Macros
                 getNutrient(1008)?.let { append("\"calories\":$it,") }
@@ -538,6 +539,71 @@ class USDAFoodSearchService(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add OFF food: ${e.message}", e)
+            Pair(false, e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * Add a food we only have a NAME and a portion for, with no nutrient data
+     * behind it. Used by the photo path when nothing in USDA matches what the
+     * model saw: the row still carries the four risk exposures, which is the
+     * part the engine reads, and the macros stay null rather than invented.
+     */
+    suspend fun addFoodByName(
+        foodName: String,
+        mealType: String,
+        source: String = "photo_ai"
+    ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
+        try {
+            val token = SessionStore.readAccessToken(context)
+                ?: return@withContext Pair(false, "Not logged in")
+            val userId = SessionStore.readUserId(context)
+                ?: return@withContext Pair(false, "No user ID")
+
+            val today = java.time.LocalDate.now().toString()
+            val nutritionRecord = buildString {
+                append("{")
+                append("\"id\":\"${UUID.randomUUID()}\",")
+                append("\"user_id\":\"$userId\",")
+                append("\"date\":\"$today\",")
+                append("\"timestamp\":\"${Instant.now()}\",")
+                append("\"food_name\":\"${foodName.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ")}\",")
+                append("\"meal_type\":\"$mealType\",")
+                append("\"source\":\"$source\",")
+
+                try {
+                    val risks = FoodRiskClassifierService().classify(token, foodName)
+                    if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
+                    if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
+                    if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
+                    if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
+                } catch (_: Exception) {}
+
+                if (endsWith(",")) deleteCharAt(length - 1)
+                append("}")
+            }
+
+            val request = Request.Builder()
+                .url("${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records")
+                .post(nutritionRecord.toRequestBody("application/json".toMediaType()))
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .build()
+
+            httpClient.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Log.d(TAG, "\u2705 Name-only food added: $foodName")
+                    Pair(true, null)
+                } else {
+                    val body = response.body?.string()
+                    Log.e(TAG, "Failed to insert name-only food: ${response.code} - $body")
+                    Pair(false, "Error ${response.code}: $body")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to add name-only food: ${e.message}", e)
             Pair(false, e.message ?: "Unknown error")
         }
     }
@@ -773,7 +839,7 @@ class USDAFoodSearchService(private val context: Context) {
             val userId = SessionStore.readUserId(context) ?: return@withContext false
 
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
+                "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off,photo_ai)"
 
             val request = Request.Builder()
                 .url(url)
@@ -816,7 +882,7 @@ class USDAFoodSearchService(private val context: Context) {
                 val updateJson = """{"meal_type":"$mealType"}"""
 
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
+                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off,photo_ai)"
 
                 val request = Request.Builder()
                     .url(url)
@@ -883,7 +949,7 @@ class USDAFoodSearchService(private val context: Context) {
                 }
 
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
+                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off,photo_ai)"
 
                 val request = Request.Builder()
                     .url(url)

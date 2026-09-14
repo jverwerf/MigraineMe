@@ -1232,7 +1232,7 @@ fun PractitionerDetailSheet(
                                 )
                                 Column(Modifier.weight(1f)) {
                                     Text(
-                                        t("Her own site"),
+                                        t("Their own site"),
                                         fontSize = 12.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = AppTheme.BodyTextColor,

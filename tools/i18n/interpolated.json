@@ -16,19 +16,19 @@
     "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Failed to add: %1\\$s\", e.message ?: tSync(\"error\"))) }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:682",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:737",
     "line": "                    if (editMode) t(\"Edit — %1\\$s\", AiSetupEntry.title(startPage ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:683",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:738",
     "line": "                    else t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:703",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:758",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:704",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:759",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
@@ -200,6 +200,46 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:505",
+    "line": "    NavRow(t(\"Use for insights\"), if (paid) t(\"%1\\$s of %2\\$s ticked, our advice\", ticked, engineUse.size) else t(\"Journal only. Subscribe to count it in insights.\"), onUse)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:507",
+    "line": "    NavRow(t(\"What we assumed\"), if (phrases > 0) t(\"%1\\$s things, including %2\\$s phrases we kept in your words\", assumptions, phrases) else t(\"%1\\$s things\", assumptions), onAssume)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:509",
+    "line": "    NavRow(t(\"Check the attacks and days\"), t(\"%1\\$s attacks and %2\\$s other days\", live, days.size), onList)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:513",
+    "line": "    PrimaryButton(t(\"Import %1\\$s attacks\", live), enabled = live > 0, onClick = onImport)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:613",
+    "line": "    Title(t(\"Attacks (%1\\$s)\", attacks.count { !it.removed }), t(\"Tap one to see everything we read from it.\"))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:756",
+    "line": "        newItems.forEachIndexed { i, o -> if (i > 0) HorizontalDivider(color = Edge); Column(Modifier.padding(vertical = 6.dp)) { PairRow(o.str(\"phrase\") ?: \"\", o.str(\"label\") ?: \"\", newItem = true); Text(listOfNotNull(t(\"New\"), o.str(\"class\")?.replace('_', ' '), o.str(\"category\")).joinToString(\" · \") + \" · \" + t(\"seen %1\\$s×\", o.int(\"count\") ?: 0), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:799",
+    "line": "                Text(t(\"%1\\$s attacks are in your journal\", verify?.int(\"attacks_written\") ?: attacks), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:813",
+    "line": "        Text(\"• \" + t(\"Journal, calendar and the doctor report show these attacks.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:814",
+    "line": "        Text(\"• \" + (if (paid) t(\"Insights use what you ticked under Use for insights. The rest stays in the journal only.\") else t(\"Insights leave imported data out. Subscribe and import again to count it.\")), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:815",
+    "line": "        Text(\"• \" + t(\"Your imported medicines and reliefs are now favourites in the log wizard.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
+  },
+  {
     "site": "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:206",
     "line": "                                t(\"%1\\$s logged • %2\\$s types\", cat.totalCount, cat.items.size),"
   },
@@ -360,19 +400,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:343",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:345",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:378",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:380",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:412",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:414",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:446",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:448",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -572,7 +612,7 @@
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NearbyCard.kt:65",
+    "site": "app/src/main/java/com/migraineme/NearbyCard.kt:70",
     "line": "        place.distance_km?.let { t(\"%1\\$s km\", formatKm(it)) },"
   },
   {
@@ -598,6 +638,10 @@
   {
     "site": "app/src/main/java/com/migraineme/PairGarminScreen.kt:213",
     "line": "                    if (remaining > 0) t(\"Expires in %1\\$s:%2\\$s\", mins, \"%02d\".format(secs)) else t(\"Expired\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:336",
+    "line": "                        t(\"Adding %1\\$s of %2\\$s…\", addedCount + 1, checkedCount),"
   },
   {
     "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:135",
@@ -685,7 +729,7 @@
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:522",
-    "line": "                                deleteError = t(\"Please type %1\\$s to confirm.\", deleteWord)"
+    "line": "                                deleteError = tSync(\"Please type %1\\$s to confirm.\", deleteWord)"
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:750",

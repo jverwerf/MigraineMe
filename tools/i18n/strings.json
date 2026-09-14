@@ -5,13 +5,13 @@
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:304",
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:384",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:851",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:891",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:906",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:946",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:155",
-      "... 81 more"
+      "... 82 more"
     ],
     "max_len": 14,
-    "count": 86
+    "count": 87
   },
   {
     "en": "Back",
@@ -21,11 +21,11 @@
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:194",
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:304",
       "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:79",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:859",
-      "... 51 more"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:914",
+      "... 52 more"
     ],
     "max_len": 14,
-    "count": 56
+    "count": 57
   },
   {
     "en": "Got it",
@@ -64,10 +64,10 @@
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:174",
       "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:134",
       "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:733",
-      "... 21 more"
+      "... 23 more"
     ],
     "max_len": 14,
-    "count": 26
+    "count": 28
   },
   {
     "en": "Remove",
@@ -78,10 +78,10 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:422",
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:694",
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:731",
-      "... 21 more"
+      "... 22 more"
     ],
     "max_len": 14,
-    "count": 26
+    "count": 27
   },
   {
     "en": "Frequent",
@@ -112,6 +112,20 @@
     "count": 24
   },
   {
+    "en": "Add",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ActivitiesScreen.kt:381",
+      "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:247",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:962",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:1014",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:1092",
+      "... 17 more"
+    ],
+    "max_len": 14,
+    "count": 22
+  },
+  {
     "en": "Close",
     "class": "soft",
     "sites": [
@@ -130,7 +144,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:308",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:869",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:924",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:151",
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:236",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:973",
@@ -140,18 +154,18 @@
     "count": 21
   },
   {
-    "en": "Add",
+    "en": "Done",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ActivitiesScreen.kt:381",
-      "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:247",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:962",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:1014",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:1092",
-      "... 15 more"
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:752",
+      "app/src/main/java/com/migraineme/AppDateTimePickers.kt:193",
+      "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:148",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1775",
+      "app/src/main/java/com/migraineme/ForumScreen.kt:209",
+      "... 14 more"
     ],
     "max_len": 14,
-    "count": 20
+    "count": 19
   },
   {
     "en": "Loading…",
@@ -182,6 +196,34 @@
     "count": 18
   },
   {
+    "en": "Medicines",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:265",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:736",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1506",
+      "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:245",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1237",
+      "... 12 more"
+    ],
+    "max_len": 14,
+    "count": 17
+  },
+  {
+    "en": "Triggers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:221",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:647",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1470",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1236",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1916",
+      "... 12 more"
+    ],
+    "max_len": 14,
+    "count": 17
+  },
+  {
     "en": "Delete",
     "class": "hard",
     "sites": [
@@ -196,34 +238,6 @@
     "count": 15
   },
   {
-    "en": "Medicines",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:265",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:736",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1506",
-      "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:245",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1237",
-      "... 10 more"
-    ],
-    "max_len": 14,
-    "count": 15
-  },
-  {
-    "en": "Triggers",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:221",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:647",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1470",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1236",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1911",
-      "... 10 more"
-    ],
-    "max_len": 14,
-    "count": 15
-  },
-  {
     "en": "Skip",
     "class": "hard",
     "sites": [
@@ -232,10 +246,10 @@
       "app/src/main/java/com/migraineme/LocationsScreen.kt:220",
       "app/src/main/java/com/migraineme/MedicinesScreen.kt:443",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:336",
-      "... 9 more"
+      "... 10 more"
     ],
     "max_len": 14,
-    "count": 14
+    "count": 15
   },
   {
     "en": "Amount",
@@ -246,6 +260,20 @@
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:1029",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1866",
       "app/src/main/java/com/migraineme/JournalEditScreen.kt:565",
+      "... 8 more"
+    ],
+    "max_len": 14,
+    "count": 13
+  },
+  {
+    "en": "Edit",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/DataSettingsComponents.kt:107",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:497",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:530",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:675",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:756",
       "... 8 more"
     ],
     "max_len": 14,
@@ -294,6 +322,20 @@
     "count": 13
   },
   {
+    "en": "Activities",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ActivitiesScreen.kt:262",
+      "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:83",
+      "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:110",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:286",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1557",
+      "... 7 more"
+    ],
+    "max_len": 14,
+    "count": 12
+  },
+  {
     "en": "All",
     "class": "hard",
     "sites": [
@@ -308,28 +350,14 @@
     "count": 12
   },
   {
-    "en": "Done",
+    "en": "Reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:752",
-      "app/src/main/java/com/migraineme/AppDateTimePickers.kt:193",
-      "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:148",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1775",
-      "app/src/main/java/com/migraineme/ForumScreen.kt:209",
-      "... 7 more"
-    ],
-    "max_len": 14,
-    "count": 12
-  },
-  {
-    "en": "Edit",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsComponents.kt:107",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:497",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:530",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:675",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:756",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:279",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:818",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1533",
+      "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:280",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1238",
       "... 7 more"
     ],
     "max_len": 14,
@@ -378,20 +406,6 @@
     "count": 11
   },
   {
-    "en": "Reliefs",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:279",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:818",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1533",
-      "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:280",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1238",
-      "... 6 more"
-    ],
-    "max_len": 14,
-    "count": 11
-  },
-  {
     "en": "Select all, set certainty",
     "class": "soft",
     "sites": [
@@ -406,14 +420,14 @@
     "count": 11
   },
   {
-    "en": "Activities",
+    "en": "Aura",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ActivitiesScreen.kt:262",
-      "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:83",
-      "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:110",
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:286",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1557",
+      "app/src/main/java/com/migraineme/AuraDetailSheet.kt:174",
+      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:592",
+      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2491",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1231",
+      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:113",
       "... 5 more"
     ],
     "max_len": 14,
@@ -469,7 +483,7 @@
       "app/src/main/java/com/migraineme/InsightsSectionConfigScreen.kt:76",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:142",
       "app/src/main/java/com/migraineme/MonitorMentalScreen.kt:128",
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:475",
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:706",
       "... 4 more"
     ],
     "max_len": 19,
@@ -532,25 +546,11 @@
     "count": 9
   },
   {
-    "en": "Aura",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AuraDetailSheet.kt:174",
-      "app/src/main/java/com/migraineme/EditMigraineScreen.kt:592",
-      "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2491",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1231",
-      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:113",
-      "... 3 more"
-    ],
-    "max_len": 14,
-    "count": 8
-  },
-  {
     "en": "Continue",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/Healthconnectrationaleactivity.kt:159",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2939",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2962",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:439",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:526",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:610",
@@ -678,7 +678,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:293",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:484",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:2911",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2383",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2388",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:169",
       "... 2 more"
     ],
@@ -691,7 +691,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1488",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1239",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2197",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2202",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:142",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:233",
       "... 2 more"
@@ -711,6 +711,20 @@
       "... 2 more"
     ],
     "max_len": 15,
+    "count": 7
+  },
+  {
+    "en": "Sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:394",
+      "app/src/main/java/com/migraineme/DataSettingsSections.kt:31",
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:681",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:725",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807",
+      "... 2 more"
+    ],
+    "max_len": 14,
     "count": 7
   },
   {
@@ -896,6 +910,20 @@
     "count": 6
   },
   {
+    "en": "Symptoms",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:272",
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:230",
+      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:77",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:677",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:68",
+      "... 1 more"
+    ],
+    "max_len": 14,
+    "count": 6
+  },
+  {
     "en": "Tomorrow",
     "class": "hard",
     "sites": [
@@ -904,6 +932,20 @@
       "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:140",
       "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:191",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:312",
+      "... 1 more"
+    ],
+    "max_len": 14,
+    "count": 6
+  },
+  {
+    "en": "Type",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/EditReliefScreen.kt:111",
+      "app/src/main/java/com/migraineme/EditReliefScreen.kt:162",
+      "app/src/main/java/com/migraineme/EditTriggerScreen.kt:105",
+      "app/src/main/java/com/migraineme/EditTriggerScreen.kt:156",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1206",
       "... 1 more"
     ],
     "max_len": 14,
@@ -1029,6 +1071,19 @@
     "count": 5
   },
   {
+    "en": "Meal Type",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:210",
+      "app/src/main/java/com/migraineme/NutritionDialogs.kt:260",
+      "app/src/main/java/com/migraineme/NutritionDialogs.kt:377",
+      "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:480",
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:308"
+    ],
+    "max_len": 14,
+    "count": 5
+  },
+  {
     "en": "Migraines",
     "class": "hard",
     "sites": [
@@ -1037,6 +1092,19 @@
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:106",
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:256",
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:99"
+    ],
+    "max_len": 14,
+    "count": 5
+  },
+  {
+    "en": "Name",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/EditMedicineScreen.kt:127",
+      "app/src/main/java/com/migraineme/EditMedicineScreen.kt:178",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:583",
+      "app/src/main/java/com/migraineme/ManagePoolScreen.kt:618",
+      "app/src/main/java/com/migraineme/ProfileScreen.kt:332"
     ],
     "max_len": 14,
     "count": 5
@@ -1052,6 +1120,19 @@
       "app/src/main/java/com/migraineme/WeatherGraph.kt:275"
     ],
     "max_len": 42,
+    "count": 5
+  },
+  {
+    "en": "Pain",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2331",
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1223",
+      "app/src/main/java/com/migraineme/PainLocationScreen.kt:179",
+      "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:209",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:669"
+    ],
+    "max_len": 14,
     "count": 5
   },
   {
@@ -1107,32 +1188,6 @@
     "count": 5
   },
   {
-    "en": "Sleep",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:394",
-      "app/src/main/java/com/migraineme/DataSettingsSections.kt:31",
-      "app/src/main/java/com/migraineme/MonitorScreen.kt:681",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:80",
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:225"
-    ],
-    "max_len": 14,
-    "count": 5
-  },
-  {
-    "en": "Symptoms",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:272",
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:230",
-      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:77",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:68",
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:299"
-    ],
-    "max_len": 14,
-    "count": 5
-  },
-  {
     "en": "Tap all that apply",
     "class": "hard",
     "sites": [
@@ -1143,19 +1198,6 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:654"
     ],
     "max_len": 21,
-    "count": 5
-  },
-  {
-    "en": "Type",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/EditReliefScreen.kt:111",
-      "app/src/main/java/com/migraineme/EditReliefScreen.kt:162",
-      "app/src/main/java/com/migraineme/EditTriggerScreen.kt:105",
-      "app/src/main/java/com/migraineme/EditTriggerScreen.kt:156",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1206"
-    ],
-    "max_len": 14,
     "count": 5
   },
   {
@@ -1287,7 +1329,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:196",
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:644",
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:895",
       "app/src/main/java/com/migraineme/NutritionDialogs.kt:244",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:286"
     ],
@@ -1468,7 +1510,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/JournalScreen.kt:1241",
       "app/src/main/java/com/migraineme/LocationsScreen.kt:126",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2286",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2291",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:151"
     ],
     "max_len": 14,
@@ -1499,18 +1541,6 @@
     "count": 4
   },
   {
-    "en": "Meal Type",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:210",
-      "app/src/main/java/com/migraineme/NutritionDialogs.kt:260",
-      "app/src/main/java/com/migraineme/NutritionDialogs.kt:377",
-      "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:480"
-    ],
-    "max_len": 14,
-    "count": 4
-  },
-  {
     "en": "Menstruation",
     "class": "hard",
     "sites": [
@@ -1523,13 +1553,13 @@
     "count": 4
   },
   {
-    "en": "Name",
+    "en": "New",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/EditMedicineScreen.kt:127",
-      "app/src/main/java/com/migraineme/EditMedicineScreen.kt:178",
-      "app/src/main/java/com/migraineme/ManagePoolScreen.kt:618",
-      "app/src/main/java/com/migraineme/ProfileScreen.kt:332"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:570",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:622",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:691",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:756"
     ],
     "max_len": 14,
     "count": 4
@@ -1595,18 +1625,6 @@
     "count": 4
   },
   {
-    "en": "Pain",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2331",
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1223",
-      "app/src/main/java/com/migraineme/PainLocationScreen.kt:179",
-      "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:209"
-    ],
-    "max_len": 14,
-    "count": 4
-  },
-  {
     "en": "Post",
     "class": "hard",
     "sites": [
@@ -1667,6 +1685,30 @@
     "count": 4
   },
   {
+    "en": "Treatment side effects",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2437",
+      "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:734",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
+    ],
+    "max_len": 25,
+    "count": 4
+  },
+  {
+    "en": "Treatments",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2103",
+      "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:522",
+      "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:556",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
+    ],
+    "max_len": 14,
+    "count": 4
+  },
+  {
     "en": "Type: %s",
     "class": "hard",
     "sites": [
@@ -1691,6 +1733,18 @@
     "count": 4
   },
   {
+    "en": "Upgrade",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:770",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:435",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:528",
+      "app/src/main/java/com/migraineme/PremiumGate.kt:227"
+    ],
+    "max_len": 14,
+    "count": 4
+  },
+  {
     "en": "Your notes",
     "class": "hard",
     "sites": [
@@ -1698,6 +1752,18 @@
       "app/src/main/java/com/migraineme/ProfileScreen.kt:733",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:72",
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:311"
+    ],
+    "max_len": 14,
+    "count": 4
+  },
+  {
+    "en": "none",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:394",
+      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:548",
+      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:629",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:695"
     ],
     "max_len": 14,
     "count": 4
@@ -1858,6 +1924,17 @@
     "count": 3
   },
   {
+    "en": "After-effects",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:679",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807",
+      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:300"
+    ],
+    "max_len": 16,
+    "count": 3
+  },
+  {
     "en": "Analysing…",
     "class": "hard",
     "sites": [
@@ -1939,8 +2016,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CommunityEngagement.kt:76",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1227",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1230"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1232",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1235"
     ],
     "max_len": 14,
     "count": 3
@@ -2016,7 +2093,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:708",
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:466",
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:697",
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:95"
     ],
     "max_len": 14,
@@ -2067,12 +2144,23 @@
     "count": 3
   },
   {
+    "en": "End",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/JournalScreen.kt:1215",
+      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:86",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:666"
+    ],
+    "max_len": 14,
+    "count": 3
+  },
+  {
     "en": "Error",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:131",
       "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:72",
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:346"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:521"
     ],
     "max_len": 14,
     "count": 3
@@ -2108,6 +2196,17 @@
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:470"
     ],
     "max_len": 15,
+    "count": 3
+  },
+  {
+    "en": "Foods",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:681",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:736",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
+    ],
+    "max_len": 14,
     "count": 3
   },
   {
@@ -2298,6 +2397,17 @@
     "count": 3
   },
   {
+    "en": "Missed plans",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:688",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:737",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
+    ],
+    "max_len": 15,
+    "count": 3
+  },
+  {
     "en": "Most frequent: %1$s (%2$s migraines, %3$s%%)",
     "class": "soft",
     "sites": [
@@ -2317,17 +2427,6 @@
       "app/src/main/java/com/migraineme/JournalScreen.kt:571"
     ],
     "max_len": 25,
-    "count": 3
-  },
-  {
-    "en": "New",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:570",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:622",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:691"
-    ],
-    "max_len": 14,
     "count": 3
   },
   {
@@ -2403,6 +2502,17 @@
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:242",
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:279",
       "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:219"
+    ],
+    "max_len": 17,
+    "count": 3
+  },
+  {
+    "en": "Pain positions",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:689",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:764",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
     ],
     "max_len": 17,
     "count": 3
@@ -2584,6 +2694,17 @@
     "count": 3
   },
   {
+    "en": "Start",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/OnboardingCoach.kt:705",
+      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:85",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:665"
+    ],
+    "max_len": 14,
+    "count": 3
+  },
+  {
     "en": "Start time: %s",
     "class": "hard",
     "sites": [
@@ -2614,17 +2735,6 @@
       "app/src/main/java/com/migraineme/SignupScreen.kt:206"
     ],
     "max_len": 25,
-    "count": 3
-  },
-  {
-    "en": "Treatments",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2103",
-      "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:522",
-      "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:556"
-    ],
-    "max_len": 14,
     "count": 3
   },
   {
@@ -2719,7 +2829,7 @@
     "en": "What did you miss?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2384",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2389",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:170",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:191"
     ],
@@ -2731,7 +2841,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:209",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2335",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2340",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:161"
     ],
     "max_len": 23,
@@ -2742,7 +2852,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LocationsScreen.kt:97",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2287",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2292",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:152"
     ],
     "max_len": 18,
@@ -3301,7 +3411,7 @@
     "en": "Add Food",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:493",
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:724",
       "app/src/main/java/com/migraineme/NutritionDialogs.kt:65"
     ],
     "max_len": 14,
@@ -3465,6 +3575,16 @@
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:558"
     ],
     "max_len": 20,
+    "count": 2
+  },
+  {
+    "en": "Attacks",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:67"
+    ],
+    "max_len": 14,
     "count": 2
   },
   {
@@ -3838,16 +3958,6 @@
     "count": 2
   },
   {
-    "en": "End",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/JournalScreen.kt:1215",
-      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:86"
-    ],
-    "max_len": 14,
-    "count": 2
-  },
-  {
     "en": "End time",
     "class": "hard",
     "sites": [
@@ -4025,6 +4135,16 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:352"
     ],
     "max_len": 34,
+    "count": 2
+  },
+  {
+    "en": "How we read your words",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:511",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:747"
+    ],
+    "max_len": 32,
     "count": 2
   },
   {
@@ -4448,6 +4568,16 @@
     "count": 2
   },
   {
+    "en": "Period",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:733",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:733"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
     "en": "Physical Health",
     "class": "hard",
     "sites": [
@@ -4465,6 +4595,16 @@
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:178"
     ],
     "max_len": 15,
+    "count": 2
+  },
+  {
+    "en": "Places",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807",
+      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:301"
+    ],
+    "max_len": 14,
     "count": 2
   },
   {
@@ -4585,6 +4725,16 @@
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:251"
     ],
     "max_len": 22,
+    "count": 2
+  },
+  {
+    "en": "Removed",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:286",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:622"
+    ],
+    "max_len": 14,
     "count": 2
   },
   {
@@ -4741,8 +4891,8 @@
     "en": "Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:825",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1192"
+      "app/src/main/java/com/migraineme/MainActivity.kt:828",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1197"
     ],
     "max_len": 14,
     "count": 2
@@ -4831,8 +4981,8 @@
     "en": "Skip Setup",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:876",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:891"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:931",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:946"
     ],
     "max_len": 14,
     "count": 2
@@ -4865,16 +5015,6 @@
       "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:76"
     ],
     "max_len": 23,
-    "count": 2
-  },
-  {
-    "en": "Start",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/OnboardingCoach.kt:705",
-      "app/src/main/java/com/migraineme/ReviewLogScreen.kt:85"
-    ],
-    "max_len": 14,
     "count": 2
   },
   {
@@ -4921,7 +5061,7 @@
     "en": "Symptoms you flag as caused by your treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2433",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2438",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:179"
     ],
     "max_len": 50,
@@ -5038,16 +5178,6 @@
     "count": 2
   },
   {
-    "en": "Treatment side effects",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2432",
-      "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178"
-    ],
-    "max_len": 25,
-    "count": 2
-  },
-  {
     "en": "Trend",
     "class": "soft",
     "sites": [
@@ -5088,13 +5218,23 @@
     "count": 2
   },
   {
-    "en": "Upgrade",
+    "en": "Use for insights",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:770",
-      "app/src/main/java/com/migraineme/PremiumGate.kt:227"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:505",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:518"
     ],
-    "max_len": 14,
+    "max_len": 19,
+    "count": 2
+  },
+  {
+    "en": "Warning signs before",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:678",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:807"
+    ],
+    "max_len": 23,
     "count": 2
   },
   {
@@ -5138,6 +5278,16 @@
     "count": 2
   },
   {
+    "en": "What we assumed",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:507",
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:559"
+    ],
+    "max_len": 18,
+    "count": 2
+  },
+  {
     "en": "When did this happen?",
     "class": "soft",
     "sites": [
@@ -5173,6 +5323,16 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1681",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:1065"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Where",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:691",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1181"
     ],
     "max_len": 14,
     "count": 2
@@ -5331,7 +5491,7 @@
     "en": "neurologist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:45",
+      "app/src/main/java/com/migraineme/NearbyCard.kt:50",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:745"
     ],
     "max_len": 14,
@@ -5343,16 +5503,6 @@
     "sites": [
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:129",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:137"
-    ],
-    "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "none",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:548",
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:629"
     ],
     "max_len": 14,
     "count": 2
@@ -5371,7 +5521,7 @@
     "en": "nutritional therapist",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:49",
+      "app/src/main/java/com/migraineme/NearbyCard.kt:54",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:738"
     ],
     "max_len": 31,
@@ -5381,7 +5531,7 @@
     "en": "osteopath",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:48",
+      "app/src/main/java/com/migraineme/NearbyCard.kt:53",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:741"
     ],
     "max_len": 14,
@@ -5391,7 +5541,7 @@
     "en": "physiotherapist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:47",
+      "app/src/main/java/com/migraineme/NearbyCard.kt:52",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:740"
     ],
     "max_len": 18,
@@ -5401,7 +5551,7 @@
     "en": "psychologist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:50",
+      "app/src/main/java/com/migraineme/NearbyCard.kt:55",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:739"
     ],
     "max_len": 15,
@@ -5591,6 +5741,15 @@
     "class": "hard",
     "sites": [
       "supabase/functions/generate-bot-comments/index.ts (push title, three or more companions)"
+    ],
+    "max_len": 46,
+    "count": 1
+  },
+  {
+    "en": "%1$s attacks are in your journal",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:799"
     ],
     "max_len": 46,
     "count": 1
@@ -5929,6 +6088,15 @@
     "count": 1
   },
   {
+    "en": "%s foods have been added to your nutrition log.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:589"
+    ],
+    "max_len": 68,
+    "count": 1
+  },
+  {
     "en": "%s free",
     "class": "hard",
     "sites": [
@@ -5941,7 +6109,7 @@
     "en": "%s has been added to your nutrition log.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:337"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:512"
     ],
     "max_len": 58,
     "count": 1
@@ -6472,7 +6640,7 @@
     "en": ", and suggested %s more",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:704"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:759"
     ],
     "max_len": 33,
     "count": 1
@@ -6838,6 +7006,15 @@
     "count": 1
   },
   {
+    "en": "A day without an attack.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:722"
+    ],
+    "max_len": 34,
+    "count": 1
+  },
+  {
     "en": "A few questions about your migraines",
     "class": "soft",
     "sites": [
@@ -6898,6 +7075,15 @@
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:565"
     ],
     "max_len": 108,
+    "count": 1
+  },
+  {
+    "en": "A phrase that names nothing specific is never guessed: it stays in your words unless you pick what it was.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:591"
+    ],
+    "max_len": 153,
     "count": 1
   },
   {
@@ -7324,6 +7510,24 @@
     "count": 1
   },
   {
+    "en": "Add %s foods",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:349"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "Add 1 food",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:349"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Add Accompanying Experience",
     "class": "hard",
     "sites": [
@@ -7366,6 +7570,15 @@
       "app/src/main/java/com/migraineme/NotesScreen.kt:124"
     ],
     "max_len": 63,
+    "count": 1
+  },
+  {
+    "en": "Add as a treatment",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:575"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -7525,7 +7738,7 @@
     "en": "Add, star, or remove medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2009"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2014"
     ],
     "max_len": 33,
     "count": 1
@@ -7534,7 +7747,7 @@
     "en": "Add, star, or remove reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2101"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2106"
     ],
     "max_len": 31,
     "count": 1
@@ -7543,9 +7756,27 @@
     "en": "Add, star, or remove triggers",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:1912"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1917"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Added to your lists",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:755"
+    ],
+    "max_len": 22,
+    "count": 1
+  },
+  {
+    "en": "Adding %1$s of %2$s…",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:336"
+    ],
+    "max_len": 23,
     "count": 1
   },
   {
@@ -7618,15 +7849,6 @@
       "build-report-html/render.ts"
     ],
     "max_len": 21,
-    "count": 1
-  },
-  {
-    "en": "After-effects",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:300"
-    ],
-    "max_len": 16,
     "count": 1
   },
   {
@@ -8047,7 +8269,7 @@
     "en": "Analyse & Configure",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:865"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:920"
     ],
     "max_len": 22,
     "count": 1
@@ -8104,6 +8326,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Another…",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:577"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -8620,15 +8851,6 @@
     "count": 1
   },
   {
-    "en": "Attacks",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:67"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
     "en": "Attacks in range",
     "class": "soft",
     "sites": [
@@ -8731,7 +8953,7 @@
     "en": "Automated tyramine, alcohol, gluten & histamine classification",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:449"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:680"
     ],
     "max_len": 89,
     "count": 1
@@ -8965,7 +9187,7 @@
     "en": "Barcode %s is not in the Open Food Facts database. Try searching by name instead.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:396"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:627"
     ],
     "max_len": 117,
     "count": 1
@@ -9109,7 +9331,7 @@
     "en": "Bedtime",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:726"
     ],
     "max_len": 14,
     "count": 1
@@ -9304,6 +9526,15 @@
     "count": 1
   },
   {
+    "en": "Blood pressure",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:731"
+    ],
+    "max_len": 17,
+    "count": 1
+  },
+  {
     "en": "Blood pressure high",
     "class": "hard",
     "sites": [
@@ -9355,6 +9586,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Body and sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:732"
+    ],
+    "max_len": 17,
     "count": 1
   },
   {
@@ -9463,6 +9703,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Bring your history with you.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:425"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -9598,6 +9847,15 @@
       "build-report-html/render.ts"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "CSV, a spreadsheet saved as CSV, Apple Health export, or plain notes",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:446"
+    ],
+    "max_len": 98,
     "count": 1
   },
   {
@@ -9739,7 +9997,7 @@
     "en": "Call",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:180"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:191"
     ],
     "max_len": 14,
     "count": 1
@@ -9898,6 +10156,15 @@
     "count": 1
   },
   {
+    "en": "Change anything that's wrong.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:559"
+    ],
+    "max_len": 42,
+    "count": 1
+  },
+  {
     "en": "Change password",
     "class": "hard",
     "sites": [
@@ -9952,10 +10219,19 @@
     "count": 1
   },
   {
+    "en": "Check the attacks and days",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:509"
+    ],
+    "max_len": 37,
+    "count": 1
+  },
+  {
     "en": "Check them as you go and change anything that doesn't fit.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:712"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:767"
     ],
     "max_len": 84,
     "count": 1
@@ -10069,6 +10345,15 @@
     "count": 1
   },
   {
+    "en": "Choose file",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:450"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Choose medicine",
     "class": "soft",
     "sites": [
@@ -10081,7 +10366,7 @@
     "en": "Choose metrics to show on Monitor",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:479"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:710"
     ],
     "max_len": 47,
     "count": 1
@@ -10798,6 +11083,15 @@
     "count": 1
   },
   {
+    "en": "Could not open the camera",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:286"
+    ],
+    "max_len": 36,
+    "count": 1
+  },
+  {
     "en": "Couldn't build the report — check your connection",
     "class": "soft",
     "sites": [
@@ -10822,6 +11116,15 @@
       "app/src/main/java/com/migraineme/MonitorScreen.kt:808"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Counting imports in insights is part of the subscription",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:525"
+    ],
+    "max_len": 81,
     "count": 1
   },
   {
@@ -10918,7 +11221,7 @@
     "en": "Customize Display",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:478"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:709"
     ],
     "max_len": 20,
     "count": 1
@@ -11329,6 +11632,24 @@
     "count": 1
   },
   {
+    "en": "Days without an attack",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:630"
+    ],
+    "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Days without an attack are kept as they are. Untick their category under Use for insights if you don't want them counted.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:739"
+    ],
+    "max_len": 175,
+    "count": 1
+  },
+  {
     "en": "Decay curves",
     "class": "soft",
     "sites": [
@@ -11602,7 +11923,7 @@
     "en": "Directions",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:191"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:202"
     ],
     "max_len": 14,
     "count": 1
@@ -11986,6 +12307,15 @@
     "count": 1
   },
   {
+    "en": "Done editing",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:652"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
     "en": "Download Report",
     "class": "hard",
     "sites": [
@@ -12133,7 +12463,7 @@
     "en": "Early warning signs before a migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2198"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2203"
     ],
     "max_len": 40,
     "count": 1
@@ -12223,7 +12553,7 @@
     "en": "Edit — %1$s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:682"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:737"
     ],
     "max_len": 14,
     "count": 1
@@ -12487,6 +12817,15 @@
       "app/src/main/java/com/migraineme/DataSettingsScreen.kt:343"
     ],
     "max_len": 94,
+    "count": 1
+  },
+  {
+    "en": "End (assumed)",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:666"
+    ],
+    "max_len": 16,
     "count": 1
   },
   {
@@ -12868,6 +13207,24 @@
     "count": 1
   },
   {
+    "en": "Everything goes in your journal. Ticked items also count in your insights. Ticks are our advice, change any.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:518"
+    ],
+    "max_len": 156,
+    "count": 1
+  },
+  {
+    "en": "Everything goes in your journal. With a subscription, ticked items also count in your insights. These are the ticks we'd advise.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:518"
+    ],
+    "max_len": 185,
+    "count": 1
+  },
+  {
     "en": "Everything here is a change you accepted — nothing moves without you.",
     "class": "soft",
     "sites": [
@@ -12910,6 +13267,15 @@
       "build-report-html/render.ts"
     ],
     "max_len": 93,
+    "count": 1
+  },
+  {
+    "en": "Everything we read from this entry.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:648"
+    ],
+    "max_len": 50,
     "count": 1
   },
   {
@@ -13174,6 +13540,15 @@
     "count": 1
   },
   {
+    "en": "Fairly sure",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:156"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "False alarm",
     "class": "hard",
     "sites": [
@@ -13339,7 +13714,7 @@
     "en": "Find matches & continue",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:879"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:934"
     ],
     "max_len": 26,
     "count": 1
@@ -13483,7 +13858,7 @@
     "en": "Food Added!",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:336"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:511"
     ],
     "max_len": 14,
     "count": 1
@@ -13522,6 +13897,33 @@
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:460"
     ],
     "max_len": 38,
+    "count": 1
+  },
+  {
+    "en": "Foods Added!",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:586"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol and gluten when ticked under Use for insights.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:761"
+    ],
+    "max_len": 195,
+    "count": 1
+  },
+  {
+    "en": "Foods, not triggers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:759"
+    ],
+    "max_len": 22,
     "count": 1
   },
   {
@@ -13648,6 +14050,15 @@
       "app/src/main/java/com/migraineme/ProfileScreen.kt:841"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Free: your history goes into your journal.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:432"
+    ],
+    "max_len": 60,
     "count": 1
   },
   {
@@ -13786,6 +14197,15 @@
     "count": 1
   },
   {
+    "en": "From the food database",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:264"
+    ],
+    "max_len": 32,
+    "count": 1
+  },
+  {
     "en": "From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is.",
     "class": "soft",
     "sites": [
@@ -13897,7 +14317,7 @@
     "en": "Garmin callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:454"
+      "app/src/main/java/com/migraineme/MainActivity.kt:456"
     ],
     "max_len": 33,
     "count": 1
@@ -14533,12 +14953,12 @@
     "count": 1
   },
   {
-    "en": "Her own site",
+    "en": "Here's what we found",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1235"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:490"
     ],
-    "max_len": 15,
+    "max_len": 23,
     "count": 1
   },
   {
@@ -14845,6 +15265,15 @@
       "build-report-html/render.ts"
     ],
     "max_len": 34,
+    "count": 1
+  },
+  {
+    "en": "How it works",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:454"
+    ],
+    "max_len": 15,
     "count": 1
   },
   {
@@ -15334,6 +15763,24 @@
     "count": 1
   },
   {
+    "en": "Import from another app",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:425"
+    ],
+    "max_len": 33,
+    "count": 1
+  },
+  {
+    "en": "Imported",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:793"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Improving — down {0}%",
     "class": "soft",
     "sites": [
@@ -15448,6 +15895,24 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Insights leave imported data out. Subscribe and import again to count it.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:814"
+    ],
+    "max_len": 105,
+    "count": 1
+  },
+  {
+    "en": "Insights use what you ticked under Use for insights. The rest stays in the journal only.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:814"
+    ],
+    "max_len": 127,
     "count": 1
   },
   {
@@ -15667,6 +16132,24 @@
     "count": 1
   },
   {
+    "en": "Journal only. Subscribe to count it in insights.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:505"
+    ],
+    "max_len": 69,
+    "count": 1
+  },
+  {
+    "en": "Journal, calendar and the doctor report show these attacks.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:813"
+    ],
+    "max_len": 85,
+    "count": 1
+  },
+  {
     "en": "Just start",
     "class": "hard",
     "sites": [
@@ -15682,6 +16165,15 @@
       "app/src/main/java/com/migraineme/ManagePoolScreen.kt:592"
     ],
     "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "Keep as written",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:577"
+    ],
+    "max_len": 18,
     "count": 1
   },
   {
@@ -15733,7 +16225,7 @@
     "en": "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2975"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2999"
     ],
     "max_len": 137,
     "count": 1
@@ -16597,7 +17089,7 @@
     "en": "Log meals and see tyramine, alcohol and gluten risk",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:487"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:718"
     ],
     "max_len": 56,
     "count": 1
@@ -16789,6 +17281,15 @@
       "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:483"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Looks wrong? Tap Edit.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:650"
+    ],
+    "max_len": 32,
     "count": 1
   },
   {
@@ -17071,12 +17572,30 @@
     "count": 1
   },
   {
+    "en": "Marked as imported, so you can always tell it apart.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:793"
+    ],
+    "max_len": 75,
+    "count": 1
+  },
+  {
     "en": "Match & continue",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:973"
     ],
     "max_len": 19,
+    "count": 1
+  },
+  {
+    "en": "Matched exactly",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:768"
+    ],
+    "max_len": 18,
     "count": 1
   },
   {
@@ -17395,6 +17914,15 @@
     "count": 1
   },
   {
+    "en": "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:457"
+    ],
+    "max_len": 168,
+    "count": 1
+  },
+  {
     "en": "Migraine ended",
     "class": "hard",
     "sites": [
@@ -17488,7 +18016,7 @@
     "en": "MigraineMe Setup — %1$s of %2$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:683"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:738"
     ],
     "max_len": 44,
     "count": 1
@@ -18613,9 +19141,18 @@
     "en": "No food logged today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:595"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:846"
     ],
     "max_len": 23,
+    "count": 1
+  },
+  {
+    "en": "No food spotted",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:605"
+    ],
+    "max_len": 18,
     "count": 1
   },
   {
@@ -19222,6 +19759,15 @@
     "count": 1
   },
   {
+    "en": "Not sure, please check",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:158"
+    ],
+    "max_len": 32,
+    "count": 1
+  },
+  {
     "en": "Note",
     "class": "hard",
     "sites": [
@@ -19273,6 +19819,15 @@
       "app/src/main/java/com/migraineme/JournalQuickAdd.kt:528"
     ],
     "max_len": 36,
+    "count": 1
+  },
+  {
+    "en": "Nothing is saved yet.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:490"
+    ],
+    "max_len": 31,
     "count": 1
   },
   {
@@ -19423,7 +19978,7 @@
     "en": "OR Continue and answer manually",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:883"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:938"
     ],
     "max_len": 34,
     "count": 1
@@ -19645,6 +20200,15 @@
     "count": 1
   },
   {
+    "en": "Or was it…",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:200"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Other",
     "class": "hard",
     "sites": [
@@ -19675,7 +20239,7 @@
     "en": "Oura callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:386"
+      "app/src/main/java/com/migraineme/MainActivity.kt:388"
     ],
     "max_len": 31,
     "count": 1
@@ -20473,6 +21037,15 @@
     "count": 1
   },
   {
+    "en": "Photograph your meal",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:788"
+    ],
+    "max_len": 30,
+    "count": 1
+  },
+  {
     "en": "Physical",
     "class": "hard",
     "sites": [
@@ -20524,6 +21097,15 @@
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:947"
     ],
     "max_len": 52,
+    "count": 1
+  },
+  {
+    "en": "Pick an export file",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:445"
+    ],
+    "max_len": 22,
     "count": 1
   },
   {
@@ -20587,15 +21169,6 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
-    "count": 1
-  },
-  {
-    "en": "Places",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:301"
-    ],
-    "max_len": 14,
     "count": 1
   },
   {
@@ -20674,7 +21247,7 @@
     "en": "Polar callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:420"
+      "app/src/main/java/com/migraineme/MainActivity.kt:422"
     ],
     "max_len": 32,
     "count": 1
@@ -20776,6 +21349,15 @@
       "app/src/main/java/com/migraineme/BarcodeAddFoodDialog.kt:120"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Portion is a guess",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:157"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -21097,7 +21679,7 @@
     "en": "Product not found",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:393"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:624"
     ],
     "max_len": 20,
     "count": 1
@@ -21199,6 +21781,15 @@
       "OnboardingCoach.kt:setupSteps-table"
     ],
     "max_len": 232,
+    "count": 1
+  },
+  {
+    "en": "Put it back",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:658"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -21415,6 +22006,15 @@
       "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:112"
     ],
     "max_len": 36,
+    "count": 1
+  },
+  {
+    "en": "Read as likely, with the reason",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:751"
+    ],
+    "max_len": 44,
     "count": 1
   },
   {
@@ -21805,12 +22405,21 @@
     "count": 1
   },
   {
-    "en": "Removed",
+    "en": "Remove this attack",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:286"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:697"
     ],
-    "max_len": 14,
+    "max_len": 21,
+    "count": 1
+  },
+  {
+    "en": "Remove this import",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:820"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -21979,7 +22588,7 @@
     "en": "Returning from Garmin...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:450"
+      "app/src/main/java/com/migraineme/MainActivity.kt:452"
     ],
     "max_len": 34,
     "count": 1
@@ -21988,7 +22597,7 @@
     "en": "Returning from Oura...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:382"
+      "app/src/main/java/com/migraineme/MainActivity.kt:384"
     ],
     "max_len": 32,
     "count": 1
@@ -21997,7 +22606,7 @@
     "en": "Returning from Polar...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:416"
+      "app/src/main/java/com/migraineme/MainActivity.kt:418"
     ],
     "max_len": 33,
     "count": 1
@@ -22006,7 +22615,7 @@
     "en": "Returning from WHOOP...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:347"
+      "app/src/main/java/com/migraineme/MainActivity.kt:349"
     ],
     "max_len": 33,
     "count": 1
@@ -22015,7 +22624,7 @@
     "en": "Returning from sign-in...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:471"
+      "app/src/main/java/com/migraineme/MainActivity.kt:473"
     ],
     "max_len": 36,
     "count": 1
@@ -22330,7 +22939,7 @@
     "en": "Save & re-check",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:853"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:908"
     ],
     "max_len": 18,
     "count": 1
@@ -22411,7 +23020,7 @@
     "en": "Scan barcode",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:537"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:768"
     ],
     "max_len": 22,
     "count": 1
@@ -22573,18 +23182,9 @@
     "en": "Search Results",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:555"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:806"
     ],
     "max_len": 17,
-    "count": 1
-  },
-  {
-    "en": "Search USDA database or scan a barcode",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:495"
-    ],
-    "max_len": 55,
     "count": 1
   },
   {
@@ -22600,7 +23200,7 @@
     "en": "Search foods",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:506"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:737"
     ],
     "max_len": 15,
     "count": 1
@@ -22630,6 +23230,15 @@
       "app/src/main/java/com/migraineme/LogFoodCard.kt:69"
     ],
     "max_len": 39,
+    "count": 1
+  },
+  {
+    "en": "Search the USDA database, scan a barcode, or photograph your meal",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:726"
+    ],
+    "max_len": 94,
     "count": 1
   },
   {
@@ -23131,7 +23740,7 @@
     "en": "Setting up your personalised migraine predictions",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2921"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2944"
     ],
     "max_len": 71,
     "count": 1
@@ -24001,6 +24610,15 @@
     "count": 1
   },
   {
+    "en": "Some foods could not be added",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:368"
+    ],
+    "max_len": 42,
+    "count": 1
+  },
+  {
     "en": "Some help",
     "class": "hard",
     "sites": [
@@ -24308,11 +24926,11 @@
   },
   {
     "en": "Steps",
-    "class": "soft",
+    "class": "hard",
     "sites": [
-      "DataSettingsSections.kt:table"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:730"
     ],
-    "max_len": 40,
+    "max_len": 14,
     "count": 1
   },
   {
@@ -24601,6 +25219,15 @@
       "app/src/main/java/com/migraineme/PaywallScreen.kt:363"
     ],
     "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "Subscribers: it also counts in your insights, triggers, medicines and patterns.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:433"
+    ],
+    "max_len": 114,
     "count": 1
   },
   {
@@ -25036,6 +25663,15 @@
     "count": 1
   },
   {
+    "en": "Tap a × to remove an item, type to add one.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:650"
+    ],
+    "max_len": 62,
+    "count": 1
+  },
+  {
     "en": "Tap any chip below to limit the report to attacks matching it.",
     "class": "soft",
     "sites": [
@@ -25168,6 +25804,15 @@
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:305"
     ],
     "max_len": 62,
+    "count": 1
+  },
+  {
+    "en": "Tap one to see everything we read from it.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:613"
+    ],
+    "max_len": 60,
     "count": 1
   },
   {
@@ -25459,6 +26104,15 @@
     "count": 1
   },
   {
+    "en": "That didn't work",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:475"
+    ],
+    "max_len": 19,
+    "count": 1
+  },
+  {
     "en": "The AI drafts your triggers, thresholds and pool",
     "class": "soft",
     "sites": [
@@ -25669,7 +26323,7 @@
     "en": "The suggestions come from your profile — worth tracking to find out. Change anything that doesn't fit as you go.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:710"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:765"
     ],
     "max_len": 162,
     "count": 1
@@ -25699,6 +26353,15 @@
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:108"
     ],
     "max_len": 66,
+    "count": 1
+  },
+  {
+    "en": "Their own site",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1235"
+    ],
+    "max_len": 17,
     "count": 1
   },
   {
@@ -25735,6 +26398,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:344"
     ],
     "max_len": 424,
+    "count": 1
+  },
+  {
+    "en": "These are estimates. Tap a food to change it, untick anything we got wrong, and correct the portions before adding.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:106"
+    ],
+    "max_len": 166,
     "count": 1
   },
   {
@@ -25834,6 +26506,15 @@
       "app/src/main/java/com/migraineme/BatteryOptimizationDialog.kt:25"
     ],
     "max_len": 113,
+    "count": 1
+  },
+  {
+    "en": "This attack will not be imported.",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:657"
+    ],
+    "max_len": 36,
     "count": 1
   },
   {
@@ -26026,6 +26707,15 @@
     "count": 1
   },
   {
+    "en": "Time",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:663"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Time cannot be in the future",
     "class": "soft",
     "sites": [
@@ -26155,7 +26845,7 @@
     "en": "Today's Log",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:586"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:837"
     ],
     "max_len": 14,
     "count": 1
@@ -26416,7 +27106,7 @@
     "en": "Track your diet patterns over time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:703"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:954"
     ],
     "max_len": 37,
     "count": 1
@@ -26545,6 +27235,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Treatment",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:735"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -26872,6 +27571,15 @@
     "count": 1
   },
   {
+    "en": "Type to search foods",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:246"
+    ],
+    "max_len": 23,
+    "count": 1
+  },
+  {
     "en": "Typical duration",
     "class": "soft",
     "sites": [
@@ -27046,7 +27754,7 @@
     "en": "Unlock Diet Trends",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:702"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:953"
     ],
     "max_len": 21,
     "count": 1
@@ -27055,7 +27763,7 @@
     "en": "Unlock Food Risk Analysis",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:486"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:717"
     ],
     "max_len": 36,
     "count": 1
@@ -27901,7 +28609,7 @@
     "en": "WHOOP callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:351"
+      "app/src/main/java/com/migraineme/MainActivity.kt:353"
     ],
     "max_len": 32,
     "count": 1
@@ -28081,9 +28789,9 @@
     "en": "Water",
     "class": "hard",
     "sites": [
-      "pool:seeded-template"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:728"
     ],
-    "max_len": 32,
+    "max_len": 14,
     "count": 1
   },
   {
@@ -28108,9 +28816,18 @@
     "en": "We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals can't be classified automatically. Log trigger foods via the barcode/search above to get classification.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:454"
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:685"
     ],
     "max_len": 359,
+    "count": 1
+  },
+  {
+    "en": "We could not make out any food in that photo. Try again in better light with the whole plate in frame, or search for it by name.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:608"
+    ],
+    "max_len": 185,
     "count": 1
   },
   {
@@ -28162,7 +28879,7 @@
     "en": "We filled in %s from what you told us",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:703"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:758"
     ],
     "max_len": 53,
     "count": 1
@@ -28183,6 +28900,15 @@
       "app/src/main/java/com/migraineme/WhoopLateDataReminderWorker.kt:77"
     ],
     "max_len": 100,
+    "count": 1
+  },
+  {
+    "en": "We read the file and show you what we found before anything is saved. You can change or remove any attack, and you can remove the whole import afterwards.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:455"
+    ],
+    "max_len": 223,
     "count": 1
   },
   {
@@ -28342,7 +29068,7 @@
     "en": "Website",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:187"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:198"
     ],
     "max_len": 14,
     "count": 1
@@ -28396,7 +29122,7 @@
     "en": "Weight",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:729"
     ],
     "max_len": 14,
     "count": 1
@@ -28609,6 +29335,15 @@
     "count": 1
   },
   {
+    "en": "What changes",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:812"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
     "en": "What did you do today?",
     "class": "hard",
     "sites": [
@@ -28696,6 +29431,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:397"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "What helped",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:686"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -28858,6 +29602,15 @@
       "app/src/main/java/com/migraineme/ProfileScreen.kt:989"
     ],
     "max_len": 31,
+    "count": 1
+  },
+  {
+    "en": "What was written",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:806"
+    ],
+    "max_len": 19,
     "count": 1
   },
   {
@@ -29104,6 +29857,15 @@
     "count": 1
   },
   {
+    "en": "What's on the plate?",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:97"
+    ],
+    "max_len": 23,
+    "count": 1
+  },
+  {
     "en": "What's on your mind?",
     "class": "hard",
     "sites": [
@@ -29263,15 +30025,6 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:3352"
     ],
     "max_len": 40,
-    "count": 1
-  },
-  {
-    "en": "Where",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1181"
-    ],
-    "max_len": 14,
     "count": 1
   },
   {
@@ -29599,6 +30352,15 @@
     "count": 1
   },
   {
+    "en": "Woke up",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:727"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Woke up time",
     "class": "soft",
     "sites": [
@@ -29776,6 +30538,15 @@
       "app/src/main/java/com/migraineme/MenstruationEditDialog.kt:39"
     ],
     "max_len": 42,
+    "count": 1
+  },
+  {
+    "en": "YYYY-MM-DDTHH:MM",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:715"
+    ],
+    "max_len": 19,
     "count": 1
   },
   {
@@ -30070,7 +30841,7 @@
     "en": "Your account and app preferences",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:831"
+      "app/src/main/java/com/migraineme/MainActivity.kt:834"
     ],
     "max_len": 46,
     "count": 1
@@ -30079,7 +30850,7 @@
     "en": "Your answers are saved and the AI has re-checked your profile.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2761"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2783"
     ],
     "max_len": 89,
     "count": 1
@@ -30133,7 +30904,7 @@
     "en": "Your data is still being processed.\nThis will complete in the background.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2920"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2943"
     ],
     "max_len": 105,
     "count": 1
@@ -30178,7 +30949,7 @@
     "en": "Your free trial just ended",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2974"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2998"
     ],
     "max_len": 37,
     "count": 1
@@ -30193,12 +30964,48 @@
     "count": 1
   },
   {
+    "en": "Your history is still imported into the journal today.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:526"
+    ],
+    "max_len": 78,
+    "count": 1
+  },
+  {
+    "en": "Your imported medicines and reliefs are now favourites in the log wizard.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:815"
+    ],
+    "max_len": 105,
+    "count": 1
+  },
+  {
     "en": "Your journal",
     "class": "soft",
     "sites": [
       "OnboardingCoach.kt:tourSteps-table"
     ],
     "max_len": 60,
+    "count": 1
+  },
+  {
+    "en": "Your labels next to ours",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:511"
+    ],
+    "max_len": 34,
+    "count": 1
+  },
+  {
+    "en": "Your labels, next to the ones MigraineMe uses.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:747"
+    ],
+    "max_len": 66,
     "count": 1
   },
   {
@@ -30271,6 +31078,15 @@
       "app/src/main/java/com/migraineme/PinnedTopics.kt:34"
     ],
     "max_len": 31,
+    "count": 1
+  },
+  {
+    "en": "Your note",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:693"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -30655,7 +31471,7 @@
     "en": "acupuncturist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:51"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:56"
     ],
     "max_len": 16,
     "count": 1
@@ -30773,6 +31589,15 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/JournalScreen.kt:1341"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "attacks",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:496"
     ],
     "max_len": 14,
     "count": 1
@@ -31102,6 +31927,15 @@
     "count": 1
   },
   {
+    "en": "e.g. 40 mg",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:573"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "e.g. CEFALY preventive",
     "class": "soft",
     "sites": [
@@ -31321,7 +32155,7 @@
     "en": "headache clinic",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:46"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:51"
     ],
     "max_len": 18,
     "count": 1
@@ -31606,6 +32440,15 @@
     "count": 1
   },
   {
+    "en": "medicines",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:496"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "melatonin",
     "class": "soft",
     "sites": [
@@ -31627,7 +32470,7 @@
     "en": "migraine clinic",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:43"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:48"
     ],
     "max_len": 18,
     "count": 1
@@ -31654,7 +32497,7 @@
     "en": "migraine specialist",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/NearbyCard.kt:44"
+      "app/src/main/java/com/migraineme/NearbyCard.kt:49"
     ],
     "max_len": 22,
     "count": 1
@@ -31817,6 +32660,15 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2800"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "out of 10",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:674"
     ],
     "max_len": 14,
     "count": 1
@@ -32278,6 +33130,15 @@
       "ai_companions:triggers/interests (DB rows, rendered via tSync)"
     ],
     "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "symptoms",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:496"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {

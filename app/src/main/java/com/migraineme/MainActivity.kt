@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -133,6 +134,7 @@ object Routes {
     const val HOME = "home"
     const val PROFILE = "profile"
     const val DATA = "data"
+        const val IMPORT_HISTORY = "import_history"
     const val MENSTRUATION_SETTINGS = "menstruation_settings"
     const val PRACTITIONERS = "practitioners"
     const val COMMUNITY = "community"
@@ -789,6 +791,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
+        DrawerItem("Import history", Routes.IMPORT_HISTORY, Icons.Outlined.UploadFile),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Shop", Routes.SHOP, Icons.Outlined.ShoppingBag),
@@ -985,6 +988,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.THIRD_PARTY_CONNECTIONS ||
             current == Routes.PROFILE ||
             current == Routes.DATA ||
+            current == Routes.IMPORT_HISTORY ||
             current == Routes.RISK_WEIGHTS ||
             current == Routes.RISK_DETAIL ||
             current == Routes.CHANGE_PASSWORD ||
@@ -1106,6 +1110,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.PROFILE -> "Profile"
                                     Routes.HELP -> "Help"
                                     Routes.DATA -> "Data"
+                                    Routes.IMPORT_HISTORY -> "Import history"
                                     Routes.PRACTITIONERS -> "Practitioners"
                                     Routes.LANGUAGE -> "Language"
                                     Routes.MENSTRUATION_SETTINGS -> "Menstruation Settings"
@@ -2613,6 +2618,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.DATA) {
                         DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) }, onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) })
+                    }
+
+                    composable(Routes.IMPORT_HISTORY) {
+                        // Open to everyone (journal). Counting imported data in insights needs a paid subscription; the screen gates that part.
+                        ImportHistoryScreen(onBack = { nav.popBackStack() }, onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) })
                     }
 
                     composable(Routes.PRACTITIONERS) {
