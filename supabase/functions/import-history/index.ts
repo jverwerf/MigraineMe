@@ -801,7 +801,7 @@ function buildVocabulary(attacks: Attack[], days: Day[]): Record<SourceClass, Vo
   return out;
 }
 
-interface Pools { [cls: string]: { label: string; category: string | null; icon_key: string | null }[] }
+interface Pools { [cls: string]: { label: string; category: string | null; icon_key: string | null; metric_table?: string | null }[] }
 const POOL_TABLE: Record<string, string> = { type: "user_migraines_pool", symptom: "user_symptoms", prodrome: "user_prodromes", postdrome: "user_symptoms", trigger: "user_triggers", medicine: "user_medicines", relief: "user_reliefs", activity: "user_activities", location: "user_locations", missed: "user_missed_activities", side_effect: "user_treatment_side_effects" };
 const PREF_TABLE: Record<string, [string, string]> = { type: ["migraine_preferences", "migraine_id"], symptom: ["symptom_preferences", "symptom_id"], prodrome: ["prodrome_user_preferences", "prodrome_id"], trigger: ["trigger_preferences", "trigger_id"], medicine: ["medicine_preferences", "medicine_id"], relief: ["relief_preferences", "relief_id"], activity: ["activity_preferences", "activity_id"], location: ["location_preferences", "location_id"], missed: ["missed_activity_preferences", "missed_activity_id"], side_effect: ["treatment_side_effect_preferences", "side_effect_id"] };
 const CATEGORIES: Record<string, string[]> = {
@@ -847,10 +847,12 @@ function painWordsToIds(phrase: string): string[] | null {
   return null;
 }
 const GENERIC_MED = /^((the |my |mijn |de |het |meine?n? )?(tablet|tabletten|tablets?|pil|pillen|pills?|medicijn|medicijnen|medication|medicatie|meds?|ingenomen|genomen|taken|eingenommen|pris|painkillers?|pijnstillers?|schmerzmittel|tabletten genomen|pillen genomen|took (something|meds|tablets|my usual)|iets genomen|usual|usuals|gebruikelijke|gewone|the strong one|sterke|other one|normal one|standard)( medication| medicatie| meds| pills?| tablets?| one| dose)?)$/i;
-const TIME_OF_DAY = /^(s\s*|'s\s*|in the |im |am |le )?(ochtends|middags|avonds|nachts|morning|afternoon|evening|night|morgens|mittags|abends|matin|après-midi|soir)$/i;
+const TIME_OF_DAY = /^(s\s*|'s\s*|in the |im |am |le )?(ochtends?|middags?|avonds?|nachts?|morning|afternoon|evening|night|morgens?|mittags?|abends?|matin|après-midi|soir)$/i;
 const QUANTITY_ONLY = /^(tab|tabs|st|stuks|pcs|pil|pillen)$|^(\d+\s*x\s*\d+(\s*(st|stuks?|tab|tabs|tablets?|tabletten))?(\s*(\+|en|and)\s*\d+\s*x?\s*\d*\s*(st|x|tab)?)?|\d+([.,]\d+)?\s*(st|stuks?|tab|tabs|tablets?|tabletten|pcs?|pil{1,2}(en)?|x)?(\s*(\+|en|and)\s*\d+\s*(st|x|tab)?)?(\s+(s\s*)?(ochtends|middags|avonds|in the morning|in the afternoon|in the evening))?|dubbele dosering|double dose|new dose|nieuwe dosis|2e x|2nd dose|second dose|extra dosis|extra dose)$/i;
 const EFFECT_WORDS = /^((it |het |dat |es )?(helped|worked|didn['’]?t (help|work)|did not (help|work)|no effect|effective|ineffective|hielp|hielp goed|hielp niet|werkte|werkte niet|geholpen|goed geholpen|niet geholpen|goed resultaat|geen effect|zonder effect|geholfen|gewirkt|nicht geholfen|efficace|inefficace|a aidé|n['’]a pas aidé)( well| a lot| a bit| goed| niet| nicht| within .*| binnen .*)?)$/i;
 const BARE_ATTACK = /^(migraine|migraines|headache|hoofdpijn|migräne|kopfschmerz(en)?|migraña|emicrania|enxaqueca|mal de tête|attack|aanval|anfall)$/i;
+// "in avond begonnen", "Beginning upon waking": when the attack started, never a trigger or warning sign
+const ONSET_TIME = /^((it |pain |headache |migraine |hoofdpijn |migraine )?(started|starting|began|beginning|begin|begonnen|gestart|opgekomen|ontstaan|angefangen|begann|commencé|a commencé)\s+(in the |at |upon |on |during the |'s\s*|s\s*|in de |bij het |bij |im |am |beim |au |le |pendant la )?(ochtends?|middags?|avonds?|nachts?|morning|afternoon|evening|night|waking( up)?|wake[- ]?up|opstaan|wakker worden|morgens?|mittags?|abends?|aufwachen|réveil|matin|soir|nuit|sleep|slaap)|(in de |'s\s*|s\s*|in |im |am |le )?(ochtends?|middags?|avonds?|nachts?|morning|evening|night|morgens?|abends?|matin|soir)\s+(begonnen|gestart|opgekomen|ontstaan|started|began|angefangen|begonnen)|(woke|waking|wake|woken|awoke) (up )?with (it|a |the )?\s*(migraine|headache|pain|hoofdpijn)?|(on|upon|at|after) wak(ing|e[- ]?up)( up)?|(wakker (geworden|gewor?den) met|mee wakker geworden|bij het (opstaan|wakker worden)|mit .* aufgewacht|beim aufwachen|au réveil))$/i;
 const GENERIC_ANY = /^((the |my |mijn |de |het |meine?n? )?(usual|usuals|gebruikelijke|gewone|same( as always| as usual)?|routine|usual routine|normal routine|something|iets|etwas|stuff|things?|the strong one|other one|normal one|standard|as always|whatever|nothing special|the works)( routine| stuff| thing| one)?)$/i;
 
 const LINK_SYSTEM = `You link words from a person's migraine diary to the vocabulary of the MigraineMe app. You see every distinct phrase of one class with how often it occurs, example sentences, and the whole file's vocabulary in other classes for context. Decide for EACH phrase:
@@ -931,8 +933,10 @@ async function link(model: Model, pools: Pools, spend: Spend): Promise<LinkDecis
           }
           if ((cls === "medicine" || dec.concept === "medicine") && GENERIC_MED.test(e.phrase) && namedMeds.length !== 1) {
             dec.tier = "ambiguous"; dec.reasoning = namedMeds.length ? `"${e.phrase}" names no drug and the file names ${namedMeds.length} different medicines` : `"${e.phrase}" names no drug and the file names none`;
-          } else if ((cls === "relief" && EFFECT_WORDS.test(e.phrase)) || (cls === "type" && BARE_ATTACK.test(e.phrase)) || TIME_OF_DAY.test(e.phrase)) {
-            dec.concept = "drop"; dec.tier = "certain"; dec.reasoning = cls === "relief" ? `"${e.phrase}" says how well something worked, it is not a relief` : cls === "type" ? `"${e.phrase}" is the attack itself` : `"${e.phrase}" is a time of day, not a ${cls}`;
+          } else if (cls === "relief" && (pools["medicine"] ?? []).some((pm) => new RegExp(`\\b${pm.label.split(" ")[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(e.phrase) || /\b(pcm|ibu|ibi|paracetamol|ibuprofen|triptan)\b/i.test(e.phrase))) {
+            dec.concept = "drop"; dec.tier = "certain"; dec.reasoning = `"${e.phrase}" is a medicine, and the medicines are listed separately`;
+          } else if ((cls === "relief" && EFFECT_WORDS.test(e.phrase)) || (cls === "type" && BARE_ATTACK.test(e.phrase)) || TIME_OF_DAY.test(e.phrase) || ONSET_TIME.test(e.phrase)) {
+            dec.concept = "drop"; dec.tier = "certain"; dec.reasoning = cls === "relief" ? `"${e.phrase}" says how well something worked, it is not a relief` : cls === "type" ? `"${e.phrase}" is the attack itself` : ONSET_TIME.test(e.phrase) ? `"${e.phrase}" says when the attack started, not a ${cls}` : `"${e.phrase}" is a time of day, not a ${cls}`;
           } else if (GENERIC_MED.test(e.phrase) && cls !== "medicine" && dec.concept !== "medicine") {
             dec.concept = "drop"; dec.tier = "certain"; dec.reasoning = `"${e.phrase}" just says medication was taken; the medicines themselves are listed separately`;
           } else if (GENERIC_ANY.test(e.phrase) || QUANTITY_ONLY.test(e.phrase)) {
@@ -1037,41 +1041,78 @@ function proposeRegimens(model: Model, decisions: LinkDecision[]): RegimenPropos
 // Use for insights: per category, recommended from what the file actually holds
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface EngineUse { key: string; label: string; recommended: boolean; reason: string; count: number }
+// fixed = no fair way to count it (vague, measured by the app, only on attack days, too few days): journal only, no tick offered, commit ignores the client
+interface EngineUse { key: string; group: string; label: string; recommended: boolean; fixed: boolean; reason: string; count: number }
 
 const METRIC_LABEL: Record<string, string> = { sleep_hours: "Sleep hours", hydration_ml: "Water", weight_kg: "Weight", steps: "Steps", sleep_disturbances: "Night wake-ups", mindfulness_minutes: "Mindfulness", body_fat_pct: "Body fat", blood_glucose: "Blood glucose", bp_systolic: "Blood pressure", bedtime: "Bedtime", wake_time: "Wake-up time" };
 
-export function engineUseRecommendations(model: Model): EngineUse[] {
+export const itemKey = (group: string, label: string) => `item|${group}|${label}`;
+
+// One decision per ITEM (every trigger, food, symptom, medicine...), each with its own reason from what the file shows.
+export function engineUseRecommendations(model: Model, decisions: LinkDecision[], answers: Record<string, string | null> = {}, pools: Pools = {}, regimens: RegimenProposal[] = []): EngineUse[] {
   const attacks = model.attacks, days = model.days;
   const attackDates = new Set(attacks.map((a) => dateOf(a.start_local)));
   const dates = attacks.map((a) => dateOf(a.start_local)).sort();
   const spanDays = dates.length ? Math.max(1, Math.round(localMinutesBetween(dates[0] + "T00:00:00", dates[dates.length - 1] + "T00:00:00") / 1440) + 1) : 1;
   const out: EngineUse[] = [];
-  const n = (f: (a: Attack) => number) => attacks.reduce((s, a) => s + f(a), 0);
-  out.push({ key: "attacks", label: "Attacks, symptoms, pain positions, aura", recommended: true, reason: "An attack is an attack. Used for how often, how long, at what time, and which symptoms come together.", count: attacks.length });
-  const meds = n((a) => a.meds.length) + days.reduce((s, d) => s + d.daily_meds.length, 0);
-  if (meds) out.push({ key: "medicines", label: "Medicines", recommended: true, reason: "Used for which medicine helped and how fast.", count: meds });
-  const rel = n((a) => a.reliefs.length);
-  if (rel) out.push({ key: "reliefs", label: "What helped", recommended: true, reason: "Used for which reliefs worked.", count: rel });
-  const pa = n((a) => a.activities.length + a.missed.length + (a.location ? 1 : 0)) + days.reduce((s, d) => s + d.missed.length, 0);
-  if (pa) out.push({ key: "places_activities", label: "Places, activities, missed plans", recommended: true, reason: "Used as they are.", count: pa });
-  const trigAttack = n((a) => a.triggers.length + a.prodromes.length);
-  const quietTrigDays = days.filter((d) => !attackDates.has(d.date) && (d.triggers.length || d.prodromes.length)).length;
-  if (trigAttack || quietTrigDays) out.push({ key: "triggers", label: "Triggers and warning signs", recommended: quietTrigDays >= 3,
-    reason: quietTrigDays >= 3 ? `Your old app recorded them on ${quietTrigDays} days without an attack too, so they can be scored fairly.` : "Your old app only recorded these on migraine days. Scoring them would make every one look like a cause. They stay readable in each attack's note.", count: trigAttack + quietTrigDays });
-  const foodAttack = n((a) => a.foods.length);
-  const quietFoodDays = days.filter((d) => !attackDates.has(d.date) && d.foods.length).length;
-  if (foodAttack || quietFoodDays) out.push({ key: "foods", label: "Foods", recommended: quietFoodDays >= 3,
-    reason: quietFoodDays >= 3 ? `Logged on ${quietFoodDays} days without an attack too, so exposure can be scored fairly.` : "Only recorded on migraine days, so exposure scoring would be one-sided. They stay in the journal as the triggers you tagged.", count: foodAttack + quietFoodDays });
+  const res = (cls: SourceClass, phrase: string) => { const r = resolveLabel(decisions, answers, cls, phrase); return r && r.concept !== "drop" ? r : null; };
+  const vague = (cls: SourceClass, phrase: string) => { const d = decisions.find((x) => x.class === cls && x.phrase.toLowerCase() === lower(phrase)); return !!d && d.tier === "ambiguous" && answers[`${d.class}|${d.phrase}`] == null; };
+  // label -> { attack dates, quiet dates, vague }
+  type Tally = { attackDays: Set<string>; quietDays: Set<string>; vague: boolean };
+  const tallies: Record<string, Map<string, Tally>> = {};
+  const foodName = new Map<string, string>();
+  const note = (group: string, label0: string, date: string, onAttack: boolean, isVague: boolean) => {
+    let label = label0; if (group === "food") { const k = label0.toLowerCase(); if (!foodName.has(k)) foodName.set(k, label0); label = foodName.get(k)!; }
+    tallies[group] ??= new Map(); const t = tallies[group].get(label) ?? { attackDays: new Set(), quietDays: new Set(), vague: false };
+    (onAttack ? t.attackDays : t.quietDays).add(date); t.vague = t.vague || isVague; tallies[group].set(label, t);
+  };
+  for (const a of attacks) {
+    const d = dateOf(a.start_local);
+    const put = (cls: SourceClass, phrase: string) => { const r = res(cls, phrase); if (!r) return; const g = r.concept === "type" ? "symptom" : r.concept === "regimen" ? "medicine" : r.concept; note(g, r.label, d, true, vague(cls, phrase)); };
+    a.types.forEach((x) => put("type", x)); a.symptoms.forEach((x) => put("symptom", x)); a.prodromes.forEach((x) => put("prodrome", x)); a.postdromes.forEach((x) => put("postdrome", x));
+    a.triggers.forEach((x) => put("trigger", x)); a.foods.forEach((x) => note("food", norm(x), d, true, false));
+    a.meds.forEach((m) => put("medicine", m.name)); a.reliefs.forEach((r) => put("relief", r.name)); a.activities.forEach((x) => put("activity", x)); a.missed.forEach((x) => put("missed", x));
+    if (a.location) put("location", a.location);
+  }
+  for (const day of days) {
+    const onAttack = attackDates.has(day.date);
+    const put = (cls: SourceClass, phrase: string) => { const r = res(cls, phrase); if (!r) return; note(r.concept === "regimen" ? "medicine" : r.concept, r.label, day.date, onAttack, vague(cls, phrase)); };
+    day.triggers.forEach((x) => put("trigger", x)); day.prodromes.forEach((x) => put("prodrome", x)); day.missed.forEach((m) => put("missed", m.name));
+    day.daily_meds.forEach((m) => put("medicine", m.name)); day.foods.forEach((f) => note("food", norm(f.name), day.date, onAttack, false));
+  }
+  const measured = (group: string, label: string) => !!(pools[group] ?? []).find((p) => p.label === label && p.metric_table);
+  const regimenNames = new Set(regimens.map((r) => r.name));
+
+  out.push({ key: "attacks", group: "attacks", label: "Attacks and pain", recommended: true, fixed: false, reason: "An attack is an attack. Used for how often, how long and at what time.", count: attacks.length });
+  const order = ["symptom", "postdrome", "medicine", "relief", "trigger", "prodrome", "food", "location", "activity", "missed"];
+  for (const group of order) {
+    const m = tallies[group]; if (!m) continue;
+    for (const [label, t] of Array.from(m.entries()).sort((x, y) => (y[1].attackDays.size + y[1].quietDays.size) - (x[1].attackDays.size + x[1].quietDays.size))) {
+      if (group === "medicine" && regimenNames.has(label)) continue; // listed under treatments
+      const onA = t.attackDays.size, quiet = t.quietDays.size, n = onA + quiet;
+      let recommended = true; let fixed = false; let reason = "";
+      if (t.vague) { recommended = false; fixed = true; reason = `We couldn't tell what "${label}" is, so it stays in your journal in your own words.`; }
+      else if (group === "trigger" || group === "prodrome" || group === "food") {
+        if (measured(group, label)) { recommended = false; fixed = true; reason = "MigraineMe measures this itself from your phone, watch or the weather. Your typed note would mix with that."; }
+        else if (quiet >= 3) { reason = `Noted on ${onA} attack ${onA === 1 ? "day" : "days"} and ${quiet} days without an attack, so it can be compared fairly.`; }
+        else { recommended = false; fixed = true; reason = onA ? `Only noted on migraine days (${onA}). Counting it would make it look like a cause. It stays in the attack's note.` : `Noted on ${quiet} ${quiet === 1 ? "day" : "days"} without an attack only, too few to compare.`; }
+      } else if (group === "symptom" || group === "postdrome") reason = `On ${onA} ${onA === 1 ? "attack" : "attacks"}. Used for which symptoms come together.`;
+      else if (group === "medicine") reason = `Taken on ${n} ${n === 1 ? "day" : "days"}. Used for how well it works and how fast.`;
+      else if (group === "relief") reason = `Used on ${n} ${n === 1 ? "day" : "days"}. Used for what helps.`;
+      else reason = `On ${n} ${n === 1 ? "day" : "days"}.`;
+      out.push({ key: itemKey(group, label), group, label, recommended, fixed, reason, count: n });
+    }
+  }
   const metricKeys = uniq([...days.flatMap((d) => Object.keys(d.metrics)), ...days.flatMap((d) => Object.keys(d.times))]).filter((k) => METRIC_LABEL[k]);
   for (const k of metricKeys) {
     const have = days.filter((d) => d.metrics[k] !== undefined || d.times[k] !== undefined).length;
     const share = have / spanDays;
-    out.push({ key: `metric:${k}`, label: METRIC_LABEL[k], recommended: share >= 0.5, reason: share >= 0.5 ? `Logged on ${have} of ${spanDays} days, enough to compare good and bad days.` : `Logged on only ${have} of ${spanDays} days, mostly around attacks. Not enough good days to compare against.`, count: have });
+    out.push({ key: `metric:${k}`, group: "metric", label: METRIC_LABEL[k], recommended: share >= 0.5, fixed: share < 0.5, reason: share >= 0.5 ? `Logged on ${have} of ${spanDays} days, enough to compare good and bad days.` : `Logged on only ${have} of ${spanDays} days, mostly around attacks. Not enough good days to compare against.`, count: have });
   }
   const periods = days.filter((d) => d.period === "start").length;
-  if (periods) out.push({ key: "period", label: "Period", recommended: true, reason: "Calendar dates, used for the cycle pattern.", count: periods });
-  if (days.some((d) => d.regimens.length)) out.push({ key: "treatments", label: "Treatments started or stopped", recommended: true, reason: "Used to compare attacks before and after.", count: days.reduce((s, d) => s + d.regimens.length, 0) });
+  if (periods) out.push({ key: "period", group: "period", label: "Period", recommended: true, fixed: false, reason: "Calendar dates, used for the cycle pattern.", count: periods });
+  for (const r of regimens) out.push({ key: itemKey("regimen", r.name), group: "regimen", label: r.name, recommended: true, fixed: false, reason: r.stop_date ? `From ${r.start_date} to ${r.stop_date}. Used to compare attacks before and after.` : `From ${r.start_date}. Used to compare attacks before and after.`, count: r.days || 1 });
+  if (days.some((d) => d.side_effects.length)) out.push({ key: "side_effects", group: "regimen", label: "Side effects of treatments", recommended: true, fixed: false, reason: "Days you noted side effects of a daily treatment.", count: days.reduce((s2, d) => s2 + d.side_effects.length, 0) });
   return out;
 }
 
@@ -1127,9 +1168,10 @@ export function buildPreview(model: Model, decisions: LinkDecision[], regimens: 
     assumptions: [
       ...(model.source.shape.date_order ? [{ key: "date_order", text: `Dates read as ${model.source.shape.date_order === "MDY" ? "month first" : model.source.shape.date_order === "YMD" || model.source.shape.date_order === "ISO" ? "year first" : "day first"}`, value: model.source.shape.date_order, options: ["DMY", "MDY", "YMD"] }] : []),
       ...(model.source.shape.intensity_scale ? [{ key: "intensity_scale", text: `Pain scale ${model.source.shape.intensity_scale}, converted to 1 to 10`, value: model.source.shape.intensity_scale, options: ["0-10", "1-10", "0-5", "1-3", "mild/moderate/severe"] }] : []),
-      { key: "timezone", text: `Times are ${model.timezone.replace(/_/g, " ")} time`, value: model.timezone, options: null },
+      { key: "timezone", text: "Times in your file are in this time zone", value: model.timezone, options: null },
       ...(attacks.some((a) => a.start_local.endsWith("T12:00:00") && a.provenance.row !== null) ? [{ key: "no_time_hour", text: `Attacks with a date but no time start at 12:00`, value: 12, options: [7, 9, 12, 18] }] : []),
       ...(sevCounts && attacks.some((a) => a.end_inferred) ? [{ key: "end_fill_hours", text: model.inferences.find((i) => i.includes("no end time")) ?? "Missing end times filled in", value: null, options: null }] : []),
+      ...(overlap.first_app_log && overlap.overlapping > 0 ? [{ key: "cutoff", text: `${overlap.overlapping} ${overlap.overlapping === 1 ? "attack is" : "attacks are"} dated after you started logging in MigraineMe (${overlap.first_app_log}). We skip those so nothing is counted twice.`, value: "skip", options: ["skip", "import"] }] : []),
       ...(decisions.some((d) => d.concept === "food" && d.class === "trigger") ? [{ key: "foods", text: "Foods you listed as triggers are tracked as food", value: "food", options: ["food", "trigger", "skip"] }] : []),
       ...regimens.map((r) => ({ key: `regimen|${r.name}`, text: r.from === "mention" ? `"${r.name}" is added as a treatment from ${r.start_date}` : `${r.name} on ${r.days} days is a daily treatment from ${r.start_date}`, value: "add", options: ["add", "skip"] })),
       ...Object.entries(attacks.reduce((acc, a) => { for (const m of a.meds) if (m.dose_value === null) { const d = decisions.find((x) => x.class === "medicine" && x.phrase.toLowerCase() === m.name.toLowerCase()); const label = d?.pool_label ?? d?.new_item?.label ?? m.name; if (d?.tier !== "ambiguous") acc[label] = (acc[label] ?? 0) + 1; } return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([label, n]) => ({ key: `dose|${label}`, text: `${label}: no dose in your file (${n} ${n === 1 ? "entry" : "entries"}). Type your usual dose to fill them in, or leave it empty.`, value: null, options: null })),
@@ -1142,7 +1184,7 @@ export function buildPreview(model: Model, decisions: LinkDecision[], regimens: 
     pain_locations: decisions.filter((d) => d.class === "pain_location").map((d) => ({ phrase: d.phrase, ids: d.pain_ids ?? [], count: d.count })),
     dropped: decisions.filter((d) => d.concept === "drop").map((d) => ({ class: d.class, phrase: d.phrase, count: d.count, reasoning: d.reasoning })),
     regimen_proposals: regimens,
-    engine_use: engineUseRecommendations(model),
+    engine_use: engineUseRecommendations(model, decisions, {}, (model as unknown as { __pools?: Pools }).__pools ?? {}, regimens),
     attacks: attacks.map((a) => ({ ref: a.ref, start_local: a.start_local, end_local: a.end_local, end_inferred: a.end_inferred, severity: a.intensity.value, types: a.types, symptoms: a.symptoms, symptom_severity: a.symptom_severity, prodromes: a.prodromes, postdromes: a.postdromes, triggers: a.triggers, foods: a.foods, meds: a.meds, reliefs: a.reliefs, activities: a.activities, missed: a.missed_detail.length ? a.missed_detail : a.missed.map((n) => ({ name: n, reasons: [], anticipated: false })), location: a.location, pain_locations: a.pain_locations, aura: a.aura, times: a.times, notes: a.notes, provenance: a.provenance })),
     days: model.days.filter((d) => Object.keys(d.metrics).length || Object.keys(d.times).length || d.period || d.side_effects.length || d.missed.length || d.regimens.length || d.foods.length || d.daily_meds.length).map((d) => ({ date: d.date, metrics: d.metrics, times: d.times, period: d.period, foods: d.foods.map((f) => f.name), daily_meds: d.daily_meds.map((m) => m.name), side_effects: d.side_effects, missed: d.missed, regimens: d.regimens })),
     cost: { usd: Math.round(spend.usd() * 1000) / 1000, tokens: spend.tokens(), calls: spend.usages.length },
@@ -1209,10 +1251,10 @@ export async function loadPools(admin: SupabaseClient, userId: string): Promise<
   const pools: Pools = {};
   for (const [cls, table] of Object.entries(POOL_TABLE)) {
     if (cls === "postdrome") continue;
-    const cols = table === "user_migraines_pool" ? "id,label" : table === "user_medicines" ? "id,label,category" : "id,label,category,icon_key";
+    const cols = table === "user_migraines_pool" ? "id,label" : table === "user_medicines" ? "id,label,category" : (table === "user_triggers" || table === "user_prodromes") ? "id,label,category,icon_key,metric_table" : "id,label,category,icon_key";
     const { data, error } = await admin.from(table).select(cols).eq("user_id", userId);
     if (error) throw new Error(`${table}: ${error.message}`);
-    pools[cls] = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => ({ label: String(r.label), category: (r.category as string) ?? null, icon_key: (r.icon_key as string) ?? null, id: r.id as string })) as Pools[string];
+    pools[cls] = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => ({ label: String(r.label), category: (r.category as string) ?? null, icon_key: (r.icon_key as string) ?? null, metric_table: (r.metric_table as string) ?? null, id: r.id as string })) as Pools[string];
   }
   return pools;
 }
@@ -1254,10 +1296,16 @@ export async function commit(admin: SupabaseClient, userId: string, model: Model
 async function commitInner(admin: SupabaseClient, userId: string, model: Model, decisions: LinkDecision[], answers: Record<string, string | null>, acceptRegimens: string[], regimens: RegimenProposal[], cutoff: string | null, importId: string, manifest: Manifest, engineUseIn: Record<string, boolean> | null) {
   const tz = model.timezone; const marker = ""; // provenance = source column + import_batches.manifest, never the person's note
   // Which categories feed insights. Defaults = the recommendations; the person can flip any.
-  const engineUse: Record<string, boolean> = Object.fromEntries(engineUseRecommendations(model).map((r) => [r.key, r.recommended]));
-  for (const [k, v] of Object.entries(engineUseIn ?? {})) if (typeof v === "boolean") engineUse[k] = v;
-  const src = (key: string) => (engineUse[key] ? "import_scored" : "import");
+
   const pools = await loadPools(admin, userId);
+  const allOff = (engineUseIn as Record<string, unknown> | null)?.["__all_off"] === true;
+  const recs = engineUseRecommendations(model, decisions, answers, pools, regimens);
+  const engineUse: Record<string, boolean> = Object.fromEntries(recs.map((r) => [r.key, allOff ? false : r.recommended]));
+  const fixedKeys = new Set(recs.filter((r) => r.fixed).map((r) => r.key));
+  if (!allOff) for (const [k, v] of Object.entries(engineUseIn ?? {})) if (typeof v === "boolean" && !fixedKeys.has(k)) engineUse[k] = v;
+  const src = (key: string) => (engineUse[key] ? "import_scored" : "import");
+  // per item: unknown items default to off for typed tags, on for everything else
+  const use = (group: string, label: string) => { if (allOff) return false; let v = engineUse[itemKey(group, label)]; if (v === undefined && group === "food") { const hit = Object.keys(engineUse).find((k) => k.toLowerCase() === itemKey(group, label).toLowerCase()); if (hit) v = engineUse[hit]; } return v ?? !(group === "trigger" || group === "prodrome" || group === "food"); };
   // Usual doses typed on the assumptions screen fill the entries that had none. Never invented: only what the person typed.
   const doses = (model as unknown as { __doses?: Record<string, string> }).__doses ?? {};
   for (const [label, txt] of Object.entries(doses)) { const pd = parseDose(String(txt)); if (pd.dose_value === null) continue; for (const a of model.attacks) for (const m of a.meds) { const r = lbl0(decisions, answers, "medicine", m.name); if (r && r.label === label && m.dose_value === null) { m.dose_value = pd.dose_value; m.dose_unit = pd.dose_unit ?? "mg"; } } for (const d of model.days) for (const m of d.daily_meds) { const r = lbl0(decisions, answers, "medicine", m.name); if (r && r.label === label && m.dose_value === null) { m.dose_value = pd.dose_value; m.dose_unit = pd.dose_unit ?? "mg"; } } }
@@ -1324,17 +1372,21 @@ async function commitInner(admin: SupabaseClient, userId: string, model: Model, 
   const regimenNames = new Set(acceptRegimens);
   let painPoints = 0, auraRows = 0;
   for (const a of attacks) {
-    const typeLabels = uniq([...a.types.map((t) => lbl("type", t)).filter(Boolean).map((r) => r!.label), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r && r.concept !== "prodrome" && r.concept !== "food").map((r) => r!.label)]);
+    const allSym = uniq([...a.types.map((t) => lbl("type", t)).filter(Boolean).map((r) => r!.label), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r && r.concept !== "prodrome" && r.concept !== "food" && r.concept !== "trigger").map((r) => r!.label)]);
+    const typeLabels = allSym.filter((l) => use("symptom", l));
+    const noteSym = allSym.filter((l) => !use("symptom", l));
     if (a.aura.present && (pools["symptom"] ?? []).some((p) => p.label === "Aura") && !typeLabels.includes("Aura")) typeLabels.push("Aura");
     const start = localToUtcIso(a.start_local, tz), end = localToUtcIso(a.end_local!, tz);
     const painIds = a.canonical_pain ? a.pain_locations : uniq(a.pain_locations.flatMap((w) => decisions.find((x) => x.class === "pain_location" && x.phrase.toLowerCase() === lower(w))?.pain_ids ?? []));
     // Journal-only tags (engine unticked) become note text instead of rows.
-    const taggedTrig = engineUse["triggers"] ? [] : uniq([...a.triggers.map((t) => lbl("trigger", t)).filter((r) => r && r.concept === "trigger").map((r) => r!.label), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r?.concept === "trigger").map((r) => r!.label)]);
-    const taggedProd = engineUse["triggers"] ? [] : uniq([...a.prodromes.map((t) => lbl("prodrome", t)), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r?.concept === "prodrome")].filter(Boolean).map((r) => r!.label));
+    const taggedTrig = uniq([...a.triggers.map((t) => lbl("trigger", t)).filter((r) => r && r.concept === "trigger").map((r) => r!.label), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r?.concept === "trigger").map((r) => r!.label)]).filter((l) => !use("trigger", l));
+    const taggedProd = uniq([...a.prodromes.map((t) => lbl("prodrome", t)), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r?.concept === "prodrome")].filter(Boolean).map((r) => r!.label)).filter((l) => !use("prodrome", l));
     const taggedFood = Array.from(new Map([...a.foods, ...a.triggers.filter((t) => lbl("trigger", t)?.concept === "food")].map(norm).map((f) => [f.toLowerCase(), f])).values());
-    const taggedActs = engineUse["places_activities"] ? [] : uniq(a.activities.map((t) => lbl("activity", t)).filter((r) => r?.concept === "activity").map((r) => r!.label));
-    const taggedMissed = engineUse["places_activities"] ? [] : uniq(a.missed.map((t) => lbl("missed", t)).filter((r) => r?.concept === "missed").map((r) => r!.label));
-    const tagNote = [taggedTrig.length ? `Triggers you tagged: ${taggedTrig.join(", ")}.` : null, taggedProd.length ? `Warning signs you tagged: ${taggedProd.join(", ")}.` : null, taggedFood.length && !engineUse["foods"] ? `Foods: ${taggedFood.join(", ")}.` : null, taggedActs.length ? `Activities: ${taggedActs.join(", ")}.` : null, taggedMissed.length ? `Missed: ${taggedMissed.join(", ")}.` : null].filter(Boolean).join(" ");
+    const taggedActs = uniq(a.activities.map((t) => lbl("activity", t)).filter((r) => r?.concept === "activity").map((r) => r!.label)).filter((l) => !use("activity", l));
+    const taggedMissed = uniq(a.missed.map((t) => lbl("missed", t)).filter((r) => r?.concept === "missed").map((r) => r!.label)).filter((l) => !use("missed", l));
+    const locR = a.location ? lbl("location", a.location) : null; const taggedLoc = locR && locR.concept === "location" && !use("location", locR.label) ? locR.label : null;
+    const taggedPost = uniq(a.postdromes.map((t) => lbl("postdrome", t)).filter(Boolean).map((r) => r!.label)).filter((l) => !use("postdrome", l));
+    const tagNote = [taggedTrig.length ? `Triggers you tagged: ${taggedTrig.join(", ")}.` : null, taggedProd.length ? `Warning signs you tagged: ${taggedProd.join(", ")}.` : null, taggedFood.filter((f) => !use("food", f)).length ? `Foods: ${taggedFood.filter((f) => !use("food", f)).join(", ")}.` : null, noteSym.length ? `Symptoms: ${noteSym.join(", ")}.` : null, taggedPost.length ? `After-effects: ${taggedPost.join(", ")}.` : null, taggedLoc ? `Where: ${taggedLoc}.` : null, taggedActs.length ? `Activities: ${taggedActs.join(", ")}.` : null, taggedMissed.length ? `Missed: ${taggedMissed.join(", ")}.` : null].filter(Boolean).join(" ");
     const [mig] = await insertReturningIds(admin, "migraines", [{
       user_id: userId, type: typeLabels.length ? typeLabels.join(", ") : "Migraine", severity: a.intensity.value, start_at: start, ended_at: end,
       pain_locations: painIds.length ? painIds : null, aura_locations: a.aura.zones.length ? a.aura.zones : null, aura_duration_minutes: a.aura.duration_minutes,
@@ -1344,43 +1396,48 @@ async function commitInner(admin: SupabaseClient, userId: string, model: Model, 
     if (painIds.length && a.intensity.value !== null) { painPoints += painIds.length; await insertReturningIds(admin, "migraine_pain_points", painIds.map((loc) => ({ user_id: userId, migraine_id: migId, location_id: loc, severity: a.intensity.value, start_at: start })), manifest); }
     if (a.aura.zones.length) { auraRows += a.aura.zones.length; await insertReturningIds(admin, "migraine_aura_zones", a.aura.zones.map((z) => ({ user_id: userId, migraine_id: migId, zone: z, start_at: start, duration_minutes: a.aura.duration_minutes })), manifest); }
     for (const [key, sev] of Object.entries(a.symptom_severity)) { const r = lbl("symptom", key); if (r && typeLabels.includes(r.label)) await admin.from("symptoms").update({ severity: sev }).eq("migraine_id", migId).eq("type", r.label); }
-    const post = uniq(a.postdromes.map((t) => lbl("postdrome", t)).filter(Boolean).map((r) => r!.label));
+    const post = uniq(a.postdromes.map((t) => lbl("postdrome", t)).filter(Boolean).map((r) => r!.label)).filter((l) => use("postdrome", l));
     if (post.length) await insertReturningIds(admin, "symptoms", post.map((t) => ({ user_id: userId, migraine_id: migId, type: t, phase: "postdrome" })), manifest);
     const trig = uniq([...a.triggers, ...a.symptoms.filter((s) => lbl("symptom", s)?.concept === "trigger")].map((t) => lbl(t === undefined ? "trigger" : "trigger", t) ?? lbl("symptom", t)).filter((r) => r && r.concept === "trigger").map((r) => r!.label));
     const whenOf = (cls: string, srcNames: string[]) => { for (const n of srcNames) { const t = a.times[`${cls}|${n.toLowerCase()}`]; if (t) return localToUtcIso(t, tz); } return start; };
     const srcOf = (cls: SourceClass, list: string[], label: string) => list.filter((n) => lbl(cls, n)?.label === label);
     const periodDay = days.some((d) => d.date === dateOf(a.start_local) && (d.period === "start" || d.period === "flow"));
     const trigRows = trig.filter((t) => !(periodDay && t.toLowerCase() === "menstruation")); // the period row already says it
-    if (trigRows.length && engineUse["triggers"]) await insertReturningIds(admin, "triggers", trigRows.map((t) => ({ user_id: userId, migraine_id: migId, type: t, start_at: whenOf("trigger", srcOf("trigger", a.triggers, t)), source: src("triggers"), active: true })), manifest);
+    const trigUse = trigRows.filter((t) => use("trigger", t));
+    if (trigUse.length) await insertReturningIds(admin, "triggers", trigUse.map((t) => ({ user_id: userId, migraine_id: migId, type: t, start_at: whenOf("trigger", srcOf("trigger", a.triggers, t)), source: "import_scored", active: true })), manifest);
     const prod = uniq([...a.prodromes.map((t) => lbl("prodrome", t)), ...a.symptoms.map((t) => lbl("symptom", t)).filter((r) => r?.concept === "prodrome")].filter(Boolean).map((r) => r!.label));
-    if (prod.length && engineUse["triggers"]) await insertReturningIds(admin, "prodromes", prod.map((t) => ({ user_id: userId, migraine_id: migId, type: t, start_at: whenOf("prodrome", srcOf("prodrome", a.prodromes, t)), source: src("triggers"), active: true })), manifest);
+    const prodUse = prod.filter((t) => use("prodrome", t));
+    if (prodUse.length) await insertReturningIds(admin, "prodromes", prodUse.map((t) => ({ user_id: userId, migraine_id: migId, type: t, start_at: whenOf("prodrome", srcOf("prodrome", a.prodromes, t)), source: "import_scored", active: true })), manifest);
     const medRows = a.meds.map((m) => ({ m, r: lbl("medicine", m.name) })).filter((x) => x.r && x.r.concept === "medicine" && !regimenNames.has(x.r.label)).map(({ m, r }) => ({
       user_id: userId, migraine_id: migId, name: r!.label, start_at: m.taken_local ? localToUtcIso(m.taken_local, tz) : start,
       dose_value: m.dose_value, dose_unit: m.dose_value ? (m.dose_unit ?? "mg") : null, amount: m.dose_value ? `${m.dose_value}${m.dose_unit === "amount" ? "" : " " + (m.dose_unit ?? "mg")}`.trim() : null,
-      relief_scale: effectScale(m.effect), side_effect_scale: sideEffectScale(m.side_effect), side_effect_notes: m.side_effect ?? null, category: (pools["medicine"] ?? []).find((p) => p.label === r!.label)?.category ?? null, source: src("medicines"),
+      relief_scale: effectScale(m.effect), side_effect_scale: sideEffectScale(m.side_effect), side_effect_notes: m.side_effect ?? null, category: (pools["medicine"] ?? []).find((p) => p.label === r!.label)?.category ?? null, source: use("medicine", r!.label) ? "import_scored" : "import",
     }));
     if (medRows.length) await insertReturningIds(admin, "medicines", medRows, manifest);
     const relRows = a.reliefs.map((rl) => ({ rl, r: lbl("relief", rl.name) })).filter((x) => x.r && x.r.concept === "relief").map(({ rl, r }) => ({
       user_id: userId, migraine_id: migId, type: r!.label, start_at: rl.start_local ? localToUtcIso(rl.start_local, tz) : start, end_at: rl.end_local ? localToUtcIso(rl.end_local, tz) : null,
-      relief_scale: effectScale(rl.effect), side_effect_scale: sideEffectScale(rl.side_effect ?? null), side_effect_notes: rl.side_effect ?? null, category: (pools["relief"] ?? []).find((p) => p.label === r!.label)?.category ?? null, source: src("reliefs"),
+      relief_scale: effectScale(rl.effect), side_effect_scale: sideEffectScale(rl.side_effect ?? null), side_effect_notes: rl.side_effect ?? null, category: (pools["relief"] ?? []).find((p) => p.label === r!.label)?.category ?? null, source: use("relief", r!.label) ? "import_scored" : "import",
     }));
     if (relRows.length) await insertReturningIds(admin, "reliefs", relRows, manifest);
     const loc = a.location ? lbl("location", a.location) : null;
-    if (loc && loc.concept === "location") await insertReturningIds(admin, "locations", [{ user_id: userId, migraine_id: migId, type: loc.label, start_at: start, source: src("places_activities") }], manifest);
+    if (loc && loc.concept === "location" && use("location", loc.label)) await insertReturningIds(admin, "locations", [{ user_id: userId, migraine_id: migId, type: loc.label, start_at: start, source: "import_scored" }], manifest);
     const acts = uniq(a.activities.map((t) => lbl("activity", t)).filter((r) => r?.concept === "activity").map((r) => r!.label));
-    if (acts.length && engineUse["places_activities"]) await insertReturningIds(admin, "activities", acts.map((t) => { const names = srcOf("activity", a.activities, t); const st = whenOf("activity", names); const enLocal = names.map((n) => a.times[`activity_end|${n.toLowerCase()}`]).find(Boolean); return { user_id: userId, migraine_id: migId, type: t, start_at: st, end_at: enLocal ? localToUtcIso(enLocal, tz) : null, source: src("places_activities") }; }), manifest);
+    const actsUse = acts.filter((t) => use("activity", t));
+    if (actsUse.length) await insertReturningIds(admin, "activities", actsUse.map((t) => { const names = srcOf("activity", a.activities, t); const st = whenOf("activity", names); const enLocal = names.map((n) => a.times[`activity_end|${n.toLowerCase()}`]).find(Boolean); return { user_id: userId, migraine_id: migId, type: t, start_at: st, end_at: enLocal ? localToUtcIso(enLocal, tz) : null, source: "import_scored" }; }), manifest);
     const miss = uniq(a.missed.map((t) => lbl("missed", t)).filter((r) => r?.concept === "missed").map((r) => r!.label));
-    if (miss.length && engineUse["places_activities"]) await insertReturningIds(admin, "missed_activities", miss.map((t) => {
+    const missUse = miss.filter((t) => use("missed", t));
+    if (missUse.length) await insertReturningIds(admin, "missed_activities", missUse.map((t) => {
       const det = a.missed_detail.filter((m) => lbl("missed", m.name)?.label === t);
       const reasons = uniq(det.flatMap((m) => m.reasons).map((rs) => lbl("trigger", rs)?.label ?? lbl("prodrome", rs)?.label ?? rs));
-      return { user_id: userId, migraine_id: migId, type: t, start_at: start, source: src("places_activities"), anticipated: det.some((m) => m.anticipated), reason_labels: reasons.length ? reasons : null };
+      return { user_id: userId, migraine_id: migId, type: t, start_at: start, source: "import_scored", anticipated: det.some((m) => m.anticipated), reason_labels: reasons.length ? reasons : null };
     }), manifest);
     const foodsRaw = [...a.foods, ...a.triggers.filter((t) => lbl("trigger", t)?.concept === "food"), ...a.symptoms.filter((t) => lbl("symptom", t)?.concept === "food")];
     const foods = Array.from(new Map(foodsRaw.map((f) => [lower(f), norm(f)])).values());
     // Foods the person tagged as triggers stay visible as the trigger chip they logged (journal only, never scored as a manual trigger).
     const foodChips = a.triggers.filter((t) => lbl("trigger", t)?.concept === "food").map(norm);
-    if (foodChips.length && engineUse["triggers"]) await insertReturningIds(admin, "triggers", uniq(foodChips).map((t) => ({ user_id: userId, migraine_id: migId, type: t, start_at: start, source: "import", active: true })), manifest);
-    if (foods.length && engineUse["foods"]) await insertReturningIds(admin, "nutrition_records", foods.map((f, i) => { const tl = a.times[`food|${f.toLowerCase()}`] ?? addMinutesLocal(a.start_local, -240); return { user_id: userId, date: dateOf(tl), timestamp: localToUtcIso(tl, tz), food_name: f, meal_type: "unknown", source: "import", health_connect_id: `import:${importId.slice(0, 8)}:${a.ref}:${i}` }; }), manifest);
+    void foodChips; // foods are never trigger rows: engine would read them; they are a note (unticked) or nutrition records (ticked)
+    const foodsUse = foods.filter((f) => use("food", f));
+    if (foodsUse.length) await insertReturningIds(admin, "nutrition_records", foodsUse.map((f, i) => { const tl = a.times[`food|${f.toLowerCase()}`] ?? addMinutesLocal(a.start_local, -240); return { user_id: userId, date: dateOf(tl), timestamp: localToUtcIso(tl, tz), food_name: f, meal_type: "unknown", source: "import", health_connect_id: `import:${importId.slice(0, 8)}:${a.ref}:${i}` }; }), manifest);
   }
 
   // 4. Days: metrics, foods, periods, daily meds not covered by an accepted regimen.
@@ -1391,25 +1448,29 @@ async function commitInner(admin: SupabaseClient, userId: string, model: Model, 
     if (d.metrics.bp_systolic && engineUse["metric:bp_systolic"]) await insertReturningIds(admin, "blood_pressure_daily", [{ user_id: userId, date: d.date, systolic_mmhg: d.metrics.bp_systolic, diastolic_mmhg: d.metrics.bp_diastolic ?? null, source: "import" }], manifest);
     if (d.times.bedtime && engineUse["metric:bedtime"]) await insertReturningIds(admin, "fell_asleep_time_daily", [{ user_id: userId, date: d.date, value_at: localToUtcIso(d.times.bedtime, tz), source: "import" }], manifest);
     if (d.times.wake_time && engineUse["metric:wake_time"]) await insertReturningIds(admin, "woke_up_time_daily", [{ user_id: userId, date: d.date, value_at: localToUtcIso(d.times.wake_time, tz), source: "import" }], manifest);
-    for (const se of engineUse["treatments"] === false ? [] : d.side_effects) {
+    for (const se of engineUse["side_effects"] === false || allOff ? [] : d.side_effects) {
       const labels = uniq(se.symptoms.map((x) => lbl("side_effect", x)?.label ?? x));
       await insertReturningIds(admin, "treatment_side_effect_logs", [{ user_id: userId, log_date: d.date, selected_symptoms: labels, notes: [se.regimen ? `(${se.regimen})` : null, se.notes].filter(Boolean).join(" ") || null, source: "manual" }], manifest);
     }
     const dmiss = d.missed.map((m) => ({ m, r: lbl("missed", m.name) })).filter((x) => x.r?.concept === "missed");
-    if (dmiss.length && engineUse["places_activities"]) await insertReturningIds(admin, "missed_activities", dmiss.map(({ m, r }) => ({ user_id: userId, type: r!.label, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: src("places_activities"), anticipated: m.anticipated, reason_labels: m.reasons.length ? m.reasons.map((rs) => lbl("trigger", rs)?.label ?? lbl("prodrome", rs)?.label ?? rs) : null })), manifest);
+    const dmissUse = dmiss.filter((x) => use("missed", x.r!.label));
+    if (dmissUse.length) await insertReturningIds(admin, "missed_activities", dmissUse.map(({ m, r }) => ({ user_id: userId, type: r!.label, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: "import_scored", anticipated: m.anticipated, reason_labels: m.reasons.length ? m.reasons.map((rs) => lbl("trigger", rs)?.label ?? lbl("prodrome", rs)?.label ?? rs) : null })), manifest);
     const dprod = uniq(d.prodromes.map((t) => lbl("prodrome", t)).filter((r) => r?.concept === "prodrome").map((r) => r!.label));
-    if (dprod.length && engineUse["triggers"]) await insertReturningIds(admin, "prodromes", dprod.map((t) => ({ user_id: userId, type: t, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: src("triggers"), active: true })), manifest);
-    if (d.foods.length && engineUse["foods"]) await insertReturningIds(admin, "nutrition_records", d.foods.map((f, i) => ({ user_id: userId, date: d.date, timestamp: localToUtcIso(f.time_local ?? `${d.date}T12:00:00`, tz), food_name: f.name, meal_type: "unknown", source: "import", health_connect_id: `import:${importId.slice(0, 8)}:${d.date}:${i}` })), manifest);
-    if (d.period === "start" && engineUse["period"] !== false) { const [row] = await insertReturningIds(admin, "triggers", [{ user_id: userId, type: "Menstruation", start_at: `${d.date}T09:00:00Z`, source: "manual", source_measure_id: `import:${importId.slice(0, 8)}:${d.date}` }], manifest); periodStarts.push({ date: d.date, id: String(row.id) }); }
-    if (d.period === "end" && engineUse["period"] !== false) { const ps = periodStarts.filter((x) => x.date <= d.date && localMinutesBetween(`${x.date}T00:00:00`, `${d.date}T00:00:00`) <= 12 * 1440).pop(); if (ps) await admin.from("triggers").update({ notes: `end_date=${d.date}` }).eq("id", ps.id); }
+    const dprodUse = dprod.filter((t) => use("prodrome", t));
+    if (dprodUse.length) await insertReturningIds(admin, "prodromes", dprodUse.map((t) => ({ user_id: userId, type: t, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: "import_scored", active: true })), manifest);
+    const dfoodsUse = d.foods.filter((f) => use("food", norm(f.name)));
+    if (dfoodsUse.length) await insertReturningIds(admin, "nutrition_records", dfoodsUse.map((f, i) => ({ user_id: userId, date: d.date, timestamp: localToUtcIso(f.time_local ?? `${d.date}T12:00:00`, tz), food_name: f.name, meal_type: "unknown", source: "import", health_connect_id: `import:${importId.slice(0, 8)}:${d.date}:${i}` })), manifest);
+    if (d.period === "start" && engineUse["period"] !== false && !allOff) { const [row] = await insertReturningIds(admin, "triggers", [{ user_id: userId, type: "Menstruation", start_at: `${d.date}T09:00:00Z`, source: "manual", source_measure_id: `import:${importId.slice(0, 8)}:${d.date}` }], manifest); periodStarts.push({ date: d.date, id: String(row.id) }); }
+    if (d.period === "end" && engineUse["period"] !== false && !allOff) { const ps = periodStarts.filter((x) => x.date <= d.date && localMinutesBetween(`${x.date}T00:00:00`, `${d.date}T00:00:00`) <= 12 * 1440).pop(); if (ps) await admin.from("triggers").update({ notes: `end_date=${d.date}` }).eq("id", ps.id); }
     const dm = d.daily_meds.map((m) => ({ m, r: lbl("medicine", m.name) })).filter((x) => x.r && x.r.concept === "medicine" && !regimenNames.has(x.r.label));
-    if (dm.length) await insertReturningIds(admin, "medicines", dm.map(({ m, r }) => ({ user_id: userId, name: r!.label, start_at: localToUtcIso(m.taken_local ?? `${d.date}T09:00:00`, tz), dose_value: m.dose_value, dose_unit: m.dose_value ? (m.dose_unit ?? "mg") : null, relief_scale: "NONE", side_effect_scale: "NONE", source: src("medicines") })), manifest);
+    if (dm.length) await insertReturningIds(admin, "medicines", dm.map(({ m, r }) => ({ user_id: userId, name: r!.label, start_at: localToUtcIso(m.taken_local ?? `${d.date}T09:00:00`, tz), dose_value: m.dose_value, dose_unit: m.dose_value ? (m.dose_unit ?? "mg") : null, relief_scale: "NONE", side_effect_scale: "NONE", source: use("medicine", r!.label) ? "import_scored" : "import" })), manifest);
     const dt = uniq(d.triggers.map((t) => lbl("trigger", t)).filter((r) => r?.concept === "trigger").map((r) => r!.label));
-    if (dt.length && engineUse["triggers"]) await insertReturningIds(admin, "triggers", dt.map((t) => ({ user_id: userId, type: t, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: src("triggers"), active: true })), manifest);
+    const dtUse = dt.filter((t) => use("trigger", t));
+    if (dtUse.length) await insertReturningIds(admin, "triggers", dtUse.map((t) => ({ user_id: userId, type: t, start_at: localToUtcIso(`${d.date}T12:00:00`, tz), source: "import_scored", active: true })), manifest);
   }
 
   // 5. Accepted regimens.
-  const regRows = (engineUse["treatments"] === false ? [] : regimens.filter((r) => regimenNames.has(r.name))).map((r) => ({ user_id: userId, kind: r.kind ?? "drug", name: r.name, dose_value: r.dose_value, dose_unit: r.dose_value ? (r.dose_unit ?? "mg") : null, frequency: r.frequency ?? "daily", start_date: r.start_date, stop_date: r.stop_date, notes: r.from === "mention" ? "Mentioned in your imported diary" : `From ${r.days} logged days in your imported diary` }));
+  const regRows = regimens.filter((r) => regimenNames.has(r.name) && use("regimen", r.name)).map((r) => ({ user_id: userId, kind: r.kind ?? "drug", name: r.name, dose_value: r.dose_value, dose_unit: r.dose_value ? (r.dose_unit ?? "mg") : null, frequency: r.frequency ?? "daily", start_date: r.start_date, stop_date: r.stop_date, notes: r.from === "mention" ? "Mentioned in your imported diary" : `From ${r.days} logged days in your imported diary` }));
   if (regRows.length) await insertReturningIds(admin, "treatment_regimens", regRows, manifest);
 
   // 6. Verify.
@@ -1496,6 +1557,7 @@ export async function runPreview(fileName: string, text: string, timezone: strin
   await mineNotes(model.attacks, model.days, spend, model.inferences);
   fillEnds(model);
   model.vocabulary = buildVocabulary(model.attacks, model.days);
+  (model as unknown as { __pools?: Pools }).__pools = pools;
   const decisions = await link(model, pools, spend);
   const namedMeds = uniq((model.vocabulary.medicine ?? []).map((e) => e.phrase).filter((p) => !GENERIC_MED.test(p) && !GENERIC_ANY.test(p)).map((p) => p.toLowerCase().replace(/\s*\d+\s*(mg|mcg)?$/, "")));
   await resolveAmbiguous(model, pools, decisions, namedMeds, spend);
@@ -1565,7 +1627,7 @@ if (import.meta.main) Deno.serve(async (req) => {
       await admin.from("import_batches").update({ status: "writing", answers, model, edits: { assumptions: body.assumptions ?? null, doses: body.doses ?? null, exclude_refs: body.exclude_refs ?? [], attack_edits: body.attack_edits ?? {}, engine_use: body.engine_use ?? null, log: editLog } }).eq("id", b.id);
       try {
         const requested = (body.engine_use ?? null) as Record<string, boolean> | null;
-        const engineUse = paid ? requested : Object.fromEntries(engineUseRecommendations(model).map((r) => [r.key, false]));
+        const engineUse = paid ? requested : ({ __all_off: true } as unknown as Record<string, boolean>);
         const { manifest, verify } = await commit(admin, user.id, model, b.linking as LinkDecision[], answers, accept, (b.regimens ?? []) as RegimenProposal[], cutoff, b.id, engineUse);
         if (!verify.ok) { await undo(admin, user.id, manifest); await admin.from("import_batches").update({ status: "failed", manifest, verify }).eq("id", b.id); return json({ error: "verification failed, nothing kept", verify }, 500); }
         await admin.from("import_batches").update({ status: "committed", manifest, verify: { ...verify, paid, insights: paid ? "as ticked" : "locked, journal only" }, committed_at: new Date().toISOString() }).eq("id", b.id);

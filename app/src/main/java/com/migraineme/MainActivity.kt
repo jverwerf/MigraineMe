@@ -791,11 +791,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
-        DrawerItem("Import history", Routes.IMPORT_HISTORY, Icons.Outlined.UploadFile),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Shop", Routes.SHOP, Icons.Outlined.ShoppingBag),
         DrawerItem("Language", Routes.LANGUAGE, Icons.Outlined.Language),
+        DrawerItem("Import history", Routes.IMPORT_HISTORY, Icons.Outlined.UploadFile),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout),
         DrawerItem("Help", Routes.HELP, Icons.Outlined.HelpOutline)
     )
@@ -1198,7 +1198,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         }
                                     }
                                 } else {
-                                    IconButton(onClick = { nav.popBackStack() }) {
+                                    val backDispatcher = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+                                    IconButton(onClick = {
+                                        // Import history is a multi-step screen: the arrow steps back inside it (its BackHandler), and only leaves from the first step.
+                                        if (current == Routes.IMPORT_HISTORY && backDispatcher != null) backDispatcher.onBackPressed() else nav.popBackStack()
+                                    }) {
                                         Icon(
                                             Icons.AutoMirrored.Outlined.ArrowBack,
                                             contentDescription = t("Back")

@@ -19,6 +19,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -32,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
@@ -253,12 +255,14 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
     var noTimeHour by remember { mutableStateOf<Int?>(null) }
     var verify by remember { mutableStateOf<JsonObject?>(null) }
     var editing by remember { mutableStateOf(false) }
+    var timezone by remember { mutableStateOf(ZoneId.systemDefault().id) }
+    var importOverlap by remember { mutableStateOf(false) }               // false = skip attacks after the first app log (default)
 
     fun loadPreview(p: JsonObject) {
         preview = p
         attacks.clear(); attacks.addAll(p.arr("attacks").mapNotNull { (it as? JsonObject)?.let { a -> ImpAttack(a) } })
         days.clear(); days.addAll(p.arr("days").mapNotNull { (it as? JsonObject)?.let { d -> ImpDay(d) } })
-        engineUse.clear(); p.arr("engine_use").forEach { e -> (e as? JsonObject)?.let { o -> o.str("key")?.let { k -> engineUse[k] = o.bool("recommended") } } }
+        engineUse.clear(); p.arr("engine_use").forEach { e -> (e as? JsonObject)?.takeIf { !it.bool("fixed") }?.let { o -> o.str("key")?.let { k -> engineUse[k] = o.bool("recommended") } } }
         answers.clear(); regimenSkip.clear(); doses.clear(); endFillHours = ""; noTimeHour = null
     }
 
@@ -284,11 +288,12 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
         scope.launch {
             val body = buildJsonObject {
                 put("action", "commit"); put("import_id", id)
+                if (importOverlap) put("cutoff_date", JsonNull)
                 put("answers", buildJsonObject { answers.forEach { (k, v) -> if (v == null) put(k, JsonNull) else put(k, v) } })
                 put("engine_use", buildJsonObject { engineUse.forEach { (k, v) -> put(k, v) } })
                 putJsonArray("accept_regimens") { preview?.arr("regimen_proposals")?.forEach { r -> (r as? JsonObject)?.str("name")?.let { n -> if (regimenSkip[n] != true) add(n) } } }
                 put("doses", buildJsonObject { doses.forEach { (k, v) -> if (v.isNotBlank()) put(k, v.trim()) } })
-                put("assumptions", buildJsonObject { endFillHours.toDoubleOrNull()?.let { put("end_fill_hours", it) }; noTimeHour?.let { put("no_time_hour", it) } })
+                put("assumptions", buildJsonObject { endFillHours.toDoubleOrNull()?.let { put("end_fill_hours", it) }; noTimeHour?.let { put("no_time_hour", it) }; put("timezone", timezone) })
                 putJsonArray("exclude_refs") { attacks.filter { it.removed }.forEach { add(it.ref) } }
                 put("attack_edits", buildJsonObject { attacks.filter { it.edited && !it.removed }.forEach { put(it.ref, it.editJson()) } })
             }
@@ -311,6 +316,13 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
     }
 
     LaunchedEffect(step) { scrollState.scrollTo(0) }
+    val parentStep: ImpStep? = when (val s = step) {
+        is ImpStep.Use, is ImpStep.Assume, is ImpStep.ListAll, is ImpStep.Words -> ImpStep.Found
+        is ImpStep.Attack, is ImpStep.Day -> ImpStep.ListAll
+        is ImpStep.Failed -> s.back
+        else -> null
+    }
+    BackHandler(enabled = parentStep != null) { editing = false; parentStep?.let { step = it } }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(8.dp))
@@ -319,11 +331,11 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
             is ImpStep.Busy -> BusyScreen(s.text)
             is ImpStep.Failed -> FailedScreen(s.text) { step = s.back }
             is ImpStep.Found -> preview?.let { p ->
-                FoundScreen(p, fileName, attacks, days, engineUse, paid,
+                FoundScreen(p, fileName, attacks, days, engineUse, paid, importOverlap,
                     onUse = { step = ImpStep.Use }, onAssume = { step = ImpStep.Assume }, onList = { step = ImpStep.ListAll }, onWords = { step = ImpStep.Words }, onImport = { commit() })
             }
             is ImpStep.Use -> preview?.let { p -> UseScreen(p, engineUse, paid, onNavigateToPaywall) { step = ImpStep.Found } }
-            is ImpStep.Assume -> preview?.let { p -> AssumeScreen(p, answers, regimenSkip, doses, endFillHours, { endFillHours = it }, noTimeHour, { noTimeHour = it }) { step = ImpStep.Found } }
+            is ImpStep.Assume -> preview?.let { p -> AssumeScreen(p, answers, regimenSkip, doses, endFillHours, { endFillHours = it }, noTimeHour, { noTimeHour = it }, timezone, { timezone = it }, importOverlap, { importOverlap = it }) { step = ImpStep.Found } }
             is ImpStep.ListAll -> ListScreen(attacks, days, onAttack = { editing = false; step = ImpStep.Attack(it) }, onDay = { step = ImpStep.Day(it) }) { step = ImpStep.Found }
             is ImpStep.Attack -> attacks.getOrNull(s.index)?.let { a -> AttackScreen(a, editing, { editing = it }) { step = ImpStep.ListAll } }
             is ImpStep.Day -> days.getOrNull(s.index)?.let { d -> DayScreen(d) { step = ImpStep.ListAll } }
@@ -408,7 +420,7 @@ private fun ChipGroup(label: String, items: List<Pair<String, String>>, editing:
         }
         if (editing && onAdd != null) {
             Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(value = draft, onValueChange = { draft = it }, placeholder = { Text(t("Add"), color = AppTheme.SubtleTextColor) }, singleLine = true, modifier = Modifier.weight(1f), textStyle = MaterialTheme.typography.bodySmall)
+                OutlinedTextField(value = draft, onValueChange = { draft = it }, placeholder = { Text(t("Add"), color = AppTheme.SubtleTextColor) }, singleLine = true, modifier = Modifier.weight(1f), textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor))
                 Spacer(Modifier.width(6.dp))
                 TextButton(onClick = { if (draft.isNotBlank()) { onAdd(draft.trim()); draft = "" } }) { Text(t("Add"), color = AppTheme.AccentPurple) }
             }
@@ -479,10 +491,12 @@ private fun FailedScreen(text: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack>, days: List<ImpDay>, engineUse: Map<String, Boolean>, paid: Boolean, onUse: () -> Unit, onAssume: () -> Unit, onList: () -> Unit, onWords: () -> Unit, onImport: () -> Unit) {
-    val live = attacks.count { !it.removed }
-    val meds = attacks.filter { !it.removed }.sumOf { it.meds.size }
-    val syms = attacks.filter { !it.removed }.sumOf { it.symptoms.size + it.types.size }
+private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack>, days: List<ImpDay>, engineUse: Map<String, Boolean>, paid: Boolean, importOverlap: Boolean, onUse: () -> Unit, onAssume: () -> Unit, onList: () -> Unit, onWords: () -> Unit, onImport: () -> Unit) {
+    val cutoff = if (importOverlap) null else p.obj("overlap")?.str("first_app_log")
+    val kept = attacks.filter { !it.removed && (cutoff == null || it.date() < cutoff) }
+    val live = kept.size
+    val meds = kept.sumOf { it.meds.size }
+    val syms = kept.sumOf { it.symptoms.size + it.types.size }
     val range = p.obj("range"); val from = range?.str("from"); val to = range?.str("to")
     val assumptions = p.arr("assumptions").size
     val phrases = p.arr("questions").size
@@ -515,37 +529,63 @@ private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack
 
 @Composable
 private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, paid: Boolean, onNavigateToPaywall: () -> Unit, onDone: () -> Unit) {
-    Title(t("Use for insights"), if (paid) t("Everything goes in your journal. Ticked items also count in your insights. Ticks are our advice, change any.") else t("Everything goes in your journal. With a subscription, ticked items also count in your insights. These are the ticks we'd advise."))
+    Title(t("Use for insights"), t("Everything goes in your journal. We decided for each item whether it should count in your insights. Change any tick."))
     if (!paid) {
         BaseCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onNavigateToPaywall)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppTheme.AccentPurple)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(t("Counting imports in insights is part of the subscription"), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(t("Your history is still imported into the journal today."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("This will not show up in your insights"), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(t("Without a subscription, imported data only goes into your journal."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 Text(t("Upgrade"), color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
             }
         }
         Spacer(Modifier.height(10.dp))
     }
-    BaseCard(modifier = Modifier.fillMaxWidth().then(if (paid) Modifier else Modifier.alpha(0.55f))) {
-        p.arr("engine_use").forEachIndexed { i, e ->
-            val o = e as? JsonObject ?: return@forEachIndexed
-            val key = o.str("key") ?: return@forEachIndexed
-            val on = engineUse[key] ?: o.bool("recommended")
-            if (i > 0) HorizontalDivider(color = Edge)
-            Row(Modifier.fillMaxWidth().then(if (paid) Modifier.clickable { engineUse[key] = !on } else Modifier).padding(vertical = 10.dp), verticalAlignment = Alignment.Top) {
-                Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(if (on) AppTheme.AccentPurple else Color.Transparent).border(1.5.dp, AppTheme.AccentPurple, RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
-                    if (on) Icon(Icons.Outlined.Check, contentDescription = null, tint = Color(0xFF20062F), modifier = Modifier.size(15.dp))
+    val groupTitle = mapOf("attacks" to t("Attacks"), "symptom" to t("Symptoms"), "postdrome" to t("After-effects"), "medicine" to t("Medicines"), "relief" to t("What helped"),
+        "trigger" to t("Triggers"), "prodrome" to t("Warning signs before"), "food" to t("Foods"), "location" to t("Places"), "activity" to t("Activities"), "missed" to t("Missed plans"),
+        "metric" to t("Body and sleep"), "period" to t("Period"), "regimen" to t("Treatments"))
+    val rows = p.arr("engine_use").mapNotNull { it as? JsonObject }
+    val groups = rows.groupBy { it.str("group") ?: "other" }
+    groups.forEach { (group, items) ->
+        // fixed rows can't be counted fairly, so they get no tick and never count toward "x of y"
+        val keys = items.filter { !it.bool("fixed") }.mapNotNull { it.str("key") }
+        val onCount = keys.count { engineUse[it] ?: false }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text((groupTitle[group] ?: group).uppercase(), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+            if (keys.isNotEmpty()) Text(t("%1\$s of %2\$s", onCount, keys.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            if (keys.size > 1) {
+                Spacer(Modifier.width(12.dp))
+                Text(if (onCount == keys.size) t("None") else t("All"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { val v = onCount != keys.size; keys.forEach { engineUse[it] = v } }.padding(4.dp))
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        BaseCard(modifier = Modifier.fillMaxWidth()) {
+            items.forEachIndexed { i, o ->
+                val key = o.str("key") ?: return@forEachIndexed
+                val fixed = o.bool("fixed")
+                val on = if (fixed) false else engineUse[key] ?: o.bool("recommended")
+                val advised = o.bool("recommended")
+                if (i > 0) HorizontalDivider(color = Edge)
+                Row(Modifier.fillMaxWidth().then(if (fixed) Modifier else Modifier.clickable { engineUse[key] = !on }).padding(vertical = 10.dp), verticalAlignment = Alignment.Top) {
+                    if (!fixed) {
+                        Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(if (on) AppTheme.AccentPurple else Color.Transparent).border(1.5.dp, AppTheme.AccentPurple, RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
+                            if (on) Icon(Icons.Outlined.Check, contentDescription = null, tint = Color(0xFF20062F), modifier = Modifier.size(15.dp))
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(o.str("label") ?: key, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        if (fixed) Text(t("Journal only"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                        Text(o.str("reason") ?: "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        if (!fixed && on != advised) Text(if (advised) t("We'd count this.") else t("We'd leave this out."), color = Color(0xFFFFC978), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Text((o.int("count") ?: 0).toString(), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(o.str("label") ?: key, color = if (on) AppTheme.TitleColor else AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(o.str("reason") ?: "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-                Text((o.int("count") ?: 0).toString(), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -555,7 +595,8 @@ private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, pai
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AssumeScreen(p: JsonObject, answers: MutableMap<String, String?>, regimenSkip: MutableMap<String, Boolean>, doses: MutableMap<String, String>, endFill: String, onEndFill: (String) -> Unit, noTimeHour: Int?, onNoTimeHour: (Int?) -> Unit, onDone: () -> Unit) {
+private fun AssumeScreen(p: JsonObject, answers: MutableMap<String, String?>, regimenSkip: MutableMap<String, Boolean>, doses: MutableMap<String, String>, endFill: String, onEndFill: (String) -> Unit, noTimeHour: Int?, onNoTimeHour: (Int?) -> Unit, timezone: String, onTimezone: (String) -> Unit, importOverlap: Boolean, onImportOverlap: (Boolean) -> Unit, onDone: () -> Unit) {
+    val zones = remember(timezone) { (listOf(timezone, ZoneId.systemDefault().id, "Europe/London", "Europe/Amsterdam", "Europe/Brussels", "Europe/Berlin", "Europe/Paris", "Europe/Madrid", "Europe/Rome", "Europe/Lisbon", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Australia/Sydney")).distinct() }
     Title(t("What we assumed"), t("Change anything that's wrong."))
     BaseCard(modifier = Modifier.fillMaxWidth()) {
         p.arr("assumptions").forEachIndexed { i, e ->
@@ -569,8 +610,10 @@ private fun AssumeScreen(p: JsonObject, answers: MutableMap<String, String?>, re
                 }
                 Spacer(Modifier.width(10.dp))
                 when {
-                    key == "end_fill_hours" -> OutlinedTextField(value = endFill, onValueChange = onEndFill, placeholder = { Text("h", color = AppTheme.SubtleTextColor) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.width(72.dp), textStyle = MaterialTheme.typography.bodySmall)
-                    key.startsWith("dose|") -> OutlinedTextField(value = doses[key.removePrefix("dose|")] ?: "", onValueChange = { doses[key.removePrefix("dose|")] = it }, placeholder = { Text(t("e.g. 40 mg"), color = AppTheme.SubtleTextColor) }, singleLine = true, modifier = Modifier.width(120.dp), textStyle = MaterialTheme.typography.bodySmall)
+                    key == "cutoff" -> { val skipL = t("Skip them"); val impL = t("Import them too"); Picker(listOf(skipL, impL), if (importOverlap) impL else skipL) { onImportOverlap(it == impL) } }
+                    key == "timezone" -> Picker(zones.map { it.replace('_', ' ') }, timezone.replace('_', ' ')) { onTimezone(it.replace(' ', '_')) }
+                    key == "end_fill_hours" -> OutlinedTextField(value = endFill, onValueChange = onEndFill, placeholder = { Text("h", color = AppTheme.SubtleTextColor) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.width(72.dp), textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor))
+                    key.startsWith("dose|") -> OutlinedTextField(value = doses[key.removePrefix("dose|")] ?: "", onValueChange = { doses[key.removePrefix("dose|")] = it }, placeholder = { Text(t("e.g. 40 mg"), color = AppTheme.SubtleTextColor) }, singleLine = true, modifier = Modifier.width(120.dp), textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor))
                     key == "no_time_hour" -> Picker(listOf("07:00", "09:00", "12:00", "18:00"), (noTimeHour ?: 12).let { "%02d:00".format(it) }) { onNoTimeHour(it.take(2).toInt()) }
                     key.startsWith("regimen|") -> { val addL = t("Add as a treatment"); val skipL = t("Skip"); val rn = key.removePrefix("regimen|"); Picker(listOf(addL, skipL), if (regimenSkip[rn] == true) skipL else addL) { regimenSkip[rn] = it == skipL } }
                     o["options"] is JsonArray && (o.str("value") == null) -> {
@@ -580,7 +623,7 @@ private fun AssumeScreen(p: JsonObject, answers: MutableMap<String, String?>, re
                         var custom by remember(key) { mutableStateOf(answers[key]?.takeIf { it !in o.strList("options") } ?: "") }
                         Column(horizontalAlignment = Alignment.End) {
                             Picker(opts, cur) { sel -> answers[key] = when (sel) { keepL -> null; otherL -> custom.ifBlank { null }; else -> sel } }
-                            if (cur == otherL) OutlinedTextField(value = custom, onValueChange = { custom = it; answers[key] = it.ifBlank { null } }, singleLine = true, modifier = Modifier.width(160.dp), textStyle = MaterialTheme.typography.bodySmall, placeholder = { Text(t("Name"), color = AppTheme.SubtleTextColor) })
+                            if (cur == otherL) OutlinedTextField(value = custom, onValueChange = { custom = it; answers[key] = it.ifBlank { null } }, singleLine = true, modifier = Modifier.width(160.dp), textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor), placeholder = { Text(t("Name"), color = AppTheme.SubtleTextColor) })
                         }
                     }
                     else -> Text(o.str("value") ?: "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -691,7 +734,7 @@ private fun AttackScreen(a: ImpAttack, editing: Boolean, setEditing: (Boolean) -
             a.location?.let { loc -> ChipGroup(t("Where"), listOf(loc to ""), editing, { a.location = null; mark() }, null) }
             Spacer(Modifier.height(10.dp))
             SectionLabel(t("Your note"))
-            if (editing) OutlinedTextField(value = a.notes, onValueChange = { a.notes = it; mark() }, modifier = Modifier.fillMaxWidth(), minLines = 2, textStyle = MaterialTheme.typography.bodySmall)
+            if (editing) OutlinedTextField(value = a.notes, onValueChange = { a.notes = it; mark() }, modifier = Modifier.fillMaxWidth(), minLines = 2, textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor))
             else Text(a.notes.ifBlank { t("none") }, color = if (a.notes.isBlank()) AppTheme.SubtleTextColor else AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         }
         if (editing) { Spacer(Modifier.height(12.dp)); GhostButton(t("Remove this attack")) { a.removed = true; setEditing(false) } }
@@ -712,7 +755,7 @@ private fun StepBtn(label: String, onClick: () -> Unit) {
 private fun TimeField(label: String, value: String, editing: Boolean, modifier: Modifier, onChange: (String) -> Unit) {
     Column(modifier) {
         Text(label, color = AppTheme.SubtleTextColor, fontSize = 11.sp)
-        if (editing) OutlinedTextField(value = value.take(16), onValueChange = { onChange(it) }, singleLine = true, placeholder = { Text("YYYY-MM-DDTHH:MM", color = AppTheme.SubtleTextColor, fontSize = 12.sp) }, textStyle = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth())
+        if (editing) OutlinedTextField(value = value.take(16), onValueChange = { onChange(it) }, singleLine = true, placeholder = { Text("YYYY-MM-DDTHH:MM", color = AppTheme.SubtleTextColor, fontSize = 12.sp) }, textStyle = MaterialTheme.typography.bodySmall.copy(color = AppTheme.TitleColor), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = AppTheme.TitleColor, unfocusedTextColor = AppTheme.TitleColor), modifier = Modifier.fillMaxWidth())
         else Text(if (value.length >= 16) "${fmtDate(value)} ${value.substring(11, 16)}" else "–", color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
     }
 }
