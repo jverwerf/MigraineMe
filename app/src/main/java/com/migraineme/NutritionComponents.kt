@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -66,22 +67,10 @@ fun FoodSearchResultItem(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-                // Risk badges — geometric icon + vertical bar
-                if (foodRisks != null) {
-                    // Colour by severity level (green/amber/red), matching iOS.
-                    // Each badge renders nothing when its level is "none".
-                    TyramineRiskBadge(riskLevelColor(foodRisks.tyramine), foodRisks.tyramine)
-                    AlcoholRiskBadge(riskLevelColor(foodRisks.alcohol), foodRisks.alcohol)
-                    GlutenRiskBadge(riskLevelColor(foodRisks.gluten), foodRisks.gluten)
-                    HistamineRiskBadge(riskLevelColor(foodRisks.histamine), foodRisks.histamine)
-                } else if (isClassifyingRisks) {
-                    Spacer(Modifier.width(6.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(10.dp),
-                        color = AppTheme.AccentPurple,
-                        strokeWidth = 1.5.dp
-                    )
-                }
+            }
+            if (foodRisks != null || isClassifyingRisks) {
+                Spacer(Modifier.height(8.dp))
+                RiskExposureMeters(foodRisks, isClassifyingRisks)
             }
         }
         
@@ -187,36 +176,11 @@ fun NutritionExposureRows(todayItems: List<NutritionLogItem>) {
     }
     if (exposureKeys.isEmpty()) return
 
-    Column(Modifier.fillMaxWidth()) {
-        exposureKeys.forEach { registryKey ->
-            val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
-            val total = todayItems.metricTotal(legacyKey)
-            val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
-            val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    when (legacyKey) {
-                        "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
-                        "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
-                        "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
-                        "histamine_exposure" -> FlaskIcon(valueColor, 12.dp)
-                    }
-                    Spacer(Modifier.width(5.dp))
-                    Text(t(MetricRegistry.label(registryKey)), color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodySmall)
-                }
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
-                    if (level != "none") {
-                        Spacer(Modifier.width(4.dp))
-                        RiskBar(valueColor, level, maxHeight = 12.dp)
-                    }
-                }
-            }
-        }
-    }
+    fun rank(legacy: String) = exposureLevelFromRank(todayItems.metricTotal(legacy).toInt())
+    RiskExposureMeters(
+        tyramine = rank("tyramine_exposure"),
+        alcohol = rank("alcohol_exposure"),
+        gluten = rank("gluten_exposure"),
+        histamine = rank("histamine_exposure")
+    )
 }

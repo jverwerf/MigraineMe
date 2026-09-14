@@ -286,6 +286,9 @@ fun NutritionHistoryScreen(
                     Text(t("All Nutrients"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
+                    NutritionExposureRows(items)
+                    Spacer(Modifier.height(10.dp))
+
                     val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
                     allNutritionKeys.forEach { registryKey ->
                         val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
@@ -295,31 +298,8 @@ fun NutritionHistoryScreen(
                         val label = MetricRegistry.label(registryKey)
                         val unit = MetricRegistry.unit(registryKey)
                         if (isRisk) {
-                            val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
-                            val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    when (legacyKey) {
-                                        "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
-                                        "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
-                                        "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
-                                    }
-                                    Spacer(Modifier.width(5.dp))
-                                    Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                }
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
-                                    if (level != "none") {
-                                        Spacer(Modifier.width(4.dp))
-                                        RiskBar(valueColor, level, maxHeight = 12.dp)
-                                    }
-                                }
-                            }
-                        } else {
+                                // Shown as exposure meters, not repeated here.
+                            } else {
                             val formatted = if (total > 0) {
                                 if (total >= 10) "${total.toInt()} $unit" else "${String.format("%.1f", total)} $unit"
                             } else "-"

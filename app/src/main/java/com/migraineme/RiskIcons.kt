@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
 import androidx.compose.ui.unit.dp
 
 /**
@@ -254,10 +261,168 @@ private fun LegendLevel(level: String, label: String) {
     }
 }
 
+/**
+ * All four exposures in one row, ALWAYS drawn. The search-result badges hide
+ * themselves at "none", which reads as "we did not check" rather than "this is
+ * clean" — in a list of foods you are about to log, the absence of a flag has
+ * to be visible. A "none" icon is dimmed and carries no bar.
+ */
+@Composable
+fun AllRiskIcons(risks: FoodRiskResult?, isClassifying: Boolean = false) {
+    if (risks == null) {
+        if (isClassifying) {
+            Spacer(Modifier.width(6.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(10.dp),
+                color = AppTheme.AccentPurple,
+                strokeWidth = 1.5.dp
+            )
+        }
+        return
+    }
+    Row(verticalAlignment = Alignment.Bottom) {
+        AlwaysRiskBadge(risks.tyramine) { c, sz -> CheeseIcon(c, sz) }
+        AlwaysRiskBadge(risks.alcohol) { c, sz -> WineGlassIcon(c, sz) }
+        AlwaysRiskBadge(risks.gluten) { c, sz -> WheatIcon(c, sz) }
+        AlwaysRiskBadge(risks.histamine) { c, sz -> FlaskIcon(c, sz) }
+    }
+}
+
+@Composable
+private fun AlwaysRiskBadge(level: String, icon: @Composable (Color, Dp) -> Unit) {
+    val color = if (level == "none") AppTheme.SubtleTextColor.copy(alpha = 0.35f)
+                else riskLevelColor(level)
+    Row(verticalAlignment = Alignment.Bottom) {
+        Spacer(Modifier.width(5.dp))
+        icon(color, 13.dp)
+        Spacer(Modifier.width(1.dp))
+        RiskBar(color, level)
+    }
+}
+
 /** Colour by severity level, matching iOS: green = low, amber = medium, red = high. */
 fun riskLevelColor(level: String): Color = when (level) {
     "high" -> Color(0xFFE57373)
     "medium" -> Color(0xFFFFB74D)
     "low" -> Color(0xFF81C784)
     else -> Color.Unspecified
+}
+
+
+// ---------------------------------------------------------------------------
+// Exposure meters: the one way the four trigger flags are shown on every Diet
+// surface. Each flag is its object icon from brainy-icons, a word label, the
+// level in words, and the app's 4 dp track filled a third / two thirds / fully.
+// Colour is severity only (the Home screen's red / amber / green), so "high" is
+// the same red on every screen. All four are always drawn: "None" is dimmed,
+// never hidden, so a clean food reads as checked rather than unchecked.
+// ---------------------------------------------------------------------------
+
+private data class ExposureSpec(val label: String, val drawable: Int)
+
+private val EXPOSURE_SPECS = listOf(
+    ExposureSpec("Tyramine", R.drawable.brainy_risk_tyramine),
+    ExposureSpec("Alcohol", R.drawable.brainy_risk_alcohol),
+    ExposureSpec("Gluten", R.drawable.brainy_risk_gluten),
+    ExposureSpec("Histamine", R.drawable.brainy_risk_histamine),
+)
+
+/** Rank 0..3 as stored on nutrition rows and rollups, back to its level word. */
+fun exposureLevelFromRank(rank: Int): String = when (rank) {
+    3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none"
+}
+
+@Composable
+fun RiskExposureMeters(
+    risks: FoodRiskResult?,
+    isClassifying: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    if (risks == null) {
+        if (isClassifying) {
+            Row(modifier = modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
+                Spacer(Modifier.width(6.dp))
+                Text(t("Checking trigger flags…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+        return
+    }
+    RiskExposureMeters(risks.tyramine, risks.alcohol, risks.gluten, risks.histamine, modifier)
+}
+
+@Composable
+fun RiskExposureMeters(
+    tyramine: String,
+    alcohol: String,
+    gluten: String,
+    histamine: String,
+    modifier: Modifier = Modifier
+) {
+    val levels = listOf(tyramine, alcohol, gluten, histamine)
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (rowIdx in 0 until 2) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                for (colIdx in 0 until 2) {
+                    val i = rowIdx * 2 + colIdx
+                    ExposureMeter(EXPOSURE_SPECS[i], levels[i], Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+private val GREYSCALE = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+
+@Composable
+private fun ExposureMeter(spec: ExposureSpec, level: String, modifier: Modifier) {
+    val none = level != "high" && level != "medium" && level != "low"
+    val color = if (none) AppTheme.SubtleTextColor.copy(alpha = 0.45f) else riskLevelColor(level)
+    val fraction = when (level) { "high" -> 1f; "medium" -> 0.67f; "low" -> 0.33f; else -> 0f }
+    val levelWord = when (level) { "high" -> "High"; "medium" -> "Medium"; "low" -> "Low"; else -> "None" }
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(spec.drawable),
+                contentDescription = null,
+                colorFilter = if (none) GREYSCALE else null,
+                alpha = if (none) 0.4f else 1f,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                t(spec.label),
+                color = if (none) AppTheme.SubtleTextColor.copy(alpha = 0.6f) else AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                t(levelWord),
+                color = color,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = if (none) FontWeight.Normal else FontWeight.Bold
+                ),
+                maxLines = 1
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(AppTheme.TrackColor)
+        ) {
+            if (fraction > 0f) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(fraction)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(color)
+                )
+            }
+        }
+    }
 }

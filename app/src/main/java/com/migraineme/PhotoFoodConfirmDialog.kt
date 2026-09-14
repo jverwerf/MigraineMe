@@ -54,10 +54,11 @@ data class PhotoFoodDraft(
     val confidence: String,
     val alternates: List<String>,
     val checked: Boolean = true,
-    /** Set once the user picks a row out of the USDA search, so saving uses
-     *  exactly the food they chose instead of re-searching the name and
-     *  possibly landing on a different one. */
-    val fdcId: Int? = null
+    /** The USDA row this will actually be logged as. Resolved as soon as the
+     *  list opens and shown on the row, so the food you see is the food whose
+     *  nutrients get written — never a silent first-hit. */
+    val fdcId: Int? = null,
+    val usdaName: String? = null
 )
 
 /**
@@ -74,6 +75,10 @@ fun PhotoFoodConfirmDialog(
     onMealTypeChange: (String) -> Unit,
     isAdding: Boolean,
     addedCount: Int,
+    matches: Map<String, List<USDAFoodSearchResult>>,
+    matching: Set<String>,
+    matchFailed: Set<String>,
+    onRetryMatch: (String) -> Unit,
     searchResults: List<USDAFoodSearchResult>,
     isSearching: Boolean,
     onSearchQueryChange: (String) -> Unit,
@@ -110,10 +115,6 @@ fun PhotoFoodConfirmDialog(
 
                 Spacer(Modifier.height(12.dp))
 
-                FoodRiskLegend()
-
-                Spacer(Modifier.height(4.dp))
-
                 drafts.forEachIndexed { index, draft ->
                     if (index > 0) {
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
@@ -146,40 +147,42 @@ fun PhotoFoodConfirmDialog(
                                 }
                         ) {
                             Text(
-                                draft.name.replaceFirstChar { it.uppercase() },
+                                draft.usdaName ?: draft.name.replaceFirstChar { it.uppercase() },
                                 color = if (draft.checked) AppTheme.BodyTextColor else AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    when (draft.confidence) {
-                                        "high" -> t("Fairly sure")
-                                        "medium" -> t("Portion is a guess")
-                                        else -> t("Not sure, please check")
-                                    },
-                                    color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-
-                                // Same four exposure badges the search results and
-                                // the barcode sheet use. Each renders nothing at
-                                // "none", so a clean food shows no clutter.
-                                val key = draft.name.trim().lowercase()
-                                val r = risks[key]
-                                if (r != null) {
-                                    TyramineRiskBadge(riskLevelColor(r.tyramine), r.tyramine)
-                                    AlcoholRiskBadge(riskLevelColor(r.alcohol), r.alcohol)
-                                    GlutenRiskBadge(riskLevelColor(r.gluten), r.gluten)
-                                    HistamineRiskBadge(riskLevelColor(r.histamine), r.histamine)
-                                } else if (key in classifying) {
-                                    Spacer(Modifier.width(6.dp))
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(10.dp),
-                                        color = AppTheme.AccentPurple,
-                                        strokeWidth = 1.5.dp
+                            if (draft.usdaName == null) {
+                                val lookupKey = draft.name.trim().lowercase()
+                                when (lookupKey) {
+                                    in matching -> Text(
+                                        t("Finding USDA match…"),
+                                        color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                    // A lookup that failed is not "no match": say so,
+                                    // and let them try again.
+                                    in matchFailed -> Text(
+                                        t("Couldn't reach the food database — tap to retry"),
+                                        color = Color(0xFFE57373),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.clickable { onRetryMatch(lookupKey) }
+                                    )
+                                    else -> Text(
+                                        t("No database match — logged by name only"),
+                                        color = Color(0xFFFFB74D),
+                                        style = MaterialTheme.typography.labelSmall
                                     )
                                 }
                             }
+                            Text(
+                                t("From photo: %1\$s · %2\$s", draft.name, when (draft.confidence) {
+                                    "high" -> t("fairly sure")
+                                    "medium" -> t("portion is a guess")
+                                    else -> t("not sure, please check")
+                                }),
+                                color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
 
                         Spacer(Modifier.width(8.dp))
@@ -191,10 +194,76 @@ fun PhotoFoodConfirmDialog(
                         )
                     }
 
+                    // Exposures get their own full-width line. Sharing a row with
+                    // the name column squeezed them to zero width and they never
+                    // drew at all.
+                    val riskKey = (draft.usdaName ?: draft.name).trim().lowercase()
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RiskExposureMeters(risks[riskKey], riskKey in classifying)
+                    }
+
                     // Tapping the name opens the alternates the model offered,
                     // plus a free text box for anything it did not think of.
                     if (editingIndex == index) {
                         Column(modifier = Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 8.dp)) {
+                            // Best USDA matches for what the photo saw, so you can
+                            // see and change which row's nutrients get logged.
+                            val candidates = matches[draft.name.trim().lowercase()].orEmpty()
+                            if (candidates.isNotEmpty()) {
+                                Text(
+                                    t("Best matches in the USDA database"),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                candidates.forEach { hit ->
+                                    val selected = draft.fdcId == hit.fdcId
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 2.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(
+                                                if (selected) AppTheme.AccentPurple.copy(alpha = 0.28f)
+                                                else AppTheme.AccentPurple.copy(alpha = 0.10f)
+                                            )
+                                            .clickable {
+                                                update(index) {
+                                                    it.copy(fdcId = hit.fdcId, usdaName = hit.description)
+                                                }
+                                                editingIndex = -1
+                                            }
+                                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            if (selected) "●" else "○",
+                                            color = AppTheme.AccentPurple,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                hit.description,
+                                                color = AppTheme.BodyTextColor,
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                            hit.calories?.let { cal ->
+                                                Text(
+                                                    t("%s cal per 100 g", cal.toInt()),
+                                                    color = AppTheme.SubtleTextColor,
+                                                    style = MaterialTheme.typography.labelSmall
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                            }
+
                             if (draft.alternates.isNotEmpty()) {
                                 Text(
                                     t("Or was it…"),
@@ -217,6 +286,7 @@ fun PhotoFoodConfirmDialog(
                                                     d.copy(
                                                         name = alt,
                                                         fdcId = null,
+                                                        usdaName = null,
                                                         alternates = (listOf(d.name) + d.alternates.filter { it != alt }).distinct()
                                                     )
                                                 }
@@ -240,7 +310,7 @@ fun PhotoFoodConfirmDialog(
                                 onValueChange = { txt ->
                                     // Typing means they are no longer on the food
                                     // they picked, so drop the pin and search again.
-                                    update(index) { it.copy(name = txt, fdcId = null) }
+                                    update(index) { it.copy(name = txt, fdcId = null, usdaName = null) }
                                     onSearchQueryChange(txt)
                                 },
                                 placeholder = { Text(t("Type to search foods")) },
@@ -275,7 +345,11 @@ fun PhotoFoodConfirmDialog(
                                             .background(AppTheme.AccentPurple.copy(alpha = 0.10f))
                                             .clickable {
                                                 update(index) {
-                                                    it.copy(name = hit.description, fdcId = hit.fdcId)
+                                                    it.copy(
+                                                        name = hit.description,
+                                                        fdcId = hit.fdcId,
+                                                        usdaName = hit.description
+                                                    )
                                                 }
                                                 onSearchQueryChange("")
                                                 editingIndex = -1
@@ -294,6 +368,12 @@ fun PhotoFoodConfirmDialog(
                                                     color = AppTheme.SubtleTextColor,
                                                     style = MaterialTheme.typography.labelSmall
                                                 )
+                                            }
+                                            // Same four exposures on the search hits,
+                                            // so you can see what you are picking.
+                                            val hitKey = hit.description.trim().lowercase()
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                RiskExposureMeters(risks[hitKey], hitKey in classifying)
                                             }
                                         }
                                     }

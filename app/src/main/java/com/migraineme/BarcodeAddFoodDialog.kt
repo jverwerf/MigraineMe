@@ -170,25 +170,15 @@ fun BarcodeAddFoodDialog(
                 }
 
                 Spacer(Modifier.height(4.dp))
-                if (isClassifyingRisks) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(t("Food Risks"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
-                            Spacer(Modifier.width(4.dp))
-                            Text(t("Classifying…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                } else {
-                    BarcodeRiskRow("Tyramine", tyramineRisk, RiskColors.TyramineHigh, RiskColors.TyramineMedium, RiskColors.TyramineLow) { c, s -> CheeseIcon(c, s) }
-                    BarcodeRiskRow("Alcohol", alcoholRisk, RiskColors.AlcoholHigh, RiskColors.AlcoholMedium, RiskColors.AlcoholLow) { c, s -> WineGlassIcon(c, s) }
-                    BarcodeRiskRow("Gluten", glutenRisk, RiskColors.GlutenHigh, RiskColors.GlutenMedium, RiskColors.GlutenLow) { c, s -> WheatIcon(c, s) }
-                    BarcodeRiskRow("Histamine", histamineRisk, RiskColors.HistamineHigh, RiskColors.HistamineMedium, RiskColors.HistamineLow) { c, s -> FlaskIcon(c, s) }
-                }
+                RiskExposureMeters(
+                    risks = if (isClassifyingRisks) null else FoodRiskResult(
+                        tyramine = tyramineRisk ?: "none",
+                        alcohol = alcoholRisk ?: "none",
+                        gluten = glutenRisk ?: "none",
+                        histamine = histamineRisk ?: "none"
+                    ),
+                    isClassifying = isClassifyingRisks
+                )
 
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))

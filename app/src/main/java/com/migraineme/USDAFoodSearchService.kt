@@ -93,65 +93,125 @@ class USDAFoodSearchService(private val context: Context) {
      * user's language (with the English name as descriptionEn). Only when that
      * finds nothing do we hit USDA, so an English word or a brand still works.
      */
-    suspend fun searchFoods(query: String): List<USDAFoodSearchResult> = withContext(Dispatchers.IO) {
-        if (query.isBlank()) return@withContext emptyList()
+    /** Result of a food search. [failed] means we could not reach any food
+     *  database — distinct from a search that ran and genuinely found nothing. */
+    data class SearchOutcome(val results: List<USDAFoodSearchResult>, val failed: Boolean)
+
+    suspend fun searchFoods(query: String): List<USDAFoodSearchResult> = searchFoodsOutcome(query).results
+
+    suspend fun searchFoodsOutcome(query: String): SearchOutcome = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext SearchOutcome(emptyList(), false)
 
         val lang = LangPrefs.lang.value.code
         if (lang != "en") {
-            val localized = searchLocalFoods(query, lang)
-            if (localized.isNotEmpty()) return@withContext localized
+            val localized = searchLocalSmart(query, lang)
+            if (localized.results.isNotEmpty()) return@withContext localized
         }
 
-        val result: List<USDAFoodSearchResult> = try {
-            val url = "$BASE_URL/foods/search?api_key=$API_KEY" +
-                "&query=${query.replace(" ", "%20")}" +
-                "&pageSize=25" +
-                "&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS)"
+        // USDA intermittently answers a valid request with an nginx 400 (the same
+        // URL flips between 200 and 400 on retry), so a single failure is not
+        // trusted: retry before giving up on it.
+        var usdaFailed = false
+        for (attempt in 0 until 3) {
+            if (attempt > 0) kotlinx.coroutines.delay(400L * attempt)
+            try {
+                val url = "$BASE_URL/foods/search?api_key=$API_KEY" +
+                    "&query=${java.net.URLEncoder.encode(query, "UTF-8").replace("+", "%20")}" +
+                    "&pageSize=25" +
+                    "&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS)"
 
-            val request = Request.Builder().url(url).get().build()
-            val response = httpClient.newCall(request).execute()
+                val response = httpClient.newCall(Request.Builder().url(url).get().build()).execute()
+                val code = response.code
 
-            if (response.code == 429 || response.code == 403) {
-                response.close()
-                Log.w(TAG, "USDA rate limited (${response.code}), falling back to local DB")
-                searchLocalFoods(query)
-            } else if (!response.isSuccessful) {
-                response.close()
-                Log.e(TAG, "USDA search failed: ${response.code}, trying local DB")
-                searchLocalFoods(query)
-            } else {
+                if (code == 429 || code == 403) {
+                    response.close()
+                    Log.w(TAG, "USDA rate limited ($code), falling back to local DB")
+                    usdaFailed = true
+                    break
+                }
+                if (!response.isSuccessful) {
+                    response.close()
+                    Log.w(TAG, "USDA search failed: $code (attempt ${attempt + 1}/3)")
+                    usdaFailed = true
+                    continue
+                }
+
                 val body = response.body?.string()
                 response.close()
-                if (body == null) {
-                    searchLocalFoods(query)
-                } else {
-                    val searchResponse = json.decodeFromString<USDASearchResponseFull>(body)
-                    if (searchResponse.foods.isEmpty()) {
-                        emptyList()
-                    } else {
-                        val sortedFoods = searchResponse.foods.sortedBy { food ->
-                            when (food.dataType) {
-                                "Foundation" -> 0; "SR Legacy" -> 1; "Survey (FNDDS)" -> 2; else -> 3
-                            }
-                        }
-                        sortedFoods.take(20).map { food ->
-                            USDAFoodSearchResult(
-                                fdcId = food.fdcId,
-                                description = food.description,
-                                brandName = food.brandName,
-                                servingSize = food.servingSize,
-                                servingSizeUnit = food.servingSizeUnit,
-                                calories = food.foodNutrients.find { it.nutrientId == 1008 }?.value
-                            )
+                if (body == null) { usdaFailed = true; continue }
+
+                val searchResponse = json.decodeFromString<USDASearchResponseFull>(body)
+                val results = searchResponse.foods
+                    .sortedBy { food ->
+                        when (food.dataType) {
+                            "Foundation" -> 0; "SR Legacy" -> 1; "Survey (FNDDS)" -> 2; else -> 3
                         }
                     }
-                }
+                    .take(20)
+                    .map { food ->
+                        USDAFoodSearchResult(
+                            fdcId = food.fdcId,
+                            description = food.description,
+                            brandName = food.brandName,
+                            servingSize = food.servingSize,
+                            servingSizeUnit = food.servingSizeUnit,
+                            calories = food.foodNutrients.find { it.nutrientId == 1008 }?.value
+                        )
+                    }
+                if (results.isNotEmpty()) return@withContext SearchOutcome(results, false)
+                // USDA answered and has nothing: still worth a local look, but
+                // this is a genuine empty, not a failure.
+                usdaFailed = false
+                break
+            } catch (e: Exception) {
+                Log.w(TAG, "USDA search error: ${e.message} (attempt ${attempt + 1}/3)")
+                usdaFailed = true
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "USDA search failed: ${e.message}, trying local DB", e)
-            searchLocalFoods(query)
         }
-        result
+
+        val local = searchLocalSmart(query, "en")
+        if (local.results.isNotEmpty()) return@withContext local
+        // Nothing anywhere. Only call it a failure if we never got a real answer.
+        SearchOutcome(emptyList(), usdaFailed && local.failed)
+    }
+
+    /**
+     * Local fallback that does not give up on a multi-word phrase. The RPC
+     * matches the whole phrase, so "farfalle pasta" finds nothing even with 137
+     * pasta rows in the table. When the phrase is empty, search each word and
+     * rank rows by how many of the query words they contain.
+     */
+    private fun searchLocalSmart(query: String, lang: String): SearchOutcome {
+        val whole = searchLocalFoods(query, lang)
+        if (whole == null || whole.isNotEmpty()) return SearchOutcome(whole.orEmpty(), whole == null)
+
+        val words = query.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.length >= 3 }.distinct()
+        if (words.size < 2) return SearchOutcome(emptyList(), false)
+
+        val byId = LinkedHashMap<Int, USDAFoodSearchResult>()
+        var anyFailed = false
+        for (w in words) {
+            val hits = searchLocalFoods(w, lang)
+            if (hits == null) { anyFailed = true; continue }
+            hits.forEach { byId.putIfAbsent(it.fdcId, it) }
+        }
+        val q = query.lowercase()
+        val ranked = byId.values.sortedWith(
+            compareByDescending<USDAFoodSearchResult> { r ->
+                val d = (r.descriptionEn ?: r.description).lowercase()
+                var score = words.count { d.contains(it) } * 10
+                // USDA names lead with the food itself ("Pasta, cooked…"), so a
+                // row that STARTS with a query word is the food, not a sauce or
+                // dish that merely mentions it.
+                if (words.any { d.startsWith(it) }) score += 6
+                // Never silently swap in a special-diet variant the user did not
+                // ask for: a gluten-free pasta would flip the gluten flag.
+                if (Regex("gluten.?free").containsMatchIn(d) && !Regex("gluten.?free").containsMatchIn(q)) score -= 12
+                score
+            }.thenBy { (it.descriptionEn ?: it.description).length }
+        ).take(20)
+        Log.d(TAG, "Local word-fallback '$query' via $words: ${ranked.size} results")
+        return SearchOutcome(ranked, ranked.isEmpty() && anyFailed)
     }
 
     /**
@@ -159,9 +219,9 @@ class USDAFoodSearchService(private val context: Context) {
      * With lang != "en" the RPC searches usda_foods_i18n and returns the name in
      * that language; it falls back to English itself when nothing matches.
      */
-    private fun searchLocalFoods(query: String, lang: String = "en"): List<USDAFoodSearchResult> {
+    private fun searchLocalFoods(query: String, lang: String = "en"): List<USDAFoodSearchResult>? {
         try {
-            val token = SessionStore.readAccessToken(context) ?: return emptyList()
+            val token = SessionStore.readAccessToken(context) ?: return null
             val rpcUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/rpc/search_usda_foods"
             val body = org.json.JSONObject().apply {
                 put("search_query", query)
@@ -180,12 +240,12 @@ class USDAFoodSearchService(private val context: Context) {
             if (!response.isSuccessful) {
                 response.close()
                 Log.e(TAG, "Local search failed: ${response.code}")
-                return emptyList()
+                return null
             }
 
             val respBody = response.body?.string()
             response.close()
-            if (respBody == null) return emptyList()
+            if (respBody == null) return null
 
             val arr = org.json.JSONArray(respBody)
             val results = mutableListOf<USDAFoodSearchResult>()
@@ -209,7 +269,7 @@ class USDAFoodSearchService(private val context: Context) {
             return results
         } catch (e: Exception) {
             Log.e(TAG, "Local search failed: ${e.message}", e)
-            return emptyList()
+            return null
         }
     }
 

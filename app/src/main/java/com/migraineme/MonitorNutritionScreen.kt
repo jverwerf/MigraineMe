@@ -139,24 +139,81 @@ fun MonitorNutritionScreen(
     // edit that lands back on an earlier name is free.
     var photoRisks by remember { mutableStateOf<Map<String, FoodRiskResult>>(emptyMap()) }
     var photoClassifying by remember { mutableStateOf<Set<String>>(emptySet()) }
+    // Best USDA rows per photo food, resolved as soon as the list opens so the
+    // match is visible and changeable instead of a silent first-hit at save.
+    var photoMatches by remember { mutableStateOf<Map<String, List<USDAFoodSearchResult>>>(emptyMap()) }
+    var photoMatching by remember { mutableStateOf<Set<String>>(emptySet()) }
+    // Names whose USDA lookup could not reach any database. Kept out of the
+    // cache so they are retried rather than frozen as "no match".
+    var photoMatchFailed by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var photoMatchRetry by remember { mutableStateOf(0) }
     var pendingPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
+    // Resolve each photo food against USDA up front, and pin the top hit so the
+    // row shows the food whose nutrients will actually be written.
+    val photoDraftNames = photoDrafts?.map { it.name.trim().lowercase() }?.filter { it.isNotEmpty() }
+    LaunchedEffect(photoDraftNames, photoMatchRetry) {
+        val names = photoDraftNames ?: return@LaunchedEffect
+        val todo = names.distinct().filter {
+            it !in photoMatches && it !in photoMatching && it !in photoMatchFailed
+        }
+        if (todo.isEmpty()) return@LaunchedEffect
+        kotlinx.coroutines.delay(300)
+        photoMatching = photoMatching + todo
+        todo.forEach { name ->
+            scope.launch {
+                val outcome = try {
+                    searchService.searchFoodsOutcome(name)
+                } catch (_: Exception) {
+                    USDAFoodSearchService.SearchOutcome(emptyList(), true)
+                }
+                photoMatching = photoMatching - name
+                if (outcome.failed) {
+                    // Could not reach a database: remember that, do NOT cache
+                    // it as an empty match.
+                    photoMatchFailed = photoMatchFailed + name
+                    return@launch
+                }
+                val hits = outcome.results.take(3)
+                photoMatches = photoMatches + (name to hits)
+                // Pre-select the best hit for any row still unpinned, so the
+                // USDA name is on screen without the user having to dig.
+                val best = hits.firstOrNull()
+                if (best != null) {
+                    photoDrafts = photoDrafts?.map { d ->
+                        if (d.fdcId == null && d.name.trim().lowercase() == name)
+                            d.copy(fdcId = best.fdcId, usdaName = best.description)
+                        else d
+                    }
+                }
+            }
+        }
+    }
+
     // Classify every name in the photo list, and re-classify when an edit
     // changes one. Debounced so typing does not fire a call per keystroke.
-    val photoNames = photoDrafts?.map { it.name.trim().lowercase() }?.filter { it.isNotEmpty() }
+    val photoNames = (
+        (photoDrafts?.map { it.usdaName ?: it.name } ?: emptyList()) +
+            photoSearchResults.map { it.description }
+    ).map { it.trim().lowercase() }.filter { it.isNotEmpty() }.distinct()
+
     LaunchedEffect(photoNames) {
-        val names = photoNames ?: return@LaunchedEffect
-        val todo = names.distinct().filter { it !in photoRisks && it !in photoClassifying }
+        val todo = photoNames.filter { it !in photoRisks && it !in photoClassifying }
         if (todo.isEmpty()) return@LaunchedEffect
         kotlinx.coroutines.delay(400)
         val token = authState.accessToken ?: return@LaunchedEffect
         photoClassifying = photoClassifying + todo
+        // One coroutine per name, launched off this effect's scope, so a
+        // recomposition that restarts the effect cannot strand the rest of the
+        // list half-classified with a spinner that never stops.
         todo.forEach { name ->
-            val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                try { FoodRiskClassifierService().classify(token, name) } catch (_: Exception) { null }
+            scope.launch {
+                val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    try { FoodRiskClassifierService().classify(token, name) } catch (_: Exception) { null }
+                }
+                photoRisks = photoRisks + (name to (result ?: FoodRiskResult()))
+                photoClassifying = photoClassifying - name
             }
-            if (result != null) photoRisks = photoRisks + (name to result)
-            photoClassifying = photoClassifying - name
         }
     }
 
@@ -323,29 +380,29 @@ fun MonitorNutritionScreen(
             var added = 0
             var lastError: String? = null
             drafts.forEach { draft ->
-                // A pinned fdcId means they picked this exact row out of the
-                // database, so never second-guess it with another search.
-                val fdcId = draft.fdcId ?: try {
-                    searchService.searchFoods(draft.name).firstOrNull()?.fdcId
-                } catch (_: Exception) { null }
-
+                // The row already shows which USDA food this is, so save exactly
+                // that. No second search, no silent substitution.
+                val fdcId = draft.fdcId
                 val details = fdcId?.let {
                     try { searchService.getFoodDetails(it) } catch (_: Exception) { null }
                 }
+                // Log it under the USDA name when there is one, so the journal
+                // entry matches the row the nutrients came from.
+                val logName = draft.usdaName ?: draft.name
 
                 val result = if (details != null) {
                     // USDA nutrient amounts are per 100g, and addFoodFromDetails
                     // multiplies by servings, so grams/100 is the scale factor.
                     searchService.addFoodFromDetails(
                         foodDetails = details,
-                        foodName = draft.name,
+                        foodName = logName,
                         mealType = photoMealType,
                         servings = (draft.grams.takeIf { it > 0 } ?: 100.0) / 100.0,
                         source = "photo_ai"
                     )
                 } else {
                     searchService.addFoodByName(
-                        foodName = draft.name,
+                        foodName = logName,
                         mealType = photoMealType,
                         source = "photo_ai"
                     )
@@ -358,6 +415,8 @@ fun MonitorNutritionScreen(
             isAddingPhoto = false
             photoDrafts = null
             photoSearchResults = emptyList()
+            photoMatches = emptyMap()
+            photoMatchFailed = emptySet()
             reloadTodayItems()
 
             // "3 foods has been added" reads wrong, so a multi-add gets its
@@ -570,6 +629,13 @@ fun MonitorNutritionScreen(
             onMealTypeChange = { photoMealType = it },
             isAdding = isAddingPhoto,
             addedCount = photoAddedCount,
+            matches = photoMatches,
+            matching = photoMatching,
+            matchFailed = photoMatchFailed,
+            onRetryMatch = { name ->
+                photoMatchFailed = photoMatchFailed - name
+                photoMatchRetry++
+            },
             searchResults = photoSearchResults,
             isSearching = isSearchingPhotoName,
             onSearchQueryChange = { searchPhotoName(it) },
@@ -807,7 +873,6 @@ fun MonitorNutritionScreen(
                         Text("✕", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clickable { searchResults = emptyList() })
                     }
                     Spacer(Modifier.height(8.dp))
-                    FoodRiskLegend()
                     searchResults.forEach { food ->
                         FoodSearchResultItem(
                             food = food,
@@ -903,31 +968,7 @@ fun MonitorNutritionScreen(
                             val label = MetricRegistry.label(registryKey)
                             val unit = MetricRegistry.unit(registryKey)
                             if (isRisk) {
-                                val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
-                                val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        when (legacyKey) {
-                                            "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
-                                            "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
-                                            "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
-                                            "histamine_exposure" -> FlaskIcon(valueColor, 12.dp)
-                                        }
-                                        Spacer(Modifier.width(5.dp))
-                                        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                    }
-                                    Row(verticalAlignment = Alignment.Bottom) {
-                                        Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
-                                        if (level != "none") {
-                                            Spacer(Modifier.width(4.dp))
-                                            RiskBar(valueColor, level, maxHeight = 12.dp)
-                                        }
-                                    }
-                                }
+                                // Shown as exposure meters, not repeated here.
                             } else {
                                 val formatted = if (total > 0) {
                                     if (total >= 10) "${total.toInt()} $unit" else "${String.format("%.1f", total)} $unit"
