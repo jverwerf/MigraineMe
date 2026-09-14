@@ -449,19 +449,25 @@ fun HomeScreenRoot(
 
                 // ── AI Daily Insight — premium only, today only ──
                 if (insightVisible) {
-                    // ── Well done — the one card that is purely on the user's side.
-                    // Deliberately NOT premium-gated: encouragement should not be paywalled.
-                    // Hidden during a language rewrite: it is model-written too, so
-                    // it would be the one paragraph left in the old language.
+                    // ── Well done — premium since 2026-09-14 (Jordy), blur-gated like
+                    // the other AI cards. Hidden during a language rewrite: it is
+                    // model-written too, so it would be the one paragraph left in the
+                    // old language.
                     if (!aiRegenerating) {
                         state.positives.firstOrNull()?.let { praise ->
-                            WellDoneCard(text = praise)
+                            PremiumGate(
+                                message = t("Unlock What Strengthens You"),
+                                onUpgrade = onNavigateToPaywall
+                            ) {
+                                WellDoneCard(text = praise)
+                            }
                             // Rating ask rides the one purely-positive moment, and
-                            // never within 24h of a logged migraine.
+                            // never within 24h of a logged migraine. Only when the
+                            // card is actually readable.
                             val attackRecently = state.recentLogs.any {
                                 it.time.isAfter(Instant.now().minusSeconds(24 * 60 * 60))
                             }
-                            if (!attackRecently) {
+                            if (!attackRecently && premiumState.access == PremiumAccess.ENTITLED) {
                                 LaunchedEffect(Unit) {
                                     (ctx as? android.app.Activity)?.let { RatingPrompt.maybeAsk(it) }
                                 }
