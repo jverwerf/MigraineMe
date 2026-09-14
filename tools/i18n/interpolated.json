@@ -16,19 +16,19 @@
     "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Failed to add: %1\\$s\", e.message ?: tSync(\"error\"))) }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:737",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:756",
     "line": "                    if (editMode) t(\"Edit — %1\\$s\", AiSetupEntry.title(startPage ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:738",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:757",
     "line": "                    else t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:758",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:777",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:759",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:778",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
@@ -200,47 +200,47 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:519",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:555",
     "line": "    NavRow(t(\"Use for insights\"), if (paid) t(\"%1\\$s of %2\\$s ticked, our advice\", ticked, engineUse.size) else t(\"Journal only. Subscribe to count it in insights.\"), onUse)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:521",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:557",
     "line": "    NavRow(t(\"What we assumed\"), if (phrases > 0) t(\"%1\\$s things, including %2\\$s phrases we kept in your words\", assumptions, phrases) else t(\"%1\\$s things\", assumptions), onAssume)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:523",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:559",
     "line": "    NavRow(t(\"Check the attacks and days\"), t(\"%1\\$s attacks and %2\\$s other days\", live, days.size), onList)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:527",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:563",
     "line": "    PrimaryButton(t(\"Import %1\\$s attacks\", live), enabled = live > 0, onClick = onImport)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:559",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:595",
     "line": "            if (keys.isNotEmpty()) Text(t(\"%1\\$s of %2\\$s\", onCount, keys.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:656",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:692",
     "line": "    Title(t(\"Attacks (%1\\$s)\", attacks.count { !it.removed }), t(\"Tap one to see everything we read from it.\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:799",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:835",
     "line": "        newItems.forEachIndexed { i, o -> if (i > 0) HorizontalDivider(color = Edge); Column(Modifier.padding(vertical = 6.dp)) { PairRow(o.str(\"phrase\") ?: \"\", o.str(\"label\") ?: \"\", newItem = true); Text(listOfNotNull(t(\"New\"), o.str(\"class\")?.replace('_', ' '), o.str(\"category\")).joinToString(\" · \") + \" · \" + t(\"seen %1\\$s×\", o.int(\"count\") ?: 0), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:842",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:878",
     "line": "                Text(t(\"%1\\$s attacks are in your journal\", verify?.int(\"attacks_written\") ?: attacks), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:856",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:893",
     "line": "        Text(\"• \" + t(\"Journal, calendar and the doctor report show these attacks.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:857",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:894",
     "line": "        Text(\"• \" + (if (paid) t(\"Insights use what you ticked under Use for insights. The rest stays in the journal only.\") else t(\"Insights leave imported data out. Subscribe and import again to count it.\")), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:858",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:895",
     "line": "        Text(\"• \" + t(\"Your imported medicines and reliefs are now favourites in the log wizard.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {

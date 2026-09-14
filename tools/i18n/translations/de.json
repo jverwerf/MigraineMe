@@ -4334,5 +4334,10 @@
  "Everything goes in your journal. We decided for each item whether it should count in your insights. Change any tick.": "Alles landet in deinem Tagebuch. Wir haben für jeden Punkt entschieden, ob er in deinen Insights zählt. Ändere jeden Haken.",
  "We'd count this.": "Wir zählen es.",
  "We'd leave this out.": "Wir lassen es weg.",
- "Journal only": "Nur Tagebuch"
+ "Journal only": "Nur Tagebuch",
+ "Have a diary, spreadsheet or export from another app?": "Hast du ein Tagebuch, eine Tabelle oder einen Export aus einer anderen App?",
+ "Import a file": "Datei hochladen",
+ "From your file": "Aus deiner Datei",
+ "Remove from story": "Aus Text entfernen",
+ "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test."
 }

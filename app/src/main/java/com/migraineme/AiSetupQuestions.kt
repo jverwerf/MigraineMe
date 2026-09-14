@@ -668,6 +668,9 @@ fun AiQuestionsPageStory(
     isLoading: Boolean,
     onParse: () -> Unit,
     onSkip: () -> Unit,
+    fileSummary: String = "",
+    onImportFile: () -> Unit = {},
+    onRemoveFileSummary: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -727,6 +730,48 @@ fun AiQuestionsPageStory(
             Icon(Icons.Outlined.Mic, contentDescription = t("Tap to speak"), tint = AppTheme.AccentPurple, modifier = Modifier.size(36.dp))
         }
         Text(t("Tap to speak"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+
+        // Secondary: bring a diary / spreadsheet / other app's export (ImportHistoryScreen, onboarding mode)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(t("Have a diary, spreadsheet or export from another app?"), style = ObStyle.body(13.sp), textAlign = TextAlign.Center)
+            OutlinedButton(
+                onClick = onImportFile,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ObStyle.CardLine.copy(alpha = 0.45f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = ObStyle.Lavender)
+            ) {
+                Icon(Icons.Outlined.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(t("Import a file"), style = ObStyle.button(14.sp))
+            }
+        }
+
+        // What the imported file says, fed to the parser alongside the typed/voice text
+        if (fileSummary.isNotBlank()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = ObStyle.CardFill),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().border(1.dp, ObStyle.CardLine.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.UploadFile, contentDescription = null, tint = ObStyle.Pink, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(t("From your file"), style = ObStyle.label(12.sp), modifier = Modifier.weight(1f))
+                        Row(
+                            Modifier.clip(RoundedCornerShape(999.dp)).clickable(onClick = onRemoveFileSummary).padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Outlined.Close, contentDescription = null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t("Remove from story"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(fileSummary, style = ObStyle.body(13.sp))
+                }
+            }
+        }
 
         // Text input area
         OutlinedTextField(

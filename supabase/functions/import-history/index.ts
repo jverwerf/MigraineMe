@@ -1133,6 +1133,47 @@ function fillEnds(model: Model) {
   if (n) model.inferences.push(`${n} attacks had no end time. End set to start plus ${Math.round(median / 60 * 10) / 10} hours (${known.length ? "the median of this file's known durations" : "our default"}), capped at 23:59 the same day.`);
 }
 
+// Plain-English summary of the file for the AI-setup story page: it is appended to what the person
+// said or typed and runs through the same story parser, so the questionnaire fills from the file too.
+// Only resolved labels (pool labels or the person's words), never guesses; counts come from the file.
+export function storySummary(model: Model, decisions: LinkDecision[]): string {
+  const attacks = model.attacks; if (!attacks.length) return "";
+  const dates = attacks.map((a) => dateOf(a.start_local)).sort();
+  const spanDays = Math.max(1, Math.round(localMinutesBetween(dates[0] + "T00:00:00", dates[dates.length - 1] + "T00:00:00") / 1440) + 1);
+  const perMonth = Math.round((attacks.length / Math.max(1, spanDays / 30.4)) * 10) / 10;
+  const durs = attacks.filter((a) => a.end_local && !a.end_inferred).map((a) => localMinutesBetween(a.start_local, a.end_local!)).filter((m) => m > 0).sort((x, y) => x - y);
+  const medianH = durs.length ? Math.round(durs[Math.floor(durs.length / 2)] / 6) / 10 : null;
+  const sev = attacks.map((a) => a.intensity.value).filter((v): v is number => v !== null);
+  const avgSev = sev.length ? Math.round(sev.reduce((x, y) => x + y, 0) / sev.length) : null;
+  const top = (cls: SourceClass, lists: string[][], min = 1, max = 10) => {
+    const c = new Map<string, number>();
+    for (const l of lists) for (const lab of uniq(l.map((p) => resolveLabel(decisions, {}, cls, p)).filter((r) => r && r.concept !== "drop" && r.concept !== "food").map((r) => r!.label))) c.set(lab, (c.get(lab) ?? 0) + 1);
+    return Array.from(c.entries()).filter(([, n]) => n >= min).sort((a, b) => b[1] - a[1]).slice(0, max).map(([l]) => l);
+  };
+  const clear = (cls: SourceClass, phrases: string[]) => phrases.filter((p) => { const d = decisions.find((x) => x.class === cls && x.phrase.toLowerCase() === lower(p)); return !d || d.tier !== "ambiguous"; });
+  const hours = attacks.map((a) => +a.start_local.slice(11, 13)).filter((h) => h !== 12);
+  const band = (lo: number, hi: number) => hours.filter((h) => h >= lo && h < hi).length;
+  const when = hours.length >= 5 ? ([["in the morning", band(4, 12)], ["in the afternoon", band(12, 18)], ["in the evening or at night", band(18, 24) + band(0, 4)]] as [string, number][]).sort((a, b) => b[1] - a[1])[0] : null;
+  const periodDays = new Set(model.days.filter((d) => d.period === "start" || d.period === "flow").map((d) => d.date));
+  const onPeriod = periodDays.size ? attacks.filter((a) => [0, -1, -2, 1, 2].some((k) => periodDays.has(addMinutesLocal(a.start_local.slice(0, 10) + "T12:00:00", k * 1440).slice(0, 10)))).length : 0;
+  const sleep = model.days.map((d) => d.metrics.sleep_hours).filter((v): v is number => typeof v === "number");
+  const parts: string[] = [];
+  parts.push(`From my diary file (${dates[0]} to ${dates[dates.length - 1]}): I had ${attacks.length} migraines, about ${perMonth} a month.`);
+  if (medianH !== null) parts.push(`They usually last about ${medianH} hours.`);
+  if (avgSev !== null) parts.push(`Average pain ${avgSev} out of 10.`);
+  if (when && when[1] >= hours.length * 0.5) parts.push(`They mostly start ${when[0]}.`);
+  const sym = top("symptom", attacks.map((a) => clear("symptom", [...a.symptoms, ...a.types])), 2); if (sym.length) parts.push(`Symptoms: ${sym.join(", ")}.`);
+  const pro = top("prodrome", attacks.map((a) => clear("prodrome", a.prodromes)), 2); if (pro.length) parts.push(`Before one starts I notice: ${pro.join(", ")}.`);
+  const trg = top("trigger", [...attacks.map((a) => clear("trigger", a.triggers)), ...model.days.map((d) => clear("trigger", d.triggers))], 2); if (trg.length) parts.push(`My triggers: ${trg.join(", ")}.`);
+  const food = Array.from(new Set(attacks.flatMap((a) => a.foods.map(norm)))).slice(0, 8); if (food.length) parts.push(`Foods or drinks before attacks: ${food.join(", ")}.`);
+  const med = top("medicine", [...attacks.map((a) => clear("medicine", a.meds.map((m) => m.name))), ...model.days.map((d) => clear("medicine", d.daily_meds.map((m) => m.name)))], 1, 8); if (med.length) parts.push(`I take ${med.join(", ")}.`);
+  const rel = top("relief", attacks.map((a) => clear("relief", a.reliefs.map((r) => r.name))), 2); if (rel.length) parts.push(`What helps: ${rel.join(", ")}.`);
+  if (periodDays.size && onPeriod >= Math.max(2, attacks.length * 0.25)) parts.push(`${onPeriod} of them were around my period.`);
+  if (sleep.length >= 5) parts.push(`I sleep about ${Math.round(sleep.reduce((x, y) => x + y, 0) / sleep.length * 10) / 10} hours.`);
+  if (attacks.some((a) => a.aura.present)) parts.push(`${attacks.filter((a) => a.aura.present).length} had an aura.`);
+  return parts.join(" ");
+}
+
 export function buildPreview(model: Model, decisions: LinkDecision[], regimens: RegimenProposal[], overlap: { first_app_log: string | null; overlapping: number }, spend: Spend) {
   const attacks = model.attacks;
   const dates = attacks.map((a) => dateOf(a.start_local)).sort();
@@ -1187,6 +1228,7 @@ export function buildPreview(model: Model, decisions: LinkDecision[], regimens: 
     engine_use: engineUseRecommendations(model, decisions, {}, (model as unknown as { __pools?: Pools }).__pools ?? {}, regimens),
     attacks: attacks.map((a) => ({ ref: a.ref, start_local: a.start_local, end_local: a.end_local, end_inferred: a.end_inferred, severity: a.intensity.value, types: a.types, symptoms: a.symptoms, symptom_severity: a.symptom_severity, prodromes: a.prodromes, postdromes: a.postdromes, triggers: a.triggers, foods: a.foods, meds: a.meds, reliefs: a.reliefs, activities: a.activities, missed: a.missed_detail.length ? a.missed_detail : a.missed.map((n) => ({ name: n, reasons: [], anticipated: false })), location: a.location, pain_locations: a.pain_locations, aura: a.aura, times: a.times, notes: a.notes, provenance: a.provenance })),
     days: model.days.filter((d) => Object.keys(d.metrics).length || Object.keys(d.times).length || d.period || d.side_effects.length || d.missed.length || d.regimens.length || d.foods.length || d.daily_meds.length).map((d) => ({ date: d.date, metrics: d.metrics, times: d.times, period: d.period, foods: d.foods.map((f) => f.name), daily_meds: d.daily_meds.map((m) => m.name), side_effects: d.side_effects, missed: d.missed, regimens: d.regimens })),
+    story_summary: storySummary(model, decisions),
     cost: { usd: Math.round(spend.usd() * 1000) / 1000, tokens: spend.tokens(), calls: spend.usages.length },
   };
 }

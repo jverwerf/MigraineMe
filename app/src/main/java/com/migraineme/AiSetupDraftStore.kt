@@ -26,6 +26,7 @@ object AiSetupDraftStore {
     private const val PREFS = "ai_setup_draft"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_STORY_TEXT = "story_text"
+    private const val KEY_FILE_SUMMARY = "file_summary"
     private const val KEY_STORY_PARSED = "story_parsed"
     private const val KEY_PAGE = "page"
     private const val KEY_ANSWERS = "answers"
@@ -33,6 +34,8 @@ object AiSetupDraftStore {
 
     data class Draft(
         val storyText: String,
+        /** Summary of a file imported from the story page; joined to storyText for the parse. */
+        val fileSummary: String,
         val storyParsed: Boolean,
         /** AiPage name as saved; the screen maps PROCESSING/RESULTS/COMPANIONS back to NOTES. */
         val page: String,
@@ -63,6 +66,7 @@ object AiSetupDraftStore {
         }.getOrNull() ?: JsonObject(emptyMap())
         return Draft(
             storyText = p.getString(KEY_STORY_TEXT, null) ?: "",
+            fileSummary = p.getString(KEY_FILE_SUMMARY, null) ?: "",
             storyParsed = p.getBoolean(KEY_STORY_PARSED, false),
             page = page,
             answers = answers,
@@ -75,11 +79,12 @@ object AiSetupDraftStore {
      * before the caller moves on: a process death right after is the whole
      * reason this exists. Call off the main thread.
      */
-    fun save(context: Context, storyText: String, storyParsed: Boolean, page: String, answersJson: String) {
+    fun save(context: Context, storyText: String, storyParsed: Boolean, page: String, answersJson: String, fileSummary: String = "") {
         val userId = SessionStore.readUserId(context) ?: return
         prefs(context).edit()
             .putString(KEY_USER_ID, userId)
             .putString(KEY_STORY_TEXT, storyText)
+            .putString(KEY_FILE_SUMMARY, fileSummary)
             .putBoolean(KEY_STORY_PARSED, storyParsed)
             .putString(KEY_PAGE, page)
             .putString(KEY_ANSWERS, answersJson)

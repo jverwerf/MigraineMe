@@ -164,6 +164,10 @@ fun AiSetupScreen(
 
     // ── Story page state ──
     var storyText by remember { mutableStateOf("") }
+    // Plain-English summary of an imported file (import-history preview.story_summary).
+    // Kept apart from storyText so voice, typing and the file all combine in the parse.
+    var fileSummary by remember { mutableStateOf("") }
+    var showImport by remember { mutableStateOf(false) }
     var storyParsed by remember { mutableStateOf(false) }
     var storyLoading by remember { mutableStateOf(false) }
     var preFill by remember { mutableStateOf<OnboardingPreFill?>(null) }
@@ -440,6 +444,7 @@ fun AiSetupScreen(
             AiSetupProfileStore.freeText(draft.answers)?.let { additionalNotes = it }
             preFilledFields = emptySet()
             storyText = draft.storyText
+            fileSummary = draft.fileSummary
             storyParsed = draft.storyParsed
             val page = runCatching { AiPage.valueOf(draft.page) }.getOrNull() ?: AiPage.STORY
             // Died while calibrating / on results / after apply: back to NOTES,
@@ -466,25 +471,27 @@ fun AiSetupScreen(
     // changes are debounced (collectLatest + short delay). Not in edit mode.
     LaunchedEffect(savedAnswersLoaded) {
         if (editMode || !savedAnswersLoaded) return@LaunchedEffect
-        fun eligible() = !draftClosed && (currentPage != AiPage.STORY || storyText.isNotBlank())
+        fun eligible() = !draftClosed && (currentPage != AiPage.STORY || storyText.isNotBlank() || fileSummary.isNotBlank())
         suspend fun write() {
             if (!eligible()) return
-            val story = storyText; val parsed = storyParsed; val page = currentPage.name
+            val story = storyText; val summary = fileSummary; val parsed = storyParsed; val page = currentPage.name
             val answersJson = AiSetupProfileStore.buildAnswersJson(buildAnswers())
-            withContext(Dispatchers.IO) { AiSetupDraftStore.save(appCtx, story, parsed, page, answersJson) }
+            withContext(Dispatchers.IO) { AiSetupDraftStore.save(appCtx, story, parsed, page, answersJson, summary) }
         }
         launch {
             snapshotFlow { currentPage }.drop(1).collect { write() }
         }
         launch {
-            snapshotFlow { Triple(storyText, storyParsed, AiSetupProfileStore.buildAnswersJson(buildAnswers())) }
+            snapshotFlow { Triple(storyText + "\u0000" + fileSummary, storyParsed, AiSetupProfileStore.buildAnswersJson(buildAnswers())) }
                 .drop(1)
                 .collectLatest { delay(400); write() }
         }
     }
 
     fun parseStory() {
-        if (storyText.isBlank()) { storyParsed = true; currentPage = AiPage.Q1; return }
+        // Typed/voice text and the imported file's summary go to the parser as one story.
+        val fullStory = listOf(storyText, fileSummary).filter { it.isNotBlank() }.joinToString(" ")
+        if (fullStory.isBlank()) { storyParsed = true; currentPage = AiPage.Q1; return }
         storyLoading = true
         scope.launch {
             try {
@@ -507,7 +514,7 @@ fun AiSetupScreen(
                 // Step 1: deterministic
                 val deter = withContext(Dispatchers.IO) {
                     AiOnboardingParser.deterministicPreFill(
-                        storyText, trigLabels, prodLabels, symLabels,
+                        fullStory, trigLabels, prodLabels, symLabels,
                         medLabels, relLabels, actLabels, missLabels,
                         locLabels, postdromeLabels
                     )
@@ -519,7 +526,7 @@ fun AiSetupScreen(
                     try {
                         withContext(Dispatchers.IO) {
                             AiOnboardingParser.gptPreFill(
-                                token, storyText, trigLabels, prodLabels, symLabels,
+                                token, fullStory, trigLabels, prodLabels, symLabels,
                                 medLabels, relLabels, actLabels, missLabels,
                                 locLabels, postdromeLabels, deter
                             )
@@ -724,7 +731,19 @@ fun AiSetupScreen(
     val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
 
     Box(Modifier.fillMaxSize().background(bgBrush)) {
-        Column(Modifier.fillMaxSize()) {
+        if (showImport) {
+            // Import a file from the story page, without leaving setup. Its own BackHandler
+            // closes it (nothing changed before the commit; Done hands the summary back).
+            ImportHistoryScreen(
+                onBack = { showImport = false },
+                onNavigateToPaywall = {},
+                onboarding = true,
+                onFinished = { summary, _ ->
+                    if (summary != fileSummary) { fileSummary = summary; storyParsed = false; preFill = null; preFilledFields = emptySet(); showParseSummary = false }
+                    showImport = false
+                },
+            )
+        } else Column(Modifier.fillMaxSize()) {
             // Progress bar
             LinearProgressIndicator(
                 progress = { pageNum.toFloat() / totalPages },
@@ -796,6 +815,9 @@ fun AiSetupScreen(
                             isLoading = storyLoading,
                             onParse = { parseStory() },
                             onSkip = { currentPage = AiPage.Q1 },
+                            fileSummary = fileSummary,
+                            onImportFile = { showImport = true },
+                            onRemoveFileSummary = { fileSummary = ""; storyParsed = false; preFill = null; preFilledFields = emptySet(); showParseSummary = false },
                         )
                         AiPage.Q1 -> AiQuestionsPage1(gender, { gender = it }, ageRange, { ageRange = it }, frequency, { frequency = it }, duration, { duration = it }, experience, { experience = it }, trajectory, { trajectory = it }, warningBefore, { warningBefore = it }, triggerDelay, { triggerDelay = it }, dailyRoutine, { dailyRoutine = it }, seasonalPattern, { seasonalPattern = it })
                         AiPage.Q2 -> AiQuestionsPage2(sleepHours, { sleepHours = it }, sleepQuality, { sleepQuality = it }, poorQualityTriggers, { poorQualityTriggers = it }, tooLittleSleepTriggers, { tooLittleSleepTriggers = it }, oversleepTriggers, { oversleepTriggers = it }, sleepIssues, { i -> sleepIssues = if (i in sleepIssues) sleepIssues - i else sleepIssues + i })
@@ -929,7 +951,7 @@ fun AiSetupScreen(
             if (currentPage == AiPage.STORY) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onSkip) { Text(t("Skip Setup"), color = AppTheme.SubtleTextColor) }
-                    if (storyText.isNotBlank() && !storyLoading) {
+                    if ((storyText.isNotBlank() || fileSummary.isNotBlank()) && !storyLoading) {
                         Button(onClick = { parseStory() }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(12.dp)) {
                             Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t("Find matches & continue"))
                         }

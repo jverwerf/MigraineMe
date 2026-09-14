@@ -4334,5 +4334,10 @@
  "Everything goes in your journal. We decided for each item whether it should count in your insights. Change any tick.": "Alles komt in je dagboek. We hebben per item bepaald of het meetelt in je inzichten. Pas elk vinkje aan.",
  "We'd count this.": "Wij tellen mee.",
  "We'd leave this out.": "Wij laten weg.",
- "Journal only": "Alleen dagboek"
+ "Journal only": "Alleen dagboek",
+ "Have a diary, spreadsheet or export from another app?": "Heb je een dagboek, spreadsheet of export uit een andere app?",
+ "Import a file": "Bestand laden",
+ "From your file": "Uit je bestand",
+ "Remove from story": "Uit verhaal halen",
+ "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode."
 }

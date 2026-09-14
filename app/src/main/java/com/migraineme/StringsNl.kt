@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4336 entries.
+ * 4341 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -1430,6 +1430,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "From the food database" to "Uit de database",
     "From what you told us" to "Uit wat je ons vertelde",
     "From your calendar" to "Uit je agenda",
+    "From your file" to "Uit je bestand",
     "From your full history" to "Uit je volledige geschiedenis",
     "Front" to "Voorkant",
     "Front##bodymap" to "Voor",
@@ -1511,6 +1512,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Hangover feeling" to "Katerig gevoel",
     "Hard to ignore, it got in the way" to "Moeilijk te negeren, zat in de weg",
     "Has contraception affected your migraines?" to "Heeft anticonceptie je migraine beïnvloed?",
+    "Have a diary, spreadsheet or export from another app?" to "Heb je een dagboek, spreadsheet of export uit een andere app?",
     "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "Bekijk eerst Begeleiding, blader dan door de artikelen of stap in een gesprek. Wil je tips op maat, ga dan naar Je lijsten en volg een gids of twee.",
     "Have a promo code?" to "Actiecode?",
     "Have they been getting better, worse, or the same?" to "Worden ze beter, erger of blijven ze gelijk?",
@@ -1671,6 +1673,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "If you've got a second, I'd really like to know what made you stop." to "Als je een momentje hebt, zou ik heel graag willen weten waarom je bent gestopt.",
     "Illness" to "Ziekte",
     "Import %1\$s attacks" to "Import: %1\$s aanvallen",
+    "Import a file" to "Bestand laden",
     "Import from another app" to "Uit een andere app importeren",
     "Import history" to "Import historie",
     "Import them too" to "Ook importeren",
@@ -2688,6 +2691,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Remove from Frequent" to "Uit Vaak halen",
     "Remove from favorites" to "Uit favorieten",
     "Remove from frequent" to "Uit favorieten halen",
+    "Remove from story" to "Uit verhaal halen",
     "Remove pain update" to "Pijnupdate weg",
     "Remove symptom?" to "Klacht weg?",
     "Remove this attack" to "Aanval verwijderen",
@@ -3955,6 +3959,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Your full migraine profile, AI-configured in under a minute." to "Je volledige migraineprofiel, door AI ingesteld in nog geen minuut.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Je volledige prodroompool. Prodromen zijn de vroege waarschuwingen die 6-48 uur voor een aanval afgaan: gapen, stijve nek, eetlust-drang, stemmingswissels, moeheid, wazig zien, vaak plassen, meer dorst, gevoeligheid voor licht of geluid.\n\nPer prodroom:\n• Tik de rij open. Zet de zwaarte (HOOG / MATIG / LAAG / GEEN). Anders dan triggers die aanvallen \"veroorzaken\", betekent een prodroom dat er al een aanval aankomt, dus noteren duwt je emmer omhoog als een verse trigger. Prodromen met gewicht HOOG tillen je meter merkbaar op.\n• Zet er een ster bij om hem bovenaan Snel noteren te pinnen.\n• Tik het prullenbakje om hem uit je pool te halen.\n\nGebruik de +-knop voor wat jij zelf aan waarschuwingen merkt. Persoonlijke prodromen (bijv. \"klaarwakker om 3 uur\", \"zonder reden prikkelbaar\") zijn vaak de betrouwbaarste voorspellers.\n\nNoteer ze zodra je er een ziet. De Inzichten-kaart \"Wat gebeurde er\" scoort met je historie welke signalen je aanvallen betrouwbaar voorspellen, zodat de app leert welke bij jou het zwaarst moeten wegen.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Je volledige verlichtingspool: alles zonder medicijn dat je helpt bij een aanval. Gaan liggen, koude packs, donkere kamers, hete douches, drinken, bepaalde rekoefeningen, ademhaling, zelfs weglopen uit een triggeromgeving. Neuromodulatie-apparaten (CEFALY, Nerivio, gammaCore en dergelijke) horen hier ook: noteer elke sessie, dan scoort Inzichten hoe goed elk apparaat bij jou werkt.\n\nPer verlichting:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan in Snel noteren, dus je vaste hulp is één tik weg.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jou past (bijv. \"buiten lopen\", \"douchestraal op de nek\", \"lavendelolie\"). Hoe specifieker, hoe bruikbaarder de inzichten.\n\nVerlichting heeft geen zwaartegewicht, want ze voedt de meter niet. Inzichten scoort hoe goed elk werkte door de zwaarte en duur te volgen van de aanvallen waarbij je het gebruikte (kaart \"Wat werkte\"). Hoe vaker je ze aan migraines koppelt, hoe scherper die score.",
+    "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode.",
     "Your history is still imported into the journal today." to "Je geschiedenis komt vandaag toch in je dagboek.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Je geïmporteerde medicijnen en verlichting zijn nu favorieten in de logwizard.",
     "Your journal" to "Je journal",

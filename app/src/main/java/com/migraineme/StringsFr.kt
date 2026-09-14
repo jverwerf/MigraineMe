@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4336 entries.
+ * 4341 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -1430,6 +1430,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "From the food database" to "Dans la base de données",
     "From what you told us" to "De ce que tu nous as dit",
     "From your calendar" to "De ton agenda",
+    "From your file" to "De ton fichier",
     "From your full history" to "Sur tout ton historique",
     "Front" to "Avant",
     "Front##bodymap" to "Devant",
@@ -1511,6 +1512,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Hangover feeling" to "Impression de gueule de bois",
     "Hard to ignore, it got in the way" to "Dur à ignorer, ça gênait",
     "Has contraception affected your migraines?" to "La contraception a-t-elle joué sur tes migraines ?",
+    "Have a diary, spreadsheet or export from another app?" to "Tu as un journal, un tableur ou un export d'une autre app ?",
     "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "Jette un œil à Suivi, puis parcours les articles ou lance-toi dans une discussion. Pour des conseils sur mesure, ouvre Tes listes et abonne-toi à un guide ou deux.",
     "Have a promo code?" to "Un code promo ?",
     "Have they been getting better, worse, or the same?" to "Ça va mieux, moins bien, ou pareil ?",
@@ -1671,6 +1673,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "If you've got a second, I'd really like to know what made you stop." to "Si tu as une seconde, j'aimerais vraiment savoir ce qui t'a fait arrêter.",
     "Illness" to "Maladie",
     "Import %1\$s attacks" to "Importer %1\$s crises",
+    "Import a file" to "Importer",
     "Import from another app" to "Importer d'une autre app",
     "Import history" to "Import historique",
     "Import them too" to "Les importer aussi",
@@ -2688,6 +2691,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Remove from Frequent" to "Retirer de Fréquent",
     "Remove from favorites" to "Retirer des favoris",
     "Remove from frequent" to "Retirer des fréquents",
+    "Remove from story" to "Retirer du récit",
     "Remove pain update" to "Retirer l'évolution",
     "Remove symptom?" to "Retirer ?",
     "Remove this attack" to "Retirer cette crise",
@@ -3955,6 +3959,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Your full migraine profile, AI-configured in under a minute." to "Ton profil migraine complet, configuré par l'IA en moins d'une minute.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Ton pool complet de prodromes. Les prodromes sont les signes précoces qui apparaissent 6 à 48 heures avant une crise : bâillements, nuque raide, fringales, bascules d'humeur, fatigue, vision floue, envies fréquentes d'uriner, soif accrue, sensibilité à la lumière ou au bruit.\n\nPour chaque prodrome :\n• Touche la ligne pour la déplier. Règle la gravité (ÉLEVÉE / MOYENNE / FAIBLE / AUCUNE). Contrairement aux facteurs qui « causent » les crises, un prodrome signifie qu'une crise est déjà en route, donc le noter fait monter ton seau comme un facteur frais. Les prodromes en ÉLEVÉ font clairement bouger ta jauge.\n• Mets une étoile pour l'épingler en haut de la saisie rapide.\n• Touche la corbeille pour le retirer du pool.\n\nUtilise le + pour ajouter ce que tu remarques de spécifique chez toi. Les prodromes personnels (p. ex. « bien réveillé à 3 h », « irritable sans raison ») sont souvent les meilleurs prédicteurs.\n\nNote-les dès que tu en repères un. La carte Analyses « Ce qui s'est passé » se sert de ton historique pour noter quels signes prédisent vraiment tes crises, et l'app apprend avec le temps lesquels peser le plus pour toi.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Ton pool complet de soulagements : tout ce qui n'est pas un médicament et qui t'aide pendant une crise. S'allonger, poches de froid, pièce sombre, douche chaude, boire, étirements précis, respiration, voire quitter un environnement déclencheur. Les appareils de neuromodulation (CEFALY, Nerivio, gammaCore et similaires) vont aussi ici : note une séance à chaque usage et Analyses évaluera l'efficacité de chacun chez toi.\n\nPour chaque soulagement :\n• Touche l'étoile pour l'épingler en favori. Les favoris passent en tête de la saisie rapide, tes réflexes sont donc à un geste.\n• Touche la corbeille pour en retirer un entièrement. Les entrées passées restent intactes.\n\nUtilise le + pour ajouter ce qui t'est propre (p. ex. « marcher dehors », « jet de douche sur la nuque », « huile de lavande »). Plus c'est précis, plus les analyses servent.\n\nPas de poids de gravité sur les soulagements : ils n'alimentent pas la jauge. Les Analyses notent leur efficacité réelle en suivant l'intensité et la durée des crises où tu les as utilisés (carte « Ce qui a marché »). Plus tu les relies à des migraines, plus la note est fine.",
+    "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Ton historique va dans ton journal. Il ne compte dans les analyses qu'avec un abonnement payant, pas pendant l'essai gratuit.",
     "Your history is still imported into the journal today." to "Votre historique est quand même importé dans le journal aujourd'hui.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Vos médicaments et soulagements importés sont maintenant des favoris dans l'assistant.",
     "Your journal" to "Ton journal",

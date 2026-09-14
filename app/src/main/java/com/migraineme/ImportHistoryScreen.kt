@@ -234,7 +234,14 @@ private sealed class ImpStep {
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
+fun ImportHistoryScreen(
+    onBack: () -> Unit,
+    onNavigateToPaywall: () -> Unit,
+    // Onboarding mode (AI setup story page): no paywall navigation out of setup, the paid
+    // rule is spelled out instead, and Done hands the file's story_summary back to the story.
+    onboarding: Boolean = false,
+    onFinished: ((summary: String, attacks: Int) -> Unit)? = null,
+) {
     val context = LocalContext.current
     val premiumState by PremiumManager.state.collectAsState()
     val paid = premiumState.tier == PremiumTier.PREMIUM
@@ -257,6 +264,8 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var timezone by remember { mutableStateOf(ZoneId.systemDefault().id) }
     var importOverlap by remember { mutableStateOf(false) }               // false = skip attacks after the first app log (default)
+    var writing by remember { mutableStateOf(false) }                     // commit or undo sent, not yet answered: back can't cancel it
+    val paywall: (() -> Unit)? = if (onboarding) null else onNavigateToPaywall
 
     fun loadPreview(p: JsonObject) {
         preview = p
@@ -285,6 +294,7 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
     fun commit() {
         val id = importId ?: return
         step = ImpStep.Busy("Writing your history…")
+        writing = true
         scope.launch {
             val body = buildJsonObject {
                 put("action", "commit"); put("import_id", id)
@@ -301,17 +311,20 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
                 is EdgeResult.Ok -> { verify = r.body.obj("verify"); step = ImpStep.Done }
                 is EdgeResult.Err -> step = ImpStep.Failed(r.message, ImpStep.Found)
             }
+            writing = false
         }
     }
 
     fun undo() {
         val id = importId ?: return
         step = ImpStep.Busy("Removing the import…")
+        writing = true
         scope.launch {
             when (val r = callImportHistory(context, buildJsonObject { put("action", "undo"); put("import_id", id) })) {
                 is EdgeResult.Ok -> { importId = null; preview = null; step = ImpStep.Pick }
                 is EdgeResult.Err -> step = ImpStep.Failed(r.message, ImpStep.Done)
             }
+            writing = false
         }
     }
 
@@ -323,24 +336,32 @@ fun ImportHistoryScreen(onBack: () -> Unit, onNavigateToPaywall: () -> Unit) {
         else -> null
     }
     BackHandler(enabled = parentStep != null) { editing = false; parentStep?.let { step = it } }
+    // Onboarding: the file's summary only goes back to the story from Done. Backing out
+    // before the commit changes nothing; backing out of Done counts as Done (it is imported).
+    fun finish() = onFinished?.invoke(preview?.str("story_summary") ?: "", verify?.int("attacks_written") ?: attacks.count { !it.removed })
+    fun topBack() { if (step is ImpStep.Done) finish() else if (!writing) onBack() }
+    BackHandler(enabled = onboarding && parentStep == null) { topBack() }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(8.dp))
+        if (onboarding && step !is ImpStep.Done && !writing) {
+            TextButton(onClick = { if (parentStep != null) { editing = false; step = parentStep } else topBack() }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
+        }
         when (val s = step) {
-            is ImpStep.Pick -> PickScreen(paid, onNavigateToPaywall, onPick = { picker.launch(arrayOf("text/*", "application/json", "application/xml", "text/csv", "text/html", "application/octet-stream")) })
+            is ImpStep.Pick -> PickScreen(paid, paywall, onboarding, onPick = { picker.launch(arrayOf("text/*", "application/json", "application/xml", "text/csv", "text/html", "application/octet-stream")) })
             is ImpStep.Busy -> BusyScreen(s.text)
             is ImpStep.Failed -> FailedScreen(s.text) { step = s.back }
             is ImpStep.Found -> preview?.let { p ->
                 FoundScreen(p, fileName, attacks, days, engineUse, paid, importOverlap,
                     onUse = { step = ImpStep.Use }, onAssume = { step = ImpStep.Assume }, onList = { step = ImpStep.ListAll }, onWords = { step = ImpStep.Words }, onImport = { commit() })
             }
-            is ImpStep.Use -> preview?.let { p -> UseScreen(p, engineUse, paid, onNavigateToPaywall) { step = ImpStep.Found } }
+            is ImpStep.Use -> preview?.let { p -> UseScreen(p, engineUse, paid, paywall) { step = ImpStep.Found } }
             is ImpStep.Assume -> preview?.let { p -> AssumeScreen(p, answers, regimenSkip, doses, endFillHours, { endFillHours = it }, noTimeHour, { noTimeHour = it }, timezone, { timezone = it }, importOverlap, { importOverlap = it }) { step = ImpStep.Found } }
             is ImpStep.ListAll -> ListScreen(attacks, days, onAttack = { editing = false; step = ImpStep.Attack(it) }, onDay = { step = ImpStep.Day(it) }) { step = ImpStep.Found }
             is ImpStep.Attack -> attacks.getOrNull(s.index)?.let { a -> AttackScreen(a, editing, { editing = it }) { step = ImpStep.ListAll } }
             is ImpStep.Day -> days.getOrNull(s.index)?.let { d -> DayScreen(d) { step = ImpStep.ListAll } }
             is ImpStep.Words -> preview?.let { p -> WordsScreen(p) { step = ImpStep.Found } }
-            is ImpStep.Done -> DoneScreen(verify, attacks.count { !it.removed }, preview, paid, onRemove = { undo() }, onClose = onBack)
+            is ImpStep.Done -> DoneScreen(verify, attacks.count { !it.removed }, preview, paid, onboarding, onRemove = { undo() }, onClose = { if (onboarding) finish() else onBack() })
         }
         Spacer(Modifier.height(32.dp))
     }
@@ -433,9 +454,12 @@ private fun ChipGroup(label: String, items: List<Pair<String, String>>, editing:
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PickScreen(paid: Boolean, onNavigateToPaywall: () -> Unit, onPick: () -> Unit) {
+private fun PickScreen(paid: Boolean, onNavigateToPaywall: (() -> Unit)?, onboarding: Boolean, onPick: () -> Unit) {
     Title(t("Import from another app"), t("Bring your history with you."))
-    if (!paid) {
+    if (onboarding) {
+        PaidRuleCard()
+        Spacer(Modifier.height(12.dp))
+    } else if (!paid && onNavigateToPaywall != null) {
         BaseCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onNavigateToPaywall)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppTheme.AccentPurple)
@@ -467,6 +491,18 @@ private fun PickScreen(paid: Boolean, onNavigateToPaywall: () -> Unit, onPick: (
         Text(t("We read the file and show you what we found before anything is saved. You can change or remove any attack, and you can remove the whole import afterwards."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(6.dp))
         Text(t("Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** The paid rule, said plainly, with no way out of the flow (onboarding mode). */
+@Composable
+private fun PaidRuleCard() {
+    BaseCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppTheme.AccentPurple)
+            Spacer(Modifier.width(10.dp))
+            Text(t("Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -528,10 +564,10 @@ private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack
 }
 
 @Composable
-private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, paid: Boolean, onNavigateToPaywall: () -> Unit, onDone: () -> Unit) {
+private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, paid: Boolean, onNavigateToPaywall: (() -> Unit)?, onDone: () -> Unit) {
     Title(t("Use for insights"), t("Everything goes in your journal. We decided for each item whether it should count in your insights. Change any tick."))
     if (!paid) {
-        BaseCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onNavigateToPaywall)) {
+        BaseCard(modifier = Modifier.fillMaxWidth().then(if (onNavigateToPaywall != null) Modifier.clickable(onClick = onNavigateToPaywall) else Modifier)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppTheme.AccentPurple)
                 Spacer(Modifier.width(10.dp))
@@ -539,7 +575,7 @@ private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, pai
                     Text(t("This will not show up in your insights"), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     Text(t("Without a subscription, imported data only goes into your journal."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
-                Text(t("Upgrade"), color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
+                if (onNavigateToPaywall != null) Text(t("Upgrade"), color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -830,7 +866,7 @@ private fun PlainChip(text: String) {
 }
 
 @Composable
-private fun DoneScreen(verify: JsonObject?, attacks: Int, p: JsonObject?, paid: Boolean, onRemove: () -> Unit, onClose: () -> Unit) {
+private fun DoneScreen(verify: JsonObject?, attacks: Int, p: JsonObject?, paid: Boolean, onboarding: Boolean, onRemove: () -> Unit, onClose: () -> Unit) {
     val rows = verify?.obj("rows_per_table")
     val range = p?.obj("range")
     Title(t("Imported"), t("Marked as imported, so you can always tell it apart."))
@@ -845,6 +881,7 @@ private fun DoneScreen(verify: JsonObject?, attacks: Int, p: JsonObject?, paid: 
         }
     }
     Spacer(Modifier.height(12.dp))
+    if (onboarding) { PaidRuleCard(); Spacer(Modifier.height(12.dp)) }
     if (rows != null) BaseCard(modifier = Modifier.fillMaxWidth()) {
         SectionLabel(t("What was written"))
         val labels = listOf("migraines" to t("Attacks"), "migraine_pain_points" to t("Pain positions"), "migraine_aura_zones" to t("Aura"), "prodromes" to t("Warning signs before"), "symptoms" to t("After-effects"), "triggers" to t("Triggers"), "medicines" to t("Medicines"), "reliefs" to t("Reliefs"), "locations" to t("Places"), "activities" to t("Activities"), "missed_activities" to t("Missed plans"), "nutrition_records" to t("Foods"), "sleep_duration_daily" to t("Sleep"), "treatment_regimens" to t("Treatments"), "treatment_side_effect_logs" to t("Treatment side effects"))

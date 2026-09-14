@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4336 entries.
+ * 4341 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -1430,6 +1430,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "From the food database" to "Aus der Datenbank",
     "From what you told us" to "Aus deinen Angaben",
     "From your calendar" to "Aus deinem Kalender",
+    "From your file" to "Aus deiner Datei",
     "From your full history" to "Aus deiner gesamten Historie",
     "Front" to "Vorn",
     "Front##bodymap" to "Vorne",
@@ -1511,6 +1512,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Hangover feeling" to "Katergefühl",
     "Hard to ignore, it got in the way" to "Schwer zu ignorieren, hat gestört",
     "Has contraception affected your migraines?" to "Hat Verhütung deine Migräne beeinflusst?",
+    "Have a diary, spreadsheet or export from another app?" to "Hast du ein Tagebuch, eine Tabelle oder einen Export aus einer anderen App?",
     "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "Schau dir Begleitung an, stöbere dann in den Artikeln oder steig in eine Diskussion ein. Für persönliche Empfehlungen öffne Elemente verwalten und abonniere ein, zwei Begleiter.",
     "Have a promo code?" to "Promo-Code?",
     "Have they been getting better, worse, or the same?" to "Werden sie besser, schlimmer oder bleiben sie gleich?",
@@ -1671,6 +1673,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "If you've got a second, I'd really like to know what made you stop." to "Wenn du eine Sekunde hast, würde ich wirklich gern wissen, warum du aufgehört hast.",
     "Illness" to "Krankheit",
     "Import %1\$s attacks" to "Import: %1\$s Attacken",
+    "Import a file" to "Datei hochladen",
     "Import from another app" to "Aus anderer App importieren",
     "Import history" to "Verlauf-Import",
     "Import them too" to "Auch importieren",
@@ -2688,6 +2691,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Remove from Frequent" to "Aus Häufig entfernen",
     "Remove from favorites" to "Aus Favoriten",
     "Remove from frequent" to "Aus Häufig entfernen",
+    "Remove from story" to "Aus Text entfernen",
     "Remove pain update" to "Schmerzwert weg",
     "Remove symptom?" to "Symptom weg?",
     "Remove this attack" to "Attacke entfernen",
@@ -3955,6 +3959,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Your full migraine profile, AI-configured in under a minute." to "Dein komplettes Migräneprofil, per KI in unter einer Minute eingerichtet.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Dein voller Prodrom-Pool. Prodrome sind die frühen Warnzeichen 6-48 Stunden vor einer Attacke: Gähnen, steifer Nacken, Heißhunger, Stimmungswechsel, Müdigkeit, verschwommenes Sehen, häufiges Wasserlassen, mehr Durst, Licht- oder Lärmempfindlichkeit.\n\nFür jedes Prodrom:\n• Tippe die Zeile zum Aufklappen. Setze die Stärke (HOCH / MITTEL / NIEDRIG / KEINE). Anders als Auslöser, die Attacken „verursachen“, heißen Prodrome, dass eine Attacke schon unterwegs ist, deshalb hebt ein erfasstes Prodrom deinen Eimer wie ein frischer Auslöser. HOCH gewichtete Prodrome heben deine Anzeige spürbar.\n• Setze einen Stern, um es oben im Schnell-Log zu halten.\n• Tippe den Papierkorb, um es aus dem Pool zu nehmen.\n\nMit + fügst du hinzu, was dir an eigenen Vorzeichen aufgefallen ist. Persönliche Prodrome (z. B. „um 3 Uhr hellwach“, „grundlos gereizt“) sind oft die verlässlichsten Vorboten.\n\nErfasse sie, sobald du eines bemerkst. Die Insights-Karte „Was ist passiert“ bewertet anhand deines Verlaufs, welche Zeichen deine Attacken zuverlässig vorhersagen, sodass die App mit der Zeit lernt, welche bei dir am stärksten zählen.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Dein voller Linderungs-Pool: alles ohne Medikament, was dir bei einer Attacke hilft. Hinlegen, Kühlpacks, dunkle Räume, heiße Duschen, Trinken, bestimmte Dehnungen, Atemübungen, sogar das Verlassen einer Auslöser-Umgebung. Neuromodulationsgeräte (CEFALY, Nerivio, gammaCore und ähnliche) gehören auch hierher: Erfasse jede Sitzung, dann bewertet Insights, wie gut jedes Gerät bei dir wirkt.\n\nFür jede Linderung:\n• Tippe den Stern, um sie als Favorit zu setzen. Favoriten stehen im Schnell-Log oben, deine üblichen sind also ein Tippen entfernt.\n• Tippe den Papierkorb, um sie ganz zu entfernen. Frühere Einträge damit bleiben unberührt.\n\nMit + fügst du hinzu, was zu dir passt (z. B. „draußen gehen“, „Duschstrahl im Nacken“, „Lavendelöl“). Je genauer, desto brauchbarer die Analysen.\n\nLinderungen haben kein Schweregewicht, weil sie die Anzeige nicht speisen. Insights bewertet, wie gut jede wirklich half, über Stärke und Dauer der Attacken, bei denen du sie genutzt hast (Karte „Was hat gewirkt“). Je öfter du sie an Migränen hängst, desto schärfer der Wert.",
+    "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test.",
     "Your history is still imported into the journal today." to "Dein Verlauf landet trotzdem heute im Tagebuch.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Deine importierten Medikamente und Linderungen sind jetzt Favoriten im Eintrags-Assistenten.",
     "Your journal" to "Dein Journal",
