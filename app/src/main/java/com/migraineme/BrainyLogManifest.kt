@@ -363,16 +363,21 @@ object BrainyLogManifest {
         "vmmed_benzo" to R.drawable.vmmed_benzo,
         "vmmed_beta_blocker" to R.drawable.vmmed_beta_blocker,
         "vmmed_betahistine" to R.drawable.vmmed_betahistine,
+        "vmmed_botox" to R.drawable.vmmed_botox,
+        "vmmed_cgrp" to R.drawable.vmmed_cgrp,
         "vmmed_cochlear_implant" to R.drawable.vmmed_cochlear_implant,
+        "vmmed_coq10" to R.drawable.vmmed_coq10,
         "vmmed_corticosteroid_oral" to R.drawable.vmmed_corticosteroid_oral,
         "vmmed_diuretic" to R.drawable.vmmed_diuretic,
         "vmmed_ear_surgery" to R.drawable.vmmed_ear_surgery,
         "vmmed_intratympanic" to R.drawable.vmmed_intratympanic,
         "vmmed_magnesium_supp" to R.drawable.vmmed_magnesium_supp,
+        "vmmed_melatonin" to R.drawable.vmmed_melatonin,
         "vmmed_riboflavin" to R.drawable.vmmed_riboflavin,
         "vmmed_snri" to R.drawable.vmmed_snri,
         "vmmed_ssri" to R.drawable.vmmed_ssri,
         "vmmed_topiramate" to R.drawable.vmmed_topiramate,
+        "vmmed_vitamin_d" to R.drawable.vmmed_vitamin_d,
     )
 
     private val KIND_MAPS: Map<String, Map<String, String>> = mapOf(
