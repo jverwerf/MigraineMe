@@ -198,8 +198,8 @@ fun PractitionerPanel(
     // sent straight there. Filing an in-app request would mean asking her to
     // watch a second inbox, which is how a booking goes unanswered.
     val bookOrRequest: (SupabasePractitionerService.PractitionerRow) -> Unit = { p ->
-        val booking = p.booking_url?.trim()
-        if (!booking.isNullOrEmpty()) uriHandler.openUri(booking) else requesting = p
+        val booking = p.bookingUrlFor(LangPrefs.get().code)
+        if (booking != null) uriHandler.openUri(booking) else requesting = p
     }
 
     LaunchedEffect(auth.accessToken, reload) {

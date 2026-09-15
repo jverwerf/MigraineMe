@@ -173,12 +173,19 @@ object SupabasePractitionerService {
         val consult_mode: String = "both",
         val listing_mode: String = "listed",
         val booking_url: String? = null,
+        val booking_urls: Map<String, String>? = null,
         val registration_body: String? = null,
         val registration_number: String? = null,
         val practitioner_bios: List<BioRow> = emptyList(),
         val practitioner_offers: List<Offer> = emptyList(),
         val practitioner_sections: List<Section> = emptyList(),
     ) {
+        /** Her booking page in the reader's language, then English, then
+         *  the single booking_url. */
+        fun bookingUrlFor(lang: String): String? =
+            (booking_urls?.get(lang) ?: booking_urls?.get("en") ?: booking_url)
+                ?.trim()?.takeIf { it.isNotEmpty() }
+
         fun sectionsFor(lang: String): List<Section> {
             val own = practitioner_sections.filter { it.lang == lang }
                 .ifEmpty { practitioner_sections.filter { it.lang == "en" } }
@@ -248,7 +255,7 @@ object SupabasePractitionerService {
 
     private const val PRAC_SELECT =
         "id,slug,display_name,practice_name,discipline,photo_url,banner_url,logo_url,facts," +
-            "website,languages,country,city,consult_mode,listing_mode,booking_url," +
+            "website,languages,country,city,consult_mode,listing_mode,booking_url,booking_urls," +
             "registration_body,registration_number," +
             "practitioner_bios(lang,headline,quote,bio,treats,meta,facts,is_source),"+
             "practitioner_offers(lang,sort,title,price,subtitle,bullets,kind,image_url),"+
