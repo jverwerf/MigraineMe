@@ -552,7 +552,7 @@ private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack
         }
     }
     Spacer(Modifier.height(12.dp))
-    NavRow(t("Use for insights"), if (paid) t("%1\$s of %2\$s ticked, our advice", ticked, engineUse.size) else t("Journal only. Subscribe to count it in insights."), onUse)
+    NavRow(t("Use for insights"), t("%1\$s of %2\$s ticked, our advice", ticked, engineUse.size), onUse)
     Spacer(Modifier.height(10.dp))
     NavRow(t("What we assumed"), if (phrases > 0) t("%1\$s things, including %2\$s phrases we kept in your words", assumptions, phrases) else t("%1\$s things", assumptions), onAssume)
     Spacer(Modifier.height(10.dp))
@@ -566,20 +566,8 @@ private fun FoundScreen(p: JsonObject, fileName: String, attacks: List<ImpAttack
 @Composable
 private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, paid: Boolean, onNavigateToPaywall: (() -> Unit)?, onDone: () -> Unit) {
     Title(t("Use for insights"), t("Everything goes in your journal. We decided for each item whether it should count in your insights. Change any tick."))
-    if (!paid) {
-        BaseCard(modifier = Modifier.fillMaxWidth().then(if (onNavigateToPaywall != null) Modifier.clickable(onClick = onNavigateToPaywall) else Modifier)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppTheme.AccentPurple)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(t("This will not show up in your insights"), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(t("Without a subscription, imported data only goes into your journal."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-                if (onNavigateToPaywall != null) Text(t("Upgrade"), color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-    }
+    // Everyone ticks from the start; the engine counts imports only once paid (not the trial).
+    if (!paid) { PaidRuleCard(); Spacer(Modifier.height(10.dp)) }
     val groupTitle = mapOf("attacks" to t("Attacks"), "symptom" to t("Symptoms"), "postdrome" to t("After-effects"), "medicine" to t("Medicines"), "relief" to t("What helped"),
         "trigger" to t("Triggers"), "prodrome" to t("Warning signs before"), "food" to t("Foods"), "location" to t("Places"), "activity" to t("Activities"), "missed" to t("Missed plans"),
         "metric" to t("Body and sleep"), "period" to t("Period"), "regimen" to t("Treatments"))
@@ -891,7 +879,7 @@ private fun DoneScreen(verify: JsonObject?, attacks: Int, p: JsonObject?, paid: 
     BaseCard(modifier = Modifier.fillMaxWidth()) {
         SectionLabel(t("What changes"))
         Text("• " + t("Journal, calendar and the doctor report show these attacks."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-        Text("• " + (if (paid) t("Insights use what you ticked under Use for insights. The rest stays in the journal only.") else t("Insights leave imported data out. Subscribe and import again to count it.")), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        Text("• " + (if (paid) t("Insights use what you ticked under Use for insights. The rest stays in the journal only.") else t("Insights use what you ticked once you have a paid subscription. The rest stays in the journal only.")), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         Text("• " + t("Your imported medicines and reliefs are now favourites in the log wizard."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
     }
     Spacer(Modifier.height(16.dp))

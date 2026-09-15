@@ -1698,6 +1698,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Indomethacin" to "Indometacine",
     "Insights" to "Inzichten",
     "Insights leave imported data out. Subscribe and import again to count it." to "Inzichten laten geïmporteerde data buiten beschouwing. Abonneer en importeer opnieuw om ze mee te tellen.",
+    "Insights use what you ticked once you have a paid subscription. The rest stays in the journal only." to "Inzichten gebruiken wat je hebt aangevinkt zodra je een betaald abonnement hebt. De rest blijft alleen in je dagboek.",
     "Insights use what you ticked under Use for insights. The rest stays in the journal only." to "Inzichten gebruiken wat je aanvinkte onder Voor inzichten. De rest blijft alleen in het dagboek.",
     "Insights — What Your Data Says" to "Inzichten — wat je data zeggen",
     "Insomnia" to "Slapeloosheid",

@@ -1698,6 +1698,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Indomethacin" to "Indometacina",
     "Insights" to "Hallazgos",
     "Insights leave imported data out. Subscribe and import again to count it." to "Insights deja fuera los datos importados. Suscríbete e importa de nuevo para contarlos.",
+    "Insights use what you ticked once you have a paid subscription. The rest stays in the journal only." to "Los hallazgos usan lo que marcaste cuando tengas una suscripción de pago. El resto se queda solo en el diario.",
     "Insights use what you ticked under Use for insights. The rest stays in the journal only." to "Insights usa lo que marcaste en Usar en Insights. El resto se queda solo en el diario.",
     "Insights — What Your Data Says" to "Hallazgos: lo que dicen tus datos",
     "Insomnia" to "Insomnio",
