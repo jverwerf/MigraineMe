@@ -241,7 +241,10 @@ Deno.serve(async (req: Request) => {
       if (te != null && (te >= 27 || te <= 3)) push("temp", "Temperature", te >= 27 ? "hot" : "cold", "Temperature");
       const aura = (Array.isArray(ep.aura_locations) && ep.aura_locations.length > 0) ||
         (ep.aura_duration_minutes ?? 0) > 0;
-      if (aura) push("aura", "Aura", null, "Aura");
+      // Separate kind + name from the "Aura" migraine type (a symptom row), so
+      // the list doesn't show two identical "Aura" lines. Clients render an
+      // unknown kind through prettyLabel(name), so this needs no app release.
+      if (aura) push("aura_map", "Aura spots drawn", null, "Aura");
       return out;
     };
 
