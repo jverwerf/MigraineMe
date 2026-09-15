@@ -4249,6 +4249,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "taken this time" to "deze keer genomen",
     "takes a few minutes" to "duurt een paar minuten",
     "talk, or type" to "praat, of typ",
+    "talk, type or import" to "praat, typ of importeer",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Spreek, typ of importeer een bestand uit een andere app. Wij vullen in wat je ons vertelt en stellen voor wat nog meer de moeite waard is om bij te houden. Op de volgende pagina's kun je alles aanpassen.",
     "temperature changes" to "temperatuurwisselingen",
     "that is the only thing you have to do" to "meer hoef je niet te doen",
     "the AI sets the lines, you can move them" to "de AI zet de lijnen, jij kunt ze verschuiven",

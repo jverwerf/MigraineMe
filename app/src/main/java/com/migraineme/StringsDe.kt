@@ -4249,6 +4249,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "taken this time" to "diesmal genommen",
     "takes a few minutes" to "ein paar Minuten",
     "talk, or type" to "sprich oder tipp",
+    "talk, type or import" to "sprich, tipp oder importier",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Sprich, tippe oder lade eine Datei aus einer anderen App hoch. Wir tragen ein, was du uns sagst, und schlagen vor, was sich noch zu erfassen lohnt. Auf den nächsten Seiten kannst du alles ändern.",
     "temperature changes" to "Temperaturwechsel",
     "that is the only thing you have to do" to "mehr musst du nicht tun",
     "the AI sets the lines, you can move them" to "die KI setzt die Linien, du kannst sie verschieben",

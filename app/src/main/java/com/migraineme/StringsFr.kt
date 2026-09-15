@@ -4249,6 +4249,8 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "taken this time" to "pris cette fois",
     "takes a few minutes" to "quelques minutes",
     "talk, or type" to "parle ou écris",
+    "talk, type or import" to "parle, écris ou importe",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Parle, écris ou importe un fichier d'une autre app. On remplit ce que tu nous dis, puis on te suggère ce qui vaut la peine d'être suivi. Tu peux tout modifier sur les pages suivantes.",
     "temperature changes" to "changements de température",
     "that is the only thing you have to do" to "c'est la seule chose à faire",
     "the AI sets the lines, you can move them" to "l'IA place les lignes, tu peux les déplacer",

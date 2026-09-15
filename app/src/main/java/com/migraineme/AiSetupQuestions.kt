@@ -713,9 +713,9 @@ fun AiQuestionsPageStory(
                 Spacer(Modifier.height(12.dp))
                 ObHeadline(t("Tell us about your migraines"), Modifier.fillMaxWidth(), size = 26.sp)
                 Spacer(Modifier.height(2.dp))
-                ObHand(t("talk, or type"), Modifier.fillMaxWidth(), size = 18.sp)
+                ObHand(t("talk, type or import"), Modifier.fillMaxWidth(), size = 18.sp)
                 Spacer(Modifier.height(8.dp))
-                Text(t("Tap the mic and talk, or type below. We'll fill in what you tell us directly, then suggest what else is worth tracking based on your profile — you can adjust it all on the next pages."), style = ObStyle.body(13.sp), textAlign = TextAlign.Center)
+                Text(t("Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages."), style = ObStyle.body(13.sp), textAlign = TextAlign.Center)
             }
         }
 
