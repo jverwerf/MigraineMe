@@ -671,6 +671,7 @@ fun AiQuestionsPageStory(
     onParse: () -> Unit,
     onSkip: () -> Unit,
     fileSummary: String = "",
+    onFileSummaryChange: ((String) -> Unit)? = null,
     onImportFile: () -> Unit = {},
     onRemoveFileSummary: () -> Unit = {},
 ) {
@@ -769,7 +770,23 @@ fun AiQuestionsPageStory(
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text(fileSummary, style = ObStyle.body(13.sp))
+                    // Editable: people add what the file missed or correct what we read.
+                    if (onFileSummaryChange != null) {
+                        OutlinedTextField(
+                            value = fileSummary,
+                            onValueChange = onFileSummaryChange,
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = ObStyle.body(13.sp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                                cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                    } else {
+                        Text(fileSummary, style = ObStyle.body(13.sp))
+                    }
                 }
             }
         }

@@ -816,6 +816,7 @@ fun AiSetupScreen(
                             onParse = { parseStory() },
                             onSkip = { currentPage = AiPage.Q1 },
                             fileSummary = fileSummary,
+                            onFileSummaryChange = { fileSummary = it; storyParsed = false; preFill = null; preFilledFields = emptySet(); showParseSummary = false },
                             onImportFile = { showImport = true },
                             onRemoveFileSummary = { fileSummary = ""; storyParsed = false; preFill = null; preFilledFields = emptySet(); showParseSummary = false },
                         )
