@@ -1,5 +1,7 @@
 package com.migraineme
 
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -772,12 +774,13 @@ fun AiQuestionsPageStory(
             }
         }
 
-        // Text input area
+        // Text input area. The example sits in the box only until you tap in, in italics, so it never reads as your own text.
+        var storyFocused by remember { mutableStateOf(false) }
         OutlinedTextField(
             value = text,
             onValueChange = onTextChange,
-            placeholder = { Text(t("e.g. \"I'm 34, female, and I've had migraines for six years — 2 to 4 a month, one-sided and throbbing, lasting 12 to 24 hours. The day before I yawn a lot and get irritable. During one I'm nauseous and light and sound are unbearable, so I lie in a dark room. My triggers are work stress, under 6 hours' sleep, and red wine. I sleep badly, drink 2 coffees a day, skip lunch when I'm busy, and I'm on screens 8 hours. They're worse around my period. I take sumatriptan at the first sign and it works within 2 hours.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
-            modifier = Modifier.fillMaxWidth(),
+            placeholder = if (storyFocused) null else ({ Text(t("e.g. \"I'm 34, female, and I've had migraines for six years — 2 to 4 a month, one-sided and throbbing, lasting 12 to 24 hours. The day before I yawn a lot and get irritable. During one I'm nauseous and light and sound are unbearable, so I lie in a dark room. My triggers are work stress, under 6 hours' sleep, and red wine. I sleep badly, drink 2 coffees a day, skip lunch when I'm busy, and I'm on screens 8 hours. They're worse around my period. I take sumatriptan at the first sign and it works within 2 hours.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic) }),
+            modifier = Modifier.fillMaxWidth().onFocusChanged { storyFocused = it.isFocused },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
                 cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
