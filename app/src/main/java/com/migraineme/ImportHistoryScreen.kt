@@ -479,7 +479,7 @@ private fun PickScreen(paid: Boolean, onNavigateToPaywall: (() -> Unit)?, onboar
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(t("Pick an export file"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
-                Text(t("CSV, a spreadsheet saved as CSV, Apple Health export, or plain notes"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("CSV, a spreadsheet saved as CSV, or plain notes"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -490,7 +490,7 @@ private fun PickScreen(paid: Boolean, onNavigateToPaywall: (() -> Unit)?, onboar
         SectionLabel(t("How it works"))
         Text(t("We read the file and show you what we found before anything is saved. You can change or remove any attack, and you can remove the whole import afterwards."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(6.dp))
-        Text(t("Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t("Migraine Buddy: Records › export › All period."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 
