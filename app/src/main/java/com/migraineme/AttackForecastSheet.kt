@@ -88,7 +88,10 @@ private fun factorLabel(f: EdgeFunctionsService.SimilarAttacksFactor): String = 
     }
     "humidity" -> if (f.band == "high") tSync("High humidity") else tSync("Low humidity")
     "temp" -> if (f.band == "hot") tSync("Hot day") else tSync("Cold day")
-    "aura" -> tSync("Aura")
+    // band = the current attack's drawn zone ids, comma-joined
+    "aura_map" -> f.band?.takeIf { it.isNotBlank() }
+        ?.let { "${tSync("Aura")}: ${AuraZones.groupedLabel(it.split(","))}" }
+        ?: prettyLabel(f.name)
     "med", "relief" ->
         if (f.band == "early") tSync("%s in the first 2h", prettyLabel(f.name)) else prettyLabel(f.name)
     else -> prettyLabel(f.name)

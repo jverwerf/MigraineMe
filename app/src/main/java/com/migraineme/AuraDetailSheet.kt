@@ -73,6 +73,15 @@ object AuraZones {
         }
         return id
     }
+
+    /** Several zones grouped per eye in grid order, translated:
+     *  "Left eye · top left, center left; Right eye · center". */
+    fun groupedLabel(ids: Collection<String>): String =
+        EYES.mapNotNull { (eyeId, eyeLabel) ->
+            val cells = ROWS.flatten().filter { "${eyeId}_$it" in ids }
+            if (cells.isEmpty()) null
+            else "${tSync(eyeLabel)} · ${cells.joinToString(", ") { tSync(CELL_LABELS[it] ?: it) }}"
+        }.joinToString("; ")
 }
 
 /** True for symptom labels that should open the aura detail sheet when tapped. */
