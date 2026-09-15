@@ -8,6 +8,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { resolveCity } from "../_shared/nearestCity.ts";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -30,76 +31,6 @@ function addDaysIsoDate(isoDate: string, deltaDays: number): string {
 }
 
 /**
- * Find nearest city to given coordinates using Haversine distance
- */
-async function findNearestCity(
-  supabase: ReturnType<typeof createClient>,
-  lat: number,
-  lon: number
-): Promise<{ cityId: number; name: string; lat: number; lon: number; timezone: string | null; distance: number } | null> {
-  // Query cities within ~2 degrees (rough bounding box first for performance)
-  const { data: cities, error } = await supabase
-    .from("city")
-    .select("id, name, lat, lon, timezone")
-    .gte("lat", lat - 2)
-    .lte("lat", lat + 2)
-    .gte("lon", lon - 2)
-    .lte("lon", lon + 2)
-    .limit(100);
-
-  if (error || !cities || cities.length === 0) {
-    // Fallback: get any city (shouldn't happen often)
-    const { data: fallback } = await supabase
-      .from("city")
-      .select("id, name, lat, lon, timezone")
-      .limit(50);
-
-    if (!fallback || fallback.length === 0) return null;
-
-    let nearest = fallback[0];
-    let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
-
-    for (const city of fallback) {
-      const dist = haversine(lat, lon, city.lat, city.lon);
-      if (dist < minDist) {
-        minDist = dist;
-        nearest = city;
-      }
-    }
-
-    return { cityId: nearest.id, name: nearest.name, lat: nearest.lat, lon: nearest.lon, timezone: nearest.timezone, distance: minDist };
-  }
-
-  let nearest = cities[0];
-  let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
-
-  for (const city of cities) {
-    const dist = haversine(lat, lon, city.lat, city.lon);
-    if (dist < minDist) {
-      minDist = dist;
-      nearest = city;
-    }
-  }
-
-  return { cityId: nearest.id, name: nearest.name, lat: nearest.lat, lon: nearest.lon, timezone: nearest.timezone, distance: minDist };
-}
-
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function toRad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
-
-/**
  * Fetch weather directly from Open-Meteo and store in city_weather_daily.
  * Used as fallback when the regular fetch-city-weather cron hasn't covered this city yet.
  */
@@ -113,6 +44,7 @@ async function fetchAndStoreCityWeather(
   try {
     const tz = cityTimezone ?? "auto";
     const u = new URL("https://api.open-meteo.com/v1/forecast");
+    u.searchParams.set("wind_speed_unit", "ms"); // stored in wind_speed_mps_* columns; Open-Meteo defaults to km/h
     u.searchParams.set("latitude", String(cityLat));
     u.searchParams.set("longitude", String(cityLon));
     u.searchParams.set(
@@ -338,9 +270,10 @@ serve(async (req) => {
         }
 
         // Find nearest city
-        const nearestCity = await findNearestCity(supabase, userLat, userLon);
+        // Nearest city within 50 km, or a new city row at the user's rounded coordinates
+        const nearestCity = await resolveCity(supabase, userLat, userLon);
         if (!nearestCity) {
-          throw new Error("No cities found in database");
+          throw new Error("Could not resolve a weather city for user location");
         }
 
         console.log(`[weather-worker] job=${jobId} user=${userId} city=${nearestCity.name} (${nearestCity.distance.toFixed(1)}km)`);
