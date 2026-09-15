@@ -1158,8 +1158,12 @@ export function storySummary(model: Model, decisions: LinkDecision[]): string {
   const onPeriod = periodDays.size ? attacks.filter((a) => [0, -1, -2, 1, 2].some((k) => periodDays.has(addMinutesLocal(a.start_local.slice(0, 10) + "T12:00:00", k * 1440).slice(0, 10)))).length : 0;
   const sleep = model.days.map((d) => d.metrics.sleep_hours).filter((v): v is number => typeof v === "number");
   const parts: string[] = [];
-  parts.push(`From my diary file (${dates[0]} to ${dates[dates.length - 1]}): I had ${attacks.length} migraines, about ${perMonth} a month.`);
-  if (medianH !== null) parts.push(`They usually last about ${medianH} hours.`);
+  // Frequency and duration are written as the questionnaire's own options, and no calendar years appear:
+  // the parser read "about 7.8 a month" as 1-3 per month and the dates as years of history.
+  const span = spanDays < 60 ? `${Math.max(1, Math.round(spanDays / 7))} weeks` : `${Math.round(spanDays / 30.4)} months`;
+  parts.push(`My diary file covers about ${span}: I had ${attacks.length} migraines in that time.`);
+  if (attacks.length >= 3) parts.push(`How often: ${perMonth < 0.34 ? "A few per year" : perMonth < 1 ? "Every 1-2 months" : perMonth < 3.5 ? "1-3 per month" : perMonth < 15 ? "Weekly" : "Chronic"}.`);
+  if (medianH !== null) parts.push(`How long they last: ${medianH < 4 ? "< 4 hours" : medianH < 12 ? "4-12 hours" : medianH < 24 ? "12-24 hours" : medianH < 72 ? "1-3 days" : "3+ days"}.`);
   if (avgSev !== null) parts.push(`Average pain ${avgSev} out of 10.`);
   if (when && when[1] >= hours.length * 0.5) parts.push(`They mostly start ${when[0]}.`);
   const sym = top("symptom", attacks.map((a) => clear("symptom", [...a.symptoms, ...a.types])), 2); if (sym.length) parts.push(`Symptoms: ${sym.join(", ")}.`);
