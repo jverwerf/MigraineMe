@@ -733,7 +733,6 @@ fun AiQuestionsPageStory(
 
         // Secondary: bring a diary / spreadsheet / other app's export (ImportHistoryScreen, onboarding mode)
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(t("Have a diary, spreadsheet or export from another app?"), style = ObStyle.body(13.sp), textAlign = TextAlign.Center)
             OutlinedButton(
                 onClick = onImportFile,
                 shape = RoundedCornerShape(12.dp),
