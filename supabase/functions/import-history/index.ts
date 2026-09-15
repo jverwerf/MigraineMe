@@ -1093,9 +1093,11 @@ export function engineUseRecommendations(model: Model, decisions: LinkDecision[]
       let recommended = true; let fixed = false; let reason = "";
       if (t.vague) { recommended = false; fixed = true; reason = `We couldn't tell what "${label}" is, so it stays in your journal in your own words.`; }
       else if (group === "trigger" || group === "prodrome" || group === "food") {
-        if (measured(group, label)) { recommended = false; fixed = true; reason = "MigraineMe measures this itself from your phone, watch or the weather. Your typed note would mix with that."; }
-        else if (quiet >= 3) { reason = `Noted on ${onA} attack ${onA === 1 ? "day" : "days"} and ${quiet} days without an attack, so it can be compared fairly.`; }
-        else { recommended = false; fixed = true; reason = onA ? `Only noted on migraine days (${onA}). Counting it would make it look like a cause. It stays in the attack's note.` : `Noted on ${quiet} ${quiet === 1 ? "day" : "days"} without an attack only, too few to compare.`; }
+        // Continuous data in the app (sleep, HRV, weather...): the engine compares bad days with good days, and a
+        // diary mostly has the bad ones. Typed metric columns logged on most days are handled below.
+        if (measured(group, label)) { recommended = false; fixed = true; reason = "MigraineMe compares bad days with good days for this. Your file mostly has bad days, so counting it would skew the results."; }
+        // Everything else counts: whether it matters is for the engine to decide, not the import.
+        else reason = `On ${n} ${n === 1 ? "day" : "days"}.`;
       } else if (group === "symptom" || group === "postdrome") reason = `On ${onA} ${onA === 1 ? "attack" : "attacks"}. Used for which symptoms come together.`;
       else if (group === "medicine") reason = `Taken on ${n} ${n === 1 ? "day" : "days"}. Used for how well it works and how fast.`;
       else if (group === "relief") reason = `Used on ${n} ${n === 1 ? "day" : "days"}. Used for what helps.`;
@@ -1630,9 +1632,9 @@ if (import.meta.main) Deno.serve(async (req) => {
     const body = await req.json();
     const action = String(body.action ?? "preview");
 
-    // Everyone may import into the journal. Only paid subscribers (not the signup
-    // trial) may have imported data count in insights: without a paid sub every
-    // category is forced to journal-only (source='import'), whatever was ticked.
+    // Everyone imports what they ticked, trial included. Whether imported data counts
+    // in the statistics is decided by the engine (compute-correlation-stats): only for
+    // paid subscribers, never in the trial. `paid` here only picks the wording.
     // Same premium_status mirror recalibrate/chat-assistant read; grace_period counts as paid.
     const { data: prem } = await admin.from("premium_status").select("rc_subscription_status").eq("user_id", user.id).maybeSingle();
     const paid = prem?.rc_subscription_status === "active" || prem?.rc_subscription_status === "grace_period";
@@ -1673,10 +1675,10 @@ if (import.meta.main) Deno.serve(async (req) => {
       await admin.from("import_batches").update({ status: "writing", answers, model, edits: { assumptions: body.assumptions ?? null, doses: body.doses ?? null, exclude_refs: body.exclude_refs ?? [], attack_edits: body.attack_edits ?? {}, engine_use: body.engine_use ?? null, log: editLog } }).eq("id", b.id);
       try {
         const requested = (body.engine_use ?? null) as Record<string, boolean> | null;
-        const engineUse = paid ? requested : ({ __all_off: true } as unknown as Record<string, boolean>);
+        const engineUse = requested;
         const { manifest, verify } = await commit(admin, user.id, model, b.linking as LinkDecision[], answers, accept, (b.regimens ?? []) as RegimenProposal[], cutoff, b.id, engineUse);
         if (!verify.ok) { await undo(admin, user.id, manifest); await admin.from("import_batches").update({ status: "failed", manifest, verify }).eq("id", b.id); return json({ error: "verification failed, nothing kept", verify }, 500); }
-        await admin.from("import_batches").update({ status: "committed", manifest, verify: { ...verify, paid, insights: paid ? "as ticked" : "locked, journal only" }, committed_at: new Date().toISOString() }).eq("id", b.id);
+        await admin.from("import_batches").update({ status: "committed", manifest, verify: { ...verify, paid, insights: paid ? "as ticked" : "as ticked, counts once subscribed" }, committed_at: new Date().toISOString() }).eq("id", b.id);
         admin.functions.invoke("compute-correlation-stats", { body: { user_id: user.id } }).catch(() => {});
         return json({ import_id: b.id, written: verify.rows_per_table, verify });
       } catch (e) {
