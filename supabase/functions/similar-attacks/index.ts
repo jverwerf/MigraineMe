@@ -68,6 +68,32 @@ function sleepBand(h: number): string | null {
   return "over8";
 }
 
+// Aura zone ids are "<eye>_<row>_<col>", the same ids every app's aura sheet
+// writes. Grid order (left eye first, row-major) keeps labels stable.
+const AURA_EYES: [string, string][] = [["left", "Left eye"], ["right", "Right eye"]];
+const AURA_CELLS: [string, string][] = [
+  ["top_left", "top left"], ["top_center", "top center"], ["top_right", "top right"],
+  ["center_left", "center left"], ["center_center", "center"], ["center_right", "center right"],
+  ["bottom_left", "bottom left"], ["bottom_center", "bottom center"], ["bottom_right", "bottom right"],
+];
+
+function auraZoneOrder(id: string): number {
+  const e = AURA_EYES.findIndex(([eye]) => id.startsWith(`${eye}_`));
+  const c = AURA_CELLS.findIndex(([cell]) => id.endsWith(`_${cell}`));
+  return e < 0 || c < 0 ? 999 : e * 9 + c;
+}
+
+// English fallback label for clients that predate the "aura_map" kind,
+// e.g. "Aura: Left eye · top left, center left".
+function auraMapLabel(zones: string[]): string {
+  const parts: string[] = [];
+  for (const [eye, eyeLabel] of AURA_EYES) {
+    const cells = AURA_CELLS.filter(([cell]) => zones.includes(`${eye}_${cell}`)).map(([, l]) => l);
+    if (cells.length) parts.push(`${eyeLabel} · ${cells.join(", ")}`);
+  }
+  return `Aura: ${parts.join("; ")}`;
+}
+
 // Weighted quantile over (value, weight) pairs; linear between points.
 function weightedQuantile(pairs: [number, number][], q: number): number | null {
   const rows = pairs.filter(([, w]) => w > 0).sort((a, b) => a[0] - b[0]);
@@ -198,6 +224,12 @@ Deno.serve(async (req: Request) => {
     const weightOf = (name: string): number => (sigNames.has(norm(name)) ? 2 : 1);
 
     // ── 5. feature extraction ───────────────────────────────────────────
+    const zonesOf = (ep: EpisodeRow): string[] =>
+      Array.isArray(ep.aura_locations)
+        ? (ep.aura_locations as unknown[]).filter((z): z is string => typeof z === "string")
+        : [];
+    const openZones = [...new Set(zonesOf(open))].sort((a, b) => auraZoneOrder(a) - auraZoneOrder(b));
+    const auraMapName = auraMapLabel(openZones);
     const featuresOf = (ep: EpisodeRow, cutoffH: number): Feature[] => {
       const out: Feature[] = [];
       const seen = new Set<string>();
@@ -239,12 +271,14 @@ Deno.serve(async (req: Request) => {
       if (hu != null && (hu >= 75 || hu <= 35)) push("humidity", "Humidity", hu >= 75 ? "high" : "low", "Humidity");
       const te = tempMap[d];
       if (te != null && (te >= 27 || te <= 3)) push("temp", "Temperature", te >= 27 ? "hot" : "cold", "Temperature");
-      const aura = (Array.isArray(ep.aura_locations) && ep.aura_locations.length > 0) ||
-        (ep.aura_duration_minutes ?? 0) > 0;
-      // Separate kind + name from the "Aura" migraine type (a symptom row), so
-      // the list doesn't show two identical "Aura" lines. Clients render an
-      // unknown kind through prettyLabel(name), so this needs no app release.
-      if (aura) push("aura_map", "Aura spots drawn", null, "Aura");
+      // Drawn aura spots, kept apart from the "Aura" migraine type (a symptom
+      // row) so the list never shows two identical "Aura" lines. The feature
+      // is always the CURRENT attack's spots: a past attack carries it only
+      // if it shares at least one of them. band = zone ids, so newer clients
+      // compose a translated label; older ones fall back to prettyLabel(name).
+      if (openZones.length && zonesOf(ep).some((z) => openZones.includes(z))) {
+        push("aura_map", auraMapName, openZones.join(","), "Aura");
+      }
       return out;
     };
 
