@@ -1694,6 +1694,16 @@ object BrainyLogManifest {
         return null
     }
 
+    /** The Brainies a user can pick for a custom item of `kind`: every (key, drawable) in that
+     *  kind's map, one entry per distinct drawing, sorted by key. The KEY is what goes in
+     *  icon_key, because keyFor resolves it through the same map. */
+    fun pickerEntries(kind: String): List<Pair<String, Int>> {
+        val map = KIND_MAPS[kind] ?: return emptyList()
+        val seen = HashSet<String>()
+        return map.entries.sortedBy { it.key }.filter { seen.add(it.value) }
+            .mapNotNull { e -> ART[e.value]?.let { e.key to it } }
+    }
+
     /** Brainy drawable for a pool item, or null so the caller keeps its glyph. */
     fun drawableFor(label: String?, iconKey: String?, category: String?, kind: String?): Int? =
         keyFor(label, iconKey, category, kind)?.let { ART[it] }
