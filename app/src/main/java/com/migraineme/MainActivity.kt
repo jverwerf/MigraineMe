@@ -484,13 +484,26 @@ class MainActivity : ComponentActivity() {
         // recalibration_ready, community_comment, trial_ending) arrive with
         // only the FCM data fields as extras, so route on the push `type`
         // instead. Without this every one of those taps landed on Home.
+        // `screen` is set by the insight pushes (patterns / recommendations) so the tap
+        // lands on the page the push is about, not just the Insights hub.
         val route = intent.getStringExtra("navigate_to")
+            ?: intent.getStringExtra("screen")?.takeIf { intent.getStringExtra("type") == "new_insight" }?.let { insightsRouteForScreen(it) }
             ?: intent.getStringExtra("type")?.let { routeForPushType(it) }
         if (route != null) {
             pendingNavigationRoute.value = route
             // Clear so it doesn't re-trigger
             intent.removeExtra("navigate_to")
             intent.removeExtra("type")
+            intent.removeExtra("screen")
+        }
+    }
+
+    companion object {
+        /** Insight push `screen` -> route. Unknown/absent lands on the Insights hub. */
+        fun insightsRouteForScreen(screen: String?): String = when (screen) {
+            "patterns" -> Routes.INSIGHTS_PATTERNS
+            "recommendations" -> Routes.INSIGHTS_RECOMMENDATIONS
+            else -> Routes.INSIGHTS
         }
     }
 

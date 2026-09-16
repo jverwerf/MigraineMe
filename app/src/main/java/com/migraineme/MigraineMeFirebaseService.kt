@@ -90,7 +90,11 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     .edit()
                     .putBoolean("has_new_insight", true)
                     .apply()
-                showNewInsightNotification()
+                showNewInsightNotification(
+                    title = message.data["title"],
+                    body = message.data["body"],
+                    screen = message.data["screen"],
+                )
             }
             "ongoing_migraine" -> {
                 Log.d(TAG, "Ongoing migraine reminder")
@@ -187,7 +191,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         nm.notify(8020, notification)
     }
 
-    private fun showNewInsightNotification() {
+    /** Server copy names the finding / recommendations; `screen` says where the tap lands
+     *  (patterns = What Happened full page, recommendations = Recommendations page). */
+    private fun showNewInsightNotification(title: String? = null, body: String? = null, screen: String? = null) {
         val channelId = "new_insight"
         val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
 
@@ -201,7 +207,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         // Tap opens the Insights tab
         val intent = android.content.Intent(this, MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("navigate_to", Routes.INSIGHTS)
+            putExtra("navigate_to", MainActivity.insightsRouteForScreen(screen))
         }
         val pi = android.app.PendingIntent.getActivity(
             this, 0, intent,
@@ -210,8 +216,8 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(tSync("New recommendations ready"))
-            .setContentText(tSync("Your recommendations for today are ready. Tap to see them."))
+            .setContentTitle(title?.takeIf { it.isNotBlank() } ?: tSync("New recommendations ready"))
+            .setContentText(body?.takeIf { it.isNotBlank() } ?: tSync("Your recommendations for today are ready. Tap to see them."))
             .setContentIntent(pi)
             .setAutoCancel(true)
             .build()
