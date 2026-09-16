@@ -1,6 +1,6 @@
 // Daily winback: emails users whose trial ended ~3 days ago and didn't subscribe.
 // Cohort from public.winback_due(); each send logged to public.winback_emails_sent.
-// New branded template + per-user Android Play code (claim_winback_android_code) + iOS
+// New branded template + per-user Android Play code (claim_winback_android_code, Android-only) + iOS
 // Apple offer-code redeem link. Sends via Resend from help@.
 //
 // Rendered in the recipient's display language (profiles.lang via winback_due,
@@ -77,8 +77,12 @@ function htmlBody(lang: Lang, name: string | null, code: string | null): string 
 </div>`;
 }
 
-async function sendOne(resendKey: string, admin: any, to: string, name: string | null, lang: Lang) {
-  const code = await claimAndroidCode(admin, to);
+async function sendOne(resendKey: string, admin: any, to: string, name: string | null, lang: Lang, platform: string) {
+  // Play promo codes are a finite purchased pool and an iPhone user can never
+  // redeem one, so only claim for people who have actually opened the app on
+  // Android. 'unknown' (no recorded activity) still gets one: a wasted code is
+  // cheaper than an Android user getting an email with no way to claim.
+  const code = platform === "ios" ? null : await claimAndroidCode(admin, to);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
@@ -100,11 +104,11 @@ serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
     const { data: due, error: dueErr } = await admin.rpc("winback_due");
     if (dueErr) return new Response(JSON.stringify({ error: dueErr.message }), { status: 500, headers: { "Content-Type": "application/json" } });
-    const rows = (due ?? []) as { email: string; first_name: string | null; lang?: string | null }[];
+    const rows = (due ?? []) as { email: string; first_name: string | null; lang?: string | null; platform?: string | null }[];
     if (body?.dryRun === true) return new Response(JSON.stringify({ dryRun: true, due: rows.length, recipients: rows }), { status: 200, headers: { "Content-Type": "application/json" } });
     const results: any[] = [];
     for (const row of rows) {
-      const r = await sendOne(resendKey, admin, row.email, row.first_name, toLang(row.lang));
+      const r = await sendOne(resendKey, admin, row.email, row.first_name, toLang(row.lang), row.platform ?? "unknown");
       if (r.ok) await admin.from("winback_emails_sent").insert({ email: row.email.toLowerCase(), source: "daily-cron" });
       results.push({ to: row.email, ok: r.ok, id: r.id, error: r.error });
       await sleep(600);
