@@ -38,10 +38,12 @@ fun InsightsPatternsScreen(
     }
 
     val significantCorrelations = remember(correlationStats) {
-        correlationStats.filter { it.isSignificant() }
+        // Same rule as the hub card: engine-gated rows (comparison OR prevalence) show directly,
+        // isSignificant is only the fallback for old untagged rows.
+        correlationStats.filter { it.hasGateMode || it.isSignificant() }
     }
     val triggerCorrelations = remember(significantCorrelations) {
-        significantCorrelations.filter { it.factorType == "trigger" }.sortedByDescending { it.liftRatio }
+        significantCorrelations.filter { it.factorType == "trigger" && it.symptomOutcome == null }.sortedByDescending { it.liftRatio }
     }
     val metricCorrelations = remember(significantCorrelations) {
         significantCorrelations.filter { it.factorType == "metric" }.sortedByDescending { it.liftRatio }
