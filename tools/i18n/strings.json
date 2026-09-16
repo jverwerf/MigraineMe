@@ -1449,7 +1449,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LoginScreen.kt:276",
-      "app/src/main/java/com/migraineme/LoginScreen.kt:505",
+      "app/src/main/java/com/migraineme/LoginScreen.kt:489",
       "app/src/main/java/com/migraineme/LoginScreen.kt:403",
       "app/src/main/java/com/migraineme/SignupScreen.kt:165"
     ],
@@ -1701,7 +1701,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LoginScreen.kt:467",
-      "app/src/main/java/com/migraineme/LoginScreen.kt:575",
+      "app/src/main/java/com/migraineme/LoginScreen.kt:559",
       "app/src/main/java/com/migraineme/SignupScreen.kt:303",
       "app/src/main/java/com/migraineme/widget/MigraineMeWidget.kt:154"
     ],
@@ -2709,7 +2709,7 @@
     "en": "Toggle password",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:523",
+      "app/src/main/java/com/migraineme/LoginScreen.kt:507",
       "app/src/main/java/com/migraineme/SignupScreen.kt:183",
       "app/src/main/java/com/migraineme/SignupScreen.kt:206"
     ],
@@ -4561,7 +4561,7 @@
     "en": "Password",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:515",
+      "app/src/main/java/com/migraineme/LoginScreen.kt:499",
       "app/src/main/java/com/migraineme/SignupScreen.kt:175"
     ],
     "max_len": 14,
@@ -14084,7 +14084,7 @@
     "en": "Forgot password?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:537"
+      "app/src/main/java/com/migraineme/LoginScreen.kt:521"
     ],
     "max_len": 19,
     "count": 1
@@ -16136,7 +16136,7 @@
     "en": "Invalid login response.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:556"
+      "app/src/main/java/com/migraineme/LoginScreen.kt:540"
     ],
     "max_len": 33,
     "count": 1
@@ -17450,7 +17450,7 @@
     "en": "Login failed.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:558"
+      "app/src/main/java/com/migraineme/LoginScreen.kt:542"
     ],
     "max_len": 16,
     "count": 1
@@ -20288,15 +20288,6 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
-    "count": 1
-  },
-  {
-    "en": "One account keeps your attacks, triggers and risk on every device.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:366"
-    ],
-    "max_len": 95,
     "count": 1
   },
   {
@@ -31226,6 +31217,15 @@
     "count": 1
   },
   {
+    "en": "Your data is yours, and it stays that way.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/LoginScreen.kt:366"
+    ],
+    "max_len": 60,
+    "count": 1
+  },
+  {
     "en": "Your data suggests adjusting these triggers",
     "class": "soft",
     "sites": [
@@ -31313,15 +31313,6 @@
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:814"
     ],
     "max_len": 66,
-    "count": 1
-  },
-  {
-    "en": "Your logs stay yours. Delete your account and everything in it, any time.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:482"
-    ],
-    "max_len": 105,
     "count": 1
   },
   {
@@ -34253,7 +34244,7 @@
     "en": "← Back to sign in options",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LoginScreen.kt:584"
+      "app/src/main/java/com/migraineme/LoginScreen.kt:568"
     ],
     "max_len": 28,
     "count": 1

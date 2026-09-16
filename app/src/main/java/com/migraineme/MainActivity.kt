@@ -214,6 +214,8 @@ object Routes {
     const val REVIEW = "review"
     const val NOTES = "notes"
 
+    /** Pre-login welcome + how-it-works deck. Start destination on a first run. */
+    const val INTRO = "intro"
     const val LOGIN = "login"
     const val SIGNUP = "signup"
     const val LOGOUT = "logout"
@@ -638,7 +640,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     LaunchedEffect(token) {
         if (token.isNullOrBlank()) return@LaunchedEffect
         val preAppRoutes = setOf(
-            Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
+            Routes.INTRO, Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
             Routes.ONBOARDING, "${Routes.ONBOARDING}/setup", Routes.AI_SETUP, Routes.AI_SETUP_PATTERN,
             "backfill_loading", "subscribe", Routes.PAYWALL, "paywall_trial_ended"
         )
@@ -1006,7 +1008,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
         val isWizardFullscreen = current in setOf(
-            Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
+            Routes.INTRO, Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
             Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAINT_PICTURE, Routes.PAIN_LOCATION,
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
@@ -1259,9 +1261,23 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // Tour navigation is already guarded by blocking bottom nav + drawer during tour.
                 // After tour completes, user is sent to onboarding/setup. Login already checks completion.
 
+                // First run only: open on the welcome + how-it-works deck, then hand
+                // over to the login screen. Anyone with a stored session, and anyone
+                // who has already been through it, goes straight to LOGIN as before —
+                // LOGIN auto-navigates onward once the token restores, and showing the
+                // deck first would flash the pitch at an existing user.
+                // Read synchronously (SharedPreferences) so there is no frame where
+                // the wrong start destination is composed.
+                val startRoute = remember {
+                    IntroPrefs.ensureInitialised(appCtx)
+                    val hasSession = !SessionStore.readAccessToken(appCtx).isNullOrBlank() ||
+                            !SessionStore.readRefreshToken(appCtx).isNullOrBlank()
+                    if (!hasSession && !IntroPrefs.seen(appCtx)) Routes.INTRO else Routes.LOGIN
+                }
+
                 NavHost(
                     navController = nav,
-                    startDestination = Routes.LOGIN,
+                    startDestination = startRoute,
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
@@ -2463,6 +2479,25 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     else frequent.find { it.sideEffectId == id }?.let { tseVm.removeFromFrequent(token, id) }
                                 },
                             ),
+                        )
+                    }
+
+                    composable(Routes.INTRO) {
+                        val introCtx = LocalContext.current
+                        IntroScreen(
+                            onFinished = {
+                                IntroPrefs.markSeen(introCtx)
+                                // Deliberately no popUpTo: INTRO is the graph's start
+                                // destination on a first run, and every post-login
+                                // navigate clears the stack with
+                                // popUpTo(findStartDestination(), inclusive = true).
+                                // Popping INTRO here would leave that with nothing to
+                                // match, so LOGIN would survive into the app and Back
+                                // from Home would land on the login screen.
+                                // Cost of keeping it: Back from login returns to the
+                                // deck, which is where it should go anyway.
+                                nav.navigate(Routes.LOGIN) { launchSingleTop = true }
+                            }
                         )
                     }
 

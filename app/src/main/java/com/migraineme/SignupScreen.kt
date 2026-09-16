@@ -251,6 +251,7 @@ fun SignupScreen(
                                             obtainedAtMs = System.currentTimeMillis()
                                         )
                                         authVm.setSession(access, userId)
+                                        IntroPrefs.markSignedIn(appCtx)
                                         // Same reason as LoginScreen: the
                                         // picker runs before the account
                                         // exists, so this is the first moment

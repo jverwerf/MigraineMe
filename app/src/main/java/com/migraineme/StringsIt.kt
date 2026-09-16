@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4382 entries.
+ * 4381 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -2371,7 +2371,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Una volta a settimana l'IA propone modifiche, come spostare le tue linee. Spunta ciò con cui sei d'accordo.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Quando ne hai uno, il punto è inserirlo: MigraineMe confronta come vanno i tuoi attacchi ",
     "Ondansetron" to "Ondansetron",
-    "One account keeps your attacks, triggers and risk on every device." to "Un account tiene i tuoi attacchi, i fattori e il rischio su ogni dispositivo.",
     "One tap to confirm or skip" to "Un tocco per confermare o saltare",
     "One-tap doctor-ready PDF of everything you've logged." to "Con un tocco: un PDF pronto per il medico con tutto ciò che hai segnato.",
     "Ongoing Migraine" to "Emicrania in corso",
@@ -3982,6 +3981,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Your data is ready to talk" to "I tuoi dati hanno da dire",
     "Your data is still being processed.\nThis will complete in the background." to "I tuoi dati sono ancora in elaborazione.\nContinua in background.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "I tuoi dati sono al sicuro e servono solo ad analizzare i tuoi schemi. Non li diamo mai a terzi.",
+    "Your data is yours, and it stays that way." to "I tuoi dati sono tuoi, e resteranno tali.",
     "Your data suggests adjusting these triggers" to "I tuoi dati chiedono di correggere questi fattori",
     "Your data, locked to your account. End-to-end private." to "I tuoi dati, legati al tuo account. Privati end-to-end.",
     "Your free trial ends tomorrow" to "La prova finisce domani",
@@ -3998,7 +3998,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Your labels, next to the ones MigraineMe uses." to "Le tue etichette, accanto a quelle usate da MigraineMe.",
     "Your location for weather data" to "La tua posizione per il meteo",
     "Your location pool. Anywhere you might tag with a migraine: home, work, specific rooms (bedroom, office, kitchen), outdoors (park, gym, beach), travel (hotel, airport, in-car), social spaces (restaurant, bar, friend's house).\n\nFor each location:\n• Tap the star to pin it as a favourite. Favourites show up first in the wizard's Locations step and the Daily Check-In.\n• Tap the trash icon to remove one. Past attacks tagged with it stay intact.\n\nUse the + button to add anything specific (e.g. \"mom's house\", \"gym treadmill\", \"meeting room 3\"). The more specific the location, the easier it is to spot environmental patterns later.\n\nLocations have no severity weight. The Insights What Were You Doing card uses your location history to flag which places turn up most around your attacks (sometimes pointing to a real environmental trigger: bad lighting, smells, noise, low air quality)." to "Il tuo elenco di luoghi. Qualsiasi posto che potresti legare a un'emicrania: casa, lavoro, stanze precise (camera, ufficio, cucina), esterni (parco, palestra, spiaggia), viaggi (hotel, aeroporto, in auto), luoghi sociali (ristorante, bar, casa di un amico).\n\nPer ogni luogo:\n• Tocca la stella per metterlo tra i preferiti. I preferiti compaiono per primi nel passaggio Luoghi e nel check quotidiano.\n• Tocca il cestino per toglierlo. Gli attacchi già segnati restano intatti.\n\nUsa il + per aggiungere qualcosa di preciso (es. «casa di mamma», «tapis roulant della palestra», «sala riunioni 3»). Più il luogo è preciso, più è facile notare schemi ambientali in seguito.\n\nI luoghi non hanno peso di gravità. La scheda Analisi «Cosa stavi facendo» usa la cronologia dei luoghi per segnalare quali posti tornano più spesso attorno agli attacchi (a volte indicano un vero fattore ambientale: luce cattiva, odori, rumore, aria pesante).",
-    "Your logs stay yours. Delete your account and everything in it, any time." to "I tuoi dati restano tuoi. Elimina il tuo account e tutto quello che contiene, quando vuoi.",
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Il tuo uso di farmaci in 30 giorni. Ogni riga mostra il nome e la ",
     "Your migraine data is not affected by this." to "Questo non tocca i tuoi dati sull'emicrania.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "La tua probabilità di emicrania in un solo punteggio. Sommiamo fattori e prodromi degli ultimi 7 giorni, pesando i giorni recenti più di quelli vecchi (oggi conta di più). Il peso di ogni voce viene dalla gravità che le hai dato nelle impostazioni; menstruation_predicted usa una finestra simmetrica attorno alla data prevista del ciclo, e ovulation_predicted fa lo stesso attorno all'ovulazione prevista quando quell'interruttore è attivo.\n\nLa scheda mostra: il punteggio, la tua zona (BASSO / LIEVE / ALTO, con soglie personali), il numero di fattori di oggi e le tre misure preferite che hai fissato. Tocca per vedere i fattori che pesano, in ordine, e uno storico di 14 giorni (premium).\n\nUsalo come controllo quotidiano: ambra o rosso vuol dire non impilare nuovi fattori oggi e valutare un sollievo preventivo.",

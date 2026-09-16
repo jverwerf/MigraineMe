@@ -66,6 +66,11 @@ fun ObWelcomePage(onNext: () -> Unit) {
             Spacer(Modifier.height(h * 0.012f))
             ObHand(t("leave the tracking to me"), Modifier.fillMaxWidth(), size = 22.sp)
         }
+        // The art assets are full-bleed: the character touches the edge of its
+        // own PNG, with no transparent margin to spend. h * 0.52 is already
+        // wider than a phone screen, so pushing it a further 46dp off the right
+        // sliced Miga's arm off. Width is capped to the screen and the offset is
+        // gone, so the whole character is on screen at every size.
         Image(
             painter = painterResource(R.drawable.brainy_guide),
             contentDescription = null,
@@ -74,8 +79,7 @@ fun ObWelcomePage(onNext: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = h * 0.125f)
-                .size(width = h * 0.52f, height = h * 0.52f)
-                .offset(x = 46.dp)
+                .size(width = (h * 0.52f).coerceAtMost(maxWidth), height = h * 0.52f)
         )
         ObPillButton(t("Show me how it works"), onNext, Modifier.align(Alignment.BottomCenter).padding(bottom = h * 0.058f).width(244.dp).height(46.dp))
     }
@@ -99,6 +103,9 @@ fun ObHowItWorksPage(onDone: () -> Unit, onSkip: () -> Unit) {
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val h = maxHeight
+        // Named, not `maxWidth`: the bucket page opens its own BoxWithConstraints
+        // further down, which would shadow it.
+        val screenW = maxWidth
         Column(Modifier.fillMaxWidth().padding(top = h * 0.055f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(t("HOW IT WORKS"), style = ObStyle.label(14.sp).copy(letterSpacing = 1.5.sp))
             Spacer(Modifier.height(h * 0.016f))
@@ -149,7 +156,11 @@ fun ObHowItWorksPage(onDone: () -> Unit, onSkip: () -> Unit) {
                         }
                     }
                 } else {
-                    // The art bleeds off one edge, like the store screens (mock: ±140px = 53dp).
+                    // Was bled ±53dp off one edge to match the store screens, but
+                    // these assets have no transparent margin of their own and
+                    // h * 0.52 already exceeds the screen width, so the bleed cut
+                    // into the character: the binoculars and the gardener both
+                    // lost their left side. Capped to the screen, no offset.
                     Image(
                         painter = painterResource(s.art),
                         contentDescription = null,
@@ -158,8 +169,7 @@ fun ObHowItWorksPage(onDone: () -> Unit, onSkip: () -> Unit) {
                         modifier = Modifier
                             .align(if (s.artLeft) Alignment.BottomStart else Alignment.BottomEnd)
                             .padding(bottom = h * 0.108f)
-                            .size(width = h * 0.52f, height = h * 0.52f)
-                            .offset(x = if (s.artLeft) (-53).dp else 53.dp)
+                            .size(width = (h * 0.52f).coerceAtMost(screenW), height = h * 0.52f)
                     )
                 }
             }

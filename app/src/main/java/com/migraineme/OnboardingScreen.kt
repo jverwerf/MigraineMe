@@ -195,7 +195,20 @@ fun OnboardingScreen(
     val appCtx = ctx.applicationContext
 
     val pages = PageId.entries
-    var currentIdx by rememberSaveable { mutableStateOf(if (startAtSetup) pages.indexOf(PageId.SETUP_LANDING) else 0) }
+    // WELCOME and HOW_IT_WORKS now run BEFORE the login screen (IntroScreen), so
+    // anyone who arrived through that has already seen both. Starting at 0 here
+    // replayed the whole pitch a second time immediately after they signed up.
+    // Only skip past them when the deck actually ran: an install that predates
+    // it, or a user restarted from Profile, still gets the pages in full.
+    var currentIdx by rememberSaveable {
+        mutableStateOf(
+            when {
+                startAtSetup -> pages.indexOf(PageId.SETUP_LANDING)
+                IntroPrefs.seen(appCtx) -> pages.indexOf(PageId.CHOICE)
+                else -> 0
+            }
+        )
+    }
     // Clamp on read — two LaunchedEffects can race on permission grant and both
     // increment currentIdx, which would otherwise crash on the next render.
     val currentPage = pages[currentIdx.coerceIn(0, pages.size - 1)]

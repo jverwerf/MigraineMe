@@ -67,6 +67,16 @@ fun LoginScreen(
     val appCtx = ctx.applicationContext
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Two different people land on this screen. Someone who has just watched the
+    // how-it-works deck has never had an account, and "Welcome back / Sign in to
+    // continue tracking" greeted them as if they had lapsed from something they
+    // had never started. Someone whose session expired genuinely is coming back.
+    // IntroPrefs.seen is set the moment the deck finishes, so it identifies the
+    // first person exactly, and stays false for every install that predates it.
+    // hasEverSignedIn, not SessionStore: sign-out clears user_id, which would
+    // make someone who logged out look brand new and re-pitch them.
+    val isFirstTime = remember { IntroPrefs.seen(appCtx) && !IntroPrefs.hasEverSignedIn(appCtx) }
+
     var needsPermissionPrompt by remember { mutableStateOf(false) }
     var showEmailForm by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
@@ -135,6 +145,7 @@ fun LoginScreen(
             obtainedAtMs = System.currentTimeMillis()
         )
         authVm.setSession(token, userId)
+        IntroPrefs.markSignedIn(appCtx)
 
         scope.launch {
             try {
@@ -346,13 +357,14 @@ fun LoginScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    t("Welcome back"),
+                    if (isFirstTime) t("Let's get you set up.") else t("Welcome back"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    t("Sign in to continue tracking"),
+                    if (isFirstTime) t("Your data is yours, and it stays that way.")
+                    else t("Sign in to continue tracking"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -382,7 +394,10 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AuthButton(
-                            onClick = { showEmailForm = true; error = null },
+                            onClick = {
+                                error = null
+                                if (isFirstTime) onNavigateToSignUp() else showEmailForm = true
+                            },
                             enabled = !busy,
                             icon = {
                                 Icon(Icons.Default.Email, contentDescription = t("Email"),
@@ -436,11 +451,23 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Text(t("Don't have an account?"), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.bodyMedium)
-                            TextButton(onClick = onNavigateToSignUp, enabled = !busy) {
-                                Text(t("Sign up"), color = AppTheme.AccentPurple,
-                                    fontWeight = FontWeight.SemiBold)
+                            Text(
+                                if (isFirstTime) t("Already have an account?") else t("Don't have an account?"),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            TextButton(
+                                onClick = {
+                                    error = null
+                                    if (isFirstTime) showEmailForm = true else onNavigateToSignUp()
+                                },
+                                enabled = !busy
+                            ) {
+                                Text(
+                                    if (isFirstTime) t("Sign in") else t("Sign up"),
+                                    color = AppTheme.AccentPurple,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4382 entries.
+ * 4381 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -2371,7 +2371,6 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Einmal pro Woche schlägt die KI Änderungen vor, etwa deine Linien zu verschieben. Hak ab, womit du einverstanden bist.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Wenn du eins hast, ist genau das der Punkt: MigraineMe vergleicht, wie deine Attacken verlaufen ",
     "Ondansetron" to "Ondansetron",
-    "One account keeps your attacks, triggers and risk on every device." to "Ein Konto, und deine Attacken, Auslöser und dein Risiko sind auf jedem Gerät da.",
     "One tap to confirm or skip" to "Ein Tipp: bestätigen oder weiter",
     "One-tap doctor-ready PDF of everything you've logged." to "Mit einem Tipp: arztfertiges PDF mit allem, was du geloggt hast.",
     "Ongoing Migraine" to "Migräne läuft",
@@ -3982,6 +3981,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Your data is ready to talk" to "Deine Daten sind bereit",
     "Your data is still being processed.\nThis will complete in the background." to "Deine Daten werden noch verarbeitet.\nDas läuft im Hintergrund weiter.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Deine Daten liegen sicher und dienen nur der Analyse deiner Muster. Wir geben sie nie an Dritte weiter.",
+    "Your data is yours, and it stays that way." to "Deine Daten gehören dir, und das bleibt auch so.",
     "Your data suggests adjusting these triggers" to "Deine Daten sprechen für diese Anpassungen",
     "Your data, locked to your account. End-to-end private." to "Deine Daten, an dein Konto gebunden. Durchgehend privat.",
     "Your free trial ends tomorrow" to "Testphase endet morgen",
@@ -3998,7 +3998,6 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Your labels, next to the ones MigraineMe uses." to "Deine Begriffe neben denen, die MigraineMe nutzt.",
     "Your location for weather data" to "Dein Standort fürs Wetter",
     "Your location pool. Anywhere you might tag with a migraine: home, work, specific rooms (bedroom, office, kitchen), outdoors (park, gym, beach), travel (hotel, airport, in-car), social spaces (restaurant, bar, friend's house).\n\nFor each location:\n• Tap the star to pin it as a favourite. Favourites show up first in the wizard's Locations step and the Daily Check-In.\n• Tap the trash icon to remove one. Past attacks tagged with it stay intact.\n\nUse the + button to add anything specific (e.g. \"mom's house\", \"gym treadmill\", \"meeting room 3\"). The more specific the location, the easier it is to spot environmental patterns later.\n\nLocations have no severity weight. The Insights What Were You Doing card uses your location history to flag which places turn up most around your attacks (sometimes pointing to a real environmental trigger: bad lighting, smells, noise, low air quality)." to "Dein Ortspool. Alles, was du an eine Migräne hängen könntest: zu Hause, Arbeit, bestimmte Räume (Schlafzimmer, Büro, Küche), draußen (Park, Fitnessstudio, Strand), unterwegs (Hotel, Flughafen, im Auto), soziale Orte (Restaurant, Bar, bei Freunden).\n\nFür jeden Ort:\n• Tippe den Stern, um ihn als Favorit zu setzen. Favoriten stehen im Assistenten-Schritt Orte und im Tagescheck oben.\n• Tippe den Papierkorb, um ihn zu entfernen. Frühere Attacken damit bleiben unberührt.\n\nMit + fügst du Genaues hinzu (z. B. „Haus von Mama“, „Laufband im Studio“, „Besprechungsraum 3“). Je genauer der Ort, desto leichter fallen später Umgebungsmuster auf.\n\nOrte haben kein Schweregewicht. Die Insights-Karte „Was hast du gemacht“ nutzt deinen Ortsverlauf, um zu zeigen, welche Orte rund um Attacken am häufigsten auftauchen (manchmal ein echter Umgebungsauslöser: schlechtes Licht, Gerüche, Lärm, schlechte Luft).",
-    "Your logs stay yours. Delete your account and everything in it, any time." to "Deine Einträge gehören dir. Lösche dein Konto samt allem darin, jederzeit.",
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Deine Medikamente der letzten 30 Tage. Jede Zeile zeigt den Namen und die ",
     "Your migraine data is not affected by this." to "Deine Migränedaten bleiben davon unberührt.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "Deine Migränewahrscheinlichkeit als eine Zahl. Wir summieren deine Auslöser und Prodrome der letzten 7 Tage und gewichten neuere Tage stärker als ältere (heute zählt am meisten). Das Gewicht jedes Eintrags kommt aus der Stärke, die du in den Einstellungen gesetzt hast; menstruation_predicted nutzt ein symmetrisches Fenster um dein erwartetes Periodendatum, und ovulation_predicted macht dasselbe um den erwarteten Eisprung, wenn dieser Schalter an ist.\n\nDie Karte zeigt: den Wert, deine Zone (NIEDRIG / LEICHT / HOCH — die Schwellen sind persönlich), die Zahl der heutigen Auslöser und die drei Lieblingsmetriken, die du gepinnt hast. Tippe für die beitragenden Auslöser in Reihenfolge und einen 14-Tage-Verlauf (Premium).\n\nNimm es als Tagescheck: Gelb oder Rot heißt, heute keine neuen Auslöser stapeln und über vorbeugende Linderung nachdenken.",

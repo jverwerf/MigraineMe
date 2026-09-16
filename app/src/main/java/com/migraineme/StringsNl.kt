@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4382 entries.
+ * 4381 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -2371,7 +2371,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Eén keer per week stelt de AI wijzigingen voor, zoals je lijnen verplaatsen. Vink aan waar je het mee eens bent.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Heb je er een, dan is noteren het punt: MigraineMe vergelijkt hoe je aanvallen verlopen ",
     "Ondansetron" to "Ondansetron",
-    "One account keeps your attacks, triggers and risk on every device." to "Met één account staan je aanvallen, triggers en risico op elk apparaat.",
     "One tap to confirm or skip" to "Eén tik: bevestigen of overslaan",
     "One-tap doctor-ready PDF of everything you've logged." to "Met één tik een dokterklaar PDF van alles wat je hebt gelogd.",
     "Ongoing Migraine" to "Lopende migraine",
@@ -3982,6 +3981,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Your data is ready to talk" to "Je gegevens kunnen praten",
     "Your data is still being processed.\nThis will complete in the background." to "Je data wordt nog verwerkt.\nDit loopt op de achtergrond door.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Je gegevens staan veilig en dienen alleen om je patronen te bekijken. We delen ze nooit met anderen.",
+    "Your data is yours, and it stays that way." to "Je gegevens zijn van jou, en dat blijft zo.",
     "Your data suggests adjusting these triggers" to "Je gegevens vragen om deze aanpassingen",
     "Your data, locked to your account. End-to-end private." to "Jouw data, gekoppeld aan je account. Volledig privé.",
     "Your free trial ends tomorrow" to "Je proefperiode stopt morgen",
@@ -3998,7 +3998,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Your labels, next to the ones MigraineMe uses." to "Jouw labels, naast die van MigraineMe.",
     "Your location for weather data" to "Je locatie voor weerdata",
     "Your location pool. Anywhere you might tag with a migraine: home, work, specific rooms (bedroom, office, kitchen), outdoors (park, gym, beach), travel (hotel, airport, in-car), social spaces (restaurant, bar, friend's house).\n\nFor each location:\n• Tap the star to pin it as a favourite. Favourites show up first in the wizard's Locations step and the Daily Check-In.\n• Tap the trash icon to remove one. Past attacks tagged with it stay intact.\n\nUse the + button to add anything specific (e.g. \"mom's house\", \"gym treadmill\", \"meeting room 3\"). The more specific the location, the easier it is to spot environmental patterns later.\n\nLocations have no severity weight. The Insights What Were You Doing card uses your location history to flag which places turn up most around your attacks (sometimes pointing to a real environmental trigger: bad lighting, smells, noise, low air quality)." to "Je plekkenpool. Alles wat je aan een migraine kunt hangen: thuis, werk, bepaalde ruimtes (slaapkamer, kantoor, keuken), buiten (park, sportschool, strand), onderweg (hotel, luchthaven, in de auto), sociale plekken (restaurant, bar, bij vrienden).\n\nPer plek:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan in de stap Plekken en in de dagcheck.\n• Tik het prullenbakje om er een weg te halen. Eerdere aanvallen die eraan hangen blijven intact.\n\nGebruik de +-knop voor iets specifieks (bijv. \"huis van mam\", \"loopband in de sportschool\", \"vergaderzaal 3\"). Hoe specifieker de plek, hoe makkelijker je later omgevingspatronen ziet.\n\nPlekken hebben geen zwaartegewicht. De Inzichten-kaart \"Wat was je aan het doen\" gebruikt je plekhistorie om te tonen welke plaatsen het vaakst rond je aanvallen opduiken (soms wijst dat op een echte omgevingstrigger: slecht licht, geuren, lawaai, benauwde lucht).",
-    "Your logs stay yours. Delete your account and everything in it, any time." to "Je gegevens blijven van jou. Verwijder je account en alles erin, wanneer je wilt.",
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Je medicijngebruik over 30 dagen. Elke rij toont de naam en de ",
     "Your migraine data is not affected by this." to "Dit verandert niets aan je migrainegegevens.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "Je migrainekans als één score. We tellen je triggers en prodromen van de laatste 7 dagen op, waarbij recente dagen zwaarder wegen dan oudere (vandaag telt het zwaarst). Het gewicht van elk item komt uit de zwaarte die je in je instellingen gaf; menstruation_predicted gebruikt een symmetrisch venster rond je voorspelde menstruatiedatum, en ovulation_predicted doet hetzelfde rond de voorspelde eisprong als die schakelaar aanstaat.\n\nDe kaart toont: de score, je zone (LAAG / LICHT / HOOG — drempels zijn persoonlijk), het aantal triggers van vandaag en de drie favoriete waarden die je vastzette. Tik voor de bijdragende triggers op volgorde en een scoregeschiedenis van 14 dagen (premium).\n\nGebruik het als dagelijkse check: amber of rood betekent vandaag geen nieuwe triggers stapelen en alvast verlichting overwegen.",
