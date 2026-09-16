@@ -1548,7 +1548,7 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_triggers") val trigger: UserTriggerRow? = null
     )
-    @Serializable private data class UserTriggerInsert(val label: String, val category: String? = null, @SerialName("prediction_value") val predictionValue: String? = "NONE")
+    @Serializable private data class UserTriggerInsert(val label: String, val category: String? = null, @SerialName("prediction_value") val predictionValue: String? = "NONE", @SerialName("icon_key") val iconKey: String? = null)
 
     suspend fun getAllTriggerPool(accessToken: String): List<UserTriggerRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_triggers") {
@@ -1558,14 +1558,14 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertTriggerToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): UserTriggerRow {
+    suspend fun upsertTriggerToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE", iconKey: String? = null): UserTriggerRow {
         val response = client.post("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             // DB unique constraint is on (user_id, label) — label-only fails with 42P10.
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserTriggerInsert(label, category, predictionValue))
+            contentType(ContentType.Application.Json); setBody(UserTriggerInsert(label, category, predictionValue, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_triggers failed: ${response.bodyAsText()}")
         return response.body()
@@ -1656,7 +1656,8 @@ class SupabaseDbService(
         val id: String,
         val label: String,
         val category: String? = null,
-        @SerialName("dose_unit") val doseUnit: String? = null
+        @SerialName("dose_unit") val doseUnit: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null
     )
     @Serializable
     data class MedicinePrefRow(
@@ -1670,24 +1671,25 @@ class SupabaseDbService(
     @Serializable private data class UserMedicineInsert(
         val label: String,
         val category: String? = null,
-        @SerialName("dose_unit") val doseUnit: String? = null
+        @SerialName("dose_unit") val doseUnit: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null
     )
 
     suspend fun getAllMedicinePool(accessToken: String): List<UserMedicineRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,dose_unit"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,dose_unit,icon_key"); parameter("order", "label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null, doseUnit: String? = null): UserMedicineRow {
+    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null, doseUnit: String? = null, iconKey: String? = null): UserMedicineRow {
         val response = client.post("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category, doseUnit))
+            contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category, doseUnit, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_medicines failed: ${response.bodyAsText()}")
         return response.body()
@@ -2047,7 +2049,8 @@ class SupabaseDbService(
     @Serializable private data class UserSymptomInsert(
         val label: String,
         val category: String? = null,
-        @SerialName("icon_key") val iconKey: String? = null
+        @SerialName("icon_key") val iconKey: String? = null,
+        @SerialName("icon_url") val iconUrl: String? = null
     )
 
     suspend fun getAllSymptomPool(accessToken: String): List<UserSymptomRow> {
@@ -2058,13 +2061,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertSymptomToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserSymptomRow {
+    suspend fun upsertSymptomToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null, iconUrl: String? = null): UserSymptomRow {
         val response = client.post("$supabaseUrl/rest/v1/user_symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserSymptomInsert(label, category, iconKey))
+            contentType(ContentType.Application.Json); setBody(UserSymptomInsert(label, category, iconKey, iconUrl))
         }
         if (!response.status.isSuccess()) error("Upsert user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
@@ -2155,7 +2158,8 @@ class SupabaseDbService(
     @Serializable private data class UserProdromeInsert(
         val label: String,
         val category: String? = null,
-        @SerialName("prediction_value") val predictionValue: String? = "NONE"
+        @SerialName("prediction_value") val predictionValue: String? = "NONE",
+        @SerialName("icon_key") val iconKey: String? = null
     )
 
     suspend fun getAllProdromePool(accessToken: String): List<UserProdromeRow> {
@@ -2166,13 +2170,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertProdromeToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): UserProdromeRow {
+    suspend fun upsertProdromeToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE", iconKey: String? = null): UserProdromeRow {
         val response = client.post("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserProdromeInsert(label, category, predictionValue))
+            contentType(ContentType.Application.Json); setBody(UserProdromeInsert(label, category, predictionValue, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
@@ -2361,7 +2365,7 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_locations") val location: UserLocationRow? = null
     )
-    @Serializable private data class UserLocationInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserLocationInsert(val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null)
 
     suspend fun getAllLocationPool(accessToken: String): List<UserLocationRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_locations") {
@@ -2371,13 +2375,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_locations failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertLocationToPool(accessToken: String, label: String, category: String? = null): UserLocationRow {
+    suspend fun upsertLocationToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserLocationRow {
         val response = client.post("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserLocationInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserLocationInsert(label, category, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_locations failed: ${response.bodyAsText()}")
         return response.body()
@@ -2542,7 +2546,7 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_activities") val activity: UserActivityRow? = null
     )
-    @Serializable private data class UserActivityInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserActivityInsert(val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null)
 
     suspend fun getAllActivityPool(accessToken: String): List<UserActivityRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_activities") {
@@ -2552,13 +2556,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertActivityToPool(accessToken: String, label: String, category: String? = null): UserActivityRow {
+    suspend fun upsertActivityToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserActivityRow {
         val response = client.post("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserActivityInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserActivityInsert(label, category, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_activities failed: ${response.bodyAsText()}")
         return response.body()
@@ -2834,7 +2838,7 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_missed_activities") val missedActivity: UserMissedActivityRow? = null
     )
-    @Serializable private data class UserMissedActivityInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserMissedActivityInsert(val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null)
 
     suspend fun getAllMissedActivityPool(accessToken: String): List<UserMissedActivityRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_missed_activities") {
@@ -2844,13 +2848,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_missed_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMissedActivityToPool(accessToken: String, label: String, category: String? = null): UserMissedActivityRow {
+    suspend fun upsertMissedActivityToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserMissedActivityRow {
         val response = client.post("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserMissedActivityInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserMissedActivityInsert(label, category, iconKey))
         }
         if (!response.status.isSuccess()) error("Upsert user_missed_activities failed: ${response.bodyAsText()}")
         return response.body()

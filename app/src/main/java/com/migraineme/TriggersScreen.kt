@@ -479,8 +479,9 @@ private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Bo
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
-                LogIconImage(
+            if (brainyId != null || icon != null || isDrawnIconKey(iconKey)) {
+                BrainyOrDrawnIcon(
+                    iconKey = iconKey,
                     drawableId = brainyId,
                     fallback = icon,
                     size = if (brainyId != null) 34.dp else 24.dp,

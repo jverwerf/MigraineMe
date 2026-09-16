@@ -112,7 +112,9 @@ fun ManageSymptomsScreen(
                     onClick = {
                         val token = authState.accessToken ?: return@TextButton
                         if (addLabel.isNotBlank()) {
-                            vm.addNewToPool(token, addLabel.trim(), addSubCategory, addIconKey)
+                            // A drawn Brainy comes back as a URL: that goes in icon_url, not icon_key.
+                            if (isDrawnIconKey(addIconKey)) vm.addNewToPool(token, addLabel.trim(), addSubCategory, null, addIconKey)
+                            else vm.addNewToPool(token, addLabel.trim(), addSubCategory, addIconKey)
                             addLabel = ""
                             addIconKey = null
                             showAddDialog = false
@@ -175,36 +177,14 @@ fun ManageSymptomsScreen(
                         }
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text(t("Pick an icon"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
-                    Spacer(Modifier.height(10.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SymptomIcons.PICKER_ICONS.forEach { picker ->
-                            val isChosen = addIconKey == picker.key
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isChosen) AppTheme.AccentPurple.copy(alpha = 0.40f)
-                                        else Color.White.copy(alpha = 0.08f)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        if (isChosen) AppTheme.AccentPurple.copy(alpha = 0.7f)
-                                        else Color.White.copy(alpha = 0.12f),
-                                        CircleShape
-                                    )
-                                    .clickable { addIconKey = if (isChosen) null else picker.key },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    picker.icon, contentDescription = picker.label,
-                                    tint = if (isChosen) Color.White else AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
-                    }
+                    BrainyPickerGrid(
+                        kind = if (addCategory == "pain_character") "painCharacter" else "symptom",
+                        label = addLabel,
+                        accessToken = authState.accessToken,
+                        accent = AppTheme.AccentPurple,
+                        selectedKey = addIconKey,
+                        onSelect = { addIconKey = it },
+                    )
                 }
             }
         )

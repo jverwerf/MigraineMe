@@ -120,6 +120,30 @@ fun CustomBrainyImage(iconUrl: String, size: Dp, modifier: Modifier = Modifier) 
 }
 
 /**
+ * A custom pool item whose icon_key holds the URL of a Brainy the server drew for it
+ * (generate-symptom-icon). Pool tables other than user_symptoms have no icon_url column,
+ * and icon_key is unconstrained text, so the link lives there.
+ */
+fun isDrawnIconKey(iconKey: String?): Boolean = iconKey?.startsWith("http") == true
+
+/**
+ * Pool item icon: the server-drawn Brainy when icon_key is a link, otherwise the usual
+ * bundled Brainy / stroke-glyph pair via [LogIconImage].
+ */
+@Composable
+fun BrainyOrDrawnIcon(
+    iconKey: String?,
+    drawableId: Int?,
+    fallback: ImageVector?,
+    size: Dp,
+    tint: Color,
+    modifier: Modifier = Modifier
+) {
+    if (isDrawnIconKey(iconKey)) CustomBrainyImage(iconKey!!, size, modifier)
+    else LogIconImage(drawableId, fallback, size, tint, modifier)
+}
+
+/**
  * Log icon renderer: full-colour Brainy drawable when one exists for the key,
  * otherwise the legacy stroke ImageVector with the caller's tint.
  * Brainy art is never tinted; selection states style the container instead.

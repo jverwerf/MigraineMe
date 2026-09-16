@@ -626,8 +626,8 @@ private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = 
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
-                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
+            if (brainyId != null || icon != null || isDrawnIconKey(iconKey)) {
+                BrainyOrDrawnIcon(iconKey = iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(iconKey)) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
             }

@@ -283,7 +283,7 @@ fun MedicinesScreen(
                     Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { med ->
-                            MedicineButton(med.label, med.label in selectedLabels, med.category) {
+                            MedicineButton(med.label, med.label in selectedLabels, med.category, med.iconKey) {
                                 onMedicineTap(med.label)
                             }
                         }
@@ -299,7 +299,7 @@ fun MedicinesScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { med ->
-                                MedicineButton(med.label, med.label in selectedLabels, med.category) {
+                                MedicineButton(med.label, med.label in selectedLabels, med.category, med.iconKey) {
                                     onMedicineTap(med.label)
                                 }
                             }
@@ -558,7 +558,7 @@ private fun MedicineEditDialog(
  * ──────────────────────────────────────────────── */
 
 @Composable
-private fun MedicineButton(label: String, isSelected: Boolean, category: String? = null, onClick: () -> Unit) {
+private fun MedicineButton(label: String, isSelected: Boolean, category: String? = null, iconKey: String? = null, onClick: () -> Unit) {
     val circleColor = if (isSelected) Color(0xFF4FC3F7).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val borderColor = if (isSelected) Color(0xFF4FC3F7).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
@@ -584,8 +584,8 @@ private fun MedicineButton(label: String, isSelected: Boolean, category: String?
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
-                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
+            if (brainyId != null || icon != null || isDrawnIconKey(iconKey)) {
+                BrainyOrDrawnIcon(iconKey = iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(iconKey)) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
             }

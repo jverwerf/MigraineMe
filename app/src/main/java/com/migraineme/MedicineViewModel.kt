@@ -37,10 +37,10 @@ class MedicineViewModel : PoolViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String, category: String? = null, doseUnit: String? = null) {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null, doseUnit: String? = null, iconKey: String? = null) {
         viewModelScope.launch {
             try {
-                db.upsertMedicineToPool(accessToken, label.trim(), category, doseUnit)
+                db.upsertMedicineToPool(accessToken, label.trim(), category, doseUnit, iconKey)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 reportError(e)

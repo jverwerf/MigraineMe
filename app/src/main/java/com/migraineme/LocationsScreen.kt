@@ -188,8 +188,8 @@ private fun CircleButton(label: String, isSelected: Boolean, accent: Color, icon
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            if (brainyId != null || icon != null) {
-                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor)
+            if (brainyId != null || icon != null || isDrawnIconKey(iconKey)) {
+                BrainyOrDrawnIcon(iconKey = iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(iconKey)) 34.dp else 24.dp, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor)
             } else {
                 Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))

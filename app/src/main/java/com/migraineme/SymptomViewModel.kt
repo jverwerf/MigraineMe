@@ -55,19 +55,20 @@ class SymptomViewModel : PoolViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String, category: String, iconKey: String? = null) {
+    /** [iconUrl]: a Brainy the user had drawn in the add dialog; skips the after-save drawing. */
+    fun addNewToPool(accessToken: String, label: String, category: String, iconKey: String? = null, iconUrl: String? = null) {
         viewModelScope.launch {
             try {
                 val clean = label.trim()
                 // A label we have no art for would sit there as two grey letters while the
                 // drawing is made, so give it a generic Brainy up front and swap it for the
                 // drawn one when that arrives.
-                val placeholder = iconKey
+                val placeholder = iconKey ?: (if (iconUrl != null) CustomBrainy.randomKey(clean) else null)
                     ?: if (BrainyLogManifest.drawableFor(clean, null, category, kindFor(category)) == null)
                         CustomBrainy.randomKey(clean) else null
-                val row = db.upsertSymptomToPool(accessToken, clean, category, placeholder)
+                val row = db.upsertSymptomToPool(accessToken, clean, category, placeholder, iconUrl)
                 loadAll(accessToken)
-                if (iconKey == null) drawBrainy(accessToken, row.id, clean, category)
+                if (iconKey == null && iconUrl == null) drawBrainy(accessToken, row.id, clean, category)
             } catch (e: Exception) {
                 reportError(e)
             }

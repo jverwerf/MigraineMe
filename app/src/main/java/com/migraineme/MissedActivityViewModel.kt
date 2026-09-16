@@ -65,9 +65,9 @@ class MissedActivityViewModel : PoolViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String, category: String? = null) {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null) {
         viewModelScope.launch {
-            runCatching { db.upsertMissedActivityToPool(accessToken, label, category); loadAll(accessToken) }
+            runCatching { db.upsertMissedActivityToPool(accessToken, label, category, iconKey); loadAll(accessToken) }
                 .onFailure { reportError(it) }
         }
     }

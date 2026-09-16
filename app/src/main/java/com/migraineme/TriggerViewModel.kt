@@ -96,10 +96,10 @@ class TriggerViewModel : PoolViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE") {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE", iconKey: String? = null) {
         viewModelScope.launch {
             try {
-                db.upsertTriggerToPool(accessToken, label.trim(), category, predictionValue)
+                db.upsertTriggerToPool(accessToken, label.trim(), category, predictionValue, iconKey)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 reportError(e)

@@ -94,7 +94,11 @@ data class PoolConfig(
     val showPrediction: Boolean = false,
     val iconResolver: ((String?, String) -> ImageVector?)? = null,
     val pickerIcons: List<PickerIconEntry> = emptyList(),
-    val onAdd: (label: String, category: String?, prediction: PredictionValue) -> Unit,
+    /** BrainyLogManifest kind for the add dialog's Brainy picker + "Draw one for me". */
+    val brainyKind: String? = null,
+    /** Needed by "Draw one for me" (generate-symptom-icon runs as the user). */
+    val accessToken: String? = null,
+    val onAdd: (label: String, category: String?, prediction: PredictionValue, iconKey: String?) -> Unit,
     val onDelete: (itemId: String) -> Unit,
     val onToggleFavorite: (itemId: String, starred: Boolean) -> Unit,
     val onSetPrediction: (itemId: String, prediction: PredictionValue) -> Unit = { _, _ -> },
@@ -106,7 +110,7 @@ data class PoolConfig(
     val infoText: String? = null,
     /** Medicines only: one-time unit choice for custom items, unit value → display label. */
     val doseUnitChoices: List<Pair<String, String>> = emptyList(),
-    val onAddWithUnit: ((label: String, category: String?, doseUnit: String) -> Unit)? = null,
+    val onAddWithUnit: ((label: String, category: String?, doseUnit: String, iconKey: String?) -> Unit)? = null,
     val onSetDoseUnit: (itemId: String, doseUnit: String) -> Unit = { _, _ -> },
     /**
      * User-facing failures from the backing view model (see [PoolViewModel.errors]).
@@ -350,9 +354,10 @@ fun ManagePoolScreen(
                                         .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    val groupBrainyId = brainyForLogVector(groupIcon) ?: brainyForLogKey(members.firstOrNull()?.iconKey, members.firstOrNull()?.label)
-                                    if (groupBrainyId != null || groupIcon != null) {
-                                        LogIconImage(drawableId = groupBrainyId, fallback = groupIcon, size = if (groupBrainyId != null) 26.dp else 20.dp, tint = effectiveConfig.iconColor)
+                                    val groupKey = members.firstOrNull()?.iconKey
+                                    val groupBrainyId = brainyForLogVector(groupIcon) ?: brainyForLogKey(groupKey, members.firstOrNull()?.label)
+                                    if (groupBrainyId != null || groupIcon != null || isDrawnIconKey(groupKey)) {
+                                        BrainyOrDrawnIcon(iconKey = groupKey, drawableId = groupBrainyId, fallback = groupIcon, size = if (groupBrainyId != null || isDrawnIconKey(groupKey)) 26.dp else 20.dp, tint = effectiveConfig.iconColor)
                                     } else {
                                         Text(groupName.take(2).uppercase(), color = effectiveConfig.iconColor,
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -703,40 +708,16 @@ fun ManagePoolScreen(
                         }
                     }
 
-                    // ── Icon picker (only shown when pickerIcons is provided) ──
-                    if (config.pickerIcons.isNotEmpty()) {
-                        Text(t("Pick an icon"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            config.pickerIcons.forEach { picker ->
-                                val isChosen = newIconKey == picker.key
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (isChosen) config.iconColor.copy(alpha = 0.40f)
-                                            else Color.White.copy(alpha = 0.08f)
-                                        )
-                                        .border(
-                                            1.5.dp,
-                                            if (isChosen) config.iconColor.copy(alpha = 0.7f)
-                                            else Color.White.copy(alpha = 0.12f),
-                                            CircleShape
-                                        )
-                                        .clickable { newIconKey = if (isChosen) null else picker.key },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        picker.icon, contentDescription = t(picker.label),
-                                        tint = if (isChosen) Color.White else AppTheme.SubtleTextColor,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
+                    // ── Icon: our Brainies for this pool + "Draw one for me" ──
+                    if (config.brainyKind != null) {
+                        BrainyPickerGrid(
+                            kind = config.brainyKind,
+                            label = newLabel,
+                            accessToken = config.accessToken,
+                            accent = config.iconColor,
+                            selectedKey = newIconKey,
+                            onSelect = { newIconKey = it },
+                        )
                     }
                 }
             },
@@ -746,9 +727,9 @@ fun ManagePoolScreen(
                         if (newLabel.isNotBlank()) {
                             val unit = newDoseUnit
                             if (config.onAddWithUnit != null && unit != null) {
-                                config.onAddWithUnit.invoke(newLabel.trim(), newCategory, unit)
+                                config.onAddWithUnit.invoke(newLabel.trim(), newCategory, unit, newIconKey)
                             } else {
-                                config.onAdd(newLabel.trim(), newCategory, newPrediction)
+                                config.onAdd(newLabel.trim(), newCategory, newPrediction, newIconKey)
                             }
                             showAddDialog = false
                         }
@@ -840,8 +821,8 @@ private fun LibraryItemRow(
             contentAlignment = Alignment.Center
         ) {
             val brainyId = brainyForLogVector(icon) ?: brainyForLogKey(item.iconKey, item.label)
-            if (brainyId != null || icon != null) {
-                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
+            if (brainyId != null || icon != null || isDrawnIconKey(item.iconKey)) {
+                BrainyOrDrawnIcon(iconKey = item.iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(item.iconKey)) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
             } else {
                 Text(item.label.take(2).uppercase(), color = config.iconColor.copy(alpha = 0.8f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -897,8 +878,8 @@ private fun PoolItemRow(
                 contentAlignment = Alignment.Center
             ) {
                 val brainyId = brainyForLogVector(icon) ?: brainyForLogKey(item.iconKey, item.label)
-                if (brainyId != null || icon != null) {
-                    LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
+                if (brainyId != null || icon != null || isDrawnIconKey(item.iconKey)) {
+                    BrainyOrDrawnIcon(iconKey = item.iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(item.iconKey)) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
                 } else {
                     Text(item.label.take(2).uppercase(), color = config.iconColor.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))

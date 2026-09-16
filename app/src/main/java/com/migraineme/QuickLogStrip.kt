@@ -668,8 +668,8 @@ private fun FavoriteCircleButton(
                 .border(1.5.dp, border, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
-                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
+            if (brainyId != null || icon != null || isDrawnIconKey(iconKey)) {
+                BrainyOrDrawnIcon(iconKey = iconKey, drawableId = brainyId, fallback = icon, size = if (brainyId != null || isDrawnIconKey(iconKey)) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(
                     label.take(2).uppercase(),

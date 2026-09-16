@@ -1963,9 +1963,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "Changes to severity, category, automation and thresholds save together when you tap Save & Recalculate at the bottom. That recomputes your risk score so the gauge reflects the new weights immediately.",
                                 categories = listOf("Body", "Cognitive", "Diet", "Environment", "Menstrual Cycle", "Physical", "Sleep"),
                                 iconResolver = { key, _ -> TriggerIcons.forKey(key) },
-                                pickerIcons = TriggerIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, prediction ->
-                                    authState.accessToken?.let { triggerVm.addNewToPool(it, label, category, prediction.name) }
+                                brainyKind = "trigger",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, prediction, iconKey ->
+                                    authState.accessToken?.let { triggerVm.addNewToPool(it, label, category, prediction.name, iconKey) }
                                 },
                                 onDelete = { id -> authState.accessToken?.let { triggerVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -2036,7 +2037,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 PoolItem(
                                     id = row.id,
                                     label = row.label,
-                                    iconKey = row.category,
+                                    iconKey = row.iconKey ?: row.category,
                                     category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     doseUnit = row.doseUnit
@@ -2059,9 +2060,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "There's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card.",
                                 categories = listOf("Analgesic", "Anti-Nausea", "CGRP", "Preventive", "Supplement", "Triptan", "Other"),
                                 iconResolver = { key, _ -> MedicineIcons.forKey(key) },
-                                pickerIcons = MedicineIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, _ ->
-                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category) }
+                                brainyKind = "medicine",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, _, iconKey ->
+                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category, iconKey = iconKey) }
                                 },
                                 onDelete = { id -> authState.accessToken?.let { medicineVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -2080,8 +2082,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     DoseUnits.MG to "Milligrams (mg)",
                                     DoseUnits.AMOUNT to "Count"
                                 ),
-                                onAddWithUnit = { label, category, doseUnit ->
-                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category, doseUnit) }
+                                onAddWithUnit = { label, category, doseUnit, iconKey ->
+                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category, doseUnit, iconKey) }
                                 },
                                 onSetDoseUnit = { id, doseUnit ->
                                     authState.accessToken?.let { medicineVm.setDoseUnit(it, id, doseUnit) }
@@ -2151,9 +2153,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "No severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets.",
                                 categories = listOf("Breathing", "Cold/Heat", "Darkness", "Device", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
                                 iconResolver = { key, label -> ReliefIcons.forLabel(label, key) },
-                                pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, _ ->
-                                    authState.accessToken?.let { reliefVm.addNewToPool(it, label, category) }
+                                brainyKind = "relief",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, _, iconKey ->
+                                    authState.accessToken?.let { reliefVm.addNewToPool(it, label, category, iconKey) }
                                 },
                                 libraryItems = libraryItems,
                                 onAddFromLibrary = { item ->
@@ -2249,9 +2252,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "Log these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically.",
                                 categories = listOf("Autonomic", "Cognitive", "Digestive", "Mood", "Physical", "Sensitivity", "Sensory", "Sleep", "Speech", "Visual"),
                                 iconResolver = { key, _ -> ProdromeIcons.forKey(key) },
-                                pickerIcons = ProdromeIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, prediction ->
-                                    authState.accessToken?.let { prodromeVm.addNewToPool(it, label, category, prediction.name) }
+                                brainyKind = "prodrome",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, prediction, iconKey ->
+                                    authState.accessToken?.let { prodromeVm.addNewToPool(it, label, category, prediction.name, iconKey) }
                                 },
                                 onDelete = { id -> authState.accessToken?.let { prodromeVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -2337,8 +2341,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "Locations have no severity weight. The Insights What Were You Doing card uses your location history to flag which places turn up most around your attacks (sometimes pointing to a real environmental trigger: bad lighting, smells, noise, low air quality).",
                                 categories = listOf("Exercise", "Home", "Medical", "Outdoors", "Social", "Transport", "Work", "Other"),
                                 iconResolver = { key, label -> LocationIcons.forLabel(label, key) },
-                                pickerIcons = LocationIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, _ -> authState.accessToken?.let { locationVm.addNewToPool(it, label, category) } },
+                                brainyKind = "location",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, _, iconKey -> authState.accessToken?.let { locationVm.addNewToPool(it, label, category, iconKey) } },
                                 onDelete = { id -> authState.accessToken?.let { locationVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
                                     val token = authState.accessToken ?: return@PoolConfig
@@ -2386,8 +2391,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "Activities have no severity weight. The Insights What Were You Doing card uses your activity history to flag which ones turn up most around your attacks; some are protective (regular cardio), others are triggers (intense exertion, alcohol, late-night screen time).",
                                 categories = listOf("Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
                                 iconResolver = { key, label -> ActivityIcons.forLabel(label, key) },
-                                pickerIcons = ActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, _ -> authState.accessToken?.let { activityVm.addNewToPool(it, label, category) } },
+                                brainyKind = "activity",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, _, iconKey -> authState.accessToken?.let { activityVm.addNewToPool(it, label, category, iconKey) } },
                                 onDelete = { id -> authState.accessToken?.let { activityVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
                                     val token = authState.accessToken ?: return@PoolConfig
@@ -2434,8 +2440,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "Missed activities have no severity weight; they don't push your bucket up. The Insights How Did It Impact You card surfaces these so you can see the real-life cost of your attacks, and the Full Report PDF shows the totals to bring to your doctor when arguing for stronger treatment.",
                                 categories = listOf("Care", "Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
                                 iconResolver = { key, label -> MissedActivityIcons.forLabel(label, key) },
-                                pickerIcons = MissedActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, category, _ -> authState.accessToken?.let { missedVm.addNewToPool(it, label, category) } },
+                                brainyKind = "missed",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, category, _, iconKey -> authState.accessToken?.let { missedVm.addNewToPool(it, label, category, iconKey) } },
                                 onDelete = { id -> authState.accessToken?.let { missedVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
                                     val token = authState.accessToken ?: return@PoolConfig
@@ -2483,8 +2490,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     "During the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects.",
                                 categories = listOf("Cognitive", "Mood", "Sleep", "Body", "Other"),
                                 iconResolver = { key, label -> SymptomIcons.forKey(key) ?: SymptomIcons.forKey(label.lowercase()) },
-                                pickerIcons = SymptomIcons.PICKER_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
-                                onAdd = { label, _, _ -> authState.accessToken?.let { tseVm.addNewToPool(it, label) } },
+                                brainyKind = "symptom",
+                                accessToken = authState.accessToken,
+                                onAdd = { label, _, _, iconKey -> authState.accessToken?.let { tseVm.addNewToPool(it, label, iconKey) } },
                                 onDelete = { id -> authState.accessToken?.let { tseVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
                                     val token = authState.accessToken ?: return@PoolConfig

@@ -1,10 +1,11 @@
 // supabase/functions/generate-symptom-icon/index.ts
 //
-// Draws a Brainy icon for a symptom or pain character the user typed themselves.
-// gpt-image-1 edits the app's own Brainy as the style reference, so a custom entry
-// looks like the built-in ones instead of a bare letter.
+// Draws a Brainy icon for a pool item the user typed themselves: a symptom, pain
+// character, trigger, prodrome, medicine, relief, activity, location or missed
+// activity. gpt-image-1 edits the app's own Brainy as the style reference, so a
+// custom entry looks like the built-in ones instead of a bare letter.
 //
-// POST body: { "label": "Tummy pain", "kind": "symptom" | "painCharacter" }
+// POST body: { "label": "Tummy pain", "kind": <one of KINDS below, default "symptom"> }
 // Returns:   { ok: true, icon_url: "https://.../custom-icons/<user>/<slug>.png", used: 3, limit: 50 }
 //            { ok: true, icon_key: "custom_bolt", reason: "limit" | "failed" }  <- bundled fallback
 //
@@ -133,15 +134,42 @@ function slug(label: string): string {
   return (s || "icon").slice(0, 40);
 }
 
+// Every pool an app lets the user add a custom item to. Same names the apps use for
+// their Brainy key maps (BrainyLogManifest / BrainyLogIcons / brainyLogIcons).
+const KINDS = [
+  "symptom", "painCharacter", "trigger", "prodrome", "medicine", "relief",
+  "activity", "location", "missed",
+] as const;
+type Kind = typeof KINDS[number];
+
 // What the character is doing. The label is the user's own words, so it goes in as a
-// plain description of a feeling, never as an instruction.
-function posePrompt(label: string, kind: string): string {
+// plain description, never as an instruction. One line per pool so a trigger Brainy
+// reads as a cause, a medicine Brainy as something taken, and so on.
+function posePrompt(label: string, kind: Kind): string {
   const what = label.replace(/["\\\n\r]/g, " ").trim().slice(0, 60);
-  return kind === "painCharacter"
-    ? `The character shows what "${what}" pain feels like, with a clear facial expression and body pose, ` +
-      `plus one simple symbol or prop that makes it readable at icon size.`
-    : `The character is feeling "${what}": a clear facial expression and body pose showing that symptom, ` +
-      `plus one simple symbol or prop that makes it readable at icon size.`;
+  const tail = ` plus one simple symbol or prop that makes it readable at icon size.`;
+  switch (kind) {
+    case "painCharacter":
+      return `The character shows what "${what}" pain feels like, with a clear facial expression and body pose,` + tail;
+    case "trigger":
+      return `The character is being set off by "${what}", a migraine trigger: a clear pose reacting to that cause,` + tail;
+    case "prodrome":
+      return `The character notices an early warning sign, "${what}", before an attack: an alert, wary expression,` + tail;
+    case "medicine":
+      return `The character is taking a medicine called "${what}": holding one simple pill, bottle or medical item,` +
+        ` a hopeful expression, readable at icon size.`;
+    case "relief":
+      return `The character finds relief through "${what}": a calm, soothed expression and relaxed pose,` + tail;
+    case "activity":
+      return `The character is doing the activity "${what}": a clear action pose,` + tail;
+    case "location":
+      return `The character is at a place called "${what}": a simple pose with one minimal prop that says the place,` +
+        ` no scenery behind, readable at icon size.`;
+    case "missed":
+      return `The character is missing out on "${what}" because of an attack: a wistful, sidelined pose,` + tail;
+    default:
+      return `The character is feeling "${what}": a clear facial expression and body pose showing that symptom,` + tail;
+  }
 }
 
 serve(async (req: Request) => {
@@ -156,7 +184,7 @@ serve(async (req: Request) => {
 
     const body = await req.json().catch(() => ({}));
     const label = (body.label ?? "").toString().trim();
-    const kind = body.kind === "painCharacter" ? "painCharacter" : "symptom";
+    const kind: Kind = (KINDS as readonly string[]).includes(body.kind) ? body.kind as Kind : "symptom";
     if (!label) return json({ error: "missing_label" }, 400);
     if (label.length > 60) return json({ error: "label_too_long" }, 400);
 
