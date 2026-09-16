@@ -215,7 +215,8 @@ fun MonitorTreatmentsScreen(navController: NavController) {
                 displayName = r.name,
                 metaLine = soloMeta(r),
                 isActive = r.stopDate == null,
-                pctChange = l?.pctChangeMmd, band = l?.band ?: "not_enough_data",
+                pctChange = l?.pctChangeMmd, rollingMmd = l?.rollingMmd,
+                priorNote = l?.priorFrequencyNote, band = l?.band ?: "not_enough_data",
                 navigateRegimenId = r.id
             ))
         }
@@ -233,7 +234,8 @@ fun MonitorTreatmentsScreen(navController: NavController) {
                 displayName = displayName,
                 metaLine = groupMeta(members, ge),
                 isActive = anyActive,
-                pctChange = ge?.pctChangeMmd, band = ge?.band ?: "not_enough_data",
+                pctChange = ge?.pctChangeMmd, rollingMmd = ge?.rollingMmd,
+                priorNote = null, band = ge?.band ?: "not_enough_data",
                 navigateRegimenId = navTarget
             ))
         }
@@ -344,6 +346,9 @@ data class TreatmentListRowItem(
     val metaLine: String,
     val isActive: Boolean,
     val pctChange: Double?,
+    /** Current rate, shown in place of a percentage when there is no before. */
+    val rollingMmd: Double?,
+    val priorNote: String?,
     val band: String,
     val navigateRegimenId: String
 )
@@ -397,15 +402,20 @@ private fun ListRow(item: TreatmentListRowItem, navController: NavController) {
             Text(item.metaLine, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
         Column(horizontalAlignment = Alignment.End) {
-            val pctText = if (item.band == "not_enough_data") "N/A"
-                else item.pctChange?.let { String.format("%+.0f%%", it) } ?: "N/A"
+            // A regimen with no before-picture has no percentage to show, so its
+            // own rate takes that slot rather than a dead "N/A".
+            val pctText = when {
+                item.band == "no_baseline" && item.rollingMmd != null -> String.format("%.1f", item.rollingMmd)
+                item.band == "not_enough_data" -> "N/A"
+                else -> item.pctChange?.let { String.format("%+.0f%%", it) } ?: "N/A"
+            }
             val color = bandPctColor(item.band)
             Text(pctText, color = color, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = bandPillBg(item.band),
             ) {
-                Text(bandPillLabel(item.band),
+                Text(t(bandPillLabel(item.band)),
                     color = color, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 7.dp, vertical = 1.dp),
                     style = MaterialTheme.typography.labelSmall)
@@ -415,6 +425,7 @@ private fun ListRow(item: TreatmentListRowItem, navController: NavController) {
 }
 
 private fun bandPillLabel(band: String): String = when (band) {
+    "no_baseline" -> "days a month"
     "working_well" -> "working well"
     "showing_progress" -> "showing progress"
     "some_effect" -> "some effect"
@@ -584,6 +595,8 @@ private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1)
         val pct = r.pctChangeMmd
         val (label, color) = when {
+            r.band == "no_baseline" && r.rollingMmd != null ->
+                String.format("%.1f days/mo", r.rollingMmd) to Color.White.copy(alpha = 0.86f)
             r.band == "not_enough_data" -> "not enough data" to Color.White.copy(alpha = 0.55f)
             pct != null -> String.format("%+.0f%% days", pct) to bandPctColor(r.band)
             else -> bandPillLabel(r.band) to bandPctColor(r.band)
@@ -648,6 +661,24 @@ private fun AddTreatmentRegimenDialog(
     val doseUnit = if (kind == "drug") (poolUnits[name.trim().lowercase()] ?: DoseUnits.MG) else DoseUnits.MG
     var inputUnit by remember(kind, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
 
+    // Someone adding a treatment they were ALREADY on has nothing logged in the
+    // 28 days before its start date, so no before-and-after is possible, ever.
+    // When that is the case the sheet asks how often attacks came back then, in
+    // their own words. Context for the card only — never used in the maths.
+    var priorNote by remember { mutableStateOf("") }
+    var askPriorFrequency by remember { mutableStateOf(false) }
+    LaunchedEffect(startDate) {
+        askPriorFrequency = withContext(Dispatchers.IO) {
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: return@withContext false
+                val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                val from = startDate.minusDays(28).format(DateTimeFormatter.ISO_LOCAL_DATE)
+                val to = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                db.countMigraineDaysBetween(token, from, to) == 0
+            } catch (_: Throwable) { false }
+        }
+    }
+
     fun save() {
         if (saving) return
         val trimmedName = name.trim()
@@ -676,7 +707,8 @@ private fun AddTreatmentRegimenDialog(
                         startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
                         notes = notes.ifBlank { null },
                         doseValue = doseValue,
-                        doseUnit = if (doseValue != null) doseUnit else null
+                        doseUnit = if (doseValue != null) doseUnit else null,
+                        priorFrequencyNote = priorNote.ifBlank { null }
                     )
                     Result.success(Unit)
                 } catch (t: Throwable) { Result.failure(t) }
@@ -758,6 +790,18 @@ private fun AddTreatmentRegimenDialog(
                 Spacer(Modifier.height(8.dp))
                 FieldLabel(t("Start date *"))
                 StartDatePicker(date = startDate, onChange = { startDate = it })
+                if (askPriorFrequency) {
+                    Spacer(Modifier.height(8.dp))
+                    FieldLabel(t("How often did attacks come before?"))
+                    OutlinedTextField(
+                        value = priorNote, onValueChange = { priorNote = it },
+                        placeholder = { Text(t("e.g. about 4 times a month")) },
+                        singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(t("Optional. Nothing is logged from before this started, so this is shown as context and never counted in the numbers."),
+                        color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp))
+                }
                 Spacer(Modifier.height(8.dp))
                 FieldLabel(t("Notes"))
                 OutlinedTextField(

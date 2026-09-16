@@ -2126,6 +2126,9 @@ private fun RegimenRow(
     val bandColor = regimenBandColor(band)
     val bandLabel = regimenBandLabel(band)
     val pctText = r.pctChangeMmd?.let { String.format("%+.0f%%", it) } ?: "—"
+    // No before-picture: show the rate itself instead of a change.
+    val rateText: String = r.rollingMmd?.let { String.format("%.1f", it) } ?: ""
+
     val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
     val weeks = runCatching {
         val s = java.time.LocalDate.parse(r.startDate)
@@ -2142,7 +2145,13 @@ private fun RegimenRow(
                 Text(sub, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
                     style = MaterialTheme.typography.labelSmall)
             }
-            if (band == "not_enough_data") {
+            if (band == "no_baseline") {
+                // Nothing logged before this treatment started, so there is no
+                // change to draw. Its own rate is the honest thing to show.
+                Text(if (rateText.isEmpty()) t("no comparison") else t("%s days/mo", rateText),
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.labelSmall)
+            } else if (band == "not_enough_data") {
                 Text(t("not enough data"), color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
                     style = MaterialTheme.typography.labelSmall)
             } else {
@@ -2159,7 +2168,11 @@ private fun RegimenRow(
                     textAlign = TextAlign.End)
             }
         }
-        if (band != "not_enough_data") {
+        if (band == "no_baseline") {
+            Text(t("Nothing logged before this started, so there is nothing to compare it with."),
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
+                style = MaterialTheme.typography.labelSmall)
+        } else if (band != "not_enough_data") {
             Text(t(bandLabel), color = bandColor, fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.labelSmall)
         }
@@ -2192,6 +2205,7 @@ private fun regimenBandLabel(b: String): String = when (b) {
     "showing_progress" -> "Showing progress"
     "some_effect" -> "Some effect"
     "not_noticeable" -> "Not noticeable yet"
+    "no_baseline" -> "No comparison possible"
     else -> "Not enough data"
 }
 

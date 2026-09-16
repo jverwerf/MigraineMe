@@ -320,7 +320,7 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2354",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2368",
     "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
   },
   {
@@ -404,19 +404,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:346",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:348",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:381",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:383",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:415",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:417",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:449",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:451",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -568,51 +568,55 @@
     "line": "                else -> t(\"In %1\\$s days\", daysUntil.toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:256",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:276",
+    "line": "                Text(t(\"%1\\$s migraine days a month while on this.\", String.format(\"%.1f\", r)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:282",
     "line": "            Text(t(\"You went from %1\\$s to %2\\$s migraine days a month, averaged since you started.\", b.toInt(), r.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:271",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:297",
     "line": "        Text(t(\"%1\\$s weeks in · %2\\$s attacks tracked%3\\$s\", e.weeksActive, e.nAttacksRolling, trustNote),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:559",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
     "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:560",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
     "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:561",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:572",
     "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:562",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:573",
     "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:563",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:574",
     "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:564",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:575",
     "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:565",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
     "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:566",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
     "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:567",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:578",
     "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {

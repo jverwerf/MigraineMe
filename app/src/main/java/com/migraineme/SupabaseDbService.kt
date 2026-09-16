@@ -417,6 +417,24 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch migraines failed: ${response.bodyAsText()}")
         return response.body()
     }
+    /**
+     * Distinct migraine days in [fromIso, toIso) — the same 28-day window the
+     * treatment efficacy baseline uses. The Add Treatment sheet asks it before
+     * saving: zero means the regimen can never be judged against a before, so
+     * the sheet offers the optional "how often before?" line instead.
+     */
+    suspend fun countMigraineDaysBetween(accessToken: String, fromIso: String, toIso: String): Int {
+        val response = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "start_at")
+            parameter("start_at", "gte.$fromIso")
+            parameter("and", "(start_at.lt.$toIso)")
+        }
+        if (!response.status.isSuccess()) error("Count migraine days failed: ${response.bodyAsText()}")
+        val rows: List<Map<String, kotlinx.serialization.json.JsonElement>> = response.body()
+        return rows.mapNotNull { it["start_at"]?.toString()?.trim('"')?.take(10) }.distinct().size
+    }
+
     suspend fun getMigraineById(accessToken: String, id: String): MigraineRow {
         val response = client.get("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -861,7 +879,11 @@ class SupabaseDbService(
         @SerialName("start_date") val startDate: String,
         @SerialName("stop_date") val stopDate: String? = null,
         val notes: String? = null,
-        @SerialName("group_id") val groupId: String? = null
+        @SerialName("group_id") val groupId: String? = null,
+        // Free text the user may give when adding a treatment they were
+        // already on ("about 4 times a month"). Context only: it is shown on
+        // the card and never enters a calculation.
+        @SerialName("prior_frequency_note") val priorFrequencyNote: String? = null
     )
     @Serializable
     data class TreatmentRegimenInsert(
@@ -878,7 +900,8 @@ class SupabaseDbService(
         @SerialName("start_date") val startDate: String,
         @SerialName("stop_date") val stopDate: String? = null,
         val notes: String? = null,
-        @SerialName("group_id") val groupId: String? = null
+        @SerialName("group_id") val groupId: String? = null,
+        @SerialName("prior_frequency_note") val priorFrequencyNote: String? = null
     )
     suspend fun insertTreatmentRegimen(
         accessToken: String,
@@ -892,13 +915,14 @@ class SupabaseDbService(
         notes: String? = null,
         groupId: String? = null,
         doseValue: Double? = null,
-        doseUnit: String? = null
+        doseUnit: String? = null,
+        priorFrequencyNote: String? = null
     ): TreatmentRegimenRow {
         // Dual-write (one-unit contract): structured dose mirrors the legacy
         // amount string. Free-text amounts (device/lifestyle) stay text-only.
         val du = doseUnit?.takeIf { doseValue != null } ?: if (doseValue != null) DoseUnits.MG else null
         val amt = amount ?: doseValue?.let { DoseUnits.legacyAmount(it, du ?: DoseUnits.MG) }
-        val payload = TreatmentRegimenInsert(userId, kind, name, amt, doseValue, du, frequency, startDate, stopDate, notes, groupId)
+        val payload = TreatmentRegimenInsert(userId, kind, name, amt, doseValue, du, frequency, startDate, stopDate, notes, groupId, priorFrequencyNote?.takeIf { it.isNotBlank() })
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_regimens") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -1209,6 +1233,8 @@ class SupabaseDbService(
         @SerialName("stop_date") val stopDate: String? = null,
         @SerialName("group_id") val groupId: String? = null,
         @SerialName("pct_change_mmd") val pctChangeMmd: Double? = null,
+        @SerialName("rolling_mmd") val rollingMmd: Double? = null,
+        @SerialName("prior_frequency_note") val priorFrequencyNote: String? = null,
         val band: String
     )
 

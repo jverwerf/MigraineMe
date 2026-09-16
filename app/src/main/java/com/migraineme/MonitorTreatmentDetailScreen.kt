@@ -33,7 +33,10 @@ private val BAND_LABELS = mapOf(
     "showing_progress" to "Showing progress",
     "some_effect" to "Some effect",
     "not_noticeable" to "Not noticeable yet",
-    "not_enough_data" to "Not enough data"
+    "not_enough_data" to "Not enough data",
+    // Not "yet": with nothing logged before this treatment started there is no
+    // before to compare against, and more logging will not create one.
+    "no_baseline" to "No comparison possible"
 )
 
 private fun bandColor(band: String): Color = when (band) {
@@ -114,6 +117,14 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
                     r.amount, r.frequency, period
                 ).joinToString(" · ")
                 Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                // What the user remembered about life before this treatment,
+                // given when they added one they were already on. Their words,
+                // shown as context; nothing here is counted anywhere.
+                val prior = r.priorFrequencyNote
+                if (!prior.isNullOrBlank()) {
+                    Text(t("Before this: %s", prior), color = Color.White.copy(alpha = 0.62f),
+                        style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                }
             }
 
             HeadlineCard(efficacy)
@@ -246,13 +257,28 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
             return@Column
         }
         val pct = e.pctChangeMmd
-        val pctText = if (pct != null) String.format("%+.0f%%", pct) else "-"
+        val b = e.baselineMmd; val r = e.rollingMmd
+        // No before-picture: nothing was logged in the 28 days before this
+        // started, usually a treatment the person was already on. A percentage
+        // cannot exist, so the headline is the rate itself rather than a dash.
+        val noBaseline = e.band == "no_baseline"
+        val pctText = when {
+            noBaseline && r != null -> String.format("%.1f", r)
+            pct != null -> String.format("%+.0f%%", pct)
+            else -> "-"
+        }
         Text(pctText, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.displayMedium)
         Spacer(Modifier.height(2.dp))
         Text(BAND_LABELS[e.band] ?: "-", color = bandColor(e.band), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
-        val b = e.baselineMmd; val r = e.rollingMmd
-        if (b != null && r != null && b > 0) {
+        if (noBaseline) {
+            if (r != null) {
+                Text(t("%1\$s migraine days a month while on this.", String.format("%.1f", r)),
+                    color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodyMedium)
+            }
+            Text(t("Nothing was logged before this started, so there is nothing to compare it with."),
+                color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+        } else if (b != null && r != null && b > 0) {
             Text(t("You went from %1\$s to %2\$s migraine days a month, averaged since you started.", b.toInt(), r.toInt()),
                 color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodyMedium)
         }
@@ -264,7 +290,7 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
         }
 
         Spacer(Modifier.height(16.dp))
-        ClinicalBandScale(pct = e.pctChangeMmd, hasData = e.band != "not_enough_data")
+        ClinicalBandScale(pct = e.pctChangeMmd, hasData = e.band != "not_enough_data" && e.band != "no_baseline")
         Spacer(Modifier.height(12.dp))
 
         val trustNote = if (e.rampComplete) " · enough data to trust this" else " · still in 8-week ramp"

@@ -4,14 +4,6 @@
  "_placeholders": "%1$s / %2$s, positional, matching the convention documented on Strings.kt: word order moves in translation and a translator must be free to reorder. supabase/functions/_shared/i18n.ts substitutes them the same way Kotlin's String.format does.",
  "entries": [
   {
-   "en": "%1$s commented",
-   "class": "hard",
-   "max_len": 42,
-   "sites": [
-    "supabase/functions/generate-bot-comments/index.ts (push title, one companion)"
-   ]
-  },
-  {
    "en": "%1$s and %2$s commented",
    "class": "hard",
    "max_len": 42,
@@ -28,6 +20,14 @@
    ]
   },
   {
+   "en": "%1$s commented",
+   "class": "hard",
+   "max_len": 42,
+   "sites": [
+    "supabase/functions/generate-bot-comments/index.ts (push title, one companion)"
+   ]
+  },
+  {
    "en": "%1$s new comments in your community feed",
    "class": "hard",
    "max_len": 64,
@@ -36,100 +36,11 @@
    ]
   },
   {
-   "en": "Please enter a promo code.",
+   "en": "1 migraine ({0}%)",
    "class": "soft",
-   "max_len": 37,
+   "max_len": 30,
    "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "This promo code doesn't exist.",
-   "class": "soft",
-   "max_len": 43,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "This promo code is no longer active.",
-   "class": "soft",
-   "max_len": 52,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "This promo code has expired.",
-   "class": "soft",
-   "max_len": 40,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "This promo code has reached its usage limit.",
-   "class": "soft",
-   "max_len": 63,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "You've already used this promo code.",
-   "class": "soft",
-   "max_len": 52,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "Something went wrong. Please try again.",
-   "class": "soft",
-   "max_len": 56,
-   "sites": [
-    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-   ]
-  },
-  {
-   "en": "This feature requires a premium subscription.",
-   "class": "soft",
-   "max_len": 65,
-   "sites": [
-    "supabase/functions/recalibrate/index.ts (message)",
-    "supabase/functions/apply-recalibration/index.ts (message)"
-   ]
-  },
-  {
-   "en": "Next recalibration available after %1$s",
-   "class": "soft",
-   "max_len": 56,
-   "sites": [
-    "supabase/functions/recalibrate/index.ts (cooldown message)"
-   ]
-  },
-  {
-   "en": "Profile re-assessment is available once per day. Try again tomorrow.",
-   "class": "soft",
-   "max_len": 98,
-   "sites": [
-    "supabase/functions/recalibrate/index.ts (cooldown message)"
-   ]
-  },
-  {
-   "en": "No proposals specified",
-   "class": "soft",
-   "max_len": 32,
-   "sites": [
-    "supabase/functions/apply-recalibration/index.ts (message)"
-   ]
-  },
-  {
-   "en": "No matching pending proposals",
-   "class": "soft",
-   "max_len": 42,
-   "sites": [
-    "supabase/functions/apply-recalibration/index.ts (message)"
+    "build-report-html/render.ts"
    ]
   },
   {
@@ -138,150 +49,6 @@
    "max_len": 70,
    "sites": [
     "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Hi %1$s,",
-   "class": "soft",
-   "max_len": 17,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Hi there,",
-   "class": "soft",
-   "max_len": 16,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.",
-   "class": "soft",
-   "max_len": 279,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "If you've got a second, I'd really like to know what made you stop.",
-   "class": "soft",
-   "max_len": 118,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Was it the price, something missing, or just not the right time?",
-   "class": "soft",
-   "max_len": 112,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Even a one-line reply genuinely helps shape what we build next.",
-   "class": "soft",
-   "max_len": 111,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "And if it was timing or cost, I'd love to give you",
-   "class": "soft",
-   "max_len": 88,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "another month, free, cancel anytime.",
-   "class": "soft",
-   "max_len": 63,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "MigraineMe's insights get better the more you log.",
-   "class": "soft",
-   "max_len": 88,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.",
-   "class": "soft",
-   "max_len": 335,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Everything's still there, right where you left it.",
-   "class": "soft",
-   "max_len": 88,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Claim your free month:",
-   "class": "soft",
-   "max_len": 39,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.",
-   "class": "soft",
-   "max_len": 142,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "We're building MigraineMe into a place where",
-   "class": "soft",
-   "max_len": 77,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "data and evidence come first",
-   "class": "soft",
-   "max_len": 51,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "for people living with migraine. It's still early, and I'd love to have you along.",
-   "class": "soft",
-   "max_len": 144,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "Either way, thanks for giving MigraineMe a go.",
-   "class": "soft",
-   "max_len": 81,
-   "sites": [
-    "supabase/functions/winback-daily/index.ts (winback email)"
-   ]
-  },
-  {
-   "en": "1 migraine ({0}%)",
-   "class": "soft",
-   "max_len": 30,
-   "sites": [
-    "build-report-html/render.ts"
    ]
   },
   {
@@ -362,6 +129,14 @@
    "max_len": 29,
    "sites": [
     "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "And if it was timing or cost, I'd love to give you",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -501,6 +276,14 @@
    ]
   },
   {
+   "en": "Before this: {0}",
+   "class": "soft",
+   "max_len": 60,
+   "sites": [
+    "supabase/functions/build-report-html/render.ts (treatments card, no-baseline regimen)"
+   ]
+  },
+  {
    "en": "Behind Left Ear",
    "class": "soft",
    "max_len": 27,
@@ -562,6 +345,14 @@
    "max_len": 34,
    "sites": [
     "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Claim your free month:",
+   "class": "soft",
+   "max_len": 39,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -645,11 +436,27 @@
    ]
   },
   {
+   "en": "Either way, thanks for giving MigraineMe a go.",
+   "class": "soft",
+   "max_len": 81,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
    "en": "Established patterns that also appeared in the attacks in this report.",
    "class": "soft",
    "max_len": 126,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Even a one-line reply genuinely helps shape what we build next.",
+   "class": "soft",
+   "max_len": 111,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -674,6 +481,14 @@
    "max_len": 93,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Everything's still there, right where you left it.",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -741,6 +556,14 @@
    ]
   },
   {
+   "en": "Grass pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
    "en": "Habits that show up on migraine-free days, and what drives them",
    "class": "soft",
    "max_len": 113,
@@ -754,6 +577,22 @@
    "max_len": 26,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Hi %1$s,",
+   "class": "soft",
+   "max_len": 17,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Hi there,",
+   "class": "soft",
+   "max_len": 16,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -786,6 +625,22 @@
    "max_len": 35,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.",
+   "class": "soft",
+   "max_len": 279,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "If you've got a second, I'd really like to know what made you stop.",
+   "class": "soft",
+   "max_len": 118,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -981,6 +836,14 @@
    ]
   },
   {
+   "en": "MigraineMe's insights get better the more you log.",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
    "en": "Missed activities",
    "class": "soft",
    "max_len": 30,
@@ -1029,6 +892,14 @@
    ]
   },
   {
+   "en": "Next recalibration available after %1$s",
+   "class": "soft",
+   "max_len": 56,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (cooldown message)"
+   ]
+  },
+  {
    "en": "No attacks in range",
    "class": "soft",
    "max_len": 35,
@@ -1037,11 +908,43 @@
    ]
   },
   {
+   "en": "No comparison possible",
+   "class": "hard",
+   "max_len": 34,
+   "sites": [
+    "supabase/functions/build-report-html/render.ts (treatments card, no-baseline regimen)"
+   ]
+  },
+  {
+   "en": "No matching pending proposals",
+   "class": "soft",
+   "max_len": 42,
+   "sites": [
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
+   "en": "No proposals specified",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
    "en": "Nose Bridge",
    "class": "soft",
    "max_len": 20,
    "sites": [
     "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Nothing logged before this started, so there is nothing to compare it with.",
+   "class": "soft",
+   "max_len": 130,
+   "sites": [
+    "supabase/functions/build-report-html/render.ts (treatments card, no-baseline regimen)"
    ]
   },
   {
@@ -1069,11 +972,43 @@
    ]
   },
   {
+   "en": "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.",
+   "class": "soft",
+   "max_len": 142,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
    "en": "Only {0} weeks of data in this record",
    "class": "soft",
    "max_len": 66,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Ozone",
+   "class": "soft",
+   "max_len": 12,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "PM10",
+   "class": "soft",
+   "max_len": 8,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
+   "en": "PM2.5",
+   "class": "soft",
+   "max_len": 8,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
    ]
   },
   {
@@ -1173,6 +1108,22 @@
    ]
   },
   {
+   "en": "Please enter a promo code.",
+   "class": "soft",
+   "max_len": 37,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "Pollen",
+   "class": "soft",
+   "max_len": 12,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
    "en": "Population default decay curve.",
    "class": "soft",
    "max_len": 55,
@@ -1210,6 +1161,14 @@
    "max_len": 20,
    "sites": [
     "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
+   ]
+  },
+  {
+   "en": "Profile re-assessment is available once per day. Try again tomorrow.",
+   "class": "soft",
+   "max_len": 98,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (cooldown message)"
    ]
   },
   {
@@ -1445,6 +1404,14 @@
    ]
   },
   {
+   "en": "Something went wrong. Please try again.",
+   "class": "soft",
+   "max_len": 56,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
    "en": "Spreads",
    "class": "soft",
    "max_len": 24,
@@ -1565,11 +1532,52 @@
    ]
   },
   {
+   "en": "This feature requires a premium subscription.",
+   "class": "soft",
+   "max_len": 65,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (message)",
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
    "en": "This period against the equal one before it",
    "class": "soft",
    "max_len": 77,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "This promo code doesn't exist.",
+   "class": "soft",
+   "max_len": 43,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code has expired.",
+   "class": "soft",
+   "max_len": 40,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code has reached its usage limit.",
+   "class": "soft",
+   "max_len": 63,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code is no longer active.",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
    ]
   },
   {
@@ -1637,6 +1645,14 @@
    ]
   },
   {
+   "en": "Tree pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
+   ]
+  },
+  {
    "en": "Trend",
    "class": "soft",
    "max_len": 20,
@@ -1659,6 +1675,14 @@
    "max_len": 28,
    "sites": [
     "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.",
+   "class": "soft",
+   "max_len": 335,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -1726,6 +1750,14 @@
    ]
   },
   {
+   "en": "Was it the price, something missing, or just not the right time?",
+   "class": "soft",
+   "max_len": 112,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
    "en": "We don't know you yet, so there's nothing personal to read into here.",
    "class": "soft",
    "max_len": 124,
@@ -1734,11 +1766,27 @@
    ]
   },
   {
+   "en": "We're building MigraineMe into a place where",
+   "class": "soft",
+   "max_len": 77,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
    "en": "Wed",
    "class": "soft",
    "max_len": 20,
    "sites": [
     "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Weed pollen",
+   "class": "soft",
+   "max_len": 18,
+   "sites": [
+    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
    ]
   },
   {
@@ -1753,6 +1801,14 @@
    "en": "What happened",
    "class": "soft",
    "max_len": 26,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What strengthens you",
+   "class": "soft",
+   "max_len": 27,
    "sites": [
     "build-report-html/render.ts"
    ]
@@ -1809,14 +1865,6 @@
    "en": "What you were doing",
    "class": "soft",
    "max_len": 34,
-   "sites": [
-    "build-report-html/render.ts"
-   ]
-  },
-  {
-   "en": "What strengthens you",
-   "class": "soft",
-   "max_len": 27,
    "sites": [
     "build-report-html/render.ts"
    ]
@@ -1894,6 +1942,14 @@
    ]
   },
   {
+   "en": "You've already used this promo code.",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
    "en": "Your free trial ends tomorrow",
    "class": "soft",
    "max_len": 52,
@@ -1907,6 +1963,14 @@
    "max_len": 20,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "another month, free, cancel anytime.",
+   "class": "soft",
+   "max_len": 63,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -1971,6 +2035,22 @@
    "max_len": 21,
    "sites": [
     "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "data and evidence come first",
+   "class": "soft",
+   "max_len": 51,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "for people living with migraine. It's still early, and I'd love to have you along.",
+   "class": "soft",
+   "max_len": 144,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
    ]
   },
   {
@@ -2067,6 +2147,14 @@
    "max_len": 27,
    "sites": [
     "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} days/mo",
+   "class": "hard",
+   "max_len": 20,
+   "sites": [
+    "supabase/functions/build-report-html/render.ts (treatments card, no-baseline regimen)"
    ]
   },
   {
@@ -2195,62 +2283,6 @@
    "max_len": 23,
    "sites": [
     "build-report-html/render.ts"
-   ]
-  },
-  {
-   "en": "Pollen",
-   "class": "soft",
-   "max_len": 12,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "Tree pollen",
-   "class": "soft",
-   "max_len": 18,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "Grass pollen",
-   "class": "soft",
-   "max_len": 18,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "Weed pollen",
-   "class": "soft",
-   "max_len": 18,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "PM2.5",
-   "class": "soft",
-   "max_len": 8,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "PM10",
-   "class": "soft",
-   "max_len": 8,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
-   ]
-  },
-  {
-   "en": "Ozone",
-   "class": "soft",
-   "max_len": 12,
-   "sites": [
-    "supabase/functions/build-report-html/metrics.ts (Environment metric label)"
    ]
   }
  ]
