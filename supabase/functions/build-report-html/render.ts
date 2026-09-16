@@ -1248,7 +1248,11 @@ function contextLine(s: CorrelationStat): string {
   const pct = share == null ? ""
     : isChronic(s) ? `${rt("{0}% of flare days", share)} · `
     : `${rt("{0}% of migraines", share)} · `;
-  return `${pct}${lag}`;
+  // Prevalence row whose factor was on 0 normal days: strong evidence, but a ratio against
+  // zero is meaningless, so the line says so instead of a multiplier.
+  const never = s.lag_details?.["mode"] === "prevalence" && (s.pct_control_windows ?? 1) <= 0
+    ? `${rt("never on a normal day")} · ` : "";
+  return `${pct}${never}${lag}`;
 }
 
 /** The badge counts attacks, never a multiplier. `pct_migraine_windows` is the
@@ -2389,23 +2393,32 @@ function treatments(d: ReportData, pageNo: number): string {
     showing_progress: "Showing progress",
     some_effect: "Some effect",
     not_noticeable: "Not noticeable yet",
+    // Nothing was logged before this treatment started, so no before/after can
+    // ever exist. The badge carries the current rate instead of a verdict.
+    no_baseline: "No comparison possible",
   };
   const card = (t: Record<string, unknown>): string => {
       const id = String(t.regimen_id ?? "");
       const pct = t.pct_change_mmd == null ? null : Number(t.pct_change_mmd);
+      const rate = t.rolling_mmd == null ? null : Number(t.rolling_mmd);
       const band = String(t.band ?? "");
+      const prior = String(t.prior_frequency_note ?? "").trim();
       // The leaderboard RPC speaks kind/amount/frequency; older shapes said
       // category/dose. Take whichever is there.
       const seLogs = (d.sideEffects[id] ?? []).slice(0, 8);
       return `<div class="card">
         <div class="log-head">
           <span class="date">${esc(pretty(t.name ?? t.treatment_name))}</span>
-          ${badge(pct != null && pct < 0 ? C.green : C.muted,
-            bandLabel[band] ? rt(bandLabel[band])
+          ${badge(band === "no_baseline" ? C.muted : (pct != null && pct < 0 ? C.green : C.muted),
+            band === "no_baseline"
+              ? (rate != null ? rt("{0} days/mo", num(rate, 1)) : rt("No comparison possible"))
+              : bandLabel[band] ? rt(bandLabel[band])
               : (pct != null ? `${pct > 0 ? "+" : ""}${num(pct, 0)}%` : rt("Not enough data")))}
         </div>
         <div class="meta">${esc([t.kind ?? t.category, t.amount ?? t.dose, t.frequency].filter(Boolean).join(" · "))}
           ${t.start_date ? esc(rt("· started {0}", String(t.start_date))) : ""}</div>
+        ${band === "no_baseline" ? `<div class="meta">${esc(rt("Nothing logged before this started, so there is nothing to compare it with."))}</div>` : ""}
+        ${prior ? `<div class="meta" style="font-style:italic">${esc(rt("Before this: {0}", prior))}</div>` : ""}
         ${d.narratives[id] ? `<div class="meta" style="line-height:1.5;margin-top:5px">${esc(d.narratives[id])}</div>` : ""}
         ${seLogs.length ? `<div class="meta" style="color:${C.pink};margin-top:5px">${rt("Side effects")}</div>
           <table class="log">

@@ -2124,6 +2124,9 @@ class EdgeFunctionsService {
 
         /** Noun for the unit sample_size counts on this row. English key; translate at the display site. */
         val countNoun: String get() = if (isChronic) "flare days" else "attacks"
+        /** Prevalence row whose factor was on 0 normal days: strong evidence, but a ratio against
+         *  zero is meaningless, so the copy says "never on a normal day" instead of a multiplier. */
+        val neverOnNormalDay: Boolean get() = mode == "prevalence" && pctControlWindows <= 0f
 
         /**
          * Trigger → pain-location rows. factor_name is the trigger label,
@@ -2150,8 +2153,12 @@ class EdgeFunctionsService {
             "trigger" -> {
                 if (mode == "prevalence") {
                     // No fair normal-day comparison — honest count, no multiplier.
-                    "${factorName} appeared in $attackHits of your $sampleSize $countNoun. " +
-                        "Not enough day-to-day data yet to say how much it changes your risk."
+                    if (neverOnNormalDay)
+                        "${factorName} appeared in $attackHits of your $sampleSize $countNoun and never on a normal day. " +
+                            "There is nothing to compare it against, so no multiplier."
+                    else
+                        "${factorName} appeared in $attackHits of your $sampleSize $countNoun. " +
+                            "Not enough day-to-day data yet to say how much it changes your risk."
                 } else {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
@@ -2191,8 +2198,12 @@ class EdgeFunctionsService {
             }
             "interaction" -> {
                 if (mode == "prevalence") {
-                    "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun. " +
-                        "Not enough day-to-day data yet to say how much they change your risk."
+                    if (neverOnNormalDay)
+                        "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun and never on a normal day. " +
+                            "There is nothing to compare them against, so no multiplier."
+                    else
+                        "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun. " +
+                            "Not enough day-to-day data yet to say how much they change your risk."
                 } else {
                     "${factorName} + ${factorB ?: "?"} together preceded " +
                         "${pctMigraineWindows.toInt()}% of your ${if (isChronic) "flare days" else "migraines"} — " +

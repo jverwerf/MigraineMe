@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4382 entries.
+ * 4383 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -4201,6 +4201,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "neck tension" to "tensione cervicale",
     "neurologist" to "neurologo",
     "never" to "mai",
+    "never on a normal day" to "mai in un giorno normale",
     "new symptom" to "nuovo sintomo",
     "no" to "no",
     "no comparison" to "nessun confronto",

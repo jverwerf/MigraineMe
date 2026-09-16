@@ -6,6 +6,7 @@
 // app's tools/i18n/translations/, then re-run the generator.
 
 const TABLE: Record<string, string> = {
+  "never on a normal day": "nooit op een normale dag",
   "1 migraine ({0}%)": "1 migraine ({0}%)",
   "Accompanying": "Wat erbij komt",
   "Across {0} attacks with aura, from the patient's own point of view": "Uit {0} aanvallen met aura, gezien door de ogen van de patiënt zelf",

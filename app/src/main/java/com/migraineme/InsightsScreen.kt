@@ -1633,9 +1633,11 @@ internal fun PatternBadge(stat: EdgeFunctionsService.CorrelationStat) {
     val pct = stat.pctMigraineWindows.toInt()
     // Chronic rows count flare days inside long attacks, so the unit is named;
     // plain rows keep the bare "in N of M" the badge has always shown.
-    val countLabel = if (stat.isChronic)
+    val countBase = if (stat.isChronic)
         t("in %1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, pct)
     else "in ${stat.attackHits} of ${stat.sampleSize} ($pct%)"
+    // 0 normal days: the strongest part of the finding, said instead of a fake multiplier.
+    val countLabel = if (stat.neverOnNormalDay) "$countBase · ${t("never on a normal day")}" else countBase
     if (stat.mode == "prevalence") {
         Text(countLabel, color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
@@ -2137,10 +2139,11 @@ private fun PatternTile(
         else -> "${stat.bestLagDays} days before"
     }
     // Chronic rows count flare days inside long attacks, not attack rows.
-    val occText = if (stat.isChronic)
+    val occBase = if (stat.isChronic)
         t("%1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
     else
         t("%1\$s of %2\$s attacks (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
+    val occText = if (stat.neverOnNormalDay) "$occBase · ${t("never on a normal day")}" else occBase
     val isCombo = stat.factorType == "interaction"
     val metaColor = Color(0xFF9C8BB0)
     val tileShape = RoundedCornerShape(18.dp)

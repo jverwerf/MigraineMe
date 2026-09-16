@@ -296,7 +296,7 @@
     "line": "        t(\"%1\\$s this month · %2\\$s\", last, direction),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:195",
+    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:197",
     "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
   },
   {
@@ -344,35 +344,35 @@
     "line": "        t(\"in %1\\$s of %2\\$s flare days (%3\\$s%%)\", stat.attackHits, stat.sampleSize, pct)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1844",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1846",
     "line": "                    Text(t(\"%1\\$s within %2\\$s\", effectText, horizonText(row.horizonMinutes)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1881",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1883",
     "line": "    return t(\"Usually starts: %1\\$s (%2\\$s of %3\\$s)\", t(label), best.withHits, best.withTotal)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2141",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2143",
     "line": "        t(\"%1\\$s of %2\\$s flare days (%3\\$s%%)\", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2143",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2145",
     "line": "        t(\"%1\\$s of %2\\$s attacks (%3\\$s%%)\", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2311",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2314",
     "line": "                    Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2742",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2745",
     "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2897",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2900",
     "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3422",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3425",
     "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 about %3\\$s times an average day.\", w.dayName, String.format(\"%.0f\", w.pct), trimLift(ratio)),"
   },
   {
