@@ -452,11 +452,11 @@
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:249",
+    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:255",
     "line": "            tSync(\"%1\\$s suggested changes to your profile. Tap to review.\").replace(\"%1\\$s\", count.toString())"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:417",
+    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:423",
     "line": "            stage == \"forecast\" -> tSync(\"Heads up for %1\\$s\").replace(\"%1\\$s\", date)"
   },
   {

@@ -131,8 +131,8 @@
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:200",
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:74",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:216",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:490",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:229",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:503",
       "app/src/main/java/com/migraineme/LocationsScreen.kt:91",
       "... 16 more"
     ],
@@ -217,7 +217,7 @@
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:647",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1470",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1236",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1941",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1954",
       "... 12 more"
     ],
     "max_len": 14,
@@ -578,7 +578,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/Healthconnectrationaleactivity.kt:159",
-      "app/src/main/java/com/migraineme/MainActivity.kt:3007",
+      "app/src/main/java/com/migraineme/MainActivity.kt:3020",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:439",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:526",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:610",
@@ -803,7 +803,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:317",
       "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:358",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:363",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:376",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:289",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:844",
       "... 1 more"
@@ -818,7 +818,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:293",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:484",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:2923",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2413",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2426",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:169",
       "... 1 more"
     ],
@@ -859,7 +859,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1488",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1239",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2227",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2240",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:142",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:234",
       "... 1 more"
@@ -902,7 +902,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:461",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2419",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:97",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:344",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:357",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:269",
       "... 1 more"
     ],
@@ -1165,7 +1165,7 @@
     "en": "Set time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:336",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:349",
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:555",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:259",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:430",
@@ -1522,7 +1522,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/JournalScreen.kt:1241",
       "app/src/main/java/com/migraineme/LocationsScreen.kt:127",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2316",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2329",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:151"
     ],
     "max_len": 14,
@@ -1724,7 +1724,7 @@
     "en": "Treatment side effects",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2462",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2475",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178",
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:801",
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:875"
@@ -1797,7 +1797,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AuraDetailSheet.kt:238",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:379",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:392",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:306"
     ],
     "max_len": 20,
@@ -1874,7 +1874,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AuraDetailSheet.kt:238",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:379",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:392",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:306"
     ],
     "max_len": 18,
@@ -2028,8 +2028,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CommunityEngagement.kt:76",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1240",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1243"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1253",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1256"
     ],
     "max_len": 14,
     "count": 3
@@ -2632,7 +2632,7 @@
     "en": "Severe",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:364",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:377",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:290",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:845"
     ],
@@ -2819,7 +2819,7 @@
     "en": "What did you miss?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2414",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2427",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:170",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:192"
     ],
@@ -2831,7 +2831,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:210",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2365",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2378",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:161"
     ],
     "max_len": 23,
@@ -2842,7 +2842,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LocationsScreen.kt:98",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2317",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2330",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:152"
     ],
     "max_len": 18,
@@ -4062,7 +4062,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:365",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:417"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:430"
     ],
     "max_len": 14,
     "count": 2
@@ -4531,7 +4531,7 @@
     "en": "Pain entry %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:323",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:336",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:245"
     ],
     "max_len": 16,
@@ -4711,7 +4711,7 @@
     "en": "Remove entry",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:330",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:343",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:252"
     ],
     "max_len": 22,
@@ -4881,8 +4881,8 @@
     "en": "Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:831",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1201"
+      "app/src/main/java/com/migraineme/MainActivity.kt:844",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1214"
     ],
     "max_len": 14,
     "count": 2
@@ -5021,7 +5021,7 @@
     "en": "Started %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:829",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:842",
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:547"
     ],
     "max_len": 14,
@@ -5051,7 +5051,7 @@
     "en": "Symptoms you flag as caused by your treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2463",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2476",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:179"
     ],
     "max_len": 50,
@@ -5061,7 +5061,7 @@
     "en": "Tap the dots on the head to mark where it hurts",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:371",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:384",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:298"
     ],
     "max_len": 68,
@@ -5192,7 +5192,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:903",
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:398"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:404"
     ],
     "max_len": 17,
     "count": 2
@@ -5351,7 +5351,7 @@
     "en": "Where did you feel the pain?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:369",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:382",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:296"
     ],
     "max_len": 40,
@@ -6651,7 +6651,7 @@
     "en": "+ Add another entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:245"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:258"
     ],
     "max_len": 22,
     "count": 1
@@ -7704,7 +7704,7 @@
     "en": "Add pain",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:222"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:235"
     ],
     "max_len": 14,
     "count": 1
@@ -7713,7 +7713,7 @@
     "en": "Add postdrome",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:496"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:509"
     ],
     "max_len": 16,
     "count": 1
@@ -7740,7 +7740,7 @@
     "en": "Add symptom",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:496"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:509"
     ],
     "max_len": 14,
     "count": 1
@@ -7758,7 +7758,7 @@
     "en": "Add to this migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:836"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:849"
     ],
     "max_len": 23,
     "count": 1
@@ -7803,7 +7803,7 @@
     "en": "Add, star, or remove medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2039"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2052"
     ],
     "max_len": 33,
     "count": 1
@@ -7812,7 +7812,7 @@
     "en": "Add, star, or remove reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2131"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2144"
     ],
     "max_len": 31,
     "count": 1
@@ -7821,7 +7821,7 @@
     "en": "Add, star, or remove triggers",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:1942"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1955"
     ],
     "max_len": 32,
     "count": 1
@@ -7983,7 +7983,7 @@
     "en": "Alerts when an item you follow becomes a trigger for the day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:400"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:406"
     ],
     "max_len": 87,
     "count": 1
@@ -7992,7 +7992,7 @@
     "en": "Alerts when new insights and recommendations are ready",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:198"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:204"
     ],
     "max_len": 78,
     "count": 1
@@ -8001,7 +8001,7 @@
     "en": "Alerts when the app has learned something new about your migraines",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:235"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:241"
     ],
     "max_len": 95,
     "count": 1
@@ -8010,7 +8010,7 @@
     "en": "Alerts when today's migraine risk reaches your chosen level",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:287"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:293"
     ],
     "max_len": 85,
     "count": 1
@@ -11538,7 +11538,7 @@
     "en": "Daily Risk Gauge",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:285"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:291"
     ],
     "max_len": 19,
     "count": 1
@@ -11556,7 +11556,7 @@
     "en": "Daily evening check-in reminder",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:166"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:170"
     ],
     "max_len": 44,
     "count": 1
@@ -11826,7 +11826,7 @@
     "en": "Delete %s?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1114"
+      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1118"
     ],
     "max_len": 14,
     "count": 1
@@ -12564,7 +12564,7 @@
     "en": "Early warning detected",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:418"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:424"
     ],
     "max_len": 25,
     "count": 1
@@ -12582,7 +12582,7 @@
     "en": "Early warning signs before a migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2228"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2241"
     ],
     "max_len": 40,
     "count": 1
@@ -12951,7 +12951,7 @@
     "en": "End now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:905"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:918"
     ],
     "max_len": 14,
     "count": 1
@@ -13176,7 +13176,7 @@
     "en": "Evening Check-in",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:164"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:168"
     ],
     "max_len": 19,
     "count": 1
@@ -14409,7 +14409,7 @@
     "en": "Full log",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:893"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:906"
     ],
     "max_len": 14,
     "count": 1
@@ -14940,7 +14940,7 @@
     "en": "Heads up for %1$s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:417"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:423"
     ],
     "max_len": 20,
     "count": 1
@@ -14949,7 +14949,7 @@
     "en": "Heads up for tomorrow",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:416"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:422"
     ],
     "max_len": 24,
     "count": 1
@@ -15678,7 +15678,7 @@
     "en": "How was today?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:181"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:185"
     ],
     "max_len": 17,
     "count": 1
@@ -16200,7 +16200,7 @@
     "en": "Is your migraine over?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:369"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:375"
     ],
     "max_len": 32,
     "count": 1
@@ -16416,7 +16416,7 @@
     "en": "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3044"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3057"
     ],
     "max_len": 137,
     "count": 1
@@ -18135,7 +18135,7 @@
     "en": "Migraine in progress",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:786"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:799"
     ],
     "max_len": 23,
     "count": 1
@@ -18891,7 +18891,7 @@
     "en": "New Insights",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:196"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:202"
     ],
     "max_len": 15,
     "count": 1
@@ -18936,7 +18936,7 @@
     "en": "New pain entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:323"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:336"
     ],
     "max_len": 17,
     "count": 1
@@ -18963,7 +18963,7 @@
     "en": "New recommendations ready",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:213"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:219"
     ],
     "max_len": 36,
     "count": 1
@@ -20025,7 +20025,7 @@
     "en": "Nothing in your list yet.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:529"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:542"
     ],
     "max_len": 36,
     "count": 1
@@ -20322,7 +20322,7 @@
     "en": "Ongoing Migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:339"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:345"
     ],
     "max_len": 19,
     "count": 1
@@ -21942,7 +21942,7 @@
     "en": "Profile Recalibration",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:233"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:239"
     ],
     "max_len": 31,
     "count": 1
@@ -22230,7 +22230,7 @@
     "en": "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:224"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:237"
     ],
     "max_len": 163,
     "count": 1
@@ -22572,7 +22572,7 @@
     "en": "Reminders to close a migraine you logged but never ended",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:341"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:347"
     ],
     "max_len": 81,
     "count": 1
@@ -23094,7 +23094,7 @@
     "en": "Risk just went up: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:307"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:313"
     ],
     "max_len": 24,
     "count": 1
@@ -23238,7 +23238,7 @@
     "en": "Save changes",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1096"
+      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1100"
     ],
     "max_len": 15,
     "count": 1
@@ -24003,7 +24003,7 @@
     "en": "Setting up your personalised migraine predictions",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2989"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3002"
     ],
     "max_len": 71,
     "count": 1
@@ -25821,7 +25821,7 @@
     "en": "Take 15 seconds to log your day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:182"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:186"
     ],
     "max_len": 44,
     "count": 1
@@ -26154,7 +26154,7 @@
     "en": "Tap to add how it ended.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:363"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:369"
     ],
     "max_len": 34,
     "count": 1
@@ -26163,7 +26163,7 @@
     "en": "Tap to add how it ended. We won't ask about this one again.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:362"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:368"
     ],
     "max_len": 85,
     "count": 1
@@ -26802,7 +26802,7 @@
     "en": "This can't be undone.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1115"
+      "app/src/main/java/com/migraineme/JournalEditScreen.kt:1119"
     ],
     "max_len": 31,
     "count": 1
@@ -27162,7 +27162,7 @@
     "en": "Today's risk: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:307"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:313"
     ],
     "max_len": 19,
     "count": 1
@@ -27630,7 +27630,7 @@
     "en": "Trigger detected",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:419"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:425"
     ],
     "max_len": 19,
     "count": 1
@@ -29187,7 +29187,7 @@
     "en": "We have suggested changes to your profile. Tap to review.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:251"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:257"
     ],
     "max_len": 82,
     "count": 1
@@ -29673,7 +29673,7 @@
     "en": "What did you feel? Tap one to rate it.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:501"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:514"
     ],
     "max_len": 55,
     "count": 1
@@ -29817,7 +29817,7 @@
     "en": "What lingered after the attack? Tap one to rate it.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:500"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:513"
     ],
     "max_len": 73,
     "count": 1
@@ -30942,7 +30942,7 @@
     "en": "You have a migraine that's still open. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:359"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:365"
     ],
     "max_len": 56,
     "count": 1
@@ -30978,7 +30978,7 @@
     "en": "You logged a migraine %s days ago and it's still open. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:357"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:363"
     ],
     "max_len": 79,
     "count": 1
@@ -30987,7 +30987,7 @@
     "en": "You logged a migraine 1 day ago and it's still open. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:356"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:362"
     ],
     "max_len": 76,
     "count": 1
@@ -31149,7 +31149,7 @@
     "en": "Your account and app preferences",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:837"
+      "app/src/main/java/com/migraineme/MainActivity.kt:850"
     ],
     "max_len": 46,
     "count": 1
@@ -31158,7 +31158,7 @@
     "en": "Your answers are saved and the AI has re-checked your profile.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2828"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2841"
     ],
     "max_len": 89,
     "count": 1
@@ -31212,7 +31212,7 @@
     "en": "Your data is still being processed.\nThis will complete in the background.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2988"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3001"
     ],
     "max_len": 105,
     "count": 1
@@ -31266,7 +31266,7 @@
     "en": "Your free trial just ended",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3043"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3056"
     ],
     "max_len": 37,
     "count": 1
@@ -31338,7 +31338,7 @@
     "en": "Your migraine data is not affected by this.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/LanguageScreen.kt:74"
+      "app/src/main/java/com/migraineme/LanguageScreen.kt:76"
     ],
     "max_len": 62,
     "count": 1
@@ -31473,7 +31473,7 @@
     "en": "Your profile has learned something new",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:256"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:262"
     ],
     "max_len": 55,
     "count": 1
@@ -31500,7 +31500,7 @@
     "en": "Your recommendations for today are ready. Tap to see them.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:214"
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:220"
     ],
     "max_len": 84,
     "count": 1
