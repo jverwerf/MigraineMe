@@ -165,14 +165,27 @@ fun MigraineQuickAddSection(onAdd: (QuickAddKind) -> Unit) {
 /** Post-save housekeeping every quick-add path shares: refresh the migraine's
  *  feed event (its linked lists changed) and recalc the risk gauge, the same
  *  as every sibling write path. */
-internal suspend fun quickAddFinish(
+/** Process-wide scope for fire-and-forget follow-ups that must outlive the
+ *  screen that started them (a popped composable's scope is cancelled). */
+internal val quickAddFollowUpScope = kotlinx.coroutines.CoroutineScope(
+    kotlinx.coroutines.SupervisorJob() + Dispatchers.IO
+)
+
+/** Journal refresh + risk recalculation after a quick add. Both are fire-and-
+ *  forget: the recalc edge function takes 1.5-9 s and the HTTP client has no
+ *  timeout, so awaiting it here kept the Save spinner up and the screen open
+ *  (Jordy, 2026-09-16: "it does save but won't close"). */
+internal fun quickAddFinish(
     ctx: android.content.Context,
     logVm: LogViewModel,
     token: String,
     migraineId: String,
 ) {
     logVm.refreshMigraineInJournal(token, migraineId)
-    runCatching { EdgeFunctionsService().triggerRecalcRiskScores(ctx.applicationContext) }
+    val appCtx = ctx.applicationContext
+    quickAddFollowUpScope.launch {
+        runCatching { EdgeFunctionsService().triggerRecalcRiskScores(appCtx) }
+    }
 }
 
 // ── Standalone pain add: copy of the wizard's pain entry card ──

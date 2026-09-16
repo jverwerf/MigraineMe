@@ -1073,7 +1073,11 @@ fun JournalEditScreen(
                                     addedId?.let { logVm?.addJournalEntry(tok, itemType, it) }
                                     if (addedNeedsFullReload) logVm?.loadJournal(tok)
                                     addForMigraineId?.let { logVm?.refreshMigraineInJournal(tok, it) }
-                                    runCatching { EdgeFunctionsService().triggerRecalcRiskScores(ctx.applicationContext) }
+                                    // Fire-and-forget: the recalc takes seconds and must not hold the screen open.
+                                    val appCtx = ctx.applicationContext
+                                    quickAddFollowUpScope.launch {
+                                        runCatching { EdgeFunctionsService().triggerRecalcRiskScores(appCtx) }
+                                    }
                                 } else {
                                     // Just this row, back into the window the feed already
                                     // holds — not a reload of the whole journal.
