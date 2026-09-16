@@ -5403,6 +5403,158 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 80
+    },
+    {
+      "en": "Tummy pain",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Skin tenderness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ringing in the ears",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zigzag lines or flashing lights",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blind spot",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vision loss in one eye",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Double vision",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Weakness on one side",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Loss of balance",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Slurred speech",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Droopy eyelid",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Diarrhoea",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vertigo",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Eye pain",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Jaw or face pain",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sinus pressure",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Chills or sweating",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pale skin",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleepiness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
