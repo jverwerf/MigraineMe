@@ -4339,5 +4339,15 @@
  "Import a file": "Bestand laden",
  "From your file": "Uit je bestand",
  "Remove from story": "Uit verhaal halen",
- "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode."
+ "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode.",
+ "Customize log pages": "Pagina's aanpassen",
+ "Hide pages you don't need and choose their order. Review always comes last.": "Verberg pagina's die je niet nodig hebt en kies de volgorde. Bekijken komt altijd als laatste.",
+ "Reset to default": "Herstellen",
+ "Stays in place": "Staat vast",
+ "CSV, a spreadsheet saved as CSV, or plain notes": "CSV, een spreadsheet opgeslagen als CSV of gewone notities",
+ "Insights use what you ticked once you have a paid subscription. The rest stays in the journal only.": "Inzichten gebruiken wat je hebt aangevinkt zodra je een betaald abonnement hebt. De rest blijft alleen in je dagboek.",
+ "Migraine Buddy: Records › export › All period.": "Migraine Buddy: Records › exporteren › Hele periode.",
+ "talk, type or import": "praat, typ of importeer",
+ "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages.": "Spreek, typ of importeer een bestand uit een andere app. Wij vullen in wat je ons vertelt en stellen voor wat nog meer de moeite waard is om bij te houden. Op de volgende pagina's kun je alles aanpassen.",
+ "Always shown": "Altijd erbij"
 }

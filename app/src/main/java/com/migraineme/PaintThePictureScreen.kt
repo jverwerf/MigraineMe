@@ -194,6 +194,10 @@ fun PaintThePictureScreen(
         parsedPainEntries.clear(); parsedPainEntries.addAll(result.painEntries)
     }
 
+    // Pages Paint fills in are surfaced in this run even if the user hid them.
+    LaunchedEffect(Unit) { WizardStepConfig.onPaintArrive(vm.draft.value) }
+    fun postdromeLabels(): Set<String> = symptomVm.postdrome.value.map { it.label }.toSet()
+
     // Inject current editable state into draft
     fun injectIntoDraft() {
         editSeverity?.let { vm.setMigraineDraft(severity = it.value) }
@@ -244,6 +248,7 @@ fun PaintThePictureScreen(
         vm.replaceMissedActivities(editMatches.filter { it.category == "missed_activity" }.map {
             MissedActivityDraft(type = it.label, startAtIso = it.startAtIso)
         })
+        WizardStepConfig.onPaintDraftInjected(vm.draft.value, postdromeLabels())
     }
 
     // What the user typed or spoke here is the note for this attack. It used to
@@ -366,9 +371,10 @@ fun PaintThePictureScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Timing"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
+                WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
@@ -396,7 +402,10 @@ fun PaintThePictureScreen(
                 )
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.LOG_MIGRAINE) })
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = {
+                WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
+                navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
+            })
 
             // Input card
             BaseCard {
@@ -668,7 +677,8 @@ fun PaintThePictureScreen(
                         if (dayNote.isNotBlank() && !aiParsed) runAiParse()
                         // Re-inject edited state before navigating
                         if (aiParsed) injectIntoDraft()
-                        navController.navigate(Routes.LOG_MIGRAINE)
+                        WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
+                        navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }

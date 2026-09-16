@@ -165,7 +165,7 @@ fun ReliefsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(t("Medicines"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -174,6 +174,7 @@ fun ReliefsScreen(
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
+                    WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                     IconButton(onClick = onClose) {
                         Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
@@ -283,7 +284,7 @@ fun ReliefsScreen(
             }
 
             if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.LOCATIONS) })
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) })
             }
 
             // Manage card (own card)
@@ -351,7 +352,7 @@ fun ReliefsScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
-                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.LOCATIONS) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) },
                     enabled = !quickLogMode || draft.rels.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Save") else t("Next")) }

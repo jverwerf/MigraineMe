@@ -169,7 +169,10 @@ fun MigraineHubScreen(navController: NavController) {
                 HeroCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { navController.navigate(Routes.TIMING) },
+                        .clickable {
+                            WizardStepConfig.startRun()
+                            navController.navigate(WizardStepConfig.firstRoute(navController.context))
+                        },
                     watermarkRes = R.drawable.brainy_migraines,
                     flipWatermark = true
                 ) {

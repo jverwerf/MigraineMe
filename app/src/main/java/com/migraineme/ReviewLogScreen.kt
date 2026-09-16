@@ -228,6 +228,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                         }
                     }
                     vm.clearDraft()
+                    WizardStepConfig.startRun()
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.HOME) { inclusive = false }
                         launchSingleTop = true

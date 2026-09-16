@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4341 entries.
+ * 4351 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -485,6 +485,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Altitude change monitoring" to "Höhenänderung überwachen",
     "Altitude high" to "Große Höhe",
     "Altitude low" to "Geringe Höhe",
+    "Always shown" to "Immer dabei",
     "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:" to "Der Umgebungslärm kommt vom Handymikrofon. Gespeichert wird ein relativer Lautstärkewert; für die Schwelle teilen wir ihn in vier Bänder, aus denen du wählst:",
     "Ambient noise level tracking" to "Umgebungslärm erfassen",
     "Ambient noise levels" to "Umgebungslärm",
@@ -984,6 +985,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Customize Sleep" to "Schlaf anpassen",
     "Customize Treatments" to "Therapien anpassen",
     "Customize Triggers" to "Auslöser anpassen",
+    "Customize log pages" to "Seiten anpassen",
     "Customize your Insights" to "Erkenntnisse anpassen",
     "Customize your Monitor" to "Monitor anpassen",
     "Cycle" to "Zyklus",
@@ -1553,6 +1555,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Hi there," to "Hallo,",
     "Hide" to "Ausblenden",
     "Hide Settings" to "Weniger anzeigen",
+    "Hide pages you don't need and choose their order. Review always comes last." to "Blende Seiten aus, die du nicht brauchst, und wähle ihre Reihenfolge. Prüfen kommt immer zuletzt.",
     "Hide promo code" to "Code ausblenden",
     "High" to "Hoch",
     "High HR" to "Hoher Puls",
@@ -1996,8 +1999,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Might play a role occasionally" to "Spielt manchmal eine Rolle",
     "Migraine" to "Migräne",
     "Migraine\nhappened" to "Migräne\npassiert",
-    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Einträge › Export › Gesamter Zeitraum. Apple Health: Profil › Alle Gesundheitsdaten exportieren, dann export.xml wählen.",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Einträge › Export › Gesamter Zeitraum.",
+    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Einträge › Export › Gesamter Zeitraum. Apple Health: Profil › Alle Gesundheitsdaten exportieren, dann export.xml wählen.",
     "Migraine Timeline" to "Zeitverlauf",
     "Migraine after stress ends (weekends, holidays)" to "Migräne nach dem Stress (Wochenende, Urlaub)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Migränegeräte sind von einer Website schwer zu beurteilen, weil die Werbung überall ",
@@ -2716,6 +2719,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Requires wearable" to "Braucht Wearable",
     "Reset Defaults" to "Zurücksetzen",
     "Reset password" to "Zurücksetzen",
+    "Reset to default" to "Zurücksetzen",
     "Resp rate high" to "Atemfrequenz hoch",
     "Resp rate low" to "Atemfrequenz niedrig",
     "Resp. Rate" to "Atemfrequenz",
@@ -3102,6 +3106,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Statistically established patterns that did not appear in this report's time frame." to "Statistisch etablierte Muster, die im Zeitraum dieses Berichts nicht auftraten.",
     "Stay at home" to "Zu Hause",
     "Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes." to "Behalte dein Risiko im Blick. MigraineMe erinnert dich täglich an den Check und warnt, wenn dein Risiko steigt.",
+    "Stays in place" to "Bleibt fest",
     "Steady %1\$s%% of the time with it, %2\$s%% without." to "Stabil zu %1\$s%% damit, %2\$s%% ohne.",
     "Steps" to "Schritte",
     "Steps high" to "Viele Schritte",
@@ -3195,6 +3200,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Takes about 5 minutes. You can leave the tour at any point." to "Dauert etwa 5 Minuten. Du kannst die Tour jederzeit verlassen.",
     "Taking longer than expected..." to "Dauert länger als gedacht...",
     "Talk through your day — voice-powered evening check-ins." to "Erzähl von deinem Tag — Abend-Check-ins per Sprache.",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Sprich, tippe oder lade eine Datei aus einer anderen App hoch. Wir tragen ein, was du uns sagst, und schlagen vor, was sich noch zu erfassen lohnt. Auf den nächsten Seiten kannst du alles ändern.",
     "Tap + to start the conversation!" to "Tippe +, um zu starten!",
     "Tap Add Treatment to start tracking a drug, device, or lifestyle change." to "Tippe auf Therapie neu, um ein Mittel, Gerät oder eine Umstellung zu verfolgen.",
     "Tap Connect on the Health Connect card above." to "Tippe oben auf der Health-Connect-Karte auf Verbinden.",
@@ -4250,8 +4256,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "taken this time" to "diesmal genommen",
     "takes a few minutes" to "ein paar Minuten",
     "talk, or type" to "sprich oder tipp",
-    "talk, type or import" to "sprich, tipp oder importier",
-    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Sprich, tippe oder lade eine Datei aus einer anderen App hoch. Wir tragen ein, was du uns sagst, und schlagen vor, was sich noch zu erfassen lohnt. Auf den nächsten Seiten kannst du alles ändern.",
+    "talk, type or import" to "sprich, tipp, importier",
     "temperature changes" to "Temperaturwechsel",
     "that is the only thing you have to do" to "mehr musst du nicht tun",
     "the AI sets the lines, you can move them" to "die KI setzt die Linien, du kannst sie verschieben",

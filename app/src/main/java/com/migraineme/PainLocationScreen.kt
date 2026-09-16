@@ -165,9 +165,10 @@ fun PainLocationScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Timing"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
+                WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
@@ -185,7 +186,7 @@ fun PainLocationScreen(
                 )
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.PRODROMES_LOG) })
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) })
 
             // ── 2. One card per timestamped pain entry ──
             draft.painEntries.forEachIndexed { index, entry ->
@@ -216,7 +217,7 @@ fun PainLocationScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
-                    onClick = { navController.navigate(Routes.PRODROMES_LOG) },
+                    onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }
             }

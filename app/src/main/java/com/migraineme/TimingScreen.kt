@@ -90,9 +90,10 @@ fun TimingScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Log"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
+                WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
@@ -127,6 +128,7 @@ fun TimingScreen(
                             rels = emptyList()
                         )
                         vm.clearDraft()
+                        WizardStepConfig.startRun()
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.HOME) { inclusive = false }
                             launchSingleTop = true
@@ -186,7 +188,7 @@ fun TimingScreen(
                 )
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.PAINT_PICTURE) })
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) })
 
             // Start time
             BaseCard {
@@ -235,7 +237,7 @@ fun TimingScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
-                    onClick = { navController.navigate(Routes.PAINT_PICTURE) },
+                    onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }
             }

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.IconButton
@@ -242,6 +243,17 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
                 modifier = Modifier.size(16.dp)
             )
         }
+    }
+}
+
+/**
+ * Pencil in a full-log wizard page's header, placed directly before Close.
+ * Opens the page customisation screen. Wizard mode only, never in quick-log.
+ */
+@Composable
+fun WizardCustomizeButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(Icons.Outlined.Edit, contentDescription = t("Customize log pages"), tint = Color.White, modifier = Modifier.size(24.dp))
     }
 }
 

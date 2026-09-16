@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4341 entries.
+ * 4351 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -485,6 +485,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Altitude change monitoring" to "Controllo dei salti di quota",
     "Altitude high" to "Altitudine alta",
     "Altitude low" to "Altitudine bassa",
+    "Always shown" to "Sempre inclusa",
     "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:" to "Il rumore arriva dal microfono. Salviamo un punteggio relativo di volume; per la soglia lo dividiamo in quattro bande tra cui scegliere:",
     "Ambient noise level tracking" to "Misura del rumore attorno a te",
     "Ambient noise levels" to "Livello di rumore",
@@ -984,6 +985,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Customize Sleep" to "Modifica sonno",
     "Customize Treatments" to "Modifica terapie",
     "Customize Triggers" to "Modifica fattori",
+    "Customize log pages" to "Personalizza pagine",
     "Customize your Insights" to "Personalizza le Analisi",
     "Customize your Monitor" to "Personalizza il Monitor",
     "Cycle" to "Ciclo",
@@ -1553,6 +1555,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Hi there," to "Ciao,",
     "Hide" to "Nascondi",
     "Hide Settings" to "Nascondi opzioni",
+    "Hide pages you don't need and choose their order. Review always comes last." to "Nascondi le pagine che non ti servono e scegli l'ordine. Rivedi è sempre l'ultima.",
     "Hide promo code" to "Nascondi codice",
     "High" to "Alto",
     "High HR" to "FC alta",
@@ -1996,8 +1999,8 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Might play a role occasionally" to "A volte può contare",
     "Migraine" to "Emicrania",
     "Migraine\nhappened" to "Emicrania\navvenuta",
-    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registri › esporta › Tutto il periodo. Apple Health: Profilo › Esporta tutti i dati, poi scegli export.xml.",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Registri › esporta › Tutto il periodo.",
+    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registri › esporta › Tutto il periodo. Apple Health: Profilo › Esporta tutti i dati, poi scegli export.xml.",
     "Migraine Timeline" to "Cronologia",
     "Migraine after stress ends (weekends, holidays)" to "Emicrania quando lo stress finisce (weekend, ferie)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "I dispositivi per l'emicrania sono difficili da giudicare da un sito, perché la pubblicità suona ",
@@ -2716,6 +2719,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Requires wearable" to "Serve wearable",
     "Reset Defaults" to "Ripristina",
     "Reset password" to "Nuova password",
+    "Reset to default" to "Ripristina",
     "Resp rate high" to "Freq. respiratoria alta",
     "Resp rate low" to "Freq. respiratoria bassa",
     "Resp. Rate" to "Fr. respiro",
@@ -3102,6 +3106,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Statistically established patterns that did not appear in this report's time frame." to "Pattern statisticamente consolidati non comparsi nel periodo di questo report.",
     "Stay at home" to "Resto a casa",
     "Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes." to "Tieni d'occhio il rischio con avvisi puntuali. MigraineMe ti ricorda il punto del giorno e ti avvisa quando il rischio sale.",
+    "Stays in place" to "Resta fissa",
     "Steady %1\$s%% of the time with it, %2\$s%% without." to "Stabile il %1\$s%% del tempo con, %2\$s%% senza.",
     "Steps" to "Passi",
     "Steps high" to "Molti passi",
@@ -3195,6 +3200,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Takes about 5 minutes. You can leave the tour at any point." to "Dura circa 5 minuti. Puoi lasciare il giro quando vuoi.",
     "Taking longer than expected..." to "Ci vuole più del previsto...",
     "Talk through your day — voice-powered evening check-ins." to "Racconta la tua giornata — check-in serali con la voce.",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Parla, scrivi o importa un file da un'altra app. Compiliamo ciò che ci dici e ti suggeriamo cos'altro vale la pena monitorare. Puoi cambiare tutto nelle pagine successive.",
     "Tap + to start the conversation!" to "Tocca + per iniziare!",
     "Tap Add Treatment to start tracking a drug, device, or lifestyle change." to "Tocca Terapia per seguire un farmaco, dispositivo o cambio.",
     "Tap Connect on the Health Connect card above." to "Tocca Collega sulla scheda Health Connect qui sopra.",
@@ -4251,7 +4257,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "takes a few minutes" to "pochi minuti",
     "talk, or type" to "parla o scrivi",
     "talk, type or import" to "parla, scrivi o importa",
-    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Parla, scrivi o importa un file da un'altra app. Compiliamo ciò che ci dici e ti suggeriamo cos'altro vale la pena monitorare. Puoi cambiare tutto nelle pagine successive.",
     "temperature changes" to "sbalzi di temperatura",
     "that is the only thing you have to do" to "è l'unica cosa da fare",
     "the AI sets the lines, you can move them" to "l'IA mette le linee, tu puoi spostarle",

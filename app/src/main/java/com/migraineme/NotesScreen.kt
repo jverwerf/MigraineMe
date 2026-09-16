@@ -104,9 +104,10 @@ fun NotesScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { syncDraft(); navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Missed Activities"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
+                WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
@@ -128,7 +129,7 @@ fun NotesScreen(
                 )
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.REVIEW) })
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) })
 
             // Notes input
             BaseCard {
@@ -179,7 +180,7 @@ fun NotesScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
-                    onClick = { syncDraft(); navController.navigate(Routes.REVIEW) },
+                    onClick = { syncDraft(); navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }
             }

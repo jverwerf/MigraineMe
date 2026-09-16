@@ -177,9 +177,10 @@ fun MissedActivitiesScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(t("Activity"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                     Spacer(Modifier.weight(1f))
+                    WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                     IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
                 }
             }
@@ -212,7 +213,7 @@ fun MissedActivitiesScreen(
             }
 
             if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.NOTES) })
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES)) })
             }
 
             BaseCard {
@@ -263,7 +264,7 @@ fun MissedActivitiesScreen(
                 Button(
                     onClick = {
                         if (quickLogMode) onSave?.invoke(reasonsByLabel.toMap(), notesByLabel.toMap(), !hadMigraineToday)
-                        else navController.navigate(Routes.NOTES)
+                        else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES))
                     },
                     enabled = !quickLogMode || draft.missedActivities.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)

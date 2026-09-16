@@ -144,9 +144,10 @@ fun LogHomeScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Back"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
+                WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
@@ -318,7 +319,7 @@ fun LogHomeScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
-                    onClick = { syncDraft(); navController.navigate(Routes.PAIN_LOCATION) },
+                    onClick = { syncDraft(); navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.LOG_MIGRAINE)) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }
             }

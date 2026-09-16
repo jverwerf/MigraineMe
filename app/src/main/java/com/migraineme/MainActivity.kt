@@ -257,6 +257,7 @@ object Routes {
     const val POSTDROMES = "postdromes"
     const val TIMING = "timing"
     const val PAINT_PICTURE = "paint_picture"
+    const val WIZARD_STEPS_CONFIG = "wizard_steps_config"
 
 
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
@@ -944,6 +945,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.REVIEW ||
             current == Routes.TIMING ||
             current == Routes.PAINT_PICTURE ||
+            current == Routes.WIZARD_STEPS_CONFIG ||
             current == Routes.MANAGE_SYMPTOMS ||
             current == Routes.MANAGE_ITEMS ||
             current == Routes.MANAGE_TRIGGERS ||
@@ -1009,7 +1011,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
             Routes.POSTDROMES, Routes.PRODROMES_LOG,
-            Routes.NOTES, Routes.REVIEW,
+            Routes.NOTES, Routes.REVIEW, Routes.WIZARD_STEPS_CONFIG,
             Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
@@ -1531,6 +1533,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     // Full migraine wizard flow
                     val wizardClose: () -> Unit = {
                         logVm.clearDraft()
+                        WizardStepConfig.startRun()
                         triggerVm.clearRecent()
                         nav.popBackStack(Routes.MIGRAINE, inclusive = false)
                     }
@@ -1755,6 +1758,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.NOTES) { NotesScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.WIZARD_STEPS_CONFIG) { WizardStepsConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm, onClose = wizardClose) }
 
                     composable("${Routes.EDIT_MIGRAINE}/{id}") {
@@ -1770,7 +1774,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         if (!prefilling) {
                             // Navigate to wizard, replacing this route
                             LaunchedEffect(Unit) {
-                                nav.navigate(Routes.TIMING) {
+                                WizardStepConfig.startRun()
+                                nav.navigate(WizardStepConfig.firstRoute(nav.context)) {
                                     popUpTo("${Routes.EDIT_MIGRAINE}/{id}") { inclusive = true }
                                 }
                             }
@@ -2728,6 +2733,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onAcuteAttack = {
                                 // Straight into the wizard. Skips the paywall too:
                                 // someone mid-attack is not the person to sell to.
+                                WizardStepConfig.startRun()
                                 nav.navigate(Routes.LOG_MIGRAINE) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true

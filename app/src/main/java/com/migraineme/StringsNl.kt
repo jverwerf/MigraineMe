@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4341 entries.
+ * 4351 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -485,6 +485,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Altitude change monitoring" to "Hoogteverschillen bijhouden",
     "Altitude high" to "Grote hoogte",
     "Altitude low" to "Geringe hoogte",
+    "Always shown" to "Altijd erbij",
     "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:" to "Omgevingsgeluid komt van je microfoon. We bewaren een relatieve score voor hardheid; voor de drempel delen we die in vier banden waaruit je kiest:",
     "Ambient noise level tracking" to "Omgevingslawaai bijhouden",
     "Ambient noise levels" to "Omgevingsgeluid",
@@ -984,6 +985,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Customize Sleep" to "Slaap aanpassen",
     "Customize Treatments" to "Behandelingen",
     "Customize Triggers" to "Triggers aanpassen",
+    "Customize log pages" to "Pagina's aanpassen",
     "Customize your Insights" to "Je Inzichten aanpassen",
     "Customize your Monitor" to "Je Monitor aanpassen",
     "Cycle" to "Cyclus",
@@ -1553,6 +1555,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Hi there," to "Hoi,",
     "Hide" to "Verberg",
     "Hide Settings" to "Verbergen",
+    "Hide pages you don't need and choose their order. Review always comes last." to "Verberg pagina's die je niet nodig hebt en kies de volgorde. Bekijken komt altijd als laatste.",
     "Hide promo code" to "Code verbergen",
     "High" to "Hoog",
     "High HR" to "Hoge HR",
@@ -1996,8 +1999,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Might play a role occasionally" to "Speelt soms een rol",
     "Migraine" to "Migraine",
     "Migraine\nhappened" to "Migraine\ngehad",
-    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Records › exporteren › Hele periode. Apple Health: Profiel › Alle gezondheidsgegevens exporteren, kies dan export.xml.",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Records › exporteren › Hele periode.",
+    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Records › exporteren › Hele periode. Apple Health: Profiel › Alle gezondheidsgegevens exporteren, kies dan export.xml.",
     "Migraine Timeline" to "Tijdlijn",
     "Migraine after stress ends (weekends, holidays)" to "Migraine als de stress stopt (weekend, vakantie)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Migraineapparaten zijn lastig te beoordelen via een website, omdat de reclame overal ",
@@ -2716,6 +2719,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Requires wearable" to "Wearable nodig",
     "Reset Defaults" to "Standaard",
     "Reset password" to "Nieuw wachtw.",
+    "Reset to default" to "Herstellen",
     "Resp rate high" to "Ademfrequentie hoog",
     "Resp rate low" to "Ademfrequentie laag",
     "Resp. Rate" to "Ademhaling",
@@ -3102,6 +3106,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Statistically established patterns that did not appear in this report's time frame." to "Statistisch vastgestelde patronen die niet in het tijdsbestek van dit rapport voorkwamen.",
     "Stay at home" to "Thuis",
     "Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes." to "Houd je risico in de gaten met tijdige meldingen. MigraineMe herinnert je aan de dagcheck en waarschuwt als je risico stijgt.",
+    "Stays in place" to "Staat vast",
     "Steady %1\$s%% of the time with it, %2\$s%% without." to "Stabiel %1\$s%% van de tijd ermee, %2\$s%% zonder.",
     "Steps" to "Stappen",
     "Steps high" to "Veel stappen",
@@ -3195,6 +3200,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Takes about 5 minutes. You can leave the tour at any point." to "Duurt zo'n 5 minuten. Je kunt de rondleiding altijd verlaten.",
     "Taking longer than expected..." to "Duurt langer dan verwacht...",
     "Talk through your day — voice-powered evening check-ins." to "Praat je dag door — avondcheck-ins met je stem.",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Spreek, typ of importeer een bestand uit een andere app. Wij vullen in wat je ons vertelt en stellen voor wat nog meer de moeite waard is om bij te houden. Op de volgende pagina's kun je alles aanpassen.",
     "Tap + to start the conversation!" to "Tik op + om te beginnen!",
     "Tap Add Treatment to start tracking a drug, device, or lifestyle change." to "Tik op Behandeling om een middel, apparaat of gewoonte te volgen.",
     "Tap Connect on the Health Connect card above." to "Tik op Koppelen op de Health Connect-kaart hierboven.",
@@ -4251,7 +4257,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "takes a few minutes" to "duurt een paar minuten",
     "talk, or type" to "praat, of typ",
     "talk, type or import" to "praat, typ of importeer",
-    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Spreek, typ of importeer een bestand uit een andere app. Wij vullen in wat je ons vertelt en stellen voor wat nog meer de moeite waard is om bij te houden. Op de volgende pagina's kun je alles aanpassen.",
     "temperature changes" to "temperatuurwisselingen",
     "that is the only thing you have to do" to "meer hoef je niet te doen",
     "the AI sets the lines, you can move them" to "de AI zet de lijnen, jij kunt ze verschuiven",

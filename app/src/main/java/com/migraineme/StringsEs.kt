@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4341 entries.
+ * 4351 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -485,6 +485,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Altitude change monitoring" to "Control de la altitud",
     "Altitude high" to "Altitud alta",
     "Altitude low" to "Altitud baja",
+    "Always shown" to "Siempre visible",
     "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:" to "El ruido se mide con el micrófono. Guardamos un valor relativo de volumen; para el umbral lo agrupamos en cuatro bandas entre las que eliges:",
     "Ambient noise level tracking" to "Medición del ruido ambiente",
     "Ambient noise levels" to "Nivel de ruido ambiente",
@@ -984,6 +985,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Customize Sleep" to "Ajustar sueño",
     "Customize Treatments" to "Ajustar tratam.",
     "Customize Triggers" to "Ajustar factores",
+    "Customize log pages" to "Ajusta las páginas",
     "Customize your Insights" to "Ajusta tus Hallazgos",
     "Customize your Monitor" to "Ajusta tu Monitor",
     "Cycle" to "Ciclo",
@@ -1553,6 +1555,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Hi there," to "Hola,",
     "Hide" to "Ocultar",
     "Hide Settings" to "Ocultar ajustes",
+    "Hide pages you don't need and choose their order. Review always comes last." to "Oculta las páginas que no necesitas y elige su orden. Revisar siempre va al final.",
     "Hide promo code" to "Ocultar código",
     "High" to "Alto",
     "High HR" to "FC alta",
@@ -1996,8 +1999,8 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Might play a role occasionally" to "Puede influir de vez en cuando",
     "Migraine" to "Migraña",
     "Migraine\nhappened" to "Hubo\nmigraña",
-    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registros › exportar › Todo el periodo. Apple Health: Perfil › Exportar todos los datos, luego elige export.xml.",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Registros › exportar › Todo el periodo.",
+    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registros › exportar › Todo el periodo. Apple Health: Perfil › Exportar todos los datos, luego elige export.xml.",
     "Migraine Timeline" to "Cronología",
     "Migraine after stress ends (weekends, holidays)" to "Migraña al acabar el estrés (findes, vacaciones)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Los aparatos para migraña son difíciles de juzgar por una web, porque la publicidad suena ",
@@ -2716,6 +2719,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Requires wearable" to "Pide wearable",
     "Reset Defaults" to "Restablecer",
     "Reset password" to "Nueva clave",
+    "Reset to default" to "Restablecer",
     "Resp rate high" to "Frec. respiratoria alta",
     "Resp rate low" to "Frec. respiratoria baja",
     "Resp. Rate" to "Frec. resp.",
@@ -3102,6 +3106,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Statistically established patterns that did not appear in this report's time frame." to "Patrones establecidos estadísticamente que no aparecieron en el marco de este informe.",
     "Stay at home" to "En casa",
     "Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes." to "Ten tu riesgo controlado con avisos a tiempo. MigraineMe te recuerda el repaso diario y avisa si el riesgo sube.",
+    "Stays in place" to "No se mueve",
     "Steady %1\$s%% of the time with it, %2\$s%% without." to "Estable el %1\$s%% del tiempo con él, %2\$s%% sin él.",
     "Steps" to "Pasos",
     "Steps high" to "Muchos pasos",
@@ -3195,6 +3200,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Takes about 5 minutes. You can leave the tour at any point." to "Dura unos 5 minutos. Puedes dejar el recorrido cuando quieras.",
     "Taking longer than expected..." to "Está tardando más de lo esperado...",
     "Talk through your day — voice-powered evening check-ins." to "Cuenta tu día: revisiones nocturnas por voz.",
+    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Habla, escribe o importa un archivo de otra app. Rellenamos lo que nos cuentas y te sugerimos qué más merece la pena registrar. Puedes cambiarlo todo en las siguientes páginas.",
     "Tap + to start the conversation!" to "¡Toca + para empezar a hablar!",
     "Tap Add Treatment to start tracking a drug, device, or lifestyle change." to "Toca Tratamiento para seguir un fármaco, aparato o cambio.",
     "Tap Connect on the Health Connect card above." to "Toca Conectar en la tarjeta de Health Connect.",
@@ -4250,8 +4256,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "taken this time" to "tomado esta vez",
     "takes a few minutes" to "lleva unos minutos",
     "talk, or type" to "habla o escribe",
-    "talk, type or import" to "habla, escribe o importa",
-    "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages." to "Habla, escribe o importa un archivo de otra app. Rellenamos lo que nos cuentas y te sugerimos qué más merece la pena registrar. Puedes cambiarlo todo en las siguientes páginas.",
+    "talk, type or import" to "habla, escribe, importa",
     "temperature changes" to "cambios de temperatura",
     "that is the only thing you have to do" to "es lo único que tienes que hacer",
     "the AI sets the lines, you can move them" to "la IA pone las líneas, tú puedes moverlas",

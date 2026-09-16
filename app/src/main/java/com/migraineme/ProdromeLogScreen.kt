@@ -206,7 +206,7 @@ fun ProdromeLogScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(t("Pain"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -215,6 +215,7 @@ fun ProdromeLogScreen(
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
+                    WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                     IconButton(onClick = onClose) {
                         Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
@@ -306,7 +307,7 @@ fun ProdromeLogScreen(
             }
 
             if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.TRIGGERS) })
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) })
             }
 
             // Manage card
@@ -374,7 +375,7 @@ fun ProdromeLogScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
-                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.TRIGGERS) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) },
                     enabled = !quickLogMode || draft.prodromes.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Save") else t("Next")) }

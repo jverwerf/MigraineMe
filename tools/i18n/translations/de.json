@@ -4339,5 +4339,15 @@
  "Import a file": "Datei hochladen",
  "From your file": "Aus deiner Datei",
  "Remove from story": "Aus Text entfernen",
- "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test."
+ "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial.": "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test.",
+ "Customize log pages": "Seiten anpassen",
+ "Hide pages you don't need and choose their order. Review always comes last.": "Blende Seiten aus, die du nicht brauchst, und wähle ihre Reihenfolge. Prüfen kommt immer zuletzt.",
+ "Reset to default": "Zurücksetzen",
+ "Stays in place": "Bleibt fest",
+ "CSV, a spreadsheet saved as CSV, or plain notes": "CSV, eine als CSV gespeicherte Tabelle oder einfache Notizen",
+ "Insights use what you ticked once you have a paid subscription. The rest stays in the journal only.": "Deine Erkenntnisse nutzen, was du angehakt hast, sobald du ein bezahltes Abo hast. Der Rest bleibt nur im Journal.",
+ "Migraine Buddy: Records › export › All period.": "Migraine Buddy: Einträge › Export › Gesamter Zeitraum.",
+ "talk, type or import": "sprich, tipp, importier",
+ "Talk, type, or import a file from another app. We fill in what you tell us, then suggest what else is worth tracking. You can change it all on the next pages.": "Sprich, tippe oder lade eine Datei aus einer anderen App hoch. Wir tragen ein, was du uns sagst, und schlagen vor, was sich noch zu erfassen lohnt. Auf den nächsten Seiten kannst du alles ändern.",
+ "Always shown": "Immer dabei"
 }
