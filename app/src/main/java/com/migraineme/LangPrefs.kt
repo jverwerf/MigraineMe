@@ -72,7 +72,43 @@ object LangPrefs {
         val ctx = context.applicationContext
         appContext = ctx
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        _lang.value = Lang.fromCode(p.getString(KEY_LANG, null)) ?: deviceDefault()
+        val stored = Lang.fromCode(p.getString(KEY_LANG, null))
+        if (stored != null) {
+            _lang.value = stored
+            return
+        }
+        // A brand new install opens in the phone's own language when we speak
+        // it, so a German phone lands on a German welcome screen instead of
+        // having to find the picker first. Saved as the choice, which is what
+        // makes the account created a minute later get pushes in that language
+        // too. Fresh installs only: an existing user who never touched the
+        // picker has been reading English, and flipping their app into another
+        // language underneath them on an update is the surprise the English
+        // default above was written to avoid.
+        val auto = if (isFreshInstall(ctx)) phoneLanguage() else null
+        if (auto != null) {
+            p.edit().putString(KEY_LANG, auto.code).apply()
+            _lang.value = auto
+        } else {
+            _lang.value = deviceDefault()
+        }
+    }
+
+    /** First of the phone's preferred languages that we have a translation for. */
+    private fun phoneLanguage(): Lang? {
+        val locales = android.content.res.Resources.getSystem().configuration.locales
+        for (i in 0 until locales.size()) {
+            Lang.fromCode(locales[i].language)?.let { return it }
+        }
+        return null
+    }
+
+    /** Installed and never updated since: nobody has been using this copy yet. */
+    private fun isFreshInstall(ctx: Context): Boolean = try {
+        val info = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+        info.firstInstallTime == info.lastUpdateTime
+    } catch (e: Exception) {
+        false
     }
 
     /** Current language, for use outside composition. */

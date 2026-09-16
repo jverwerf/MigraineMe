@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -205,16 +207,32 @@ fun LanguageFlagButton() {
     val current by LangPrefs.lang.collectAsState()
     var expanded by remember { mutableStateOf(false) }
     Box {
+        // Flag, language name and a chevron. A flag on its own read as
+        // decoration, not as something you tap to change the language.
         Surface(
             color = Color.White.copy(alpha = 0.14f),
             shape = CircleShape,
             modifier = Modifier.clickable { expanded = true }
         ) {
-            Text(
-                current.flag,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp)
+            ) {
+                Text(current.flag, style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    current.endonym,
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = AppTheme.TitleColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
         DropdownMenu(
             expanded = expanded,
