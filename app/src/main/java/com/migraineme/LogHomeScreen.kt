@@ -187,7 +187,7 @@ fun LogHomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                sym,
+                                t(sym),
                                 color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                             )
@@ -201,7 +201,7 @@ fun LogHomeScreen(
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
-                                        sev.lowercase().replaceFirstChar { c -> c.uppercase() },
+                                        t(sev.lowercase().replaceFirstChar { c -> c.uppercase() }),
                                         color = AppTheme.AccentPurple,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                                     )
