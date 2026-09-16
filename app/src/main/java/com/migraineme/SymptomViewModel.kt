@@ -58,10 +58,35 @@ class SymptomViewModel : PoolViewModel() {
     fun addNewToPool(accessToken: String, label: String, category: String, iconKey: String? = null) {
         viewModelScope.launch {
             try {
-                db.upsertSymptomToPool(accessToken, label.trim(), category, iconKey)
+                val clean = label.trim()
+                // A label we have no art for would sit there as two grey letters while the
+                // drawing is made, so give it a generic Brainy up front and swap it for the
+                // drawn one when that arrives.
+                val placeholder = iconKey
+                    ?: if (BrainyLogManifest.drawableFor(clean, null, category, kindFor(category)) == null)
+                        CustomBrainy.randomKey(clean) else null
+                val row = db.upsertSymptomToPool(accessToken, clean, category, placeholder)
                 loadAll(accessToken)
+                if (iconKey == null) drawBrainy(accessToken, row.id, clean, category)
             } catch (e: Exception) {
                 reportError(e)
+            }
+        }
+    }
+
+    private fun kindFor(category: String?) =
+        if (category == "pain_character") "painCharacter" else "symptom"
+
+    /** Asks the server for a Brainy drawn from the user's own words (~20 s), then reloads. */
+    private fun drawBrainy(accessToken: String, symptomId: String, label: String, category: String?) {
+        viewModelScope.launch {
+            val drawn = EdgeFunctionsService().generateSymptomIcon(accessToken, label, kindFor(category)) ?: return@launch
+            if (drawn.iconUrl == null && drawn.iconKey == null) return@launch
+            try {
+                db.setSymptomIcon(accessToken, symptomId, drawn.iconKey, drawn.iconUrl)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

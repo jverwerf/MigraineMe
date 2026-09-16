@@ -208,6 +208,7 @@ fun QuickMigraineScreen(
                         SymptomRow(
                             label = s.label,
                             iconKey = s.iconKey,
+                            iconUrl = s.iconUrl,
                             selected = selectedSymptom == s.label,
                             color = AppTheme.AccentPink
                         ) { onPick(s.label) }
@@ -218,7 +219,7 @@ fun QuickMigraineScreen(
                 if (painNonFav.isNotEmpty()) {
                     SectionHeader(t("Pain character"))
                     painNonFav.forEach { s ->
-                        SymptomRow(s.label, s.iconKey, selectedSymptom == s.label, AppTheme.AccentPink) {
+                        SymptomRow(s.label, s.iconKey, s.iconUrl, selectedSymptom == s.label, AppTheme.AccentPink) {
                             onPick(s.label)
                         }
                     }
@@ -235,7 +236,7 @@ fun QuickMigraineScreen(
                             modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                         )
                         items.forEach { s ->
-                            SymptomRow(s.label, s.iconKey, selectedSymptom == s.label, AppTheme.AccentPink) {
+                            SymptomRow(s.label, s.iconKey, s.iconUrl, selectedSymptom == s.label, AppTheme.AccentPink) {
                                 onPick(s.label)
                             }
                         }
@@ -349,6 +350,7 @@ private fun SectionHeader(text: String) {
 private fun SymptomRow(
     label: String,
     iconKey: String?,
+    iconUrl: String?,
     selected: Boolean,
     color: Color,
     onClick: () -> Unit
@@ -364,7 +366,10 @@ private fun SymptomRow(
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (brainyId != null || icon != null) {
+        if (iconUrl != null) {
+            CustomBrainyImage(iconUrl, 24.dp)
+            Spacer(Modifier.width(10.dp))
+        } else if (brainyId != null || icon != null) {
             LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 24.dp else 18.dp, tint = if (selected) color else AppTheme.SubtleTextColor)
             Spacer(Modifier.width(10.dp))
         }

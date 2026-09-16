@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
 /**
  * Key/label-based lookup used when the caller cannot name a kind: per-drug
@@ -87,6 +88,35 @@ fun brainyForLogVector(v: ImageVector?): Int? {
         ?: ActivityIcons.drawableForVector(v)
         ?: LocationIcons.drawableForVector(v)
         ?: MissedActivityIcons.drawableForVector(v)
+}
+
+/**
+ * The generic Brainies a user-typed symptom or pain character wears until the
+ * server has drawn one from their own words. Same ten keys as the edge function's
+ * FALLBACK_POOL, which also answers with one of these when the daily cap is hit.
+ */
+object CustomBrainy {
+    val POOL = listOf(
+        "custom_star", "custom_note", "custom_question", "custom_pin", "custom_bulb",
+        "custom_heart", "custom_clock", "custom_bolt", "custom_cloud", "custom_tag"
+    )
+
+    /** Picked from the label so the same entry keeps the same stand-in across reloads. */
+    fun randomKey(label: String): String =
+        POOL[(label.hashCode().toUInt() % POOL.size.toUInt()).toInt()]
+}
+
+/**
+ * Brainy that was drawn for this row on the server. Falls back to the built-in art
+ * while the image loads or if it cannot be fetched, so a row is never blank.
+ */
+@Composable
+fun CustomBrainyImage(iconUrl: String, size: Dp, modifier: Modifier = Modifier) {
+    AsyncImage(
+        model = iconUrl,
+        contentDescription = null,
+        modifier = modifier.size(size)
+    )
 }
 
 /**

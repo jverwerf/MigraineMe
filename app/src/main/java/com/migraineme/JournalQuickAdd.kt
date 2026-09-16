@@ -516,6 +516,7 @@ fun QuickAddSymptomScreen(
                             label = item.label,
                             isSelected = item.label in selected,
                             iconKey = item.iconKey,
+                            iconUrl = item.iconUrl,
                             onClick = {
                                 if (item.label !in selected) selected.add(item.label)
                                 sheetLabel = item.label

@@ -2824,4 +2824,43 @@ class EdgeFunctionsService {
             client.close()
         }
     }
+
+    @Serializable
+    data class GeneratedIcon(
+        @SerialName("icon_url") val iconUrl: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null,
+        val reason: String? = null,
+    )
+
+    /**
+     * Draws a Brainy for a symptom or pain character the user typed themselves.
+     * Takes ~20 s, so callers run it after the row is already saved and showing a
+     * stand-in icon. Over the daily cap, or on any failure, the server answers with
+     * one of the bundled `custom_*` keys instead, so this never comes back empty.
+     */
+    suspend fun generateSymptomIcon(accessToken: String, label: String, kind: String): GeneratedIcon? {
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/generate-symptom-icon"
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                contentType(ContentType.Application.Json)
+                setBody(buildJsonObject {
+                    put("label", label)
+                    put("kind", kind)
+                }.toString())
+            }
+            if (res.status.value in 200..299) res.body<GeneratedIcon>()
+            else {
+                Log.e("EdgeFunctionsService", "generateSymptomIcon failed: ${res.status.value}")
+                null
+            }
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "generateSymptomIcon exception", t)
+            null
+        } finally {
+            client.close()
+        }
+    }
 }

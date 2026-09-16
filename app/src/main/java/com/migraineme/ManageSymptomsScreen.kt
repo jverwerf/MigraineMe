@@ -290,6 +290,7 @@ fun ManageSymptomsScreen(
                         SymptomRow(
                             label = symptom.label,
                             iconKey = symptom.iconKey,
+                            iconUrl = symptom.iconUrl,
                             isFavorite = isFav,
                             onToggleFavorite = {
                                 val token = authState.accessToken ?: return@SymptomRow
@@ -326,6 +327,7 @@ fun ManageSymptomsScreen(
                             SymptomRow(
                                 label = symptom.label,
                                 iconKey = symptom.iconKey,
+                            iconUrl = symptom.iconUrl,
                                 isFavorite = isFav,
                                 onToggleFavorite = {
                                     val token = authState.accessToken ?: return@SymptomRow
@@ -356,6 +358,7 @@ fun ManageSymptomsScreen(
                         SymptomRow(
                             label = symptom.label,
                             iconKey = symptom.iconKey,
+                            iconUrl = symptom.iconUrl,
                             isFavorite = isFav,
                             onToggleFavorite = {
                                 val token = authState.accessToken ?: return@SymptomRow
@@ -386,6 +389,7 @@ fun ManageSymptomsScreen(
 private fun SymptomRow(
     label: String,
     iconKey: String? = null,
+    iconUrl: String? = null,
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     onDelete: () -> Unit
@@ -408,7 +412,9 @@ private fun SymptomRow(
                 .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
+            if (iconUrl != null) {
+                CustomBrainyImage(iconUrl, 26.dp)
+            } else if (brainyId != null || icon != null) {
                 LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 20.dp, tint = AppTheme.SubtleTextColor)
             } else {
                 Text(

@@ -149,7 +149,7 @@ fun PostdromesScreen(
                 if (frequent.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         frequent.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
                                 syncDraft()
                             }
@@ -162,7 +162,7 @@ fun PostdromesScreen(
                 if (rest.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         rest.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
                                 syncDraft()
                             }

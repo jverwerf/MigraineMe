@@ -2031,7 +2031,9 @@ class SupabaseDbService(
         val id: String,
         val label: String,
         val category: String? = null,
-        @SerialName("icon_key") val iconKey: String? = null
+        @SerialName("icon_key") val iconKey: String? = null,
+        /** Brainy drawn for a symptom the user typed themselves (generate-symptom-icon). */
+        @SerialName("icon_url") val iconUrl: String? = null
     )
     @Serializable
     data class SymptomPrefRow(
@@ -2051,7 +2053,7 @@ class SupabaseDbService(
     suspend fun getAllSymptomPool(accessToken: String): List<UserSymptomRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,icon_url"); parameter("order", "label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
@@ -2066,6 +2068,21 @@ class SupabaseDbService(
         }
         if (!response.status.isSuccess()) error("Upsert user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
+    }
+
+    @Serializable private data class SymptomIconPatch(
+        @SerialName("icon_key") val iconKey: String? = null,
+        @SerialName("icon_url") val iconUrl: String? = null
+    )
+
+    /** Stores the Brainy that generate-symptom-icon drew for a user-typed symptom. */
+    suspend fun setSymptomIcon(accessToken: String, symptomId: String, iconKey: String?, iconUrl: String?) {
+        val response = client.patch("$supabaseUrl/rest/v1/user_symptoms") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$symptomId")
+            contentType(ContentType.Application.Json); setBody(SymptomIconPatch(iconKey, iconUrl))
+        }
+        if (!response.status.isSuccess()) error("Patch user_symptoms icon failed: ${response.bodyAsText()}")
     }
     suspend fun deleteSymptomFromPool(accessToken: String, symptomId: String) {
         client.delete("$supabaseUrl/rest/v1/symptom_preferences") {
@@ -2082,7 +2099,7 @@ class SupabaseDbService(
     suspend fun getSymptomPrefs(accessToken: String): List<SymptomPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/symptom_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,symptom_id,position,status,user_symptoms(id,label,category,icon_key)")
+            parameter("select", "id,user_id,symptom_id,position,status,user_symptoms(id,label,category,icon_key,icon_url)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch symptom prefs failed: ${response.bodyAsText()}")

@@ -246,7 +246,7 @@ fun LogHomeScreen(
                 if (freqPainIds.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         painCharacter.filter { it.label in freqPainIds }.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 onSymptomTap(symptom.label)
                             }
                         }
@@ -263,7 +263,7 @@ fun LogHomeScreen(
                 if (remainingPain.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         remainingPain.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 onSymptomTap(symptom.label)
                             }
                         }
@@ -281,7 +281,7 @@ fun LogHomeScreen(
                 if (freqAccompIds.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         accompanying.filter { it.label in freqAccompIds }.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 onSymptomTap(symptom.label)
                             }
                         }
@@ -298,7 +298,7 @@ fun LogHomeScreen(
                 if (remainingAccomp.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         remainingAccomp.forEach { symptom ->
-                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey, iconUrl = symptom.iconUrl) {
                                 onSymptomTap(symptom.label)
                             }
                         }
@@ -406,7 +406,7 @@ fun LogHomeScreen(
 }
 
 @Composable
-internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
+internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, iconUrl: String? = null, onClick: () -> Unit) {
     val icon = SymptomIcons.forLabel(label, iconKey)
     val brainyId = SymptomIcons.drawableForLabel(label, iconKey)
     val circleColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
@@ -434,7 +434,9 @@ internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? 
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (brainyId != null || icon != null) {
+            if (iconUrl != null) {
+                CustomBrainyImage(iconUrl, 34.dp)
+            } else if (brainyId != null || icon != null) {
                 LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 26.dp, tint = iconTint)
             } else {
                 Text(
