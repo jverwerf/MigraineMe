@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4371 entries.
+ * 4382 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -80,6 +80,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Zwaarte: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, rond %2\$s",
     "%1\$s/%2\$s — Tap to expand" to "%1\$s/%2\$s — Tik om te openen",
+    "%1\$s: %2\$s days in the last 30" to "%1\$s: %2\$s dagen in de laatste 30",
     "%1\$ss account for %2\$s%% of your migraines — %3\$s× the average day." to "%1\$ss zijn goed voor %2\$s%% van je migraines — %3\$s× een gewone dag.",
     "%1\$ss account for %2\$s%% of your migraines — about %3\$s times an average day." to "%1\$s verklaren %2\$s%% van je migraines — ongeveer %3\$s keer een gemiddelde dag.",
     "%1\$s× · %2\$s%%" to "%1\$s× · %2\$s%%",
@@ -372,6 +373,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Acupressure" to "Acupressuur",
     "Acupuncture" to "Acupunctuur",
     "Acute medication use rising — worth an overuse check." to "Gebruik van acute medicatie stijgt: check op overgebruik.",
+    "Acute medicine days" to "Dagen medicatie",
     "Add" to "Toevoegen",
     "Add %s" to "%s erbij",
     "Add %s foods" to "%s toevoegen",
@@ -871,6 +873,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Cold weather" to "Koud weer",
     "Cold/Heat" to "Koud/warm",
     "Collapse" to "Inklappen",
+    "Combination painkillers" to "Combinatiepijnstillers",
     "Combinations" to "Combinaties",
     "Comes out of Harvard research showing green light is the least aggravating wavelength. Small studies only." to "Komt uit Harvard-onderzoek dat groen licht de minst vervelende golflengte noemt. Alleen kleine studies.",
     "Comment under review" to "In beoordeling",
@@ -1032,6 +1035,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Days" to "Dagen",
     "Days / month" to "Dagen / maand",
     "Days before" to "Dagen ervoor",
+    "Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. " to "Dagen geteld uit wat je zelf logde. Richtlijnen koppelen frequent gebruik van acute medicijnen aan rebound-hoofdpijn. ",
     "Days tracked" to "Dagen bijgeh.",
     "Days with no migraine where something was skipped anyway" to "Dagen zonder migraine waarop toch iets afviel",
     "Days without an attack" to "Dagen zonder aanval",
@@ -1101,6 +1105,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Dismiss recommendation" to "Tip sluiten",
     "Display Metrics (%s/3)" to "Getoonde waarden (%s/3)",
     "Disturbances" to "Onderbreking",
+    "Ditans" to "Ditanen",
     "Dizziness" to "Duizeligheid",
     "Dizziness (after)" to "Duizeligheid (erna)",
     "Do any eating patterns trigger migraines?" to "Geven bepaalde eetpatronen migraine?",
@@ -1251,6 +1256,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Eptinezumab (Vyepti)" to "Eptinezumab (Vyepti)",
     "Erenumab (Aimovig)" to "Erenumab (Aimovig)",
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
+    "Ergots" to "Ergotaminen",
     "Error" to "Fout",
     "Error: %1\$s" to "Fout: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Vaste patronen die ook in de aanvallen van dit rapport voorkwamen.",
@@ -1469,6 +1475,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Generating PDF…" to "Pdf maken…",
     "Generating..." to "Maken...",
     "Gentle walk" to "Rustige wandeling",
+    "Gepants" to "Gepanten",
     "Get notified each morning when your new recommendations are ready" to "Krijg elke ochtend bericht als er nieuwe tips klaarstaan",
     "Get notified when an AI companion adds to your community feed" to "Krijg bericht als een AI-gids iets aan je feed toevoegt",
     "Get notified when your recovery score indicates potential issues." to "Krijg bericht als je herstel op problemen wijst.",
@@ -2379,6 +2386,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Open the card and tap Edit to set or correct your last period date. If your cycle is irregular, log each actual period as it happens and the prediction adjusts over time." to "Open de kaart en tik op Wijzig om de datum van je vorige menstruatie te zetten of te verbeteren. Is je cyclus onregelmatig, noteer dan elke menstruatie als die komt; de verwachting past zich aan.",
     "Open the category you log most often and switch off anything that doesn't apply to you. Scroll to AI Companions to follow a curator or two." to "Open de categorie die je het vaakst noteert en zet uit wat niet op jou slaat. Scroll naar AI-gidsen om er een of twee te volgen.",
     "Open the drawer (top-left menu) for full control.\n\nManage Items is where everything is customisable: add your own triggers, prodromes, medicines, reliefs, symptoms, activities or locations, change the severity weighting on each one, or turn off the defaults you don't care about. It's also where you follow AI Companions to personalise your Articles feed.\n\nRisk Model lets you move your LOW / MILD / HIGH thresholds and reshape the per-day decay curve (how much today's trigger counts vs. one from 6 days ago) so the gauge reflects what an actual risky day looks like for you.\n\nData Settings controls which metrics MigraineMe pulls from your wearable, Health Connect, or HealthKit. Connections lets you link or unlink your wearable, calendar, and health platforms.\n\nNotifications, Profile, and Help round out the drawer." to "Open de zijbalk (menu linksboven) voor volledige controle.\n\nItems beheren is waar alles aanpasbaar is: voeg je eigen triggers, prodromen, medicijnen, verlichting, klachten, activiteiten of plekken toe, verander het gewicht van elk, of zet standaarden uit waar je niets mee hebt. Hier volg je ook AI-companions om je artikelenfeed te kleuren.\n\nRisicomodel laat je je LAAG / LICHT / HOOG drempels verschuiven en de dagcurve hervormen (hoeveel de trigger van vandaag telt tegenover die van 6 dagen terug), zodat de meter laat zien hoe een risicodag er voor jou uitziet.\n\nData-instellingen bepaalt welke waarden MigraineMe ophaalt uit je wearable, Health Connect of HealthKit. Koppelingen laat je wearable, agenda en gezondheidsplatforms verbinden of losmaken.\n\nMeldingen, Profiel en Help maken de zijbalk af.",
+    "Opioids" to "Opioïden",
     "Optional" to "Optioneel",
     "Optional — you can set this later" to "Optioneel: kan ook later",
     "Optional. Nothing is logged from before this started, so this is shown as context and never counted in the numbers." to "Optioneel. Er is niets vastgelegd van voor de start, dus dit dient als context en telt nooit mee in de cijfers.",
@@ -2527,6 +2535,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Pins and needles sensations" to "Tintelingen of speldenprikken",
     "Pizotifen" to "Pizotifeen",
     "Places" to "Plaatsen",
+    "Plain painkillers" to "Pijnstillers",
     "Plane" to "Vliegtuig",
     "Please enable these metrics first, then you can enable Stress Index." to "Zet eerst deze waarden aan, daarna kun je de stressindex aanzetten.",
     "Please enter a promo code." to "Vul een promocode in.",
@@ -3339,6 +3348,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "This can't be undone." to "Dit kan niet terug.",
     "This feature requires a premium subscription." to "Hiervoor heb je Premium nodig.",
     "This file was already imported." to "Dit bestand is al geïmporteerd.",
+    "This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor." to "Dit is informatie, geen medisch advies of diagnose, en niets hiervan is een reden om zelf een medicijn te wijzigen of te stoppen. Het staat hier zodat je het met je arts kunt bespreken.",
     "This is optional — you can skip straight to logging manually" to "Dit is optioneel: je kunt ook direct zelf noteren",
     "This is your full trigger pool: every trigger that can be picked in the wizard, Quick Log, or Daily Check-In, plus every trigger that gets auto-fired from your wearable, weather, nutrition or menstruation data.\n\nFor each trigger:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log and in the wizard, so put your most-logged ones up top.\n• Tap the row to expand it. From there you can change the category, set the severity (HIGH / MILD / LOW / NONE — NONE keeps it in the pool but stops it contributing to your risk score), and for auto-detected triggers, toggle the automation on/off and set the threshold the app uses to fire it.\n• Tap the trash icon to remove a trigger entirely. Past logged entries aren't affected; the trigger just stops appearing as an option going forward.\n\nUse the + button to add a custom trigger your doctor mentioned or that you've noticed isn't in the defaults. Manual triggers don't auto-fire, you log them yourself.\n\nChanges to severity, category, automation and thresholds save together when you tap Save & Recalculate at the bottom. That recomputes your risk score so the gauge reflects the new weights immediately." to "Dit is je volledige triggerlijst: elke trigger die je in de wizard, bij Snel of in de Dagcheck kunt kiezen, plus elke trigger die vanzelf afgaat op basis van je wearable, het weer, je voeding of je cyclus.\n\nPer trigger:\n• Tik op de ster om hem favoriet te maken. Favorieten staan bovenaan bij Snel en in de wizard, dus zet je meest genoteerde triggers vooraan.\n• Tik op de regel om hem uit te klappen. Daar wijzig je de categorie, zet je de zwaarte (HOOG / LICHT / LAAG / GEEN — GEEN houdt hem in je lijst maar laat hem niet meetellen in je risico) en zet je bij automatische triggers de automatisering aan of uit met de drempel waarop hij afgaat.\n• Tik op het prullenbakje om een trigger helemaal weg te halen. Wat je eerder noteerde blijft staan; de trigger is voortaan alleen geen optie meer.\n\nMet de knop + voeg je een eigen trigger toe die je arts noemde of die je zelf opmerkte en die niet standaard is. Handmatige triggers gaan niet vanzelf af, die noteer je zelf.\n\nWijzigingen in zwaarte, categorie, automatisering en drempels sla je samen op met Herberekenen onderaan. Dat rekent je risico opnieuw uit, zodat de meter de nieuwe gewichten meteen laat zien.",
     "This lets Android share app usage totals with MigraineMe. " to "Hiermee deelt Android het app-gebruik met MigraineMe. ",
@@ -3487,6 +3497,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Triggers, prodromes, medicines & symptoms" to "Triggers, prodromen, medicijnen en klachten",
     "Triggers, prodromes, reliefs, treatments — all in one place." to "Triggers, prodromen, verlichting, behandelingen — alles op één plek.",
     "Triptan" to "Triptaan",
+    "Triptans" to "Triptanen",
     "Trouble concentrating or reading" to "Moeite met concentreren of lezen",
     "Trustpilot, 137 reviews" to "Trustpilot, 137 reviews",
     "Try Again" to "Opnieuw",

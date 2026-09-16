@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4371 entries.
+ * 4382 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -80,6 +80,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Stärke: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s gegen %2\$s",
     "%1\$s/%2\$s — Tap to expand" to "%1\$s/%2\$s — Tippen zum Öffnen",
+    "%1\$s: %2\$s days in the last 30" to "%1\$s: %2\$s Tage in den letzten 30",
     "%1\$ss account for %2\$s%% of your migraines — %3\$s× the average day." to "%1\$ss machen %2\$s%% deiner Migränen aus — %3\$s× so viel wie ein üblicher Tag.",
     "%1\$ss account for %2\$s%% of your migraines — about %3\$s times an average day." to "%1\$s stehen hinter %2\$s%% deiner Migränen — etwa %3\$s-mal so viel wie an einem Durchschnittstag.",
     "%1\$s× · %2\$s%%" to "%1\$s× · %2\$s%%",
@@ -372,6 +373,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Acupressure" to "Akupressur",
     "Acupuncture" to "Akupunktur",
     "Acute medication use rising — worth an overuse check." to "Akutmedikation steigt — auf Übergebrauch prüfen.",
+    "Acute medicine days" to "Akutmedikamenttage",
     "Add" to "Hinzufügen",
     "Add %s" to "%s hinzufügen",
     "Add %s foods" to "%s hinzufügen",
@@ -871,6 +873,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Cold weather" to "Kaltes Wetter",
     "Cold/Heat" to "Kälte/Wärme",
     "Collapse" to "Einklappen",
+    "Combination painkillers" to "Kombinierte Schmerzmittel",
     "Combinations" to "Kombinationen",
     "Comes out of Harvard research showing green light is the least aggravating wavelength. Small studies only." to "Beruht auf Harvard-Forschung, wonach grünes Licht die am wenigsten reizende Wellenlänge ist. Bisher nur kleine Studien.",
     "Comment under review" to "Wird geprüft",
@@ -1032,6 +1035,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Days" to "Tage",
     "Days / month" to "Tage / Monat",
     "Days before" to "Tage davor",
+    "Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. " to "Tage aus deinen eigenen Einträgen gezählt. Leitlinien bringen häufigen Gebrauch von Akutmedikamenten mit Rebound-Kopfschmerz in Verbindung. ",
     "Days tracked" to "Tage erfasst",
     "Days with no migraine where something was skipped anyway" to "Tage ohne Migräne, an denen trotzdem etwas ausfiel",
     "Days without an attack" to "Tage ohne Attacke",
@@ -1101,6 +1105,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Dismiss recommendation" to "Empfehlung schließen",
     "Display Metrics (%s/3)" to "Angezeigte Werte (%s/3)",
     "Disturbances" to "Störungen",
+    "Ditans" to "Ditane",
     "Dizziness" to "Schwindel",
     "Dizziness (after)" to "Schwindel (danach)",
     "Do any eating patterns trigger migraines?" to "Lösen bestimmte Essgewohnheiten Migräne aus?",
@@ -1251,6 +1256,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Eptinezumab (Vyepti)" to "Eptinezumab (Vyepti)",
     "Erenumab (Aimovig)" to "Erenumab (Aimovig)",
     "Ergotamine (Cafergot)" to "Ergotamin (Cafergot)",
+    "Ergots" to "Ergotamine",
     "Error" to "Fehler",
     "Error: %1\$s" to "Fehler: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Etablierte Muster, die auch in den Attacken dieses Berichts auftraten.",
@@ -1469,6 +1475,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Generating PDF…" to "Erstelle PDF…",
     "Generating..." to "Erzeuge...",
     "Gentle walk" to "Leichter Spaziergang",
+    "Gepants" to "Gepante",
     "Get notified each morning when your new recommendations are ready" to "Werde morgens benachrichtigt, wenn neue Empfehlungen da sind",
     "Get notified when an AI companion adds to your community feed" to "Werde benachrichtigt, wenn ein KI-Begleiter etwas beisteuert",
     "Get notified when your recovery score indicates potential issues." to "Werde benachrichtigt, wenn deine Erholung auffällig wird.",
@@ -2379,6 +2386,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Open the card and tap Edit to set or correct your last period date. If your cycle is irregular, log each actual period as it happens and the prediction adjusts over time." to "Öffne die Karte und tippe auf Bearbeiten, um das Datum deiner letzten Periode zu setzen oder zu korrigieren. Bei unregelmäßigem Zyklus erfasse jede Periode, dann passt sich die Vorhersage mit der Zeit an.",
     "Open the category you log most often and switch off anything that doesn't apply to you. Scroll to AI Companions to follow a curator or two." to "Öffne die Kategorie, die du am häufigsten erfasst, und schalte aus, was auf dich nicht zutrifft. Scrolle zu den KI-Begleitern und folge ein, zwei Kuratoren.",
     "Open the drawer (top-left menu) for full control.\n\nManage Items is where everything is customisable: add your own triggers, prodromes, medicines, reliefs, symptoms, activities or locations, change the severity weighting on each one, or turn off the defaults you don't care about. It's also where you follow AI Companions to personalise your Articles feed.\n\nRisk Model lets you move your LOW / MILD / HIGH thresholds and reshape the per-day decay curve (how much today's trigger counts vs. one from 6 days ago) so the gauge reflects what an actual risky day looks like for you.\n\nData Settings controls which metrics MigraineMe pulls from your wearable, Health Connect, or HealthKit. Connections lets you link or unlink your wearable, calendar, and health platforms.\n\nNotifications, Profile, and Help round out the drawer." to "Öffne die Schublade (Menü oben links) für die volle Kontrolle.\n\nUnter Elemente verwalten ist alles anpassbar: eigene Auslöser, Prodrome, Medikamente, Linderungen, Symptome, Aktivitäten oder Orte anlegen, die Gewichtung jedes Eintrags ändern oder Vorgaben abschalten, die dich nicht interessieren. Dort folgst du auch KI-Begleitern, um deinen Artikel-Feed zu personalisieren.\n\nIm Risikomodell verschiebst du deine Schwellen NIEDRIG / LEICHT / HOCH und formst die Abklingkurve pro Tag (wie stark der heutige Auslöser zählt gegenüber einem von vor 6 Tagen), damit die Anzeige zeigt, wie ein wirklich riskanter Tag bei dir aussieht.\n\nDie Dateneinstellungen steuern, welche Werte MigraineMe von deinem Wearable, aus Health Connect oder HealthKit holt. Unter Verbindungen koppelst du Wearable, Kalender und Gesundheitsplattformen.\n\nHinweise, Profil und Hilfe runden die Schublade ab.",
+    "Opioids" to "Opioide",
     "Optional" to "Optional",
     "Optional — you can set this later" to "Optional — später einstellbar",
     "Optional. Nothing is logged from before this started, so this is shown as context and never counted in the numbers." to "Optional. Von vor dem Start gibt es keine Einträge, das hier dient nur als Kontext und zählt nie in den Zahlen mit.",
@@ -2527,6 +2535,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Pins and needles sensations" to "Kribbeln oder Ameisenlaufen",
     "Pizotifen" to "Pizotifen",
     "Places" to "Orte",
+    "Plain painkillers" to "Schmerzmittel",
     "Plane" to "Flugzeug",
     "Please enable these metrics first, then you can enable Stress Index." to "Aktiviere zuerst diese Werte, dann kannst du den Stress-Index einschalten.",
     "Please enter a promo code." to "Bitte gib einen Promo-Code ein.",
@@ -3339,6 +3348,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "This can't be undone." to "Nicht umkehrbar.",
     "This feature requires a premium subscription." to "Dafür brauchst du Premium.",
     "This file was already imported." to "Diese Datei wurde schon importiert.",
+    "This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor." to "Das ist eine Information, kein medizinischer Rat und keine Diagnose, und nichts davon ist ein Grund, ein Medikament eigenmächtig zu ändern oder abzusetzen. Es steht hier, damit du es in deiner Praxis ansprechen kannst.",
     "This is optional — you can skip straight to logging manually" to "Das ist optional — du kannst direkt selbst erfassen",
     "This is your full trigger pool: every trigger that can be picked in the wizard, Quick Log, or Daily Check-In, plus every trigger that gets auto-fired from your wearable, weather, nutrition or menstruation data.\n\nFor each trigger:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log and in the wizard, so put your most-logged ones up top.\n• Tap the row to expand it. From there you can change the category, set the severity (HIGH / MILD / LOW / NONE — NONE keeps it in the pool but stops it contributing to your risk score), and for auto-detected triggers, toggle the automation on/off and set the threshold the app uses to fire it.\n• Tap the trash icon to remove a trigger entirely. Past logged entries aren't affected; the trigger just stops appearing as an option going forward.\n\nUse the + button to add a custom trigger your doctor mentioned or that you've noticed isn't in the defaults. Manual triggers don't auto-fire, you log them yourself.\n\nChanges to severity, category, automation and thresholds save together when you tap Save & Recalculate at the bottom. That recomputes your risk score so the gauge reflects the new weights immediately." to "Das ist deine volle Auslöserliste: jeder Auslöser, den du im Assistenten, in Quick Log oder im Tages-Check wählen kannst, plus jeder Auslöser, der automatisch aus Wearable-, Wetter-, Ernährungs- oder Zyklusdaten ausgelöst wird.\n\nFür jeden Auslöser:\n• Tippe den Stern an, um ihn als Favorit anzuheften. Favoriten stehen in Quick Log und im Assistenten oben, leg deine häufigsten also nach vorn.\n• Tippe die Zeile an, um sie zu öffnen. Dort änderst du die Kategorie, setzt die Gewichtung (HOCH / LEICHT / NIEDRIG / KEINE — KEINE behält ihn in der Liste, lässt ihn aber nicht mehr auf den Risikowert wirken) und schaltest bei automatischen Auslösern die Automatik an oder aus und setzt die Schwelle, ab der sie greift.\n• Tippe den Papierkorb an, um einen Auslöser ganz zu entfernen. Frühere Einträge bleiben unberührt; er erscheint nur nicht mehr als Auswahl.\n\nMit dem +-Knopf fügst du einen eigenen Auslöser hinzu, der in der Praxis genannt wurde oder dir in den Standards fehlt. Manuelle Auslöser greifen nicht automatisch, du erfasst sie selbst.\n\nÄnderungen an Gewichtung, Kategorie, Automatik und Schwellen werden zusammen gesichert, wenn du unten auf Neu berechnen tippst. Das rechnet deinen Risikowert neu, damit die Anzeige die neuen Gewichte sofort spiegelt.",
     "This lets Android share app usage totals with MigraineMe. " to "So teilt Android die App-Nutzungszeiten mit MigraineMe. ",
@@ -3487,6 +3497,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Triggers, prodromes, medicines & symptoms" to "Auslöser, Prodrome, Medikamente, Symptome",
     "Triggers, prodromes, reliefs, treatments — all in one place." to "Auslöser, Prodrome, Linderungen, Behandlungen — alles an einem Ort.",
     "Triptan" to "Triptan",
+    "Triptans" to "Triptane",
     "Trouble concentrating or reading" to "Konzentration oder Lesen schwer",
     "Trustpilot, 137 reviews" to "Trustpilot, 137 Reviews",
     "Try Again" to "Nochmal",

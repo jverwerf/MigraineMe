@@ -516,44 +516,56 @@
     "line": "                    t(\"the pattern behind a specific attack.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:438",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:531",
     "line": "                    t(\"Your medicine usage over the last 30 days. Each row shows a medicine name + the \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:439",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:532",
     "line": "                    t(\"category you've set on it (if any), with three numbers on the right: Day (today), \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:440",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:533",
     "line": "                    t(\"Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:441",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:534",
     "line": "                    t(\"2×, or 1200mg + if you mixed units. \\\"—\\\" means nothing logged in that window.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:442",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:535",
     "line": "                    t(\"Which medicines appear here is driven by what you've favourited in Customize; if \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:443",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:536",
     "line": "                    t(\"you haven't picked favourites, the most-logged medicines from the past week show \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:444",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:537",
     "line": "                    t(\"up. Below those, the most-used categories appear as their own D/W/M totals.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:445",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:538",
     "line": "                    t(\"Tap to open the detail screen with: Customize Medicines (pick favourites and \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:446",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:539",
     "line": "                    t(\"highlighted categories), a full breakdown across every medicine and category, \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:447",
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:540",
     "line": "                    t(\"and a 14-day stacked-bar history chart you can filter by medicine or category.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:565",
+    "line": "                            t(\"%1\\$s: %2\\$s days in the last 30\", drugClassLabel(c.drugClass), c.days.toString()),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:577",
+    "line": "                        t(\"Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:578",
+    "line": "                        t(\"This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.\"),"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:515",

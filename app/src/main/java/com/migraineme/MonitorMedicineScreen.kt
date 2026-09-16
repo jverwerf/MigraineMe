@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,8 +44,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
@@ -246,6 +249,79 @@ suspend fun loadMedicineSummary(context: Context): MedicineSummary = withContext
     )
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// ACUTE MEDICINE DAY COUNTS (rebound-risk rule, server-side)
+// ────────────────────────────────────────────────────────────────────────────
+
+/** One acute drug class the user logged in the window, as returned by the RPC. */
+data class MedicationDayCount(
+    val drugClass: String,
+    val days: Int,
+    val thresholdDays: Int?,
+    val flagged: Boolean,
+    val medicines: List<String>,
+)
+
+/**
+ * Distinct days per acute drug class over the last 30 days. The flag itself is
+ * the server's deterministic ICHD-3 rule, so nothing is decided here.
+ *
+ * A failed call returns an empty list: the caller renders nothing at all, which
+ * is the same as "no class flagged". Never surfaces an error.
+ */
+suspend fun loadMedicationDayCounts(context: Context): List<MedicationDayCount> = withContext(Dispatchers.IO) {
+    val token = SessionStore.getValidAccessToken(context) ?: return@withContext emptyList()
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+
+    val body = JSONObject().put("p_days", 30).toString()
+    val req = Request.Builder().url("$base/rest/v1/rpc/medication_day_counts")
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json")
+        .post(body.toRequestBody("application/json".toMediaType()))
+        .build()
+
+    try {
+        val res = OkHttpClient().newCall(req).execute()
+        val arr = JSONArray(res.body?.string() ?: "[]")
+        buildList {
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val cls = o.optString("drug_class").takeIf { it.isNotBlank() } ?: continue
+                val medsArr = o.optJSONArray("medicines")
+                val meds = buildList {
+                    for (j in 0 until (medsArr?.length() ?: 0)) {
+                        medsArr?.optString(j)?.takeIf { it.isNotBlank() && it != "null" }?.let { add(it) }
+                    }
+                }
+                add(
+                    MedicationDayCount(
+                        drugClass = cls,
+                        days = o.optInt("days"),
+                        thresholdDays = if (o.isNull("threshold_days")) null else o.optInt("threshold_days"),
+                        flagged = o.optBoolean("flagged"),
+                        medicines = meds,
+                    )
+                )
+            }
+        }
+    } catch (_: Exception) { emptyList() }
+}
+
+/** Plain-language name for a drug class key returned by the RPC. */
+@Composable
+private fun drugClassLabel(drugClass: String): String = when (drugClass) {
+    "triptan" -> t("Triptans")
+    "ergot" -> t("Ergots")
+    "opioid" -> t("Opioids")
+    "combination analgesic" -> t("Combination painkillers")
+    "plain painkiller" -> t("Plain painkillers")
+    "gepant" -> t("Gepants")
+    "ditan" -> t("Ditans")
+    else -> prettyLabel(drugClass)
+}
+
 /**
  * Range-aware medicine loader for the full-screen graph. Returns daily totals
  * (and a flat list of distinct medicine + category names) for the requested
@@ -379,6 +455,12 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
     val accent = Color(0xFF4FC3F7)
     var showInfo by remember { mutableStateOf(false) }
 
+    // Rebound-risk day counts. Empty (including on a failed call) renders nothing.
+    var dayCounts by remember { mutableStateOf<List<MedicationDayCount>>(emptyList()) }
+    var showOveruse by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { dayCounts = loadMedicationDayCounts(ctx) }
+    val flaggedClasses = dayCounts.filter { it.flagged }
+
     Box(modifier = Modifier.fillMaxWidth()) {
         MonitorBrainyCard(
             modifier = Modifier.fillMaxWidth().clickable { onClick() },
@@ -391,6 +473,17 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
                 Text(t("Medicines"), color = Color.White,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
+                if (flaggedClasses.isNotEmpty()) {
+                    Icon(
+                        Icons.Outlined.Star,
+                        contentDescription = t("Acute medicine days"),
+                        tint = Color(0xFFFFB74D),
+                        modifier = Modifier
+                            .clickable { showOveruse = true }
+                            .size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             }
 
@@ -447,6 +540,45 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
                     t("and a 14-day stacked-bar history chart you can filter by medicine or category."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
+    }
+
+    if (showOveruse && flaggedClasses.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { showOveruse = false },
+            confirmButton = { TextButton(onClick = { showOveruse = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Star, contentDescription = null,
+                        tint = Color(0xFFFFB74D), modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(t("Acute medicine days"), color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Column {
+                    flaggedClasses.forEach { c ->
+                        Text(
+                            t("%1\$s: %2\$s days in the last 30", drugClassLabel(c.drugClass), c.days.toString()),
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        if (c.medicines.isNotEmpty()) {
+                            Text(c.medicines.joinToString(", "),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelMedium)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    Text(
+                        t("Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. ") +
+                        t("This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor."),
+                        color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             },
             containerColor = Color(0xFF1E0A2E)
         )

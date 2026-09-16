@@ -36,10 +36,10 @@
       "app/src/main/java/com/migraineme/HomeScreen.kt:435",
       "app/src/main/java/com/migraineme/HomeScreen.kt:667",
       "app/src/main/java/com/migraineme/HomeScreen.kt:926",
-      "... 32 more"
+      "... 33 more"
     ],
     "max_len": 14,
-    "count": 37
+    "count": 38
   },
   {
     "en": "Save",
@@ -524,7 +524,7 @@
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:404",
       "app/src/main/java/com/migraineme/HomeScreen.kt:621",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:122",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1190",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1322",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:187",
       "... 4 more"
     ],
@@ -552,7 +552,7 @@
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:384",
       "app/src/main/java/com/migraineme/HomeScreen.kt:608",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:103",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1182",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1314",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:157",
       "... 4 more"
     ],
@@ -1166,7 +1166,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/JournalQuickAdd.kt:336",
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:553",
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:555",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:259",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:430",
       "app/src/main/java/com/migraineme/TriggersScreen.kt:427"
@@ -1415,7 +1415,7 @@
       "app/src/main/java/com/migraineme/QuickLogMedicineScreen.kt:228",
       "app/src/main/java/com/migraineme/QuickLogReliefScreen.kt:223",
       "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:212",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:250"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:251"
     ],
     "max_len": 14,
     "count": 4
@@ -1497,7 +1497,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/HomeScreen.kt:561",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:557",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:689",
       "app/src/main/java/com/migraineme/PremiumGate.kt:360",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:131"
     ],
@@ -1607,7 +1607,7 @@
       "app/src/main/java/com/migraineme/QuickLogMedicineScreen.kt:271",
       "app/src/main/java/com/migraineme/QuickLogReliefScreen.kt:297",
       "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:234",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:268"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:269"
     ],
     "max_len": 19,
     "count": 4
@@ -1918,8 +1918,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:278",
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:308",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:228"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:309",
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:229"
     ],
     "max_len": 26,
     "count": 3
@@ -1983,9 +1983,9 @@
     "en": "Categories",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:579",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1095",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1426"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:711",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1227",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1558"
     ],
     "max_len": 14,
     "count": 3
@@ -2304,7 +2304,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/MigraineHubScreen.kt:184",
       "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:155",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:310"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:311"
     ],
     "max_len": 15,
     "count": 3
@@ -2469,7 +2469,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:243",
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:279",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:219"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:220"
     ],
     "max_len": 17,
     "count": 3
@@ -2590,7 +2590,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:381",
       "app/src/main/java/com/migraineme/QuickLogStrip.kt:553",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:310"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:311"
     ],
     "max_len": 14,
     "count": 3
@@ -2742,7 +2742,7 @@
     "en": "Unknown",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1232",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1364",
       "app/src/main/java/com/migraineme/EditMedicineScreen.kt:91",
       "app/src/main/java/com/migraineme/EditMedicineScreen.kt:96"
     ],
@@ -2753,7 +2753,7 @@
     "en": "Unlock Treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:548",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:680",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:256",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:506"
     ],
@@ -3261,8 +3261,8 @@
     "en": "About Medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:432",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:419"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:525",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:512"
     ],
     "max_len": 18,
     "count": 2
@@ -3375,6 +3375,16 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:920"
     ],
     "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Acute medicine days",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:557",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:479"
+    ],
+    "max_len": 22,
     "count": 2
   },
   {
@@ -3552,7 +3562,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/OnboardingPages.kt:137",
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:219"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:229"
     ],
     "max_len": 32,
     "count": 2
@@ -3682,7 +3692,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2614",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:680"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:812"
     ],
     "max_len": 14,
     "count": 2
@@ -4171,7 +4181,7 @@
     "en": "In an attack? This one",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:226",
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:236",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:109"
     ],
     "max_len": 32,
@@ -4212,7 +4222,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/FreeTrialGiftScreen.kt:88",
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:446"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:459"
     ],
     "max_len": 14,
     "count": 2
@@ -4331,7 +4341,7 @@
     "en": "Minimal setup for the app to work",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:210",
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:220",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:131"
     ],
     "max_len": 47,
@@ -4421,8 +4431,8 @@
     "en": "No medicines logged in the last 30 days",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:399",
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:508"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:492",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:640"
     ],
     "max_len": 56,
     "count": 2
@@ -4442,7 +4452,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:285",
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:314"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:315"
     ],
     "max_len": 18,
     "count": 2
@@ -4682,7 +4692,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CompanionsScreen.kt:351",
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:194"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:204"
     ],
     "max_len": 14,
     "count": 2
@@ -5002,7 +5012,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/OnboardingPages.kt:119",
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:235"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:245"
     ],
     "max_len": 14,
     "count": 2
@@ -5011,8 +5021,8 @@
     "en": "Started %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:828",
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:545"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:829",
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:547"
     ],
     "max_len": 14,
     "count": 2
@@ -5161,7 +5171,7 @@
     "en": "Track your health metrics over time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:549",
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:681",
       "app/src/main/java/com/migraineme/MonitorPhysicalScreen.kt:230"
     ],
     "max_len": 38,
@@ -5292,7 +5302,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:219",
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:254"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:255"
     ],
     "max_len": 31,
     "count": 2
@@ -5962,6 +5972,15 @@
     "count": 1
   },
   {
+    "en": "%1$s: %2$s days in the last 30",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:565"
+    ],
+    "max_len": 43,
+    "count": 1
+  },
+  {
     "en": "%1$ss account for %2$s%% of your migraines — about %3$s times an average day.",
     "class": "soft",
     "sites": [
@@ -6523,7 +6542,7 @@
     "en": "%s-Day Medicines History",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1387"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1519"
     ],
     "max_len": 34,
     "count": 1
@@ -6613,7 +6632,7 @@
     "en": "+ Add a time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:545"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:547"
     ],
     "max_len": 15,
     "count": 1
@@ -6676,7 +6695,7 @@
     "en": "0 min",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:228"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:238"
     ],
     "max_len": 14,
     "count": 1
@@ -6865,7 +6884,7 @@
     "en": "1. Permissions",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:684"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:697"
     ],
     "max_len": 17,
     "count": 1
@@ -6892,7 +6911,7 @@
     "en": "14-Day Medicines History",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:554"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:686"
     ],
     "max_len": 34,
     "count": 1
@@ -6910,7 +6929,7 @@
     "en": "2. Connect",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:686"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:699"
     ],
     "max_len": 14,
     "count": 1
@@ -6919,7 +6938,7 @@
     "en": "2×, or 1200mg + if you mixed units. \"—\" means nothing logged in that window.\n\n",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:441"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:534"
     ],
     "max_len": 113,
     "count": 1
@@ -6928,7 +6947,7 @@
     "en": "3. Configure",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:688"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:701"
     ],
     "max_len": 15,
     "count": 1
@@ -6946,7 +6965,7 @@
     "en": "4. AI Personalisation",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:690"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:703"
     ],
     "max_len": 31,
     "count": 1
@@ -7045,7 +7064,7 @@
     "en": "A few questions about your migraines",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:214"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:224"
     ],
     "max_len": 52,
     "count": 1
@@ -7720,7 +7739,7 @@
     "en": "Add to frequent",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:427"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:433"
     ],
     "max_len": 25,
     "count": 1
@@ -7729,7 +7748,7 @@
     "en": "Add to this migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:835"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:836"
     ],
     "max_len": 23,
     "count": 1
@@ -8062,7 +8081,7 @@
     "en": "All set!",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:607"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:620"
     ],
     "max_len": 14,
     "count": 1
@@ -8395,7 +8414,7 @@
     "en": "Answer questions about your migraines, AI configures everything",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:690"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:703"
     ],
     "max_len": 91,
     "count": 1
@@ -9727,7 +9746,7 @@
     "en": "Breakdown",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:518"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:650"
     ],
     "max_len": 14,
     "count": 1
@@ -9853,7 +9872,7 @@
     "en": "By category",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1197"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1329"
     ],
     "max_len": 14,
     "count": 1
@@ -10474,7 +10493,7 @@
     "en": "Choose which data to collect",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:688"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:701"
     ],
     "max_len": 40,
     "count": 1
@@ -10582,7 +10601,7 @@
     "en": "Clear time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:557"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:559"
     ],
     "max_len": 14,
     "count": 1
@@ -10666,6 +10685,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Combination painkillers",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:318"
+    ],
+    "max_len": 33,
     "count": 1
   },
   {
@@ -10915,7 +10943,7 @@
     "en": "Connect your wearable at the end",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:216"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:226"
     ],
     "max_len": 46,
     "count": 1
@@ -11311,7 +11339,7 @@
     "en": "Customize Medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:492"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:624"
     ],
     "max_len": 22,
     "count": 1
@@ -11509,7 +11537,7 @@
     "en": "Daily amount, stacked",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1390"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1522"
     ],
     "max_len": 31,
     "count": 1
@@ -11674,6 +11702,15 @@
       "build-report-html/render.ts"
     ],
     "max_len": 21,
+    "count": 1
+  },
+  {
+    "en": "Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. ",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:577"
+    ],
+    "max_len": 150,
     "count": 1
   },
   {
@@ -12079,6 +12116,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
     ],
     "max_len": 15,
+    "count": 1
+  },
+  {
+    "en": "Ditans",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:321"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -12895,7 +12941,7 @@
     "en": "End now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:904"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:905"
     ],
     "max_len": 14,
     "count": 1
@@ -12931,7 +12977,7 @@
     "en": "Ends with connecting your wearable and your profile",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:200"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:210"
     ],
     "max_len": 73,
     "count": 1
@@ -13060,6 +13106,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Ergots",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:316"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -14344,7 +14399,7 @@
     "en": "Full log",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:892"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:893"
     ],
     "max_len": 14,
     "count": 1
@@ -14488,7 +14543,7 @@
     "en": "General",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:230"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:231"
     ],
     "max_len": 14,
     "count": 1
@@ -14548,6 +14603,15 @@
     "count": 1
   },
   {
+    "en": "Gepants",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:320"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Get notified each morning when your new recommendations are ready",
     "class": "soft",
     "sites": [
@@ -14587,7 +14651,7 @@
     "en": "Getting things ready",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:607"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:620"
     ],
     "max_len": 23,
     "count": 1
@@ -14677,7 +14741,7 @@
     "en": "Go to the app",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:227"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:237"
     ],
     "max_len": 16,
     "count": 1
@@ -14758,7 +14822,7 @@
     "en": "HOW IT WORKS",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:103"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:110"
     ],
     "max_len": 15,
     "count": 1
@@ -14911,7 +14975,7 @@
     "en": "Health Connect, WHOOP, Oura, Polar, Garmin",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:686"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:699"
     ],
     "max_len": 60,
     "count": 1
@@ -15289,7 +15353,7 @@
     "en": "How bad was it?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:506"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:508"
     ],
     "max_len": 18,
     "count": 1
@@ -15316,7 +15380,7 @@
     "en": "How do you\nwant to *start?*",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:187"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:197"
     ],
     "max_len": 39,
     "count": 1
@@ -15838,7 +15902,7 @@
     "en": "If you skip now, only limited demo data will be shown. The app will work perfectly fine — you'll just see fewer example insights in the tour.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:462"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:475"
     ],
     "max_len": 204,
     "count": 1
@@ -16306,7 +16370,7 @@
     "en": "Keep loading",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:483"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:496"
     ],
     "max_len": 15,
     "count": 1
@@ -17062,7 +17126,7 @@
     "en": "Location, notifications, microphone, calendar",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:684"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:697"
     ],
     "max_len": 65,
     "count": 1
@@ -17242,7 +17306,7 @@
     "en": "Log medicines on the Log screen to see them here",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:510"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:642"
     ],
     "max_len": 69,
     "count": 1
@@ -17323,7 +17387,7 @@
     "en": "Log your attacks, that is the only thing you have to do",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:231"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:241"
     ],
     "max_len": 79,
     "count": 1
@@ -17836,7 +17900,7 @@
     "en": "Medicines Taken",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1215"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1347"
     ],
     "max_len": 18,
     "count": 1
@@ -18061,7 +18125,7 @@
     "en": "Migraine in progress",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:785"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:786"
     ],
     "max_len": 23,
     "count": 1
@@ -19384,7 +19448,7 @@
     "en": "No medicines logged in this range",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1403"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1535"
     ],
     "max_len": 47,
     "count": 1
@@ -19393,7 +19457,7 @@
     "en": "No medicines logged on this date",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1224"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1356"
     ],
     "max_len": 46,
     "count": 1
@@ -19537,7 +19601,7 @@
     "en": "No postdrome symptoms yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:351"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:353"
     ],
     "max_len": 28,
     "count": 1
@@ -19951,7 +20015,7 @@
     "en": "Nothing in your list yet.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:528"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:529"
     ],
     "max_len": 36,
     "count": 1
@@ -20068,7 +20132,7 @@
     "en": "Now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:257"
+      "app/src/main/java/com/migraineme/QuickMigraineScreen.kt:258"
     ],
     "max_len": 14,
     "count": 1
@@ -20086,7 +20150,7 @@
     "en": "Now let's set up\nyour *data*",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:680"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:693"
     ],
     "max_len": 40,
     "count": 1
@@ -20332,6 +20396,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:417"
     ],
     "max_len": 25,
+    "count": 1
+  },
+  {
+    "en": "Opioids",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:317"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -21265,7 +21338,7 @@
     "en": "Pick a medicine or category to chart",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:947"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1079"
     ],
     "max_len": 52,
     "count": 1
@@ -21283,7 +21356,7 @@
     "en": "Pick medicines and categories to prioritize on the Monitor card and chart.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1061"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1193"
     ],
     "max_len": 107,
     "count": 1
@@ -21319,7 +21392,7 @@
     "en": "Pick which medicines appear as favourites on the card",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:494"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:626"
     ],
     "max_len": 76,
     "count": 1
@@ -21340,6 +21413,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Plain painkillers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:319"
+    ],
+    "max_len": 20,
     "count": 1
   },
   {
@@ -21535,7 +21617,7 @@
     "en": "Postdrome (after attack)",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:345"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:347"
     ],
     "max_len": 34,
     "count": 1
@@ -22516,7 +22598,7 @@
     "en": "Remove %s from this log",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:575"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:577"
     ],
     "max_len": 33,
     "count": 1
@@ -22543,7 +22625,7 @@
     "en": "Remove from frequent",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:427"
+      "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:433"
     ],
     "max_len": 30,
     "count": 1
@@ -23056,7 +23138,7 @@
     "en": "SE: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1260"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1392"
     ],
     "max_len": 14,
     "count": 1
@@ -23470,7 +23552,7 @@
     "en": "See our Privacy Policy for details.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:694"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:707"
     ],
     "max_len": 50,
     "count": 1
@@ -23857,7 +23939,7 @@
     "en": "Set up my profile",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:211"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:221"
     ],
     "max_len": 20,
     "count": 1
@@ -24163,7 +24245,7 @@
     "en": "Show me how it works",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:80"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:84"
     ],
     "max_len": 23,
     "count": 1
@@ -24172,7 +24254,7 @@
     "en": "Show me the app",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:203"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:213"
     ],
     "max_len": 18,
     "count": 1
@@ -24361,7 +24443,7 @@
     "en": "Skip anyway",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:478"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:491"
     ],
     "max_len": 14,
     "count": 1
@@ -24370,7 +24452,7 @@
     "en": "Skip loading?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:459"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:472"
     ],
     "max_len": 16,
     "count": 1
@@ -24388,7 +24470,7 @@
     "en": "Skip — I'd rather not rate it",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:568"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:570"
     ],
     "max_len": 42,
     "count": 1
@@ -25000,7 +25082,7 @@
     "en": "Start Tour",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:437"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:450"
     ],
     "max_len": 14,
     "count": 1
@@ -25243,7 +25325,7 @@
     "en": "Straight in, nothing to fill in",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:230"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:240"
     ],
     "max_len": 44,
     "count": 1
@@ -25765,7 +25847,7 @@
     "en": "Take the tour",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:195"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:205"
     ],
     "max_len": 16,
     "count": 1
@@ -26098,7 +26180,7 @@
     "en": "Tap to open the detail screen with: Customize Medicines (pick favourites and ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:445"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:538"
     ],
     "max_len": 111,
     "count": 1
@@ -26278,7 +26360,7 @@
     "en": "Ten real screens, each explained in one card",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:198"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:208"
     ],
     "max_len": 63,
     "count": 1
@@ -26314,7 +26396,7 @@
     "en": "The AI drafts your triggers, thresholds and pool",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:215"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:225"
     ],
     "max_len": 69,
     "count": 1
@@ -26341,7 +26423,7 @@
     "en": "The AI proposes your profile every Monday, after about 5 attacks",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:232"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:242"
     ],
     "max_len": 92,
     "count": 1
@@ -26368,7 +26450,7 @@
     "en": "The app is ready for the tour.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:622"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:635"
     ],
     "max_len": 43,
     "count": 1
@@ -26722,6 +26804,15 @@
       "app/src/main/java/com/migraineme/JournalEditScreen.kt:1115"
     ],
     "max_len": 31,
+    "count": 1
+  },
+  {
+    "en": "This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:578"
+    ],
+    "max_len": 253,
     "count": 1
   },
   {
@@ -27658,6 +27749,15 @@
       "app/src/main/java/com/migraineme/OnboardingScreen.kt:511"
     ],
     "max_len": 87,
+    "count": 1
+  },
+  {
+    "en": "Triptans",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:315"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -29149,7 +29249,7 @@
     "en": "We're preparing your example data — this usually takes up to a minute. After the tour we'll ask a few quick questions and connect your wearables. Just once.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:623"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:636"
     ],
     "max_len": 226,
     "count": 1
@@ -29311,7 +29411,7 @@
     "en": "Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:440"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:533"
     ],
     "max_len": 118,
     "count": 1
@@ -30256,7 +30356,7 @@
     "en": "Where everything lives, tab by tab",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:199"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:209"
     ],
     "max_len": 49,
     "count": 1
@@ -30346,7 +30446,7 @@
     "en": "Which medicines appear here is driven by what you've favourited in Customize; if ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:442"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:535"
     ],
     "max_len": 117,
     "count": 1
@@ -30895,7 +30995,7 @@
     "en": "You miss nothing.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:202"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:212"
     ],
     "max_len": 20,
     "count": 1
@@ -30904,7 +31004,7 @@
     "en": "You miss: the tour, the AI head start and your wearable, until you open Settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:234"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:244"
     ],
     "max_len": 117,
     "count": 1
@@ -30913,7 +31013,7 @@
     "en": "You miss: the tour. Rerun it anytime from Profile.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:218"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:228"
     ],
     "max_len": 72,
     "count": 1
@@ -31228,7 +31328,7 @@
     "en": "Your medicine usage over the last 30 days. Each row shows a medicine name + the ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:438"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:531"
     ],
     "max_len": 116,
     "count": 1
@@ -31741,7 +31841,7 @@
     "en": "and a 14-day stacked-bar history chart you can filter by medicine or category.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:447"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:540"
     ],
     "max_len": 113,
     "count": 1
@@ -31948,7 +32048,7 @@
     "en": "category you've set on it (if any), with three numbers on the right: Day (today), ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:439"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:532"
     ],
     "max_len": 118,
     "count": 1
@@ -32416,7 +32516,7 @@
     "en": "highlighted categories), a full breakdown across every medicine and category, ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:446"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:539"
     ],
     "max_len": 113,
     "count": 1
@@ -33127,7 +33227,7 @@
     "en": "relief: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1255"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1387"
     ],
     "max_len": 14,
     "count": 1
@@ -33658,7 +33758,7 @@
     "en": "up. Below those, the most-used categories appear as their own D/W/M totals.\n\n",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:444"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:537"
     ],
     "max_len": 111,
     "count": 1
@@ -33703,7 +33803,7 @@
     "en": "wearables, data, then the AI personalises it all",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingScreen.kt:682"
+      "app/src/main/java/com/migraineme/OnboardingScreen.kt:695"
     ],
     "max_len": 69,
     "count": 1
@@ -33757,7 +33857,7 @@
     "en": "you can rerun any of this from Profile",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:189"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:199"
     ],
     "max_len": 55,
     "count": 1
@@ -33766,7 +33866,7 @@
     "en": "you haven't picked favourites, the most-logged medicines from the past week show ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:443"
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:536"
     ],
     "max_len": 117,
     "count": 1
@@ -34054,7 +34154,7 @@
     "en": "~3 min",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:212"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:222"
     ],
     "max_len": 14,
     "count": 1
@@ -34063,7 +34163,7 @@
     "en": "~5 min",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:196"
+      "app/src/main/java/com/migraineme/OnboardingIntroPages.kt:206"
     ],
     "max_len": 14,
     "count": 1
