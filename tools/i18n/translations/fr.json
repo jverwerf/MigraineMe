@@ -4255,6 +4255,7 @@
  "some relief %1$s of %2$s times": "un peu de soulagement %1$s fois sur %2$s",
  "stable": "stable",
  "started %s": "commencé %s",
+ "steadier %s": "stable : %s",
  "steady": "stable",
  "steady %s": "stable %s",
  "steady {0}": "stable {0}",

@@ -603,16 +603,25 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 )
             }
         }
-    val helpingPool = correlations.filter { it.factorType == "well_done" }.sortedByDescending { it.liftRatio }
+    // Both halves of the card, not just the first. A user whose only finding is
+    // a chain (e.g. training days -> steadier recovery) had a populated screen
+    // behind an empty card, because this preview filtered to well_done alone.
+    val helpingPool = correlations
+        .filter { it.factorType == "well_done" || it.factorType == "well_done_chain" }
+        .sortedByDescending { it.liftRatio }
     val whatsHelpingPreview: (@Composable ColumnScope.() -> Unit)? =
         helpingPool.takeIf { it.isNotEmpty() }?.let { pool ->
             {
                 CardPreviewRows(
                     pool.take(2).map {
-                        // Attack-free days, a third question again: how much more
-                        // often you did this on the days no attack came.
-                        CardPreviewEntry(it.factorName,
-                            tSync("on %s%% of migraine-free days", it.pctControlWindows.toInt()))
+                        // well_done reads against migraine-free days; a chain reads
+                        // against the steadiness it drives, so it names its target.
+                        if (it.factorType == "well_done_chain")
+                            CardPreviewEntry(it.factorName,
+                                tSync("steadier %s", (it.factorB ?: "").lowercase()))
+                        else
+                            CardPreviewEntry(it.factorName,
+                                tSync("on %s%% of migraine-free days", it.pctControlWindows.toInt()))
                     },
                     totalCount = pool.size
                 )
