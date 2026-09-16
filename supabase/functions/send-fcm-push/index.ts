@@ -135,6 +135,9 @@ async function sendFcmMessage(
       data: {
         // Caller-supplied fields first so `type` can never be overwritten.
         ...extraData,
+        // Android renders ios_alert pushes itself in onMessageReceived; give it the
+        // same copy iOS shows so the two lock screens say the same thing.
+        ...(notification && iosAlertOnly ? { title: notification.title, body: notification.body } : {}),
         type: messageType,
       },
       // `iosAlertOnly` keeps the copy out of the top-level notification, which
