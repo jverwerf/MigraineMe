@@ -75,7 +75,7 @@ fun PostdromesScreen(
     // Wizard search — live-filters the symptom grid below
     var wizardSearch by remember { mutableStateOf("") }
     val searchItems = if (wizardSearch.isBlank()) postdromeItems
-        else postdromeItems.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+        else postdromeItems.filter { matchesSearch(it.label, wizardSearch) }
 
     val frequentLabels = postdromeItems.filter { it.id in favoriteIds }.map { it.label }.toSet()
     val frequent = searchItems.filter { it.label in frequentLabels }

@@ -370,3 +370,11 @@ fun DismissableInfoCard(
         }
     }
 }
+
+/** Pool rows are stored with English labels and rendered through t(); search has to match what
+ *  the user actually sees, or a French user typing "Règles" finds nothing. Match both. */
+fun matchesSearch(label: String, query: String): Boolean {
+    val q = query.trim()
+    if (q.isEmpty()) return true
+    return label.contains(q, ignoreCase = true) || tSync(label).contains(q, ignoreCase = true)
+}

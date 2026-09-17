@@ -272,7 +272,7 @@ fun ManagePoolScreen(
                 }
 
                 val visibleItems = if (searchQuery.isBlank()) effectiveConfig.items
-                    else effectiveConfig.items.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+                    else effectiveConfig.items.filter { matchesSearch(it.label, searchQuery) }
                 val isSearching = searchQuery.isNotBlank()
 
                 if (visibleItems.isEmpty()) {
@@ -440,7 +440,7 @@ fun ManagePoolScreen(
 
                     val isSearching = searchQuery.isNotBlank()
                     val visibleLibrary = if (!isSearching) effectiveConfig.libraryItems
-                        else effectiveConfig.libraryItems.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+                        else effectiveConfig.libraryItems.filter { matchesSearch(it.label, searchQuery) }
 
                     if (visibleLibrary.isEmpty()) {
                         Text(

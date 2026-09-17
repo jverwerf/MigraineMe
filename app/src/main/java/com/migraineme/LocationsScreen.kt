@@ -72,7 +72,7 @@ fun LocationsScreen(
     var wizardSearch by remember { mutableStateOf("") }
     val searchPool = remember(pool, wizardSearch) {
         if (wizardSearch.isBlank()) pool
-        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+        else pool.filter { matchesSearch(it.label, wizardSearch) }
     }
 
     val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
