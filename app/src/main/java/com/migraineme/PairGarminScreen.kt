@@ -153,6 +153,15 @@ fun GarminConnectionCard(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
                         ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = accent,
+                            focusedBorderColor = accent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.45f),
+                            focusedPlaceholderColor = Color.White.copy(alpha = 0.35f),
+                            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.35f)
+                        ),
                         modifier = Modifier.width(150.dp)
                     )
                     Spacer(Modifier.width(8.dp))

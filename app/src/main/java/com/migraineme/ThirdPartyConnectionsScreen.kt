@@ -1437,7 +1437,7 @@ fun GarminDevicePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.BaseCardContainer,
+        containerColor = Color(0xFF1E0A2E),
         title = {
             Column {
                 Text(
