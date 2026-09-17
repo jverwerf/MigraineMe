@@ -2148,80 +2148,99 @@ class EdgeFunctionsService {
          *  instead of re-filtering by p. */
         val hasGateMode: Boolean get() = lagDetails?.get("mode") is kotlinx.serialization.json.JsonPrimitive
 
-        /** Human-readable description of this finding */
-        fun toInsightText(): String = when (factorType) {
-            "trigger" -> {
-                if (mode == "prevalence") {
-                    // No fair normal-day comparison — honest count, no multiplier.
-                    if (neverOnNormalDay)
-                        "${factorName} appeared in $attackHits of your $sampleSize $countNoun and never on a normal day. " +
-                            "There is nothing to compare it against, so no multiplier."
-                    else
-                        "${factorName} appeared in $attackHits of your $sampleSize $countNoun. " +
-                            "Not enough day-to-day data yet to say how much it changes your risk."
-                } else {
-                val lagText = if (bestLagDays == 0) "on the same day"
-                    else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
-                val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your ${if (isChronic) "flare days" else "migraines"} ($lagText). " +
-                    "That's about ${trimLift(liftRatio)} times as likely as on your normal days."
-                val parts = mutableListOf(base)
-                val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
-                val sevStr = avgSeverity?.let { "severity ${String.format("%.0f", it)}/10" }
-                val extras = listOfNotNull(durStr, sevStr)
-                if (extras.isNotEmpty()) parts.add("These migraines: ${extras.joinToString(", ")}.")
-                parts.joinToString(" ")
-                }
-            }
-            "metric" -> {
-                if (suggestedThreshold != null && currentThreshold != null &&
-                    kotlin.math.abs(suggestedThreshold - currentThreshold) > currentThreshold * 0.05f) {
-                    val dirText = when (thresholdDirection) {
-                        "low" -> "drops below"
-                        "high" -> "rises above"
-                        else -> "crosses"
+        /**
+         * Human-readable description of this finding. Every sentence is an i18n
+         * key with positional placeholders, mirrored string for string by iOS
+         * InsightsViewModel.insightText, so both platforms translate the same
+         * copy. Built outside composition, hence tSync.
+         */
+        fun toInsightText(): String {
+            val name = tSync(factorName)
+            val nameB = tSync(factorB ?: "?")
+            // English lowercases the metric label mid-sentence ("when sleep
+            // duration drops below"); other languages keep their own casing.
+            val nameLower = if (LangPrefs.get() == Lang.EN) name.lowercase() else name
+            val pct = pctMigraineWindows.toInt().toString()
+            val lift = trimLift(liftRatio)
+            return when (factorType) {
+                "trigger" -> {
+                    if (mode == "prevalence") {
+                        // No fair normal-day comparison — honest count, no multiplier.
+                        if (neverOnNormalDay) {
+                            if (isChronic) tSync("%1\$s appeared in %2\$s of your %3\$s flare days and never on a normal day. There is nothing to compare it against, so no multiplier.", name, attackHits, sampleSize)
+                            else tSync("%1\$s appeared in %2\$s of your %3\$s attacks and never on a normal day. There is nothing to compare it against, so no multiplier.", name, attackHits, sampleSize)
+                        } else {
+                            if (isChronic) tSync("%1\$s appeared in %2\$s of your %3\$s flare days. Not enough day-to-day data yet to say how much it changes your risk.", name, attackHits, sampleSize)
+                            else tSync("%1\$s appeared in %2\$s of your %3\$s attacks. Not enough day-to-day data yet to say how much it changes your risk.", name, attackHits, sampleSize)
+                        }
+                    } else {
+                        val lagText = when (bestLagDays) {
+                            0 -> tSync("on the same day")
+                            1 -> tSync("1 day before onset")
+                            else -> tSync("%s days before onset", bestLagDays)
+                        }
+                        val base = if (isChronic)
+                            tSync("%1\$s appeared before %2\$s%% of your flare days (%3\$s). That's about %4\$s times as likely as on your normal days.", name, pct, lagText, lift)
+                        else
+                            tSync("%1\$s appeared before %2\$s%% of your migraines (%3\$s). That's about %4\$s times as likely as on your normal days.", name, pct, lagText, lift)
+                        val durStr = avgDurationHrs?.let { tSync("avg %shrs", String.format("%.0f", it)) }
+                        val sevStr = avgSeverity?.let { tSync("severity %s/10", String.format("%.0f", it)) }
+                        val extras = listOfNotNull(durStr, sevStr)
+                        if (extras.isEmpty()) base
+                        else base + " " + tSync("These migraines: %s.", extras.joinToString(", "))
                     }
-                    "Your migraine risk jumps when ${factorName.lowercase()} $dirText " +
-                        "${fmtThreshold(suggestedThreshold, factorName)} — your current alert is set at " +
-                        "${fmtThreshold(currentThreshold, factorName)}."
-                } else if (suggestedThreshold != null) {
-                    val dirText = when (thresholdDirection) {
-                        "low" -> "below"
-                        "high" -> "above"
-                        else -> "around"
+                }
+                "metric" -> {
+                    if (suggestedThreshold != null && currentThreshold != null &&
+                        kotlin.math.abs(suggestedThreshold - currentThreshold) > currentThreshold * 0.05f) {
+                        val dirText = when (thresholdDirection) {
+                            "low" -> tSync("drops below")
+                            "high" -> tSync("rises above")
+                            else -> tSync("crosses")
+                        }
+                        tSync("Your migraine risk jumps when %1\$s %2\$s %3\$s — your current alert is set at %4\$s.",
+                            nameLower, dirText, fmtThreshold(suggestedThreshold, factorName), fmtThreshold(currentThreshold, factorName))
+                    } else if (suggestedThreshold != null) {
+                        val dirText = when (thresholdDirection) {
+                            "low" -> tSync("below")
+                            "high" -> tSync("above")
+                            else -> tSync("around")
+                        }
+                        tSync("Your migraines cluster when %1\$s is %2\$s %3\$s (about %4\$s times as likely).",
+                            nameLower, dirText, fmtThreshold(suggestedThreshold, factorName), lift)
+                    } else {
+                        tSync("%1\$s turns up about %2\$s times as often on pre-migraine days as on normal days.", name, lift)
                     }
-                    "Your migraines cluster when ${factorName.lowercase()} is $dirText " +
-                        "${fmtThreshold(suggestedThreshold, factorName)} " +
-                        "(about ${trimLift(liftRatio)} times as likely)."
-                } else {
-                    "${factorName} turns up about ${trimLift(liftRatio)} times as often on pre-migraine days as on normal days."
                 }
-            }
-            "interaction" -> {
-                if (mode == "prevalence") {
-                    if (neverOnNormalDay)
-                        "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun and never on a normal day. " +
-                            "There is nothing to compare them against, so no multiplier."
-                    else
-                        "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize $countNoun. " +
-                            "Not enough day-to-day data yet to say how much they change your risk."
-                } else {
-                    "${factorName} + ${factorB ?: "?"} together preceded " +
-                        "${pctMigraineWindows.toInt()}% of your ${if (isChronic) "flare days" else "migraines"} — " +
-                        "about ${trimLift(liftRatio)} times as likely as either alone."
+                "interaction" -> {
+                    if (mode == "prevalence") {
+                        if (neverOnNormalDay) {
+                            if (isChronic) tSync("%1\$s + %2\$s appeared together in %3\$s of your %4\$s flare days and never on a normal day. There is nothing to compare them against, so no multiplier.", name, nameB, attackHits, sampleSize)
+                            else tSync("%1\$s + %2\$s appeared together in %3\$s of your %4\$s attacks and never on a normal day. There is nothing to compare them against, so no multiplier.", name, nameB, attackHits, sampleSize)
+                        } else {
+                            if (isChronic) tSync("%1\$s + %2\$s appeared together in %3\$s of your %4\$s flare days. Not enough day-to-day data yet to say how much they change your risk.", name, nameB, attackHits, sampleSize)
+                            else tSync("%1\$s + %2\$s appeared together in %3\$s of your %4\$s attacks. Not enough day-to-day data yet to say how much they change your risk.", name, nameB, attackHits, sampleSize)
+                        }
+                    } else {
+                        if (isChronic) tSync("%1\$s + %2\$s together preceded %3\$s%% of your flare days — about %4\$s times as likely as either alone.", name, nameB, pct, lift)
+                        else tSync("%1\$s + %2\$s together preceded %3\$s%% of your migraines — about %4\$s times as likely as either alone.", name, nameB, pct, lift)
+                    }
                 }
+                // Combination rows are not multipliers any more. lift_ratio on them is
+                // computed the old way and says nothing a reader can act on, so the
+                // sentence reports how often the pair was actually used and stops.
+                "treatment_interaction" ->
+                    if (isChronic) tSync("%1\$s + %2\$s used together in %3\$s of your flare days.", name, nameB, sampleSize)
+                    else tSync("%1\$s + %2\$s used together in %3\$s of your attacks.", name, nameB, sampleSize)
+                // The treatment sentence is built by TreatmentEffectiveness.kt, which
+                // owns the whole vocabulary (verdict word, evidence line, timing line)
+                // so the hub, the page and the report cannot drift apart. This is the
+                // fallback for anywhere still calling the generic sentence builder.
+                "treatment" ->
+                    if (isChronic) tSync("%1\$s was logged in %2\$s of your flare days.", name, sampleSize)
+                    else tSync("%1\$s was logged in %2\$s of your attacks.", name, sampleSize)
+                else -> tSync("%1\$s turns up about %2\$s times as often around your attacks.", name, lift)
             }
-            // Combination rows are not multipliers any more. lift_ratio on them is
-            // computed the old way and says nothing a reader can act on, so the
-            // sentence reports how often the pair was actually used and stops.
-            "treatment_interaction" ->
-                "${factorName} + ${factorB ?: "?"} used together in $sampleSize of your $countNoun."
-            // The treatment sentence is built by TreatmentEffectiveness.kt, which
-            // owns the whole vocabulary (verdict word, evidence line, timing line)
-            // so the hub, the page and the report cannot drift apart. This is the
-            // fallback for anywhere still calling the generic sentence builder.
-            "treatment" ->
-                "${factorName} was logged in $sampleSize of your $countNoun."
-            else -> "${factorName} turns up about ${trimLift(liftRatio)} times as often around your attacks."
         }
 
         fun isSignificant(): Boolean = when (factorType) {

@@ -372,7 +372,9 @@ def main():
                 line = lines[i] if i < len(lines) else ""
                 if line.lstrip().startswith("//"):
                     continue
-                if "${" in raw or re.search(r'\$[A-Za-z_]', raw):
+                # Positional placeholders (%1$s) are not Kotlin interpolation:
+                # strip them before looking for a $name reference.
+                if "${" in raw or re.search(r'\$[A-Za-z_]', re.sub(r'%\d+\$', '', raw)):
                     if WORD.search(STRIPPED.sub("", raw)):
                         interpolated.setdefault(f"{rel}:{ln}", line.rstrip())
                     continue

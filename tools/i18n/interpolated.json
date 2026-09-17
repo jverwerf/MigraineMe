@@ -1,67 +1,11 @@
 [
   {
-    "site": "app/src/main/java/com/migraineme/AdjustReliefsScreen.kt:105",
-    "line": "                                    scope.launch { snackbar.showSnackbar(tSync(\"Failed to remove: %1\\$s\", e.message ?: tSync(\"error\"))) }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AdjustReliefsScreen.kt:130",
-    "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Delete failed: %1\\$s\", e.message ?: tSync(\"error\"))) }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AdjustReliefsScreen.kt:158",
-    "line": "                                        scope.launch { snackbar.showSnackbar(tSync(\"Add failed: %1\\$s\", e.message ?: tSync(\"error\"))) }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AdjustReliefsScreen.kt:74",
-    "line": "                                scope.launch { snackbar.showSnackbar(tSync(\"Failed to add: %1\\$s\", e.message ?: tSync(\"error\"))) }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:756",
-    "line": "                    if (editMode) t(\"Edit — %1\\$s\", AiSetupEntry.title(startPage ?: \"\"))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:757",
-    "line": "                    else t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:777",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
     "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:778",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:174",
-    "line": "                            t(\"%1\\$s, around %2\\$s\", dayWord(end, now), clock(end)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:302",
-    "line": "                                if (f.usable) t(\"in %1\\$s of %2\\$s\", f.count, f.of)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:303",
-    "line": "                                else t(\"in %1\\$s, too few to use\", f.count),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:343",
-    "line": "        tSync(\"usually over by %1\\$s %2\\$s\", dayWord(end, ZonedDateTime.now(ZoneId.systemDefault())), clock(end))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:356",
-    "line": "        tSync(\"usually over by %1\\$s, around %2\\$s\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:395",
-    "line": "                        h.reliefHigh > 0 -> t(\"high relief %1\\$s of %2\\$s times\", h.reliefHigh, h.reliefRated)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AttackForecastSheet.kt:396",
-    "line": "                        h.reliefSome > 0 -> t(\"some relief %1\\$s of %2\\$s times\", h.reliefSome, h.reliefRated)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/AuraDetailSheet.kt:228",
-    "line": "                        t(\"Earlier (%1\\$s)%2\\$s%3\\$s: %4\\$s\", i + 1, atLabel, durLabel, prev.zones.joinToString(\", \") { AuraZones.label(it) }),"
   },
   {
     "site": "app/src/main/java/com/migraineme/AutoTriggersTab.kt:98",
@@ -88,26 +32,6 @@
     "line": "                t(\"You'll be taken to Settings where you can grant this permission.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:286",
-    "line": "                if (isUndone) t(\"Removed\") else t(\"Saved as %1\\$s: %2\\$s\", type, label),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:281",
-    "line": "                    append(tSync(\"%1\\$s covers %2\\$s.\", displayName, companion.triggers.joinToString(\", \") { tSync(it) }))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:285",
-    "line": "                    append(tSync(\"Interested in %1\\$s.\", companion.interests.joinToString(\", \") { tSync(it) }))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:388",
-    "line": "                    append(tSync(\"%1\\$s covers %2\\$s.\", displayName, companion.triggers.joinToString(\", \") { tSync(it) }))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:392",
-    "line": "                    append(tSync(\"Interested in %1\\$s.\", companion.interests.joinToString(\", \") { tSync(it) }))"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/CustomizeTriggersScreen.kt:104",
     "line": "                    t(\"Configure which health patterns should automatically create triggers. \") +"
   },
@@ -132,10 +56,6 @@
     "line": "                t(\"Please enable these metrics first, then you can enable Stress Index.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsRow.kt:320",
-    "line": "                        t(\"Last: %1\\$s • Avg: %2\\$s days\", menstruationSettings.lastMenstruationDate, menstruationSettings.avgCycleLength),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:342",
     "line": "                            t(\"Toggle the metrics MigraineMe collects each day. \") +"
   },
@@ -146,14 +66,6 @@
   {
     "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:344",
     "line": "                            t(\"Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:909",
-    "line": "        Text(t(\"Delete → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", deletes.first, deletes.second, deletes.third))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:910",
-    "line": "        Text(t(\"Add → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", adds.first, adds.second, adds.third))"
   },
   {
     "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:309",
@@ -176,60 +88,8 @@
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:675",
-    "line": "            t(\"Evening Check-in — %1\\$s of %2\\$s\", pageIndex + 1, pages.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:187",
-    "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", worst.dayName, worst.count, String.format(\"%.0f\", worst.pct)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:292",
-    "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], counts[worstIdx], String.format(\"%.0f\", pct)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:138",
-    "line": "                    text = if (isCustomRange) t(\"Custom: %1\\$s – %2\\$s\", startDate.format(dateFormat), endDate.format(dateFormat)) else t(\"Custom range…\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:823",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm \\u2022 Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"\\u2014\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:830",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:555",
-    "line": "    NavRow(t(\"Use for insights\"), t(\"%1\\$s of %2\\$s ticked, our advice\", ticked, engineUse.size), onUse)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:557",
-    "line": "    NavRow(t(\"What we assumed\"), if (phrases > 0) t(\"%1\\$s things, including %2\\$s phrases we kept in your words\", assumptions, phrases) else t(\"%1\\$s things\", assumptions), onAssume)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:559",
-    "line": "    NavRow(t(\"Check the attacks and days\"), t(\"%1\\$s attacks and %2\\$s other days\", live, days.size), onList)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:563",
-    "line": "    PrimaryButton(t(\"Import %1\\$s attacks\", live), enabled = live > 0, onClick = onImport)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:583",
-    "line": "            if (keys.isNotEmpty()) Text(t(\"%1\\$s of %2\\$s\", onCount, keys.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:680",
-    "line": "    Title(t(\"Attacks (%1\\$s)\", attacks.count { !it.removed }), t(\"Tap one to see everything we read from it.\"))"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:823",
     "line": "        newItems.forEachIndexed { i, o -> if (i > 0) HorizontalDivider(color = Edge); Column(Modifier.padding(vertical = 6.dp)) { PairRow(o.str(\"phrase\") ?: \"\", o.str(\"label\") ?: \"\", newItem = true); Text(listOfNotNull(t(\"New\"), o.str(\"class\")?.replace('_', ' '), o.str(\"category\")).joinToString(\" · \") + \" · \" + t(\"seen %1\\$s×\", o.int(\"count\") ?: 0), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:866",
-    "line": "                Text(t(\"%1\\$s attacks are in your journal\", verify?.int(\"attacks_written\") ?: attacks), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)"
   },
   {
     "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:881",
@@ -244,196 +104,8 @@
     "line": "        Text(\"• \" + t(\"Your imported medicines and reliefs are now favourites in the log wizard.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:206",
-    "line": "                                t(\"%1\\$s logged • %2\\$s types\", cat.totalCount, cat.items.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:534",
-    "line": "            t(\"%1\\$s logged • %2\\$s types\", spider.totalLogged, spider.axes.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:386",
-    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:770",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:777",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:247",
-    "line": "                                Text(t(\"%1\\$s logged \\u2022 %2\\$s categories\", medicineSpider!!.totalLogged, medicineSpider!!.breakdown.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:282",
-    "line": "                                Text(t(\"%1\\$s logged \\u2022 %2\\$s categories\", reliefSpider!!.totalLogged, reliefSpider!!.breakdown.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:359",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm \\u2022 Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"\\u2014\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:363",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:211",
-    "line": "                                    t(\"%1\\$s \\u2192 %2\\$s (%3\\$s of %4\\$s)\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:288",
-    "line": "                                    t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), count),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:414",
-    "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:894",
-    "line": "        t(\"%1\\$s this month · %2\\$s\", last, direction),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:197",
-    "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1041",
-    "line": "                        t(\"Showing %1\\$s of %2\\$s attacks · the PDF includes all %3\\$s\", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1379",
-    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1811",
-    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1913",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1920",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2368",
-    "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:785",
-    "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1397",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1404",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1488",
-    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1637",
-    "line": "        t(\"in %1\\$s of %2\\$s flare days (%3\\$s%%)\", stat.attackHits, stat.sampleSize, pct)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1846",
-    "line": "                    Text(t(\"%1\\$s within %2\\$s\", effectText, horizonText(row.horizonMinutes)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1883",
-    "line": "    return t(\"Usually starts: %1\\$s (%2\\$s of %3\\$s)\", t(label), best.withHits, best.withTotal)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2143",
-    "line": "        t(\"%1\\$s of %2\\$s flare days (%3\\$s%%)\", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2145",
-    "line": "        t(\"%1\\$s of %2\\$s attacks (%3\\$s%%)\", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2314",
-    "line": "                    Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2745",
-    "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2900",
-    "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3425",
-    "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 about %3\\$s times an average day.\", w.dayName, String.format(\"%.0f\", w.pct), trimLift(ratio)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:576",
-    "line": "                            (if (it.isChronic) tSync(\"%1\\$s · %2\\$s%% of flare days\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:578",
-    "line": "                             else tSync(\"%1\\$s · %2\\$s%% of attacks\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:636",
-    "line": "                        CardPreviewEntry(it.name, tSync(\"%1\\$s attacks · %2\\$s%%\", it.count, it.pctOfMigraines.toInt()))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:650",
-    "line": "                tSync(\"in %1\\$s attacks · %2\\$s%%\", count, count * 100 / totalMigsHub),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:655",
-    "line": "            add(CardPreviewEntry(it.name, tSync(\"missed %1\\$s times · %2\\$s%%\", it.totalMissed, it.pctOfMigraines.toInt())))"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:81",
     "line": "                        t(\"Nearest: %s\", city.label) + (city.timezone?.let { \"  •  $it\" } ?: \"\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:227",
-    "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:348",
-    "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:383",
-    "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:417",
-    "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:451",
-    "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ManagePoolScreen.kt:183",
-    "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:189",
-    "line": "                        daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:192",
-    "line": "                        else -> t(\"In %1\\$s days\", daysUntil.toString())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:208",
-    "line": "                        MStatColumn(t(\"Cycle\"), t(\"%1\\$s days\", s.avgCycleLength.toString()))"
   },
   {
     "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:227",
@@ -450,22 +122,6 @@
   {
     "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:230",
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:255",
-    "line": "            tSync(\"%1\\$s suggested changes to your profile. Tap to review.\").replace(\"%1\\$s\", count.toString())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:423",
-    "line": "            stage == \"forecast\" -> tSync(\"Heads up for %1\\$s\").replace(\"%1\\$s\", date)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:188",
-    "line": "                        t(\"this week (vs %1\\$s)\", wsValue.lastWeekCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:238",
-    "line": "                                t(\"%1\\$s migraine days, %2\\$s pain days\", mix.migraineDays, mix.painDays)"
   },
   {
     "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:302",
@@ -556,40 +212,12 @@
     "line": "                    t(\"and a 14-day stacked-bar history chart you can filter by medicine or category.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:565",
-    "line": "                            t(\"%1\\$s: %2\\$s days in the last 30\", drugClassLabel(c.drugClass), c.days.toString()),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:577",
     "line": "                        t(\"Days counted from what you logged. Guidance links frequent use of acute medicines to rebound headaches. \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:578",
     "line": "                        t(\"This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:515",
-    "line": "                t(\"%1\\$s meals • %2\\$s items today\", mealTypes.size, nutritionItems.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:793",
-    "line": "                daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:796",
-    "line": "                else -> t(\"In %1\\$s days\", daysUntil.toString())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:276",
-    "line": "                Text(t(\"%1\\$s migraine days a month while on this.\", String.format(\"%.1f\", r)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:282",
-    "line": "            Text(t(\"You went from %1\\$s to %2\\$s migraine days a month, averaged since you started.\", b.toInt(), r.toInt()),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:297",
-    "line": "        Text(t(\"%1\\$s weeks in · %2\\$s attacks tracked%3\\$s\", e.weeksActive, e.nAttacksRolling, trustNote),"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
@@ -632,132 +260,20 @@
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NearbyCard.kt:70",
-    "line": "        place.distance_km?.let { t(\"%1\\$s km\", formatKm(it)) },"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:324",
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:94",
-    "line": "                            t(\"1 serving = %1\\$s %2\\$s\", food.servingSize.toInt(), food.servingSizeUnit),"
   },
   {
     "site": "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:415",
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:632",
-    "line": "                                    t(\"%1\\$s/%2\\$s — Tap to expand\", tourState.stepIndex + 1, steps.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:730",
-    "line": "                                    Text(t(\"%1\\$s of %2\\$s\", tourState.stepIndex + 1, steps.size), style = ObStyle.label(12.sp))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PairGarminScreen.kt:213",
-    "line": "                    if (remaining > 0) t(\"Expires in %1\\$s:%2\\$s\", mins, \"%02d\".format(secs)) else t(\"Expired\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:178",
-    "line": "                                t(\"From photo: %1\\$s · %2\\$s\", draft.name, when (draft.confidence) {"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PhotoFoodConfirmDialog.kt:416",
-    "line": "                        t(\"Adding %1\\$s of %2\\$s…\", addedCount + 1, checkedCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:135",
-    "line": "            else -> t(\"%1\\$s days ago\", days)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1458",
-    "line": "        title = { Text(t(\"Ask %1\\$s for an intro call\", practitionerName.substringBefore(' '))) },"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:399",
-    "line": "            title = { Text(t(\"Stop sharing with %1\\$s?\", name)) },"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:490",
-    "line": "                    t(\"Last looked %1\\$s\", agoText(lastViewedIso)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:538",
-    "line": "        title = { Text(if (isFirstAnswer) t(\"Share your diary?\") else t(\"What %1\\$s can see\", practitionerName)) },"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:547",
-    "line": "                            t(\"%1\\$s is a %2\\$s. They have asked to see:\", practitionerName, role.lowercase())"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:548",
-    "line": "                        else t(\"%1\\$s has asked to see:\", practitionerName),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:679",
-    "line": "                            if (some) t(\"%1\\$s of %2\\$s shared\", on, inGroup.size) else \"\""
-  },
-  {
     "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:680",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/PremiumGate.kt:511",
-    "line": "            t(\"You have %1\\$s migraines, %2\\$s triggers, and %3\\$s treatments logged.\", migraineCount, triggerCount, treatmentCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:185",
-    "line": "                Text(if (setupDate != null) t(\"%1\\$s. It does not rewrite itself.\", setupDate) else t(\"It does not rewrite itself.\"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:205",
-    "line": "        if (setupDate != null) t(\"Your answers from %1\\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup.\", setupDate)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:339",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", d.enabledMetrics, d.totalMetrics), color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:386",
-    "line": "            Text(if (d != null) t(\"Last rewritten %1\\$s by a weekly check-in\", d) else t(\"Rewritten by weekly check-ins\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:398",
-    "line": "            if (d.runCount > 0) t(\"%1\\$s check-ins so far\", d.runCount) else t(\"No check-ins yet\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:408",
-    "line": "                Text(t(\"and %1\\$s more\", accepted.size - 8), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 6.dp))"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:412",
     "line": "                (if (latest != null) t(\"Latest %1\\$s. \", latest) else \"\") + t(\"Everything here is a change you accepted — nothing moves without you.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:430",
-    "line": "        \"gauge_threshold\" -> Triple(t(\"%1\\$s starts at\", sevWord(label)), from, to)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:431",
-    "line": "        \"gauge_decay\" -> Triple(t(\"%1\\$s day curve\", sevWord(label)), null, t(\"changed\"))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:518",
-    "line": "        SectionHeader(icon, title, t(\"Page %1\\$s of setup\", page), \"$answered / ${rows.size}\", warn = answered < rows.size, onEdit = { onEditSection(entryKey) })"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:548",
-    "line": "        Text(if (n == 0) t(\"none\") else t(\"%1\\$s added\", n), color = if (n == 0) AppTheme.SubtleTextColor.copy(alpha = 0.55f) else Color.White,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:522",
-    "line": "                                deleteError = tSync(\"Please type %1\\$s to confirm.\", deleteWord)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:750",
-    "line": "                        if (answers == null) t(\"Not answered yet\") else t(\"%1\\$s answers from your setup\", answered),"
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:783",
@@ -784,28 +300,12 @@
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/QuickLogMedicineScreen.kt:427",
-    "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/QuickLogReliefScreen.kt:459",
-    "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:298",
-    "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294",
     "line": "                    Text((if (acceptedCount == 1) t(\"Apply 1 change\") else t(\"Apply %s changes\", acceptedCount)) +"
   },
   {
     "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:295",
     "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:718",
-    "line": "                            Text(t(\"%1\\$s · %2\\$s pts\", bar.trigger.severity.uppercase(), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)"
   },
   {
     "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:23",
@@ -842,54 +342,6 @@
   {
     "site": "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:51",
     "line": "                t(\"yet. You haven't been charged. This is usually temporary.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:283",
-    "line": "        tSync(\"Pain dropped about %1\\$s points within 2 hours, over %2\\$s uses\", trimNum(e.points), e.uses)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:285",
-    "line": "        tSync(\"Pain rose about %1\\$s points within 2 hours, over %2\\$s uses\", trimNum(e.points), e.uses)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:291",
-    "line": "        tSync(\"At least about %1\\$s points less pain than attacks you treated with nothing, over %2\\$s uses\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:298",
-    "line": "        tSync(\"Attacks ended about %1\\$s sooner, over %2\\$s uses\", hoursText(e.hours), e.uses)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:300",
-    "line": "        tSync(\"Attacks ran about %1\\$s longer, over %2\\$s uses\", hoursText(e.hours), e.uses)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:304",
-    "line": "        tSync(\"You rated it %1\\$s relief, over %2\\$s uses\", reliefWordText(e.word), e.uses)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:323",
-    "line": "    tSync(\"Taken within %1\\$s (your median delay): peak %2\\$s · later: peak %3\\$s\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:594",
-    "line": "                    if (rising) t(\"pain rose after these doses, in %1\\$s of %2\\$s\", hits, row.n)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:595",
-    "line": "                    else t(\"by %1\\$s, in %2\\$s of %3\\$s doses\", horizonPhrase(row.horizonMinutes), hits, row.n),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:687",
-    "line": "                    if (stat.isChronic) t(\"Used together in %1\\$s of your %2\\$s flare days\", together, stat.sampleSize)"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:688",
-    "line": "                    else t(\"Used together in %1\\$s of your %2\\$s attacks\", together, stat.sampleSize),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:786",
-    "line": "                        t(\"%1\\$s relief on %2\\$s attacks with %3\\$s, against %4\\$s on %5\\$s without\","
   },
   {
     "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:107",

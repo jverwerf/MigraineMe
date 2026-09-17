@@ -387,11 +387,11 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: run {
                 Log.e(TAG, "No access token")
-                return@withContext Pair(false, "Not logged in")
+                return@withContext Pair(false, tSync("Not logged in"))
             }
             val userId = SessionStore.readUserId(context) ?: run {
                 Log.e(TAG, "No user ID")
-                return@withContext Pair(false, "No user ID")
+                return@withContext Pair(false, tSync("Not signed in"))
             }
 
             Log.d(TAG, "Adding food: $foodName for user: $userId")
@@ -504,7 +504,7 @@ class USDAFoodSearchService(private val context: Context) {
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add food: ${e.message}", e)
-            Pair(false, e.message ?: "Unknown error")
+            Pair(false, e.message ?: tSync("Unknown error"))
         }
     }
 
@@ -521,11 +521,11 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: run {
                 Log.e(TAG, "No access token")
-                return@withContext Pair(false, "Not logged in")
+                return@withContext Pair(false, tSync("Not logged in"))
             }
             val userId = SessionStore.readUserId(context) ?: run {
                 Log.e(TAG, "No user ID")
-                return@withContext Pair(false, "No user ID")
+                return@withContext Pair(false, tSync("Not signed in"))
             }
 
             val grams = gramsConsumed.takeIf { it > 0 } ?: 100.0
@@ -599,7 +599,7 @@ class USDAFoodSearchService(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add OFF food: ${e.message}", e)
-            Pair(false, e.message ?: "Unknown error")
+            Pair(false, e.message ?: tSync("Unknown error"))
         }
     }
 
@@ -616,9 +616,9 @@ class USDAFoodSearchService(private val context: Context) {
     ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
         try {
             val token = SessionStore.readAccessToken(context)
-                ?: return@withContext Pair(false, "Not logged in")
+                ?: return@withContext Pair(false, tSync("Not logged in"))
             val userId = SessionStore.readUserId(context)
-                ?: return@withContext Pair(false, "No user ID")
+                ?: return@withContext Pair(false, tSync("Not signed in"))
 
             val today = java.time.LocalDate.now().toString()
             val nutritionRecord = buildString {
@@ -664,7 +664,7 @@ class USDAFoodSearchService(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add name-only food: ${e.message}", e)
-            Pair(false, e.message ?: "Unknown error")
+            Pair(false, e.message ?: tSync("Unknown error"))
         }
     }
 

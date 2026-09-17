@@ -188,7 +188,7 @@ private fun fmtDate(iso: String): String = runCatching { LocalDate.parse(iso.tak
 private sealed class EdgeResult { data class Ok(val body: JsonObject) : EdgeResult(); data class Err(val status: Int, val message: String) : EdgeResult() }
 
 private suspend fun callImportHistory(context: Context, body: JsonObject): EdgeResult = withContext(Dispatchers.IO) {
-    val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext EdgeResult.Err(401, "Not signed in")
+    val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext EdgeResult.Err(401, tSync("Not signed in"))
     // Reading a big export takes the server a minute or two (model calls); the default 10 s Android engine timeout gave "Connect timeout has expired".
     val client = HttpClient(Android) { install(HttpTimeout) { requestTimeoutMillis = 300_000; connectTimeoutMillis = 30_000; socketTimeoutMillis = 300_000 } }
     try {
@@ -204,7 +204,7 @@ private suspend fun callImportHistory(context: Context, body: JsonObject): EdgeR
         if (res.status.value in 200..299 && json != null) EdgeResult.Ok(json)
         else EdgeResult.Err(res.status.value, json?.str("message") ?: json?.str("error") ?: text.take(200))
     } catch (t: Throwable) {
-        Log.e("ImportHistory", "call failed", t); EdgeResult.Err(0, t.message ?: "Network error")
+        Log.e("ImportHistory", "call failed", t); EdgeResult.Err(0, t.message ?: tSync("Network error"))
     } finally { client.close() }
 }
 
