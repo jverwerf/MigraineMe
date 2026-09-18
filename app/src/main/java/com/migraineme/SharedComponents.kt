@@ -247,17 +247,6 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
 }
 
 /**
- * Pencil in a full-log wizard page's header, placed directly before Close.
- * Opens the page customisation screen. Wizard mode only, never in quick-log.
- */
-@Composable
-fun WizardCustomizeButton(onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Icon(Icons.Outlined.Edit, contentDescription = t("Customize log pages"), tint = Color.White, modifier = Modifier.size(24.dp))
-    }
-}
-
-/**
  * Search field for wizard pool pages, live-filtering the item grid below it.
  * Same idiom as the ManagePoolScreen search bar.
  */

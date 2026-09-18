@@ -196,7 +196,6 @@ fun ActivitiesScreen(
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
-                    WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
                     IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
                 } else {
                     Spacer(Modifier.size(28.dp))

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
@@ -213,6 +214,22 @@ fun MigraineHubScreen(navController: NavController) {
                         contentDescription = t("About Log Migraine"),
                         tint = AppTheme.SubtleTextColor,
                         modifier = Modifier.size(20.dp)
+                    )
+                }
+                // Page order / hide list lives on this card now, not in every
+                // wizard page header (Jordy 2026-09-18; iOS + VertigoMe same).
+                IconButton(
+                    onClick = { navController.navigate(Routes.WIZARD_STEPS_CONFIG) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-20).dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = t("Customize log pages"),
+                        tint = AppTheme.SubtleTextColor,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

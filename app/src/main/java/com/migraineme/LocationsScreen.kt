@@ -87,8 +87,7 @@ fun LocationsScreen(
                     Text(WizardStepConfig.backLabel(navController), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
-                if (!quickLogMode) WizardCustomizeButton { navController.navigate(Routes.WIZARD_STEPS_CONFIG) }
-                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
+                if (!quickLogMode)                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 
             HeroCard {
