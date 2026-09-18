@@ -505,6 +505,14 @@ fun RecommendationsCard(
 
 @Composable
 fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsViewModel) {
+    // Reached directly from an insight push tap: the hub that normally loads the vm
+    // may never have composed.
+    val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+    val appCtx = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    val authVm: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+    val auth by authVm.state.collectAsState()
+    LaunchedEffect(auth.accessToken) { auth.accessToken?.takeIf { it.isNotBlank() }?.let { vm.ensureLoaded(appCtx, it) } }
+
     val recs by vm.aiRecommendations.collectAsState()
     val dismissedKeys by vm.dismissedRecommendationKeys.collectAsState()
     val allSections = buildRecommendationSections(recs, dismissedKeys)

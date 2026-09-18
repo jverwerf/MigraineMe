@@ -796,6 +796,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         val route = pendingNavigationRoute.value ?: return@LaunchedEffect
         // Wait until user is authenticated before navigating
         if (!token.isNullOrBlank()) {
+            // Insight pages deep-linked from a push get the Insights hub underneath,
+            // so back returns to Insights instead of Home.
+            if (route == Routes.INSIGHTS_PATTERNS || route == Routes.INSIGHTS_RECOMMENDATIONS) {
+                nav.navigate(Routes.INSIGHTS) { launchSingleTop = true }
+            }
             nav.navigate(route) { launchSingleTop = true }
             pendingNavigationRoute.value = null
         }

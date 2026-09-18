@@ -1335,6 +1335,16 @@ class InsightsViewModel : ViewModel() {
 
     // ======= Public API =======
 
+    /**
+     * Load once if nothing has been loaded yet. The Insights hub calls [load] on every
+     * visit; the pages a push tap deep-links to (patterns, recommendations) skip the hub,
+     * so without this they read an empty view model and spin forever.
+     */
+    fun ensureLoaded(context: Context, accessToken: String) {
+        if (cachedToken != null) return
+        load(context, accessToken)
+    }
+
     fun load(context: Context, accessToken: String) {
         cachedToken = accessToken
         viewModelScope.launch {

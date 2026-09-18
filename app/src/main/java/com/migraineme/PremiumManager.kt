@@ -370,7 +370,12 @@ object PremiumManager {
                 tier = tier,
                 subscriptionExpiryDate = rcState.expiryDate,
                 planType = rcState.planType,
-                isLoaded = true
+                // "No subscription" from RevenueCat is not the final answer: the
+                // Supabase trial/premium check in loadState decides that. The login
+                // callback fires ~300 ms before it, and publishing loaded+FREE here
+                // bounced any gated screen composed in that window (a push tap on
+                // cold start) to the paywall. Stay LOADING until loadState publishes.
+                isLoaded = current.isLoaded || rcState.isSubscribed
             )
         }
     }
