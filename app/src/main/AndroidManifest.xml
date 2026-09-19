@@ -212,6 +212,29 @@
                     android:host="login-callback" />
             </intent-filter>
 
+            <!-- Straight to the pay screen (trial reminder email button) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="migraineme"
+                    android:host="paywall" />
+            </intent-filter>
+
+            <!-- Same, as a verified App Link. Only /upgrade: the rest of the
+                 website must keep opening in the browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="migraineme.app"
+                    android:path="/upgrade" />
+                <data android:path="/upgrade/" />
+            </intent-filter>
+
         </activity>
 
         <!-- Health Connect Rationale Activity - used for pre-permission explanation -->

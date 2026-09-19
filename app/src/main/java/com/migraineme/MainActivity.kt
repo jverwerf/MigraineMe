@@ -489,13 +489,28 @@ class MainActivity : ComponentActivity() {
         val route = intent.getStringExtra("navigate_to")
             ?: intent.getStringExtra("screen")?.takeIf { intent.getStringExtra("type") == "new_insight" }?.let { insightsRouteForScreen(it) }
             ?: intent.getStringExtra("type")?.let { routeForPushType(it) }
+            ?: routeForLink(intent.data)
         if (route != null) {
             pendingNavigationRoute.value = route
             // Clear so it doesn't re-trigger
             intent.removeExtra("navigate_to")
             intent.removeExtra("type")
             intent.removeExtra("screen")
+            if (routeForLink(intent.data) != null) intent.data = null
         }
+    }
+
+    /**
+     * Links that open a screen rather than finish a sign-in. The trial reminder
+     * email's button is https://migraineme.app/upgrade (App Link, any query
+     * string); migraineme://paywall is the same door for anything that cannot
+     * carry an https link.
+     */
+    private fun routeForLink(data: Uri?): String? = when {
+        data == null -> null
+        data.scheme == "migraineme" && data.host == "paywall" -> Routes.PAYWALL
+        data.scheme == "https" && data.host == "migraineme.app" && data.path?.trimEnd('/') == "/upgrade" -> Routes.PAYWALL
+        else -> null
     }
 
     companion object {
