@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.graphicsLayer
@@ -190,10 +191,18 @@ fun HomeScreenRoot(
         }
     }
     LaunchedEffect(auth.accessToken) { reloadOpenMigraines() }
+
+    // ── Card order + visibility (Customize Home). Re-read whenever Home comes
+    // back: on re-entering composition, same as Insights, and on resume. ──
+    var homeConfig by remember { mutableStateOf(HomeCardConfigStore.load(appCtx)) }
+    LaunchedEffect(Unit) {
+        homeConfig = HomeCardConfigStore.load(appCtx)
+    }
     DisposableEffect(lifecycleOwner, auth.accessToken) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                 homeScope.launch { reloadOpenMigraines() }
+                homeConfig = HomeCardConfigStore.load(appCtx)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -245,14 +254,20 @@ fun HomeScreenRoot(
         val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
 
         // Last visible card carries the Brainy watermark, same rule as Insights detail screens.
+        // "Last" follows the user's own order (Customize Home), so it is worked out
+        // from the ordered list rather than assumed to be contributors → insight → ask.
         val contributorsVisible = displayTriggers.isNotEmpty()
         // Stays visible through a language rewrite: the card holds its place and
         // says it is updating, rather than vanishing mid-switch and coming back.
         val insightVisible = selectedDay == 0 && (!state.dailyInsight.isNullOrBlank() || aiRegenerating)
-        val watermarkOn = when {
-            contributorsVisible -> "contributors"
-            insightVisible -> "insight"
-            else -> "ask"
+        val orderedHomeCards = homeConfig.getOrderedVisibleCards()
+        val watermarkOn = orderedHomeCards.lastOrNull { id ->
+            when (id) {
+                HomeCardConfig.CARD_CONTRIBUTORS -> contributorsVisible
+                HomeCardConfig.CARD_INSIGHT -> insightVisible
+                HomeCardConfig.CARD_ASK -> true
+                else -> false
+            }
         }
 
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -265,6 +280,15 @@ fun HomeScreenRoot(
                     onTap = onNavigateToRecalibrationReview
                 )
 
+                // ── Configurable cards, in the user's order (Customize Home) ──
+                // Each card keeps its own code, conditions and premium gate;
+                // key(cardId) keeps remember{} state attached to the card when
+                // the order changes. The banners above and the disclaimer below
+                // are pinned and not part of the order.
+                for (homeCardId in orderedHomeCards) {
+                key(homeCardId) {
+                when (homeCardId) {
+                HomeCardConfig.CARD_QUICKLOG -> {
                 // ── Quick Log Strip — above the gauge. While an attack is
                 // still open the in-progress card takes this slot instead:
                 // during an attack almost everything logged belongs to it,
@@ -317,7 +341,9 @@ fun HomeScreenRoot(
                         }
                     )
                 }
+                }
 
+                HomeCardConfig.CARD_RISK -> {
                 Box(Modifier.onGloballyPositioned { riskCardY = it.positionInParent().y.toInt() }) {
                 // Three states, not two. Today's risk is free either way, so
                 // while entitlement is resolving the gauge shows exactly that —
@@ -347,12 +373,29 @@ fun HomeScreenRoot(
                     infoText = RiskInfoCopy.text
                 )
                 }
+                }
 
+                HomeCardConfig.CARD_EXERCISES -> {
+                // ── Exercises — guided routines (list → player) ──
+                // PREMIUM GATE (assumption, owner to confirm): to make the card
+                // free, drop this PremiumGate wrapper and keep ExercisesHomeCard.
+                PremiumGate(
+                    message = t("Unlock Exercises"),
+                    subtitle = t("Guided routines for your neck, and for during an attack"),
+                    onUpgrade = onNavigateToPaywall
+                ) {
+                    ExercisesHomeCard(onTap = { onNavigateRoute(Routes.EXERCISES) })
+                }
+                }
+
+                HomeCardConfig.CARD_LOCATION -> {
                 // ── Android silently revoked location — weather/risk are dead
                 //    until it's restored. Only shows when the user still has the
                 //    location metric ON server-side. ──
                 LocationPermissionBanner()
+                }
 
+                HomeCardConfig.CARD_ASK -> {
                 // ── Ask MigraineMe — chat assistant (premium only) ──
                 PremiumGate(
                     message = t("Unlock AI Chat"),
@@ -372,7 +415,7 @@ fun HomeScreenRoot(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Box(modifier = Modifier.fillMaxWidth()) {
-                                if (watermarkOn == "ask") {
+                                if (watermarkOn == HomeCardConfig.CARD_ASK) {
                                     Box(Modifier.matchParentSize()) {
                                         Image(
                                             painter = painterResource(R.drawable.brainy_risk),
@@ -446,8 +489,11 @@ fun HomeScreenRoot(
                         containerColor = AppTheme.BaseCardContainer
                     )
                 }
+                }
 
-                // ── AI Daily Insight — premium only, today only ──
+                HomeCardConfig.CARD_WELLDONE -> {
+                // Same condition as the daily insight it used to sit inside:
+                // today only, and only when there is an insight to go with it.
                 if (insightVisible) {
                     // ── Well done — premium since 2026-09-14 (Jordy), blur-gated like
                     // the other AI cards. Hidden during a language rewrite: it is
@@ -474,7 +520,12 @@ fun HomeScreenRoot(
                             }
                         }
                     }
+                }
+                }
 
+                HomeCardConfig.CARD_INSIGHT -> {
+                // ── AI Daily Insight — premium only, today only ──
+                if (insightVisible) {
                     PremiumGate(
                         message = t("Unlock Daily Insights"),
                         subtitle = t("Personalised advice based on your data"),
@@ -482,12 +533,14 @@ fun HomeScreenRoot(
                     ) {
                         AiInsightCard(
                             insight = state.dailyInsight.orEmpty(),
-                            watermark = watermarkOn == "insight",
+                            watermark = watermarkOn == HomeCardConfig.CARD_INSIGHT,
                             updating = aiRegenerating
                         )
                     }
                 }
+                }
 
+                HomeCardConfig.CARD_CONTRIBUTORS -> {
                 // ── Active triggers — blurred for free users ──
                 // Only when there is something to blur: ActiveTriggersCard renders
                 // nothing for an empty list, and a gate around nothing collapses to
@@ -502,13 +555,98 @@ fun HomeScreenRoot(
                             triggers = displayTriggers.take(3),
                             gaugeMax = state.gaugeMaxScore,
                             onTap = onNavigateToRiskDetail,
-                            watermark = watermarkOn == "contributors"
+                            watermark = watermarkOn == HomeCardConfig.CARD_CONTRIBUTORS
                         )
                     }
                 }
+                }
+                } // end when(homeCardId)
+                } // end key(homeCardId)
+                } // end for — configurable cards
 
                 // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
                 MedicalDisclaimerCard(prefKey = "home_dismissed")
+
+                // ── Customize (entry row, same as Insights' Customize Insights) ──
+                HeroCard(
+                    modifier = Modifier.clickable { onNavigateRoute(Routes.HOME_CONFIG) }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = t("Configure"),
+                            tint = AppTheme.AccentPurple,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                t("Customize"),
+                                color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                t("Show, hide, and reorder cards"),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Text(
+                            "\u2192",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Home nav card for the exercise routines. Same build as the inline
+ * "Ask MigraineMe" card (same surface, blob icon, title/subtitle, arrow), minus
+ * the info button. Static: no motion.
+ */
+@Composable
+private fun ExercisesHomeCard(onTap: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+    ) {
+        Surface(
+            onClick = onTap,
+            shape = AppTheme.BaseCardShape,
+            color = AppTheme.BaseCardContainer,
+            border = AppTheme.BaseCardBorder,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BrainyBlobIcon(resId = R.drawable.brainy_physical_small)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        t("Exercises"),
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Text(
+                        t("Guided routines for your neck, and for during an attack"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
             }
         }
     }

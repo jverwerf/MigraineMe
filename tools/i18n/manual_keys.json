@@ -5555,6 +5555,390 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Location reminder",
+      "class": "hard",
+      "sites": [
+        "HomeCardConfig.kt:card-label-table"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Neck reset",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 14
+    },
+    {
+      "en": "Easy",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 14
+    },
+    {
+      "en": "A bed edge or a chair",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 31
+    },
+    {
+      "en": "Why this helps",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 17
+    },
+    {
+      "en": "The muscles at the top of your neck and the nerves that carry migraine pain meet in the same part of the brainstem. When those muscles are tight and sore, the brain can read it as head pain, and a neck that is already irritated makes an attack easier to set off.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 379
+    },
+    {
+      "en": "Gentle movement through the full range, held for a few breaths, eases that stiffness and reminds the muscles how to let go. It is the simplest thing in the set and the one to do most often.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 274
+    },
+    {
+      "en": "What to expect",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 17
+    },
+    {
+      "en": "Most people feel looser straight away. The effect on attacks comes from doing it daily for a few weeks, ideally at the same time, so it becomes a habit rather than a rescue.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 250
+    },
+    {
+      "en": "When to do it",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 16
+    },
+    {
+      "en": "Any day, including the start of an attack if moving does not make the pain worse. A break from the desk is the natural moment.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 182
+    },
+    {
+      "en": "Go gently. Move only as far as feels easy, never into pain. Check with a clinician first if your neck pain started after an injury, or comes with dizziness or tingling in your arms.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 262
+    },
+    {
+      "en": "Neck stretches",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 17
+    },
+    {
+      "en": "Two muscles run from the neck to the shoulder blade and take the strain when you sit forward over a screen: one down the side of the neck, one across the back corner. When they are tight and tender, that tenderness feeds into the same brainstem nerve cells that carry migraine pain, and the head feels it.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 442
+    },
+    {
+      "en": "These are the two stretches a physiotherapist gives for exactly that. The hand is there to add a little weight, never to pull. Held long enough, the muscle lets go rather than fighting back.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 275
+    },
+    {
+      "en": "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 229
+    },
+    {
+      "en": "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 200
+    },
+    {
+      "en": "Go gently. Let the hand rest, not pull. Check with a clinician first if your neck pain started after an injury, or comes with dizziness or tingling in your arms.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 233
+    },
+    {
+      "en": "Posture and deep neck",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 31
+    },
+    {
+      "en": "Hard",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 14
+    },
+    {
+      "en": "A clear wall, a bed or a mat, a tennis ball",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 62
+    },
+    {
+      "en": "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 276
+    },
+    {
+      "en": "Those muscles share a junction in the brainstem with the nerves that carry migraine pain, so their ache gets felt in your head. The small muscles at the front of the neck, whose job is to hold the head up, test weak in people whose headaches come with neck pain.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 379
+    },
+    {
+      "en": "The wall part opens the chest and gives you something honest to measure against. If your elbows and wrists cannot stay near it, that is the tightness. The bed part trains the small front muscles: lifting your head a finger's width with the chin tucked works them without letting the big ones cheat. Of everything in these routines, that lift has the best trial results behind it.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 549
+    },
+    {
+      "en": "Strength takes weeks, not days. Two or three times a week is plenty. The wall part should feel like opening something up, and a few good lifts beat a lot of sloppy ones.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 245
+    },
+    {
+      "en": "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 159
+    },
+    {
+      "en": "Go gently. Let your arms slide only as far as they go without your back arching off the wall. If your neck shakes or your chin pokes forward, the lift is too high. Lower it and do fewer. Check with a clinician first if your neck pain started after an injury, or comes with dizziness or tingling in your arms.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 446
+    },
+    {
+      "en": "Relaxation",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 14
+    },
+    {
+      "en": "A bed or a mat",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 17
+    },
+    {
+      "en": "Muscles that stay a little tense all day stop feeling tense. You only notice them when the ache arrives. Squeezing a muscle hard and then letting it go teaches you what the difference feels like, and it is easier to release something once you can feel it.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 369
+    },
+    {
+      "en": "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 300
+    },
+    {
+      "en": "The first few times feel like a lot of effort for nothing. The benefit comes from doing it most days for a few weeks, ideally at the same time, so the body learns the release.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 253
+    },
+    {
+      "en": "Any day. It suits the evening, and it is a reasonable thing to do when you feel an attack building, as long as tensing does not make the pain worse.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 214
+    },
+    {
+      "en": "Go gently. Tense firmly, never to the point of cramping or shaking. Skip a body part that hurts.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 139
+    },
+    {
+      "en": "Slow breathing",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 17
+    },
+    {
+      "en": "A bed and a dim room",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 23
+    },
+    {
+      "en": "During an attack the body is in alarm mode: fast shallow breathing, tight shoulders, a racing pulse. Slowing the breath to about six a minute is the quickest lever you have on that. It nudges the nervous system toward its calm setting, and the pain is easier to sit with.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 392
+    },
+    {
+      "en": "The hand on the belly is there so you can feel that the breath is going low and slow, not high into the chest.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 159
+    },
+    {
+      "en": "It will not stop an attack. It can take the edge off, and it gives you something to do while your medicine works. Most people feel calmer within a minute or two.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 233
+    },
+    {
+      "en": "At the first sign of an attack, and whenever the pain is at its worst. Dark room, eyes closed, sound low.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 152
+    },
+    {
+      "en": "Go gently. If slow breathing makes you feel light-headed, breathe at whatever pace is comfortable instead.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 153
+    },
+    {
+      "en": "Lie-down release",
+      "class": "hard",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 19
+    },
+    {
+      "en": "A bed, a cold pack and a dim room",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 47
+    },
+    {
+      "en": "During an attack the neck and shoulders brace without you asking them to, the jaw clenches and the eyes screw up against the light. All of that feeds back into the same nerve centre that is already firing, and keeps it going.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 326
+    },
+    {
+      "en": "Cold at the back of the neck calms the nerves that run from there up into the head. Letting each of those places go, one at a time, takes some of the fuel away from the attack.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 255
+    },
+    {
+      "en": "Not a cure. A little less pressure, a little less noise. Do it alongside your medicine, not instead of it.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 153
+    },
+    {
+      "en": "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 134
+    },
+    {
+      "en": "Go gently. Everything here is small. If the chin nod or the shoulder lift makes the pain worse, leave it out and just lie with the cold.",
+      "class": "soft",
+      "sites": [
+        "ExerciseCatalogue.kt:routine-table"
+      ],
+      "max_len": 197
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

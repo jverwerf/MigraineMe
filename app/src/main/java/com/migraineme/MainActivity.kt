@@ -158,6 +158,11 @@ object Routes {
     const val MONITOR = "monitor"
     const val MONITOR_CONFIG = "monitor_config"
     const val INSIGHTS_CONFIG = "insights_config"
+    const val HOME_CONFIG = "home_config"
+    const val EXERCISES = "exercises"
+    /** Player for one routine. Navigate with [exercisePlayer]. */
+    const val EXERCISE_PLAYER = "exercise/{id}"
+    fun exercisePlayer(id: String): String = "exercise/$id"
     const val INSIGHTS_SECTION_CONFIG = "insights_section_config"
     const val JOURNAL = "journal"
 
@@ -956,6 +961,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.INSIGHTS_WHATS_HELPING ||
             current == Routes.INSIGHTS_WHAT_CHANGED ||
             current == Routes.INSIGHTS_CONFIG ||
+            current == Routes.HOME_CONFIG ||
+            current == Routes.EXERCISES ||
+            current == Routes.EXERCISE_PLAYER ||
             current?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true ||
             current == Routes.INSIGHTS_CONTEXT ||
             current == Routes.INSIGHTS_IMPACT ||
@@ -1097,6 +1105,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MONITOR -> "Monitor"
                                     Routes.MONITOR_CONFIG -> "Configure Monitor"
                                     Routes.INSIGHTS_CONFIG -> "Customize Insights"
+                                    Routes.HOME_CONFIG -> "Customize Home"
+                                    Routes.EXERCISES -> "Exercises"
                                     Routes.INSIGHTS -> "Insights"
                                     Routes.INSIGHTS_DETAIL -> "Explore Migraines"
                                     Routes.INSIGHTS_TIMELINE -> "Migraine Timeline"
@@ -1200,6 +1210,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ->
                                             backStack?.arguments?.getString("logType") ?: "Breakdown"
                                         current?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true -> "Customize"
+                                        // The routine's English title (an ExerciseCatalogue literal); t() below translates it.
+                                        current == Routes.EXERCISE_PLAYER ->
+                                            ExerciseCatalogue.byId(backStack?.arguments?.getString("id"))?.title ?: "Exercise"
                                         current?.startsWith("help_article") == true -> "Help"
                                         current?.startsWith(Routes.ARTICLE_DETAIL) == true -> "Article"
                                         current?.startsWith(Routes.BLOG_DETAIL) == true -> "Blog"
@@ -1522,6 +1535,20 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             reliefVm = reliefVm,
                             symptomVm = symptomVm,
                         )
+                    }
+                    composable(Routes.HOME_CONFIG) { HomeConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.EXERCISES) {
+                        // PREMIUM GATE (assumption, owner to confirm): to make the list free, drop the PremiumRoute wrapper.
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                            ExercisesScreen(onOpenRoutine = { id -> nav.navigate(Routes.exercisePlayer(id)) })
+                        }
+                    }
+                    composable(Routes.EXERCISE_PLAYER) { backStack ->
+                        val routineId = backStack.arguments?.getString("id")
+                        // PREMIUM GATE (assumption, owner to confirm): to make the player free, drop the PremiumRoute wrapper.
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                            ExercisePlayerScreen(routineId = routineId, onBack = { nav.popBackStack() })
+                        }
                     }
                     composable(Routes.CHAT_ASSISTANT) {
                         ChatAssistantScreen(
@@ -3243,6 +3270,9 @@ private fun BottomBar(
             val showBadge = item.route == Routes.JOURNAL && journalBadgeCount > 0
             val showInsightsDot = item.route == Routes.INSIGHTS && insightsHasNew
             val selected = currentRoute == item.route ||
+                    (item.route == Routes.HOME && currentRoute == Routes.HOME_CONFIG) ||
+                    (item.route == Routes.HOME && currentRoute == Routes.EXERCISES) ||
+                    (item.route == Routes.HOME && currentRoute == Routes.EXERCISE_PLAYER) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_CONFIG) ||
                     (item.route == Routes.INSIGHTS && currentRoute?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true) ||

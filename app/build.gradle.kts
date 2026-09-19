@@ -174,6 +174,16 @@ dependencies {
     // Coil — async image loading for Compose
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // Media3 — exercise films: ExoPlayer + PlayerView controls, and the disk
+    // cache (SimpleCache) that lets a film watched once play offline.
+    // One version for all three. 1.4.1 is built against Kotlin 1.9, which is
+    // what this project compiles with; check that before bumping.
+    val media3Version = "1.4.1"
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
+    implementation("androidx.media3:media3-ui:$media3Version")
+    implementation("androidx.media3:media3-datasource:$media3Version")
+    implementation("androidx.media3:media3-database:$media3Version")
+
     // RevenueCat (pulls Google Play Billing Library transitively — don't add an explicit
     // billing dep, it causes a classpath clash that makes getOfferings() hang)
     // 9.x bundles Play Billing Library 8.0.0, required by Google Play from Aug 31 2026.

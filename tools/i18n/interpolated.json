@@ -72,20 +72,24 @@
     "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1307",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1251",
     "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1457",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1401",
     "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1464",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1408",
     "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2514",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2387",
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:102",
+    "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
     "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:823",
