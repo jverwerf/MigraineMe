@@ -11,6 +11,7 @@ import { WINDOW_AFTER_DAYS, WINDOW_BEFORE_DAYS } from "./data.ts";
 import { METRICS } from "./metrics.ts";
 import type { ChildRow, CorrelationStat, Migraine, ReportData, SymptomRow } from "./data.ts";
 import { translatorFor } from "../_shared/i18n.ts";
+import { summariseSideEffects, type SideEffectSummary } from "../_shared/sideEffects.ts";
 
 // ── colours, one palette for the whole document ──────────────────
 const C = {
@@ -1526,16 +1527,20 @@ type TreatRow = {
   usesAreDays: boolean;
   avgRelief: number | null;
   nRated: number;
+  /** Side effects counted from the logs in the report window. The engine row
+   *  carries the whole-history count and leads when it has one. */
+  sideEffects: SideEffectSummary;
 };
 
 function treatmentRows(d: ReportData): TreatRow[] {
-  const pool = new Map<string, { label: string; uses: Set<string>; scores: number[] }>();
+  const pool = new Map<string, { label: string; uses: Set<string>; scores: number[]; logs: ChildRow[] }>();
   for (const list of [d.medicines, d.reliefs]) {
     for (const r of list) {
       const label = (r.name ?? r.type ?? "").trim();
       if (!label) continue;
       const key = label.toLowerCase();
-      const entry = pool.get(key) ?? { label, uses: new Set<string>(), scores: [] };
+      const entry = pool.get(key) ?? { label, uses: new Set<string>(), scores: [], logs: [] };
+      entry.logs.push(r);
       if (r.migraine_id) entry.uses.add(r.migraine_id);
       const sc = typeof r.relief_scale === "string" ? RELIEF_SCORE[r.relief_scale] : undefined;
       if (sc != null) entry.scores.push(sc);
@@ -1559,15 +1564,34 @@ function treatmentRows(d: ReportData): TreatRow[] {
       usesAreDays: !e.uses.size && !!stat && isChronic(stat),
       avgRelief: e.scores.length ? e.scores.reduce((a, b) => a + b, 0) / e.scores.length : null,
       nRated: e.scores.length,
+      sideEffects: summariseSideEffects(e.logs),
     });
   }
   // Engine rows for treatments the report window did not log — the statistics
   // run on the whole history, so these are real findings about this patient.
   for (const [key, s] of stats) {
     if (seen.has(key)) continue;
-    rows.push({ name: s.factor_name, stat: s, uses: s.sample_size ?? 0, usesAreDays: isChronic(s), avgRelief: null, nRated: 0 });
+    rows.push({ name: s.factor_name, stat: s, uses: s.sample_size ?? 0, usesAreDays: isChronic(s), avgRelief: null, nRated: 0, sideEffects: summariseSideEffects([]) });
   }
   return rows;
+}
+
+/** "Side effects in 3 of 7 uses · Drowsiness 3×, Nausea 1×", or nothing when
+ *  none were logged. Same line the apps print under a What Worked row: the
+ *  engine's whole-history count leads, and a treatment it has no count for (too
+ *  few attacks for a row, or not recomputed yet) is counted from the report's
+ *  own logs, because nothing the patient logged may quietly disappear. */
+function sideEffectLine(r: TreatRow): string {
+  const eng = asObj((r.stat?.lag_details ?? {})["side_effects"]);
+  const se: Blocks = eng && (asNum(eng["n_uses_with"]) ?? 0) > 0 ? eng : r.sideEffects;
+  const nWith = asNum(se["n_uses_with"]) ?? 0;
+  if (nWith <= 0) return "";
+  const items = (Array.isArray(se["items"]) ? se["items"] as unknown[] : [])
+    .map((it) => asObj(it))
+    .filter((it): it is Blocks => !!it && !!asStr(it["label"]) && (asNum(it["n"]) ?? 0) > 0)
+    .map((it) => `${pretty(it["label"])} ${it["n"]}×`);
+  const head = rt("Side effects in {0} of {1} uses", nWith, Math.max(nWith, asNum(se["n_uses"]) ?? 0));
+  return items.length ? `${head} · ${items.join(", ")}` : head;
 }
 
 /** Resolve one row. The verdict rules are the ones the apps use (TreatmentEffectiveness.kt), so
@@ -1819,12 +1843,14 @@ function whatWorked(d: ReportData, pageNo: number): string {
   const treatmentRow = (r: TreatRow): string => {
     const e = treatmentEvidence(r);
     const timing = timingLine(r.name);
+    const sideFx = sideEffectLine(r);
     return `<div class="card row">
       <div class="grow">
         <div class="name">${esc(pretty(r.name))}</div>
         <div class="meta">${esc(e.line)}</div>
         ${e.counts ? `<div class="meta">${esc(e.counts)}</div>` : ""}
         ${timing ? `<div class="meta">${esc(timing)}</div>` : ""}
+        ${sideFx ? `<div class="meta">${esc(sideFx)}</div>` : ""}
       </div>
       ${dots(VERDICT_COLOR[e.verdict], r.stat?.p_value ?? null, e.dots)}
       ${badge(VERDICT_COLOR[e.verdict], VERDICT_LABEL[e.verdict]())}

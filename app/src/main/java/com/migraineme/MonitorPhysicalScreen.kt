@@ -289,7 +289,6 @@ private suspend fun loadPhysicalDetailData(
     val rhr = try { physService.fetchRestingHrDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val spo2 = try { physService.fetchSpo2Daily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val skinTemp = try { physService.fetchSkinTempDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
-    val glucose = try { physService.fetchBloodGlucoseDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val stress = try { physService.fetchStressIndexDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
     val highHr = try { physService.fetchHighHrDaily(token, 1).find { it.date == date } } catch (_: Exception) { null }
 
@@ -299,6 +298,7 @@ private suspend fun loadPhysicalDetailData(
     val steps = if (userId != null) fetchSingleDouble(client, token, "steps_daily", userId, date, "value_count")?.toInt() else null
     val respiratoryRate = if (userId != null) fetchSingleDouble(client, token, "respiratory_rate_daily", userId, date, "value_bpm") else null
     val strain = if (userId != null) fetchSingleDouble(client, token, "strain_daily", userId, date, "value_kilojoule") else null
+    val glucose = if (userId != null) fetchSingleDouble(client, token, "blood_glucose_daily", userId, date, "value_mmol_l") else null
 
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
         stress == null && highHr == null && steps == null &&
@@ -317,7 +317,7 @@ private suspend fun loadPhysicalDetailData(
         strain = strain,
         highHrZonesMinutes = highHr?.value_minutes,
         steps = steps,
-        bloodGlucose = glucose?.value_mmol_l
+        bloodGlucose = glucose
     )
 }
 

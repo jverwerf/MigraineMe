@@ -2114,6 +2114,17 @@ class EdgeFunctionsService {
         val attackHits: Int get() = Math.round(pctMigraineWindows / 100f * sampleSize)
 
         /**
+         * METRIC rows carry MEANS, not percentages. compute-correlation-stats
+         * stores a metric's own mean on attack days in pct_migraine_windows and
+         * its mean on normal days in pct_control_windows ("percentages as the
+         * means themselves for readability"); only trigger and interaction rows
+         * store a real share of attack windows. Rendered as a percentage, a
+         * barometric pressure mean of 988 hPa printed "988%" and back-computed
+         * "454 of 46 attacks", and attackHits above is meaningless on such a row.
+         */
+        val isMeanNotPercent: Boolean get() = factorType == "metric"
+
+        /**
          * True when the engine expanded at least one long / ongoing attack into
          * its flare days (lag_details.chronic = true). sample_size and every
          * "in N of …" count on this row then count attack DAYS, not attacks, so

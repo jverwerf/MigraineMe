@@ -3329,6 +3329,122 @@
         "it": "Registrati insieme in circa {0} giorni di riacutizzazione su {1}",
         "pt": "Registados juntos em cerca de {0} de {1} dias de surto"
       }
+    },
+    {
+      "en": "Side effects in {0} of {1} uses",
+      "why": "report What Worked: per-treatment side-effect line, server-only copy (the app tables only hold the chip-length 'Side effects')",
+      "value": {
+        "de": "Nebenwirkungen in {0} von {1} Anwendungen",
+        "es": "Efectos secundarios en {0} de {1} usos",
+        "nl": "Bijwerkingen bij {0} van {1} toepassingen",
+        "fr": "Effets secondaires dans {0} utilisations sur {1}",
+        "it": "Effetti collaterali in {0} utilizzi su {1}",
+        "pt": "Efeitos secundários em {0} de {1} utilizações"
+      }
+    },
+    {
+      "en": "Memory trouble",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Confusion",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Better focus",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Mental clarity",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Mood shift",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Low mood",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Calmer",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Less anxious",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Better mood",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Insomnia",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Drowsiness",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Vivid dreams",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Better sleep",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "More energy",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Headache",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Dry mouth",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Sweating",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Tremor",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Muscle weakness",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Heart palpitations",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Light sensitivity",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Sound sensitivity",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Increased appetite",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Constipation",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Less pain",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "Less nausea",
+      "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
     }
   ]
 }

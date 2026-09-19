@@ -80,6 +80,7 @@ fun QuickLogReliefScreen(
     var reliefScale by rememberSaveable { mutableStateOf("NONE") }
     var sideEffectScale by rememberSaveable { mutableStateOf("NONE") }
     var sideEffectNotes by rememberSaveable { mutableStateOf("") }
+    var sideEffects by rememberSaveable(stateSaver = SideEffectItemsSaver) { mutableStateOf<List<SideEffectItem>>(emptyList()) }
     var saving by remember { mutableStateOf(false) }
 
     // Voice input for the Notes field, same contract as JournalEditScreen:
@@ -93,20 +94,6 @@ fun QuickLogReliefScreen(
                 ?.firstOrNull()
             if (!spoken.isNullOrBlank()) {
                 notes = if (notes.isBlank()) spoken else "$notes, $spoken"
-            }
-        }
-    }
-
-    // Same voice input for the side-effect notes field.
-    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-            if (!spoken.isNullOrBlank()) {
-                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
             }
         }
     }
@@ -346,59 +333,14 @@ fun QuickLogReliefScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Side effects
-                    Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
-                            val seColor = when (key) { "NONE" -> Color(0xFF81C784); "SOFT" -> Color(0xFFFFB74D); "MODERATE" -> Color(0xFFFF8A65); else -> Color(0xFFE57373) }
-                            androidx.compose.material3.FilterChip(
-                                selected = sideEffectScale == key,
-                                onClick = { sideEffectScale = key },
-                                label = { Text(t(display), style = MaterialTheme.typography.labelSmall) },
-                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = seColor.copy(alpha = 0.3f),
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color.White.copy(alpha = 0.06f),
-                                    labelColor = AppTheme.SubtleTextColor
-                                ),
-                                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = sideEffectScale == key,
-                                    borderColor = Color.White.copy(alpha = 0.12f),
-                                    selectedBorderColor = seColor.copy(alpha = 0.6f)
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-                    OutlinedTextField(
-                        value = sideEffectNotes,
-                        onValueChange = { sideEffectNotes = it },
-                        label = { Text(t("Side effect notes"), color = AppTheme.SubtleTextColor) },
-                        placeholder = { Text(t("e.g. drowsiness, nausea…"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = AppTheme.AccentPurple,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
-                        ),
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
-                                }
-                                try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                                    android.widget.Toast.makeText(ctx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }) {
-                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                            }
-                        },
-                        minLines = 1, maxLines = 3
+                    // Side effects: shared Brainy picker (collapsed by default) + notes
+                    SideEffectPicker(
+                        sideEffectScale = sideEffectScale,
+                        onScaleChange = { sideEffectScale = it },
+                        sideEffects = sideEffects,
+                        onSideEffectsChange = { sideEffects = it },
+                        sideEffectNotes = sideEffectNotes,
+                        onNotesChange = { sideEffectNotes = it },
                     )
                 }
                 
@@ -447,7 +389,8 @@ fun QuickLogReliefScreen(
                                                 endAt = endIso,
                                                 reliefScale = reliefScale,
                                                 sideEffectScale = sideEffectScale,
-                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                                sideEffects = sideEffects
                                             )
                                             if (reliefScale == null || reliefScale == "NONE") {
                                                 DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, relief, row.category)

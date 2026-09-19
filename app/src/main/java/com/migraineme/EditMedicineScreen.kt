@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -83,6 +85,7 @@ fun EditMedicineScreen(
     var reliefScale by rememberSaveable(row?.id) { mutableStateOf(row?.reliefScale ?: "NONE") }
     var sideEffectScale by rememberSaveable(row?.id) { mutableStateOf(row?.sideEffectScale ?: "NONE") }
     var sideEffectNotes by rememberSaveable(row?.id) { mutableStateOf(row?.sideEffectNotes ?: "") }
+    var sideEffects by rememberSaveable(row?.id, stateSaver = SideEffectItemsSaver) { mutableStateOf(row?.sideEffects ?: emptyList()) }
 
     var nameMenuOpen by rememberSaveable { mutableStateOf(false) }
     var migraineMenuOpen by rememberSaveable { mutableStateOf(false) }
@@ -112,6 +115,8 @@ fun EditMedicineScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            // scrolls: the expanded side-effect tile grid is taller than the screen
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -226,9 +231,11 @@ fun EditMedicineScreen(
 
         // Side effects
         Spacer(Modifier.height(4.dp))
-        SideEffectChips(
+        SideEffectPicker(
             sideEffectScale = sideEffectScale,
             onScaleChange = { sideEffectScale = it },
+            sideEffects = sideEffects,
+            onSideEffectsChange = { sideEffects = it },
             sideEffectNotes = sideEffectNotes,
             onNotesChange = { sideEffectNotes = it }
         )
@@ -293,7 +300,8 @@ fun EditMedicineScreen(
                         migraineId = migraineId.ifBlank { null },
                         reliefScale = reliefScale,
                         sideEffectScale = sideEffectScale,
-                        sideEffectNotes = sideEffectNotes.ifBlank { null }
+                        sideEffectNotes = sideEffectNotes.ifBlank { null },
+                        sideEffects = sideEffects
                     )
                     navController.popBackStack()
                 }

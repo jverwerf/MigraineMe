@@ -56,7 +56,8 @@ data class PhysicalGraphDay(
     val stress: Double?,
     val strain: Double?,
     val highHrZones: Double?,
-    val steps: Double?
+    val steps: Double?,
+    val bloodGlucose: Double?
 )
 
 data class PhysicalGraphResult(
@@ -404,6 +405,7 @@ private fun getPhysicalDayValue(day: PhysicalGraphDay, metric: String): Float? {
         PhysicalCardConfig.METRIC_STRAIN -> day.strain?.toFloat()
         PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> day.highHrZones?.toFloat()
         PhysicalCardConfig.METRIC_STEPS -> day.steps?.toFloat()
+        PhysicalCardConfig.METRIC_BLOOD_GLUCOSE -> day.bloodGlucose?.toFloat()
         else -> null
     }
 }
@@ -449,6 +451,8 @@ private suspend fun loadPhysicalGraphData(
         val stepsList = fetchDailyDoubles(client, token, "steps_daily", userId, "value_count", fetchLimit)
         val respRateList = fetchDailyDoubles(client, token, "respiratory_rate_daily", userId, "value_bpm", fetchLimit)
         val strainList = fetchDailyDoubles(client, token, "strain_daily", userId, "value_kilojoule", fetchLimit)
+        // value_mmol_l is `numeric`, so read it the tolerant way like the others above
+        val glucoseList = fetchDailyDoubles(client, token, "blood_glucose_daily", userId, "value_mmol_l", fetchLimit)
 
         // Build maps by date
         val recoveryMap = recoveryList.associateBy { it.date }
@@ -461,6 +465,7 @@ private suspend fun loadPhysicalGraphData(
         val stepsMap = stepsList.associateBy { it.first }
         val respRateMap = respRateList.associateBy { it.first }
         val strainMap = strainList.associateBy { it.first }
+        val glucoseMap = glucoseList.associateBy { it.first }
 
         // Collect all dates that have any data
         val allDates = mutableSetOf<String>()
@@ -474,6 +479,7 @@ private suspend fun loadPhysicalGraphData(
         stepsMap.keys.forEach { allDates.add(it) }
         respRateMap.keys.forEach { allDates.add(it) }
         strainMap.keys.forEach { allDates.add(it) }
+        glucoseMap.keys.forEach { allDates.add(it) }
 
         val graphDays = allDates
             .filter { it >= startStr && it <= endStr }
@@ -490,7 +496,8 @@ private suspend fun loadPhysicalGraphData(
                     stress = stressMap[date]?.value,
                     strain = strainMap[date]?.second,
                     highHrZones = highHrMap[date]?.value_minutes,
-                    steps = stepsMap[date]?.second
+                    steps = stepsMap[date]?.second,
+                    bloodGlucose = glucoseMap[date]?.second
                 )
             }
 

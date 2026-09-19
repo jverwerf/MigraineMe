@@ -28,7 +28,9 @@ data class AiMatchItemV2(
     // Medicine + Relief shared
     val reliefScale: String? = null,
     val sideEffectScale: String? = null,
-    val sideEffectNotes: String? = null
+    val sideEffectNotes: String? = null,
+    // Ticked side effects with their severity (picked by the user, never by the AI)
+    val sideEffects: List<SideEffectItem> = emptyList()
 )
 
 /** One timestamped pain moment extracted from the narrative (labels, not ids —
@@ -798,7 +800,9 @@ data class CheckInMedicineItem(
     val reliefScale: String? = "NONE",
     val sideEffectScale: String? = "NONE",
     val sideEffectNotes: String? = null,
-    val inferred: Boolean = false
+    val inferred: Boolean = false,
+    /** Ticked side effects with their severity; sideEffectScale is their max. Last on purpose: positional callers stay valid. */
+    val sideEffects: List<SideEffectItem> = emptyList()
 )
 
 data class CheckInReliefItem(
@@ -809,7 +813,9 @@ data class CheckInReliefItem(
     val reliefScale: String? = "NONE",
     val sideEffectScale: String? = "NONE",
     val sideEffectNotes: String? = null,
-    val inferred: Boolean = false
+    val inferred: Boolean = false,
+    /** Ticked side effects with their severity; sideEffectScale is their max. Last on purpose: positional callers stay valid. */
+    val sideEffects: List<SideEffectItem> = emptyList()
 )
 
 data class CheckInActivityItem(

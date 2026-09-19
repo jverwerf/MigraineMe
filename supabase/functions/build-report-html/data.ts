@@ -89,6 +89,10 @@ export type ChildRow = {
   dose_unit?: string | null;
   /** NONE/LOW/MILD/HIGH — how much this relief or medicine actually helped. */
   relief_scale?: string | null;
+  /** Medicines and reliefs only. NONE/SOFT/MODERATE/SEVERE overall, plus the
+   *  ticked items [{label, severity}]; legacy rows have the scale alone. */
+  side_effect_scale?: string | null;
+  side_effects?: unknown;
   start_at: string;
   source?: string | null;
 };
@@ -353,8 +357,8 @@ export async function loadReportData(
   ] = await Promise.all([
     childrenFor(sb, "triggers", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "prodromes", ids, "id,migraine_id,type,start_at,source"),
-    childrenFor(sb, "medicines", ids, "id,migraine_id,name,amount,dose_value,dose_unit,start_at,source"),
-    childrenFor(sb, "reliefs", ids, "id,migraine_id,type,relief_scale,start_at,source"),
+    childrenFor(sb, "medicines", ids, "id,migraine_id,name,amount,dose_value,dose_unit,start_at,source,side_effect_scale,side_effects"),
+    childrenFor(sb, "reliefs", ids, "id,migraine_id,type,relief_scale,start_at,source,side_effect_scale,side_effects"),
     childrenFor(sb, "activities", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "locations", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "missed_activities", ids, "id,migraine_id,type,start_at,source"),

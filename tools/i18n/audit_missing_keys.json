@@ -1603,5 +1603,14 @@
    "(t() call site)"
   ],
   "source": "audit-2026-08-29-chronic-location"
+ },
+ {
+  "en": "%1$s vs %2$s on normal days",
+  "class": "soft",
+  "max_len": 50,
+  "sites": [
+   "(t() call site)"
+  ],
+  "source": "audit-2026-09-18-metric-means"
  }
 ]

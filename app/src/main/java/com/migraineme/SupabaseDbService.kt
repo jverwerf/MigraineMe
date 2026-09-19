@@ -714,7 +714,10 @@ class SupabaseDbService(
         @SerialName("migraine_id") val migraineId: String? = null,
         val source: String? = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
-        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null,
+        // Per-item side effects ({label, severity}); side_effect_scale is
+        // always the max of these. Empty on legacy rows that only have a scale.
+        @SerialName("side_effects") val sideEffects: List<SideEffectItem> = emptyList()
     )
     @Serializable
     data class MedicineInsert(
@@ -732,7 +735,10 @@ class SupabaseDbService(
         // typed under "Auto".
         val source: String = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
-        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null,
+        // Per-item side effects ({label, severity}); side_effect_scale is
+        // always the max of these. Empty on legacy rows that only have a scale.
+        @SerialName("side_effects") val sideEffects: List<SideEffectItem> = emptyList()
     )
     suspend fun insertMedicine(
         accessToken: String,
@@ -746,7 +752,8 @@ class SupabaseDbService(
         sideEffectScale: String? = "NONE",
         sideEffectNotes: String? = null,
         doseValue: Double? = null,
-        doseUnit: String? = null
+        doseUnit: String? = null,
+        sideEffects: List<SideEffectItem> = emptyList()
     ): MedicineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         // Dual-write (one-unit contract): a structured dose mirrors the legacy
@@ -765,7 +772,10 @@ class SupabaseDbService(
             name = name, amount = amt, doseValue = dv, doseUnit = du,
             startAt = safeStart, notes = notes, category = category,
             reliefScale = reliefScale, migraineId = migraineId,
-            sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes
+            // Items win: the scale column is always the max of the ticked items.
+            sideEffectScale = SideEffectItem.scaleFor(sideEffects, sideEffectScale),
+            sideEffectNotes = sideEffectNotes,
+            sideEffects = SideEffectItem.clean(sideEffects)
         )
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -813,7 +823,11 @@ class SupabaseDbService(
         doseValue: Double? = null,
         doseUnit: String? = null,
         category: String? = null,
-        moveCategory: Boolean = false
+        moveCategory: Boolean = false,
+        // null = leave the column alone. A list (even empty) is written, and
+        // side_effect_scale is written with it: max of the items, else the
+        // scale the caller passed (a legacy scale the user never touched).
+        sideEffects: List<SideEffectItem>? = null
     ): MedicineRow {
         // Dual-write (one-unit contract) — see insertMedicine.
         var dv = doseValue
@@ -844,7 +858,10 @@ class SupabaseDbService(
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
             else migraineId?.let { put("migraine_id", it) }
             reliefScale?.let { put("relief_scale", it) }
-            sideEffectScale?.let { put("side_effect_scale", it) }
+            if (sideEffects != null) {
+                put("side_effects", SideEffectItem.toJsonArray(sideEffects))
+                put("side_effect_scale", SideEffectItem.scaleFor(sideEffects, sideEffectScale))
+            } else sideEffectScale?.let { put("side_effect_scale", it) }
             sideEffectNotes?.let { put("side_effect_notes", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/medicines") {
@@ -1008,6 +1025,10 @@ class SupabaseDbService(
     )
     @Serializable
     data class TreatmentSideEffectLogInsert(
+        // treatment_side_effect_logs.user_id is NOT NULL with no default, and the
+        // insert policy is WITH CHECK (auth.uid() = user_id). Without it every save
+        // was rejected, silently, because both callers wrap this in runCatching.
+        @SerialName("user_id") val userId: String,
         @SerialName("log_date") val logDate: String,
         @SerialName("selected_symptoms") val selectedSymptoms: List<String>,
         val notes: String? = null,
@@ -1022,7 +1043,9 @@ class SupabaseDbService(
         regimenId: String? = null,
         source: String = "check_in"
     ): TreatmentSideEffectLogRow {
-        val payload = TreatmentSideEffectLogInsert(logDate, selectedSymptoms, notes, source, regimenId)
+        val userId = JwtUtils.extractUserIdFromAccessToken(accessToken)
+            ?: error("Insert side-effect log failed: no user id in the access token")
+        val payload = TreatmentSideEffectLogInsert(userId, logDate, selectedSymptoms, notes, source, regimenId)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_side_effect_logs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation")
@@ -1381,7 +1404,10 @@ class SupabaseDbService(
         @SerialName("migraine_id") val migraineId: String? = null,
         val source: String? = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
-        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null,
+        // Per-item side effects ({label, severity}); side_effect_scale is
+        // always the max of these. Empty on legacy rows that only have a scale.
+        @SerialName("side_effects") val sideEffects: List<SideEffectItem> = emptyList()
     )
     @Serializable
     data class ReliefInsert(
@@ -1397,7 +1423,10 @@ class SupabaseDbService(
         // typed under "Auto".
         val source: String = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
-        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null,
+        // Per-item side effects ({label, severity}); side_effect_scale is
+        // always the max of these. Empty on legacy rows that only have a scale.
+        @SerialName("side_effects") val sideEffects: List<SideEffectItem> = emptyList()
     )
     /**
      * Writes one relief log.
@@ -1428,7 +1457,8 @@ class SupabaseDbService(
         reliefScale: String? = "NONE",
         sideEffectScale: String? = "NONE",
         sideEffectNotes: String? = null,
-        category: String? = null
+        category: String? = null,
+        sideEffects: List<SideEffectItem> = emptyList()
     ): ReliefRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         // end_at is the single source of truth for duration; a relief with no
@@ -1436,7 +1466,7 @@ class SupabaseDbService(
         val safeEnd = endAt?.takeIf { it.isNotBlank() }
         val safeCategory = category?.takeIf { it.isNotBlank() }
             ?: ReliefPoolCategories.categoryFor(this, accessToken, type)
-        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, category = safeCategory, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
+        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, category = safeCategory, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = SideEffectItem.scaleFor(sideEffects, sideEffectScale), sideEffectNotes = sideEffectNotes, sideEffects = SideEffectItem.clean(sideEffects))
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -1480,7 +1510,9 @@ class SupabaseDbService(
         clearEndAt: Boolean = false,
         reliefScale: String? = null,
         sideEffectScale: String? = null,
-        sideEffectNotes: String? = null
+        sideEffectNotes: String? = null,
+        // See updateMedicine: null = untouched, a list is written with its max scale.
+        sideEffects: List<SideEffectItem>? = null
     ): ReliefRow {
         // Changing the type changes which pool item the row is, so its category
         // has to move with it — including down to NULL when the new label is in
@@ -1502,7 +1534,10 @@ class SupabaseDbService(
             if (clearEndAt) put("end_at", kotlinx.serialization.json.JsonNull)
             else endAt?.let { put("end_at", it) }
             reliefScale?.let { put("relief_scale", it) }
-            sideEffectScale?.let { put("side_effect_scale", it) }
+            if (sideEffects != null) {
+                put("side_effects", SideEffectItem.toJsonArray(sideEffects))
+                put("side_effect_scale", SideEffectItem.scaleFor(sideEffects, sideEffectScale))
+            } else sideEffectScale?.let { put("side_effect_scale", it) }
             sideEffectNotes?.let { put("side_effect_notes", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/reliefs") {

@@ -86,6 +86,19 @@ data class WhatWorkedRow(
     val measured: Boolean,         // a real test ran on measured data
     val pValue: Float?,
     val updatedAt: String,
+    val sideEffects: TreatmentSideEffects? = null,
+)
+
+/**
+ * lag_details.side_effects, written by compute-correlation-stats on every
+ * treatment row. Rows computed before that change do not carry it, so every
+ * field is optional and the row simply shows no side-effect line.
+ */
+data class TreatmentSideEffects(
+    val nUses: Int,
+    val nUsesWith: Int,
+    /** Pool label (canonical English) to how many uses carried it. Already top 5, sorted by the engine. */
+    val items: List<Pair<String, Int>>,
 )
 
 // ── JSON helpers ────────────────────────────────────────────────────────────
@@ -99,6 +112,21 @@ private fun JsonObject.int(key: String): Int? =
 private fun JsonObject.str(key: String): String? =
     (this[key] as? JsonPrimitive)?.content
 
+/** Null unless the engine wrote the object AND at least one use carried a side effect. */
+private fun parseTreatmentSideEffects(lagDetails: JsonObject?): TreatmentSideEffects? {
+    val o = lagDetails?.get("side_effects") as? JsonObject ?: return null
+    val nWith = o.int("n_uses_with") ?: 0
+    if (nWith <= 0) return null
+    val items = (o["items"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { el ->
+        val item = el as? JsonObject ?: return@mapNotNull null
+        // isString keeps a JSON null from arriving as the text "null".
+        val label = (item["label"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim().orEmpty()
+        val n = item.int("n") ?: 0
+        if (label.isEmpty() || n <= 0) null else label to n
+    }
+    return TreatmentSideEffects(nUses = maxOf(o.int("n_uses") ?: nWith, nWith), nUsesWith = nWith, items = items)
+}
+
 // ── Formatting ──────────────────────────────────────────────────────────────
 
 /** "2" not "2.0", "1.4" stays "1.4". Points and hours both read better this way. */
@@ -110,8 +138,32 @@ internal fun trimNum(v: Float): String {
 /** "2.9" / "3". A lift printed whole, never truncated to an int. */
 internal fun trimLift(lift: Float): String = trimNum(lift)
 
+/**
+ * A metric row's mean, at the precision its magnitude deserves: one decimal
+ * below 100, whole numbers at or above it.
+ *
+ * compute-correlation-stats stores a metric's OWN MEAN in pct_migraine_windows
+ * and pct_control_windows ("percentages as the means themselves for
+ * readability"), while trigger and interaction rows really do store a share.
+ * Printed through the percentage path, a barometric pressure mean of 988 hPa
+ * read as "988%" and back-computed "454 of 46 attacks". Unlike trimNum this
+ * keeps the sign, because a mean temperature can be below zero.
+ */
+internal fun formatMetricMean(v: Float): String {
+    if (kotlin.math.abs(v) >= 100f) return String.format("%.0f", v)
+    val r = Math.round(v * 10f) / 10f
+    return if (r == r.toInt().toFloat()) r.toInt().toString() else String.format("%.1f", r)
+}
+
 /** "4h" / "1.5h". Hours only — duration is never a ratio. */
 internal fun hoursText(hours: Float): String = "${trimNum(hours)}h"
+
+/**
+ * "1 use" / "7 uses". The count and its noun, so no sentence key carries a
+ * hard-coded plural — "over 1 uses" was the bug this exists to prevent.
+ */
+internal fun usesText(n: Int): String =
+    if (n == 1) tSync("1 use") else tSync("%s uses", n)
 
 /** "45 min" under an hour and a half, hours above it. */
 internal fun cutoffText(minutes: Int): String =
@@ -247,6 +299,7 @@ fun buildWhatWorkedRows(
             measured = measured,
             pValue = stat?.pValue,
             updatedAt = stat?.updatedAt ?: "",
+            sideEffects = parseTreatmentSideEffects(stat?.lagDetails),
         )
     }.sortedWith(whatWorkedComparator)
 }
@@ -280,30 +333,38 @@ fun verdictColor(v: TreatmentVerdict): Color = when (v) {
 /** One plain-English line saying where the verdict came from. Hours and pain points only. */
 fun evidenceText(e: TreatmentEvidence): String = when (e) {
     is TreatmentEvidence.PainDrop ->
-        tSync("Pain dropped about %1\$s points within 2 hours, over %2\$s uses", trimNum(e.points), e.uses)
+        tSync("Pain dropped about %1\$s points within 2 hours, over %2\$s", trimNum(e.points), usesText(e.uses))
     is TreatmentEvidence.PainRise ->
-        tSync("Pain rose about %1\$s points within 2 hours, over %2\$s uses", trimNum(e.points), e.uses)
+        tSync("Pain rose about %1\$s points within 2 hours, over %2\$s", trimNum(e.points), usesText(e.uses))
     is TreatmentEvidence.PainFlat ->
-        tSync("Pain barely moved within 2 hours, over %s uses", e.uses)
+        tSync("Pain barely moved within 2 hours, over %s", usesText(e.uses))
     // "At least" is mandatory. People treat their worse attacks, which biases
     // this comparison against the treatment, so a measured benefit is a floor.
     is TreatmentEvidence.SeverityMilder ->
-        tSync("At least about %1\$s points less pain than attacks you treated with nothing, over %2\$s uses",
-            trimNum(e.points), e.uses)
+        tSync("At least about %1\$s points less pain than attacks you treated with nothing, over %2\$s",
+            trimNum(e.points), usesText(e.uses))
     is TreatmentEvidence.SeverityWorse ->
         tSync("No measurable difference from attacks you treated with nothing — you tend to reach for it on worse attacks")
     is TreatmentEvidence.SeverityFlat ->
-        tSync("About the same pain as attacks you treated with nothing, over %s uses", e.uses)
+        tSync("About the same pain as attacks you treated with nothing, over %s", usesText(e.uses))
     is TreatmentEvidence.Shorter ->
-        tSync("Attacks ended about %1\$s sooner, over %2\$s uses", hoursText(e.hours), e.uses)
+        tSync("Attacks ended about %1\$s sooner, over %2\$s", hoursText(e.hours), usesText(e.uses))
     is TreatmentEvidence.Longer ->
-        tSync("Attacks ran about %1\$s longer, over %2\$s uses", hoursText(e.hours), e.uses)
+        tSync("Attacks ran about %1\$s longer, over %2\$s", hoursText(e.hours), usesText(e.uses))
     is TreatmentEvidence.DurationFlat ->
-        tSync("Attacks ran about as long as usual, over %s uses", e.uses)
+        tSync("Attacks ran about as long as usual, over %s", usesText(e.uses))
     is TreatmentEvidence.Rated ->
-        tSync("You rated it %1\$s relief, over %2\$s uses", reliefWordText(e.word), e.uses)
+        tSync("You rated it %1\$s relief, over %2\$s", reliefWordText(e.word), usesText(e.uses))
     is TreatmentEvidence.NotRated ->
-        tSync("Used %s times, no relief rated", e.uses)
+        if (e.uses == 1) tSync("Used once, no relief rated")
+        else tSync("Used %s times, no relief rated", e.uses)
+}
+
+/** "Side effects in 3 of 7 uses · Drowsiness 3×, Nausea 1×". Labels are pool labels stored in English. */
+fun sideEffectsText(s: TreatmentSideEffects): String {
+    val head = tSync("Side effects in %1\$s of %2\$s uses", s.nUsesWith, s.nUses)
+    if (s.items.isEmpty()) return head
+    return head + " · " + s.items.joinToString(", ") { (label, n) -> "${tSync(label)} $n×" }
 }
 
 /** Same four words the user picked when logging, translated. */
@@ -487,6 +548,10 @@ private fun WhatWorkedTile(
                         style = MaterialTheme.typography.labelSmall)
                 }
             }
+        }
+        row.sideEffects?.let {
+            Spacer(Modifier.height(5.dp))
+            Text(sideEffectsText(it), color = metaColor, style = MaterialTheme.typography.labelSmall)
         }
         Spacer(Modifier.height(5.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
