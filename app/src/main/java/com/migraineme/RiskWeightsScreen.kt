@@ -179,7 +179,7 @@ fun RiskWeightsScreen(
                             .size(34.dp)
                     ) {
                         Icon(Icons.Outlined.Info, contentDescription = t("About Gauge Thresholds"),
-                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                     }
                 }
 
@@ -202,7 +202,7 @@ fun RiskWeightsScreen(
                             .size(34.dp)
                     ) {
                         Icon(Icons.Outlined.Info, contentDescription = t("About Decay Curves"),
-                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                     }
                 }
 
@@ -217,7 +217,7 @@ fun RiskWeightsScreen(
 
                 // ── Error / success ──
                 error?.let {
-                    Text(it, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                    LabelPlate { Text(it, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall) }
                 }
                 if (saveSuccess) {
                     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2A1A)), shape = RoundedCornerShape(12.dp)) {
@@ -232,7 +232,7 @@ fun RiskWeightsScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick = { resetDefaults() }, modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = Color.White)
                     ) { Text(t("Reset Defaults")) }
                     Button(
                         onClick = { save() }, modifier = Modifier.weight(1f), enabled = !saving,
@@ -326,7 +326,7 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     ) {

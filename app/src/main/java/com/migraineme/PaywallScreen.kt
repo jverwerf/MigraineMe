@@ -124,6 +124,8 @@ fun PaywallScreen(
         return
     }
 
+    // Over the swing scene the cards stay see-through
+    androidx.compose.runtime.CompositionLocalProvider(LocalSolidCards provides false) {
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(
             scrollState = scroll,
@@ -573,6 +575,7 @@ fun PaywallScreen(
             Spacer(Modifier.height(32.dp))
         }
     }
+    } // LocalSolidCards
 }
 
 private data class FeatureItem(

@@ -176,7 +176,7 @@ fun NotesScreen(
                 OutlinedButton(
                     onClick = { syncDraft(); navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
                     onClick = { syncDraft(); navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) },

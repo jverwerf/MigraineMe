@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -116,14 +117,14 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
                     r.kind.replaceFirstChar { it.uppercase() },
                     r.amount, r.frequency, period
                 ).joinToString(" · ")
-                Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                LabelPlate { Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall, maxLines = 2) }
                 // What the user remembered about life before this treatment,
                 // given when they added one they were already on. Their words,
                 // shown as context; nothing here is counted anywhere.
                 val prior = r.priorFrequencyNote
                 if (!prior.isNullOrBlank()) {
-                    Text(t("Before this: %s", prior), color = Color.White.copy(alpha = 0.62f),
-                        style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                    LabelPlate { Text(t("Before this: %s", prior), color = Color.White.copy(alpha = 0.62f),
+                        style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic) }
                 }
             }
 
@@ -180,6 +181,7 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
 
         if (showAddSideEffect) {
             AddSideEffectDialog(
+                regimenId = regimenId,
                 onDismiss = { showAddSideEffect = false },
                 onSaved = {
                     showAddSideEffect = false
@@ -246,7 +248,7 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.78f))
+            .background(AppTheme.HeroCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .padding(20.dp)
     ) {
@@ -354,7 +356,7 @@ private fun MmdChartCard(series: List<SupabaseDbService.TreatmentMmdSeriesPoint>
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -471,7 +473,7 @@ private fun SeverityDurationRow(e: SupabaseDbService.TreatmentEfficacyRow) {
 private fun MiniMetric(label: String, rolling: Double?, baseline: Double?, unit: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(12.dp)
     ) {
@@ -498,7 +500,7 @@ private fun TriggerShiftCard(shifts: List<SupabaseDbService.TreatmentTriggerShif
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -533,14 +535,20 @@ private fun triggerChangeLabel(t: SupabaseDbService.TreatmentTriggerShiftRow): P
     }
 }
 
+/** The % the comparison may show for a row. The Treatments list reads "not enough
+ *  data" (or a plain rate, with no before-picture) for these bands, so the comparison
+ *  must not put a percentage next to the same treatment: one page, one verdict. */
+private fun SupabaseDbService.TreatmentLeaderboardRow.comparablePct(): Double? =
+    if (band == "not_enough_data" || band == "no_baseline") null else pctChangeMmd
+
 @Composable
 private fun LeaderboardCard(rows: List<SupabaseDbService.TreatmentLeaderboardRow>, currentId: String) {
-    val sorted = rows.sortedBy { it.pctChangeMmd ?: Double.POSITIVE_INFINITY }
-    val maxPct = maxOf(50.0, sorted.mapNotNull { it.pctChangeMmd }.map { Math.abs(it) }.maxOrNull() ?: 50.0)
+    val sorted = rows.sortedBy { it.comparablePct() ?: Double.POSITIVE_INFINITY }
+    val maxPct = maxOf(50.0, sorted.mapNotNull { it.comparablePct() }.map { Math.abs(it) }.maxOrNull() ?: 50.0)
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -559,7 +567,7 @@ private fun LeaderboardCard(rows: List<SupabaseDbService.TreatmentLeaderboardRow
 
 @Composable
 private fun LeaderboardRow(row: SupabaseDbService.TreatmentLeaderboardRow, maxPct: Double, isCurrent: Boolean) {
-    val pct = row.pctChangeMmd
+    val pct = row.comparablePct()
     val widthRatio = pct?.let { minOf(1.0, Math.abs(it) / maxPct) } ?: 0.0
     val color = when (row.band) {
         "working_well" -> Color(0xFF6ED69E)
@@ -601,7 +609,7 @@ private fun ConfoundersCard(
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -702,7 +710,7 @@ private fun SideEffectsCard(
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -760,7 +768,7 @@ private fun NarrativeCard(narrative: String?, loading: Boolean, onRegenerate: ()
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
@@ -790,7 +798,7 @@ private fun NarrativeCard(narrative: String?, loading: Boolean, onRegenerate: ()
 private fun ActionButton(label: String, modifier: Modifier = Modifier, color: Color = Color.White, enabled: Boolean = true, onClick: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.05f),
+        color = Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
         onClick = onClick,
         enabled = enabled,
@@ -958,7 +966,7 @@ private fun ConfounderConfigDialog(
 private fun LinkRow(r: SupabaseDbService.TreatmentRegimenRow, isSelected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -986,7 +994,7 @@ private fun LinkRow(r: SupabaseDbService.TreatmentRegimenRow, isSelected: Boolea
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
+private fun AddSideEffectDialog(regimenId: String, onDismiss: () -> Unit, onSaved: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val selected = remember { mutableStateListOf<String>() }
@@ -1029,6 +1037,7 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                         logDate = LocalDate.now().toString(),
                         selectedSymptoms = selected.toList(),
                         notes = if (notes.isBlank()) null else notes,
+                        regimenId = regimenId,
                         source = "manual"
                     )
                 }
@@ -1044,25 +1053,12 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
         title = { Text(t("Note a side effect"), color = Color(0xFFDCCEFF)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (TREATMENT_SIDE_EFFECT_POOL + "+ other").forEach { label ->
-                        val isSel = selected.contains(label)
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSel) Color(0xFFB97BFF).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.04f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) Color(0xFFB97BFF) else Color.White.copy(alpha = 0.10f)),
-                            onClick = {
-                                if (isSel) selected.remove(label) else selected.add(label)
-                            }
-                        ) {
-                            Text(t(label),
-                                color = if (isSel) Color(0xFFDCCEFF) else Color.White.copy(alpha = 0.86f),
-                                fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Normal,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
+                // The same Brainy tiles as every other side-effect surface (pool + favourites),
+                // not a private chip list. Anything not in the pool goes in the notes below.
+                TreatmentSideEffectTilePicker(
+                    selected = selected,
+                    onToggle = { label -> if (selected.contains(label)) selected.remove(label) else selected.add(label) },
+                )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },

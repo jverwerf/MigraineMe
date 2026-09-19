@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
@@ -67,17 +68,17 @@ fun LanguageScreen() {
     Column(
         Modifier
             .fillMaxSize()
-            .background(AppTheme.FadeColor)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
         Spacer(Modifier.height(12.dp))
-        Text(
-            t("Your migraine data is not affected by this."),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
+        LabelPlate(modifier = Modifier.padding(horizontal = 4.dp)) {
+            Text(
+                t("Your migraine data is not affected by this."),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
         Lang.entries.forEach { lang ->
@@ -98,8 +99,8 @@ private fun LanguageRow(lang: Lang, selected: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (selected) AppTheme.AccentPurple.copy(alpha = 0.20f)
-                else Color.White.copy(alpha = 0.04f),
+                (if (selected) AppTheme.AccentPurple.copy(alpha = 0.20f)
+                else Color.White.copy(alpha = 0.04f)).compositeOver(AppTheme.FadeColor),
                 RoundedCornerShape(14.dp)
             )
             .clickable(onClick = onClick)

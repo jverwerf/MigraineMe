@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -123,7 +124,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
 
     LaunchedEffect(Unit) { reload() }
 
-    Column(Modifier.fillMaxSize().background(AppTheme.FadeColor)) {
+    Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = 16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -132,7 +133,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     Modifier.fillMaxWidth().background(
-                        Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)
+                        Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(16.dp)
                     ).padding(vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -156,22 +157,22 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
                         .size(34.dp)
                 ) {
                     Icon(Icons.Outlined.Info, contentDescription = t("About Calendar opt-outs"),
-                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                 }
             }
 
             when {
                 loading -> CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp,
                     modifier = Modifier.padding(vertical = 24.dp).size(28.dp))
-                error != null -> Text(error!!, color = Color(0xFFE57373),
-                    style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-                groups.isEmpty() -> Text(
+                error != null -> LabelPlate { Text(error!!, color = Color(0xFFE57373),
+                    style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
+                groups.isEmpty() -> BaseCard { Text(
                     t("Nothing here. When you tap Undo on a calendar event during your check-in, the title shows up here so you can revive it later."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 24.dp, horizontal = 24.dp),
-                )
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 24.dp),
+                ) }
                 else -> groups.forEach { g ->
                     SkipRowCard(
                         group = g,
@@ -220,7 +221,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
 private fun SkipRowCard(group: SkipGroup, onDelete: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().background(
-            Color.White.copy(alpha = 0.06f), RoundedCornerShape(12.dp)
+            Color.White.copy(alpha = 0.06f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp)
         ).border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp)).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

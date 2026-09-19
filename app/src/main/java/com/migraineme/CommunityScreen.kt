@@ -29,6 +29,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -223,9 +224,9 @@ private fun ArticlesContent(
                     )
                 },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
+                    selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f).compositeOver(AppTheme.FadeColor),
                     selectedLabelColor = Color.White,
-                    containerColor = Color.White.copy(alpha = 0.04f),
+                    containerColor = Color.White.copy(alpha = 0.04f).compositeOver(AppTheme.FadeColor),
                     labelColor = AppTheme.SubtleTextColor
                 ),
                 border = FilterChipDefaults.filterChipBorder(
@@ -245,10 +246,10 @@ private fun ArticlesContent(
                 .clip(RoundedCornerShape(10.dp))
                 .then(
                     if (savedSelected) Modifier
-                        .background(AppTheme.AccentPurple.copy(alpha = 0.25f))
+                        .background(AppTheme.AccentPurple.copy(alpha = 0.25f).compositeOver(AppTheme.FadeColor))
                         .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
                     else Modifier
-                        .background(Color.White.copy(alpha = 0.04f))
+                        .background(Color.White.copy(alpha = 0.04f).compositeOver(AppTheme.FadeColor))
                         .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
                 )
                 .clickable { vm.selectTab(3) },
@@ -274,7 +275,7 @@ private fun ArticlesContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text(t("Loading articles\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                LabelPlate { Text(t("Loading articles\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) }
             }
         }
     } else {
@@ -297,7 +298,7 @@ private fun ArticlesContent(
                     .height(200.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BaseCard { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Canvas(modifier = Modifier.size(48.dp)) {
                         drawSavedHeart(AppTheme.SubtleTextColor.copy(alpha = 0.4f), filled = false)
                     }
@@ -305,7 +306,7 @@ private fun ArticlesContent(
                     Text(t("No saved articles yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
                     Text(t("Tap the heart on any article to save it"), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
-                }
+                } }
             }
         }
 
@@ -332,11 +333,11 @@ private fun ArticlesContent(
                     .height(200.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BaseCard { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(t("No articles yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
                     Text(t("Check back soon!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
+                } }
             }
         }
     }
@@ -381,7 +382,7 @@ private fun ForumContent(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = AppTheme.AccentPurple)
                     Spacer(Modifier.height(8.dp))
-                    Text(t("Loading discussions\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                    LabelPlate { Text(t("Loading discussions\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) }
                 }
             }
         } else if (regularPosts.isEmpty()) {
@@ -391,11 +392,11 @@ private fun ForumContent(
                     .height(120.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BaseCard { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(t("No discussions yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
                     Text(t("Tap + to start the conversation!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
+                } }
             }
         } else {
             regularPosts.forEach { post ->
@@ -610,7 +611,7 @@ private fun SegmentedTabRow(
             .fillMaxWidth()
             .height(44.dp)
             .clip(shape)
-            .background(Color.White.copy(alpha = 0.06f))
+            .background(Color.White.copy(alpha = 0.06f).compositeOver(AppTheme.FadeColor))
             .border(1.dp, Color.White.copy(alpha = 0.10f), shape)
     ) {
         leading?.invoke(this)
@@ -687,7 +688,7 @@ private fun BrowseTagsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
@@ -760,7 +761,7 @@ private fun ArticleCard(
             .fillMaxWidth()
             .clickable(onClick = onOpen),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {

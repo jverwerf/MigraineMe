@@ -248,7 +248,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
             }
 

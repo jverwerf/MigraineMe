@@ -201,6 +201,8 @@ fun ProdromeLogScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar
+            // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
+            if (!quickLogMode) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -221,6 +223,7 @@ fun ProdromeLogScreen(
                 } else {
                     Spacer(Modifier.size(28.dp))
                 }
+            }
             }
 
             // ── Selected prodromes card (hero area) ──
@@ -371,7 +374,7 @@ fun ProdromeLogScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) },

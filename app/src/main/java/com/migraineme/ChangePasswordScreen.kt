@@ -12,6 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -156,7 +158,17 @@ fun ChangePasswordScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(t("Change password"), style = MaterialTheme.typography.titleLarge)
+        // Default Material text is dark in light mode, unreadable on the dark card.
+        val fieldColors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            disabledTextColor = Color.White.copy(alpha = 0.38f),
+            focusedLabelColor = AppTheme.SubtleTextColor,
+            unfocusedLabelColor = AppTheme.SubtleTextColor,
+            disabledLabelColor = AppTheme.SubtleTextColor
+        )
+        BaseCard(innerSpacing = 12.dp) {
+        Text(t("Change password"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleLarge)
         Divider()
 
         OutlinedTextField(
@@ -166,6 +178,7 @@ fun ChangePasswordScreen(
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -176,6 +189,7 @@ fun ChangePasswordScreen(
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -186,8 +200,10 @@ fun ChangePasswordScreen(
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
+        }
 
         Spacer(Modifier.height(4.dp))
 

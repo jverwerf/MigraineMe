@@ -858,7 +858,10 @@ internal fun MonitorBrainyCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        // Same switch as BaseCard: opaque on the lattice, see-through only over artwork
+        colors = CardDefaults.cardColors(
+            containerColor = if (LocalSolidCards.current) AppTheme.BaseCardSolid else AppTheme.BaseCardContainer
+        ),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
@@ -967,7 +970,7 @@ private fun MonitorCategoryCard(
                     Icons.Outlined.Info,
                     contentDescription = t("About %s", title),
                     tint = AppTheme.SubtleTextColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp).infoDisc()
                 )
             }
         }

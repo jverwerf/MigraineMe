@@ -138,10 +138,10 @@ private fun HomeCardConfigItem(
     BaseCard(
         modifier = modifier
             .shadow(elevation, shape = AppTheme.BaseCardShape)
-            .alpha(if (isVisible) 1f else 0.6f)
     ) {
+        // Hidden rows dim their CONTENT, not the card: on the lattice a see-through card shows the pattern
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().alpha(if (isVisible) 1f else 0.6f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Drag handle

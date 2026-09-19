@@ -141,13 +141,7 @@ fun QuickMigraineScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Spacer(Modifier.width(48.dp))
-                Text(t("Quick Log"), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
-                }
-            }
+            // One way back only: the app top bar. (The old "Quick Log  X" row duplicated it.)
 
             // Hero (matches iOS symptomContent header)
             HeroCard {
@@ -162,7 +156,8 @@ fun QuickMigraineScreen(
             }
 
             // Symptom picker — single-select, matches iOS symptomPoolPicker
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // One card around the whole picker so nothing sits bare on the lattice.
+            BaseCard(innerSpacing = 12.dp) {
                 selectedSymptom?.let { sel ->
                     val allRows = painCharacter + accompanying
                     val iconKey = allRows.firstOrNull { it.label == sel }?.iconKey
@@ -298,7 +293,7 @@ fun QuickMigraineScreen(
             ) {
                 OutlinedButton(
                     onClick = onClose,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = Color.White)
                 ) {
                     Text(t("Cancel"))
                 }

@@ -97,20 +97,9 @@ fun JournalEditScreen(
     var reliefScale by remember { mutableStateOf(ReliefScale.NONE) }
     var sideEffectScale by remember { mutableStateOf("NONE") }
     var sideEffectNotes by remember { mutableStateOf("") }
+    var sideEffects by remember { mutableStateOf<List<SideEffectItem>>(emptyList()) }
 
     val context = LocalContext.current
-    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-            if (!spoken.isNullOrBlank()) {
-                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
-            }
-        }
-    }
 
     // Voice input for the general Notes field, same contract as the
     // side-effect one: appends the spoken text to what is already there.
@@ -209,6 +198,7 @@ fun JournalEditScreen(
                             reliefScale = ReliefScale.fromString(row.reliefScale)
                             sideEffectScale = row.sideEffectScale ?: "NONE"
                             sideEffectNotes = row.sideEffectNotes ?: ""
+                            sideEffects = row.sideEffects
                         }
                         if (pickEditable) {
                             val prefs = runCatching { db.getMedicinePrefs(token) }.getOrNull().orEmpty()
@@ -235,6 +225,7 @@ fun JournalEditScreen(
                             reliefScale = ReliefScale.fromString(row.reliefScale)
                             sideEffectScale = row.sideEffectScale ?: "NONE"
                             sideEffectNotes = row.sideEffectNotes ?: ""
+                            sideEffects = row.sideEffects
                         }
                         // Pool options for the type picker — frequent prefs in
                         // position order first, the rest alphabetised. Best
@@ -369,7 +360,7 @@ fun JournalEditScreen(
     }
 
     Scaffold(
-        containerColor = AppTheme.FadeColor,
+        containerColor = Color.Transparent,
     ) { padding ->
 
         if (!loaded) {
@@ -401,11 +392,13 @@ fun JournalEditScreen(
             }
 
             if (isAdd) {
-                Text(
-                    t("Add %s", typeTitle.lowercase()),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+                LabelPlate {
+                    Text(
+                        t("Add %s", typeTitle.lowercase()),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
             }
 
             // ── Item name. Reliefs are re-pickable from the user's own pool
@@ -893,67 +886,21 @@ fun JournalEditScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
-                            val seColor = when (key) { "NONE" -> Color(0xFF81C784); "SOFT" -> Color(0xFFFFB74D); "MODERATE" -> Color(0xFFFF8A65); else -> Color(0xFFE57373) }
-                            FilterChip(
-                                selected = sideEffectScale == key,
-                                onClick = { sideEffectScale = key },
-                                label = { Text(t(display), style = MaterialTheme.typography.labelSmall) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = seColor.copy(alpha = 0.3f),
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color.White.copy(alpha = 0.06f),
-                                    labelColor = AppTheme.SubtleTextColor
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = sideEffectScale == key,
-                                    borderColor = Color.White.copy(alpha = 0.12f),
-                                    selectedBorderColor = seColor.copy(alpha = 0.6f)
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = sideEffectNotes,
-                        onValueChange = { sideEffectNotes = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(t("Side effect notes"), color = AppTheme.SubtleTextColor) },
-                        placeholder = { Text(t("e.g. drowsiness, nausea…"), color = AppTheme.SubtleTextColor) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = AppTheme.AccentPurple,
-                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                            cursorColor = AppTheme.AccentPurple,
-                        ),
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
-                                }
-                                try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                                    android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }) {
-                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                            }
-                        },
-                        minLines = 1,
-                        maxLines = 3,
+                    // Side effects: shared Brainy picker (collapsed by default) + notes
+                    SideEffectPicker(
+                        sideEffectScale = sideEffectScale,
+                        onScaleChange = { sideEffectScale = it },
+                        sideEffects = sideEffects,
+                        onSideEffectsChange = { sideEffects = it },
+                        sideEffectNotes = sideEffectNotes,
+                        onNotesChange = { sideEffectNotes = it },
                     )
                 }
             }
 
             // ── Error ──
             if (error != null) {
-                Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                LabelPlate { Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall) }
             }
 
             // ── Save button ──
@@ -998,6 +945,7 @@ fun JournalEditScreen(
                                                 reliefScale = reliefScale.name,
                                                 sideEffectScale = sideEffectScale,
                                                 sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                                sideEffects = sideEffects,
                                                 doseValue = doseValue,
                                                 doseUnit = if (doseValue != null) doseUnit else null
                                             ).id
@@ -1011,7 +959,8 @@ fun JournalEditScreen(
                                                 endAt = resolvedEnd?.toString(),
                                                 reliefScale = reliefScale.name,
                                                 sideEffectScale = sideEffectScale,
-                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                                sideEffects = sideEffects
                                             )
                                             addedId = row.id
                                             // Device reliefs schedule their follow-up here, same
@@ -1035,7 +984,7 @@ fun JournalEditScreen(
                                     "medicine" -> {
                                         val doseValue = DoseUnits.parseNumber(doseText)
                                             ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
-                                        db.updateMedicine(token, itemId, name = newType, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null, category = newCategory, moveCategory = newType != null)
+                                        db.updateMedicine(token, itemId, name = newType, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null, category = newCategory, moveCategory = newType != null, sideEffects = sideEffects)
                                     }
                                     "relief" -> {
                                         // End card set → end_at, cleared → the stored end
@@ -1051,7 +1000,8 @@ fun JournalEditScreen(
                                             notes = notes,
                                             reliefScale = reliefScale.name,
                                             sideEffectScale = sideEffectScale,
-                                            sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                            sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                            sideEffects = sideEffects
                                         )
                                     }
                                     "prodrome" -> db.updateProdromeLog(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
@@ -1104,7 +1054,7 @@ fun JournalEditScreen(
             if (!isAdd) OutlinedButton(
                 onClick = { confirmDelete = true },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373)),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = Color(0xFFE57373)),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Icon(Icons.Outlined.Delete, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(16.dp))

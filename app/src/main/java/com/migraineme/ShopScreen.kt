@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
@@ -62,7 +63,7 @@ fun ShopScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(AppTheme.HeroCardContainer)
+                .background(AppTheme.HeroCardSolid)
                 .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
                 .padding(vertical = 20.dp, horizontal = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -110,24 +111,29 @@ fun ShopScreen(onBack: () -> Unit) {
                 }
             }
             loaded.isEmpty() -> {
-                Text(
-                    t("Nothing to show here yet. Check back once you have a connection."),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                LabelPlate {
+                    Text(
+                        t("Nothing to show here yet. Check back once you have a connection."),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             else -> loaded.forEach { group ->
-                Text(
-                    group.title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    group.blurb,
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
-                )
+                // The 10.dp gap to the first product card moves onto the card.
+                BaseCard(modifier = Modifier.padding(bottom = 10.dp), innerSpacing = 0.dp) {
+                    Text(
+                        group.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        group.blurb,
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
                 group.items.forEach { shopItem ->
                     ShopCard(
                         item = shopItem,
@@ -167,7 +173,7 @@ private fun ShopCard(item: ShopCatalogue.Item, onOpenLink: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .padding(14.dp)
     ) {
@@ -356,7 +362,7 @@ private fun ShopDisclaimerCard() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.Top

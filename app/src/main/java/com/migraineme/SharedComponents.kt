@@ -65,7 +65,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.border
 import androidx.compose.ui.unit.dp
+
+/**
+ * Every screen sits on the lattice, so HeroCard and BaseCard paint the opaque twin
+ * of their fill and the pattern stays behind them. Provide false where a card must
+ * stay see-through (the paywall, over the swing scene).
+ */
+val LocalSolidCards = androidx.compose.runtime.staticCompositionLocalOf { true }
+
+/**
+ * Counts the ScrollFadeContainers on screen. While one is up it owns the page
+ * fade (exact scroll position); MainActivity's fallback veil stands down.
+ */
+object PageFade {
+    var screenHandled by androidx.compose.runtime.mutableIntStateOf(0)
+}
 
 /**
  * A container that fades from transparent to a solid color as the user scrolls.
@@ -84,6 +100,11 @@ fun ScrollFadeContainer(
     content: @Composable (ScrollState) -> Unit
 ) {
     val density = LocalDensity.current
+
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        PageFade.screenHandled++
+        onDispose { PageFade.screenHandled-- }
+    }
     
     val fadeAlpha by remember(scrollState, density) {
         derivedStateOf {
@@ -168,7 +189,9 @@ fun HeroCard(
                 )
             },
         shape = AppTheme.HeroCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+        colors = CardDefaults.cardColors(
+            containerColor = if (LocalSolidCards.current) AppTheme.HeroCardSolid else AppTheme.HeroCardContainer
+        ),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -215,6 +238,7 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
+                .background(AppTheme.BaseCardSolid)
                 .clickable(onClick = onBack)
                 .padding(horizontal = 8.dp, vertical = 6.dp)
         ) {
@@ -231,6 +255,7 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
+                .background(AppTheme.BaseCardSolid)
                 .clickable(onClick = onSkip)
                 .padding(horizontal = 8.dp, vertical = 6.dp)
         ) {
@@ -275,11 +300,31 @@ fun WizardSearchField(
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White,
             cursorColor = accent,
+            focusedContainerColor = AppTheme.BaseCardSolid,
+            unfocusedContainerColor = AppTheme.BaseCardSolid,
             focusedBorderColor = accent.copy(alpha = 0.5f),
             unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
         )
     )
 }
+
+/**
+ * A small solid plate for a short label that sits between cards (section titles,
+ * captions, empty-state lines), so no text lies bare on the lattice. Hugs its content.
+ */
+@Composable
+fun LabelPlate(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(AppTheme.BaseCardSolid)
+            .border(AppTheme.BaseCardBorder, RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) { content() }
+}
+
+/** Solid disc behind the "(i)" icon that overhangs a card corner, so it never sits bare on the lattice. */
+fun Modifier.infoDisc(): Modifier = this.background(AppTheme.BaseCardSolid, androidx.compose.foundation.shape.CircleShape)
 
 /**
  * A standard base card for secondary content on Home/Insights.
@@ -301,7 +346,9 @@ fun BaseCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(
+            containerColor = if (LocalSolidCards.current) AppTheme.BaseCardSolid else AppTheme.BaseCardContainer
+        ),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {

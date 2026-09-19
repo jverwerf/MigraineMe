@@ -96,24 +96,26 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-            Text(
-                t("Pick up to %s treatments to show on the Monitor home tile. Leave empty to auto-pick by best %% change.", TREATMENT_CARD_MAX_FAVOURITES),
-                color = Color.White.copy(alpha = 0.62f),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            LabelPlate(modifier = Modifier.padding(vertical = 8.dp)) {
+                Text(
+                    t("Pick up to %s treatments to show on the Monitor home tile. Leave empty to auto-pick by best %% change.", TREATMENT_CARD_MAX_FAVOURITES),
+                    color = Color.White.copy(alpha = 0.62f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             if (loading) {
                 Box(Modifier.fillMaxWidth().padding(top = 30.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color(0xFFB97BFF))
                 }
             } else if (active.isEmpty()) {
-                Text(
-                    t("No active treatments yet. Add one to customize the card."),
-                    color = Color.White.copy(alpha = 0.62f),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 30.dp)
-                )
+                LabelPlate(modifier = Modifier.padding(top = 30.dp)) {
+                    Text(
+                        t("No active treatments yet. Add one to customize the card."),
+                        color = Color.White.copy(alpha = 0.62f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             } else {
                 active.forEach { r ->
                     val isSelected = favourites.contains(r.id)
@@ -123,7 +125,7 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(18.dp))
-                            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+                            .background(AppTheme.BaseCardSolid)
                             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
                             .clickable(enabled = isSelected || !atMax) {
                                 val next = if (isSelected) favourites.filterNot { it == r.id }
@@ -297,7 +299,7 @@ private fun CustomizeTreatmentsHero(onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.78f))
+            .background(AppTheme.HeroCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .clickable { onClick() }
             .padding(20.dp),
@@ -318,7 +320,7 @@ private fun AddTreatmentButton(onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.78f))
+            .background(AppTheme.HeroCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .clickable { onClick() }
             .padding(20.dp),
@@ -336,7 +338,9 @@ private fun AddTreatmentButton(onClick: () -> Unit) {
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(title, color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+    LabelPlate(modifier = Modifier.padding(top = 8.dp)) {
+        Text(title, color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+    }
 }
 
 data class TreatmentListRowItem(
@@ -384,7 +388,7 @@ private fun ListRow(item: TreatmentListRowItem, navController: NavController) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+            .background(AppTheme.BaseCardSolid)
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .clickable { navController.navigate("monitor_treatment_detail/${item.navigateRegimenId}") }
             .padding(16.dp),
@@ -449,13 +453,15 @@ private fun bandPillBg(band: String): Color = when (band) {
 
 @Composable
 private fun EmptyState() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(t("No treatments yet"), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(4.dp))
-        Text(t("Tap Add Treatment to start tracking a drug, device, or lifestyle change."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+    BaseCard(modifier = Modifier.padding(top = 40.dp), innerSpacing = 0.dp) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(t("No treatments yet"), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(t("Tap Add Treatment to start tracking a drug, device, or lifestyle change."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -510,7 +516,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
         Box(
             modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+                .background(AppTheme.BaseCardSolid)
                 .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
                 .clickable(onClick = onClick)
         ) {
@@ -557,7 +563,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
                 .size(34.dp)
         ) {
             Icon(Icons.Outlined.Info, contentDescription = t("About Treatments"),
-                tint = Color.White.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
+                tint = Color.White.copy(alpha = 0.55f), modifier = Modifier.size(20.dp).infoDisc())
         }
     }
     if (showInfo) {

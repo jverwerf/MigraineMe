@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -271,7 +272,7 @@ fun HomeScreenRoot(
         }
 
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
-            ScrollableScreenContent(scrollState = scroll) {
+            ScrollableScreenContent(scrollState = scroll, logoRevealHeight = AppTheme.HomeRevealHeight) {
 
                 // ── Trial banner ──
                 TrialBanner(onUpgrade = onNavigateToPaywall)
@@ -405,12 +406,12 @@ fun HomeScreenRoot(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .padding(vertical = 6.dp)
                     ) {
                         Surface(
                             onClick = onNavigateToChatAssistant,
                             shape = AppTheme.BaseCardShape,
-                            color = AppTheme.BaseCardContainer,
+                            color = AppTheme.BaseCardSolid,
                             border = AppTheme.BaseCardBorder,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -465,7 +466,7 @@ fun HomeScreenRoot(
                                 Icons.Outlined.Info,
                                 contentDescription = t("About Ask MigraineMe"),
                                 tint = AppTheme.SubtleTextColor,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp).infoDisc()
                             )
                         }
                     }
@@ -486,7 +487,7 @@ fun HomeScreenRoot(
                             Text(AskMigraineMeInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
                 }
@@ -616,12 +617,12 @@ private fun ExercisesHomeCard(onTap: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(vertical = 6.dp)
     ) {
         Surface(
             onClick = onTap,
             shape = AppTheme.BaseCardShape,
-            color = AppTheme.BaseCardContainer,
+            color = AppTheme.BaseCardSolid,
             border = AppTheme.BaseCardBorder,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -791,7 +792,7 @@ private fun RiskHeroCard(
                     Icons.Outlined.Info,
                     contentDescription = t("About Risk today"),
                     tint = AppTheme.SubtleTextColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp).infoDisc()
                 )
             }
         }
@@ -812,7 +813,7 @@ private fun RiskHeroCard(
             text = {
                 Text(infoText, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             },
-            containerColor = AppTheme.BaseCardContainer
+            containerColor = AppTheme.DialogContainer
         )
     }
 }
@@ -1051,7 +1052,7 @@ private fun ActiveTriggersCard(
                 Icons.Outlined.Info,
                 contentDescription = t("About Active triggers"),
                 tint = AppTheme.SubtleTextColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp).infoDisc()
             )
         }
     }
@@ -1072,7 +1073,7 @@ private fun ActiveTriggersCard(
                 Text(ActiveTriggersInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium)
             },
-            containerColor = AppTheme.BaseCardContainer
+            containerColor = AppTheme.DialogContainer
         )
     }
 }
@@ -1086,7 +1087,7 @@ private fun WellDoneCard(text: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784).copy(alpha = 0.10f)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784).copy(alpha = 0.10f).compositeOver(AppTheme.FadeColor)),
         elevation = CardDefaults.cardElevation(0.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF81C784).copy(alpha = 0.25f))
     ) {
@@ -1125,7 +1126,7 @@ private fun WellDoneCard(text: String) {
 @Composable
 private fun AiInsightCard(insight: String, watermark: Boolean = false, updating: Boolean = false) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f).compositeOver(AppTheme.FadeColor)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Box(Modifier.fillMaxWidth()) {

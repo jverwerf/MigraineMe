@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -228,73 +229,15 @@ fun EveningCheckInScreen(
             hadMigraineToday = withContext(Dispatchers.IO) {
                 runCatching { db.hasMigraineOnDay(token, LocalDate.now()) }.getOrDefault(openMigraine != null)
             }
-            var tsePool = withContext(Dispatchers.IO) {
-                runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
-            }
-            // Seed defaults for legacy accounts so the side-effects page isn't empty.
-            // icon_key values match SymptomIcons registered keys so the circles
-            // render proper glyphs (not 2-letter initials). Categories group
-            // them sensibly in the Manage screen.
-            if (tsePool.isEmpty()) {
-                val defaults = listOf(
-                    // Cognitive
-                    Triple("Brain fog",          "brainfog",   "Cognitive"),
-                    Triple("Memory trouble",     "brainfog",   "Cognitive"),
-                    Triple("Confusion",          "aura",       "Cognitive"),
-                    Triple("Better focus",       "brainfog",   "Cognitive"),
-                    Triple("Mental clarity",     "aura",       "Cognitive"),
-                    // Mood
-                    Triple("Mood shift",         "mood_crash", "Mood"),
-                    Triple("Irritability",       "burning",    "Mood"),
-                    Triple("Low mood",           "mood_crash", "Mood"),
-                    Triple("Calmer",             "mood_lift",  "Mood"),
-                    Triple("Less anxious",       "heart",      "Mood"),
-                    Triple("Better mood",        "mood_lift",  "Mood"),
-                    // Sleep
-                    Triple("Insomnia",           "moon",       "Sleep"),
-                    Triple("Drowsiness",         "moon",       "Sleep"),
-                    Triple("Vivid dreams",       "aura",       "Sleep"),
-                    Triple("Fatigue",            "fatigue",    "Sleep"),
-                    Triple("Better sleep",       "moon",       "Sleep"),
-                    Triple("More energy",        "fatigue",    "Sleep"),
-                    // Body
-                    Triple("Dizziness",          "dizziness",  "Body"),
-                    Triple("Tingling",           "tingling",   "Body"),
-                    Triple("Headache",           "dullache",   "Body"),
-                    Triple("Nausea",             "nausea",     "Body"),
-                    Triple("Dry mouth",          "droplet",    "Body"),
-                    Triple("Sweating",           "droplet",    "Body"),
-                    Triple("Tremor",             "throbbing",  "Body"),
-                    Triple("Muscle weakness",    "weakness",   "Body"),
-                    Triple("Heart palpitations", "heart",      "Body"),
-                    Triple("Blurred vision",     "blur",       "Body"),
-                    Triple("Light sensitivity",  "light",      "Body"),
-                    Triple("Sound sensitivity",  "sound",      "Body"),
-                    Triple("Loss of appetite",   "cross",      "Body"),
-                    Triple("Increased appetite", "cross",      "Body"),
-                    Triple("Constipation",       "cross",      "Body"),
-                    Triple("Less pain",          "dullache",   "Body"),
-                    Triple("Less nausea",        "nausea",     "Body"),
-                )
-                withContext(Dispatchers.IO) {
-                    for ((label, iconKey, category) in defaults) {
-                        runCatching { db.insertTreatmentSideEffectToPool(token, label, category = category, iconKey = iconKey) }
-                    }
-                }
-                tsePool = withContext(Dispatchers.IO) {
-                    runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
-                }
-            }
+            // Shared pool (treatments, medicines, reliefs). The default list and
+            // the seed-when-empty logic live in TreatmentSideEffectPool, which the
+            // medicine/relief side-effect picker uses too.
+            val tse = runCatching { TreatmentSideEffectPool.loadAndSeed(db, token) }
+                .getOrDefault(TreatmentSideEffectPool.Loaded(emptyList(), emptyList()))
             treatmentSideEffectPool.clear()
-            treatmentSideEffectPool.addAll(tsePool)
-            val tsePrefs = withContext(Dispatchers.IO) {
-                runCatching { db.getTreatmentSideEffectPrefs(token) }.getOrDefault(emptyList())
-            }
+            treatmentSideEffectPool.addAll(tse.pool)
             treatmentSideEffectFavLabels.clear()
-            treatmentSideEffectFavLabels.addAll(
-                tsePrefs.filter { it.status == "frequent" }
-                    .mapNotNull { it.sideEffect?.label ?: tsePool.firstOrNull { p -> p.id == it.sideEffectId }?.label }
-            )
+            treatmentSideEffectFavLabels.addAll(tse.favLabels)
         } catch (_: Throwable) { }
     }
     var saving by remember { mutableStateOf(false) }
@@ -478,7 +421,8 @@ fun EveningCheckInScreen(
                                 token, null, m.label, m.amount, m.startAtIso ?: now, m.note ?: "evening check-in",
                                 reliefScale = m.reliefScale ?: "NONE",
                                 sideEffectScale = m.sideEffectScale ?: "NONE",
-                                sideEffectNotes = m.sideEffectNotes
+                                sideEffectNotes = m.sideEffectNotes,
+                                sideEffects = m.sideEffects
                             )
                         }
                     }
@@ -489,7 +433,8 @@ fun EveningCheckInScreen(
                                 endAt = r.endAtIso,
                                 reliefScale = r.reliefScale ?: "NONE",
                                 sideEffectScale = r.sideEffectScale ?: "NONE",
-                                sideEffectNotes = r.sideEffectNotes
+                                sideEffectNotes = r.sideEffectNotes,
+                                sideEffects = r.sideEffects
                             )
                         }
                     }
@@ -663,21 +608,30 @@ fun EveningCheckInScreen(
 
     fun nowIso(): String = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
-    val bgBrush = remember { androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
-
-    Column(Modifier.fillMaxSize().background(bgBrush).statusBarsPadding().navigationBarsPadding()) {
+    // No own background: MainActivity draws the lattice behind this route.
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         LinearProgressIndicator(
             progress = { (pageIndex + 1).toFloat() / pages.size },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)),
             color = AppTheme.AccentPink, trackColor = AppTheme.TrackColor
         )
-        Text(
-            t("Evening Check-in — %1\$s of %2\$s", pageIndex + 1, pages.size),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 28.dp)
-        )
-        Spacer(Modifier.height(8.dp))
+        // Page label on the left, a close X on the right of every page (same exit as Cancel on page 1)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 28.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                t("Evening Check-in — %1\$s of %2\$s", pageIndex + 1, pages.size),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.weight(1f)
+            )
+            if (!saved) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Outlined.Close, t("Close"), tint = Color.White)
+                }
+            }
+        }
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AnimatedContent(
@@ -961,9 +915,9 @@ fun EveningCheckInScreen(
         if (!saved) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (currentPage == CheckInPage.Note) {
-                    TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
+                    LabelPlate { TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
                 } else {
-                    TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
+                    LabelPlate { TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
                 }
                 when (currentPage) {
                     CheckInPage.Review -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
@@ -1108,13 +1062,18 @@ private fun FavouritesPage(
     val others = remember(items) { items.filter { !it.isFavourite } }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        } }
 
+        Spacer(Modifier.height(12.dp))
+
+        // One card for the whole picker (summary + pools); skipped when there is nothing to show.
+        if (selected.isNotEmpty() || items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
         // Selected items summary at top
         if (selected.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
             Column(
                 Modifier.fillMaxWidth()
                     .background(accentColor.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
@@ -1145,9 +1104,8 @@ private fun FavouritesPage(
                     }
                 }
             }
+            if (items.isNotEmpty()) Spacer(Modifier.height(16.dp))
         }
-
-        Spacer(Modifier.height(16.dp))
 
         if (favourites.isNotEmpty()) {
             Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -1157,12 +1115,15 @@ private fun FavouritesPage(
                     CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
         }
 
         if (others.isNotEmpty()) {
-            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
-            Spacer(Modifier.height(12.dp))
+            // No divider as the first thing inside the card.
+            if (favourites.isNotEmpty() || selected.isNotEmpty()) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                Spacer(Modifier.height(12.dp))
+            }
             // Group unfavved items by category so each bucket gets its own
             // sub-header. Falls back to "Other" for items with no category.
             val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
@@ -1182,6 +1143,7 @@ private fun FavouritesPage(
                     }
                 }
             }
+        }
         }
 
         footer()
@@ -1231,11 +1193,15 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(t("Tell us about your day"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(t("Type or speak freely — keep each thing separate so we can match it accurately"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        } }
         Spacer(Modifier.height(20.dp))
 
+        // One card: the note field, its buttons and whatever was matched from it.
+        BaseCard(innerSpacing = 0.dp) {
         OutlinedTextField(
             value = noteText, onValueChange = onNoteChange,
             placeholder = { Text(t("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
@@ -1271,7 +1237,6 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
                 }
             }
         }
-        Spacer(Modifier.height(12.dp))
 
         if (aiParsed && aiResult != null) {
             val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size +
@@ -1322,6 +1287,8 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
             Spacer(Modifier.height(12.dp))
             Text(t("No matches found"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
+        }
+        Spacer(Modifier.height(12.dp))
         if (noteText.isBlank()) {
             Spacer(Modifier.height(12.dp))
         }
@@ -1424,23 +1391,27 @@ private fun ReviewPage(
     var expandedKey by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        } }
         Spacer(Modifier.height(20.dp))
 
         AnimatedVisibility(visible = saved) {
-            Row(Modifier.fillMaxWidth().background(Color(0xFF2E7D32).copy(alpha = 0.85f), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Row(Modifier.fillMaxWidth().background(Color(0xFF2E7D32).copy(alpha = 0.85f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                 Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text(t("Check-in saved!"), color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         }
 
         if (total == 0 && !saved) {
             Spacer(Modifier.height(40.dp))
-            Text(t("Nothing selected — go back to tap items, or save an empty check-in"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            BaseCard { Text(t("Nothing selected — go back to tap items, or save an empty check-in"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
         }
 
         if (migraineNowCount > 0) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Migraine update"), Color(0xFF4DB6AC), migraineNowCount)
             if (endedAtIso != null) {
                 ReviewItemRow("Migraine ended", Color(0xFF81C784), false, false,
@@ -1465,8 +1436,11 @@ private fun ReviewPage(
                         (auraNowDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
                     onRemove = { rmAuraNow() }, onClick = {})
             }
+            }
         }
         if (triggers.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Triggers"), Color(0xFFFFB74D), triggers.size)
             triggers.forEach { t ->
                 val key = "trigger_${t.label}"
@@ -1483,8 +1457,11 @@ private fun ReviewPage(
                     )
                 }
             }
+            }
         }
         if (prodromes.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Prodromes"), Color(0xFF9575CD), prodromes.size)
             prodromes.forEach { p ->
                 val key = "prodrome_${p.label}"
@@ -1501,8 +1478,11 @@ private fun ReviewPage(
                     )
                 }
             }
+            }
         }
         if (medicines.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Medicines"), Color(0xFF4FC3F7), medicines.size)
             medicines.forEach { m ->
                 val key = "medicine_${m.label}"
@@ -1519,7 +1499,7 @@ private fun ReviewPage(
                         m.amount?.let { append("Amount: $it") }
                         formatTimeSubtitle(m.startAtIso)?.let { if (isNotEmpty()) append(" · "); append(it) }
                         if (m.reliefScale != null && m.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${m.reliefScale.lowercase()}") }
-                        if (m.sideEffectScale != null && m.sideEffectScale != "NONE") { if (isNotEmpty()) append(" · "); append("Side effects: ${m.sideEffectScale.lowercase()}") }
+                        sideEffectsLine(m.sideEffects, m.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
                         m.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
                     }.ifBlank { null }
                     ReviewItemRow(m.label, Color(0xFF4FC3F7), m.label in aiLabels, m.inferred,
@@ -1528,8 +1508,11 @@ private fun ReviewPage(
                     )
                 }
             }
+            }
         }
         if (reliefs.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Reliefs"), Color(0xFF81C784), reliefs.size)
             reliefs.forEach { r ->
                 val key = "relief_${r.label}"
@@ -1543,7 +1526,7 @@ private fun ReviewPage(
                     val sub = buildString {
                         formatTimeSubtitle(r.startAtIso)?.let { append(it) }
                         if (r.reliefScale != null && r.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${r.reliefScale.lowercase()}") }
-                        if (r.sideEffectScale != null && r.sideEffectScale != "NONE") { if (isNotEmpty()) append(" · "); append("Side effects: ${r.sideEffectScale.lowercase()}") }
+                        sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
                         r.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
                     }.ifBlank { null }
                     ReviewItemRow(r.label, Color(0xFF81C784), r.label in aiLabels, r.inferred,
@@ -1552,8 +1535,11 @@ private fun ReviewPage(
                     )
                 }
             }
+            }
         }
         if (activities.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Activities"), Color(0xFFFF8A65), activities.size)
             activities.forEach { a ->
                 ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
@@ -1562,8 +1548,11 @@ private fun ReviewPage(
                     onClick = {}
                 )
             }
+            }
         }
         if (missed.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("Didn't do"), Color(0xFFE8A0A0), missed.size)
             missed.forEach { m ->
                 val reasons = (m.reasons + sharedReasons).distinct()
@@ -1574,8 +1563,11 @@ private fun ReviewPage(
                     onClick = {}
                 )
             }
+            }
         }
         if (todayCalendar.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            BaseCard(innerSpacing = 0.dp) {
             ReviewSectionHeader(t("From calendar"), Color(0xFF64B5F6), todayCalendar.size)
             todayCalendar.forEach { m ->
                 val type = m.targetType ?: "activity"
@@ -1593,11 +1585,12 @@ private fun ReviewPage(
                     onClick = {}
                 )
             }
+            }
         }
 
         if (total > 0 && !saved) {
             Spacer(Modifier.height(12.dp))
-            Text((if (total == 1) t("Logging 1 item") else t("Logging %s items", total)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            LabelPlate(Modifier.align(Alignment.CenterHorizontally)) { Text((if (total == 1) t("Logging 1 item") else t("Logging %s items", total)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -1605,7 +1598,7 @@ private fun ReviewPage(
 
 @Composable
 private fun ReviewSectionHeader(title: String, color: Color, count: Int) {
-    Spacer(Modifier.height(12.dp))
+    // The 12dp gap above a section now sits between the section cards in ReviewPage.
     Text("$title ($count)", color = color, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
     Spacer(Modifier.height(8.dp))
 }
@@ -1757,11 +1750,8 @@ private fun ScalePicker(
 // side_effect_scale NONE/SOFT/MODERATE/SEVERE — an off-set value rejects the whole row.
 private val reliefScaleOptions = listOf("NONE", "LOW", "MILD", "HIGH")
 private val reliefScaleLabels = listOf("None", "Low", "Mild", "High")
-private val sideEffectScaleOptions = listOf("NONE", "SOFT", "MODERATE", "SEVERE")
-private val sideEffectScaleLabels = listOf("None", "Soft", "Moderate", "Severe")
 
 private val reliefColorMap = mapOf("HIGH" to Color(0xFF81C784), "MILD" to Color(0xFFFFB74D), "LOW" to Color(0xFFEF5350), "NONE" to Color.White.copy(alpha = 0.2f))
-private val sideEffectColorMap = mapOf("SEVERE" to Color(0xFFEF5350), "MODERATE" to Color(0xFFFFB74D), "SOFT" to Color(0xFF81C784), "NONE" to Color.White.copy(alpha = 0.2f))
 
 // ═══════════════════════════════════════════════════════════════════
 //  Editor Header — shared by all editor pills
@@ -1822,29 +1812,14 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, doseUnit
     var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
     var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
-
-    // Voice input for the side-effect details field, same contract as
-    // JournalEditScreen: appends the spoken text to what is already there.
-    val seCtx = androidx.compose.ui.platform.LocalContext.current
-    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-            if (!spoken.isNullOrBlank()) {
-                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
-            }
-        }
-    }
+    var sideEffects by remember(item.label) { mutableStateOf(item.sideEffects) }
 
     fun commit() {
         // Legacy mirror string ("400mg" / "2"); the insert path re-derives
         // dose_value/dose_unit from it (dual-write).
         val mirror = DoseUnits.parseNumber(amount)
             ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
-        onUpdate(item.copy(startAtIso = timeIso, amount = mirror, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
+        onUpdate(item.copy(startAtIso = timeIso, amount = mirror, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, sideEffects = sideEffects))
     }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
@@ -1870,34 +1845,15 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, doseUnit
 
         ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap, reliefScaleOptions, reliefScaleLabels)
         Spacer(Modifier.height(10.dp))
-        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap, sideEffectScaleOptions, sideEffectScaleLabels)
-
-        if (sideEffectScale != "NONE") {
-            Spacer(Modifier.height(10.dp))
-            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
-                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
-                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
-                trailingIcon = {
-                    IconButton(onClick = {
-                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
-                        }
-                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }) {
-                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
-                    }
-                },
-                singleLine = true
-            )
-        }
+        // Shared Brainy side-effect picker (same pool as the treatment side-effects page).
+        SideEffectPicker(
+            sideEffectScale = sideEffectScale,
+            onScaleChange = { sideEffectScale = it },
+            sideEffects = sideEffects,
+            onSideEffectsChange = { sideEffects = it },
+            sideEffectNotes = sideEffectNotes,
+            onNotesChange = { sideEffectNotes = it },
+        )
     }
 }
 
@@ -1911,25 +1867,10 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
     var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
     var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
-
-    // Voice input for the side-effect details field, same contract as
-    // JournalEditScreen: appends the spoken text to what is already there.
-    val seCtx = androidx.compose.ui.platform.LocalContext.current
-    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-            if (!spoken.isNullOrBlank()) {
-                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
-            }
-        }
-    }
+    var sideEffects by remember(item.label) { mutableStateOf(item.sideEffects) }
 
     fun commit() {
-        onUpdate(item.copy(startAtIso = timeIso, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
+        onUpdate(item.copy(startAtIso = timeIso, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, sideEffects = sideEffects))
     }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
@@ -1941,34 +1882,15 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
 
         ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap, reliefScaleOptions, reliefScaleLabels)
         Spacer(Modifier.height(10.dp))
-        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap, sideEffectScaleOptions, sideEffectScaleLabels)
-
-        if (sideEffectScale != "NONE") {
-            Spacer(Modifier.height(10.dp))
-            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
-                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
-                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
-                trailingIcon = {
-                    IconButton(onClick = {
-                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
-                        }
-                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }) {
-                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
-                    }
-                },
-                singleLine = true
-            )
-        }
+        // Shared Brainy side-effect picker (same pool as the treatment side-effects page).
+        SideEffectPicker(
+            sideEffectScale = sideEffectScale,
+            onScaleChange = { sideEffectScale = it },
+            sideEffects = sideEffects,
+            onSideEffectsChange = { sideEffects = it },
+            sideEffectNotes = sideEffectNotes,
+            onNotesChange = { sideEffectNotes = it },
+        )
     }
 }
 
@@ -2190,17 +2112,19 @@ private fun PostdromeStep(
     } ?: "your open migraine"
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(t("Postdrome"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(t("Any lingering symptoms from %s?", migraineLabel),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        } }
         Spacer(Modifier.height(12.dp))
 
         if (isStale) {
             Row(
                 Modifier.fillMaxWidth()
-                    .background(Color(0xFFFFB74D).copy(alpha = 0.18f), RoundedCornerShape(12.dp))
+                    .background(Color(0xFFFFB74D).copy(alpha = 0.18f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp))
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -2215,6 +2139,7 @@ private fun PostdromeStep(
             Spacer(Modifier.height(12.dp))
         }
 
+        BaseCard(innerSpacing = 0.dp) {
         if (pool.isEmpty()) {
             Text(t("No postdrome symptoms in your pool. Manage your symptoms list to add some."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
@@ -2235,7 +2160,7 @@ private fun PostdromeStep(
                             item.label in selected, accent, false) { onToggle(item.label) }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                if (rest.isNotEmpty()) Spacer(Modifier.height(16.dp))
             }
             if (rest.isNotEmpty()) {
                 if (favs.isNotEmpty()) {
@@ -2261,6 +2186,7 @@ private fun PostdromeStep(
                     }
                 }
             }
+        }
         }
 
         Spacer(Modifier.height(80.dp))
@@ -2312,14 +2238,17 @@ private fun MigraineNowStep(
     var showAuraSheet by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(t("How's the migraine now?"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(t("Update %s — everything here is added to it", migraineLabel),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        } }
         Spacer(Modifier.height(16.dp))
 
         // ── Has it ended? ──
+        BaseCard(innerSpacing = 0.dp) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val ongoing = endedAtIso == null
             Surface(
@@ -2358,9 +2287,11 @@ private fun MigraineNowStep(
                 TimeEditor(endedAtIso, Color(0xFF81C784)) { onEndedChange(it) }
             }
         }
+        }
         Spacer(Modifier.height(20.dp))
 
         // ── New symptoms ──
+        BaseCard(innerSpacing = 0.dp) {
         Text(t("Any new symptoms?"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
@@ -2380,7 +2311,7 @@ private fun MigraineNowStep(
                             item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                if (rest.isNotEmpty()) Spacer(Modifier.height(12.dp))
             }
             if (rest.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -2392,9 +2323,11 @@ private fun MigraineNowStep(
                 }
             }
         }
+        }
         Spacer(Modifier.height(20.dp))
 
         // ── Pain update ──
+        BaseCard(innerSpacing = 0.dp) {
         Text(t("Pain update"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
@@ -2485,9 +2418,11 @@ private fun MigraineNowStep(
                 )
             }
         }
+        }
         Spacer(Modifier.height(20.dp))
 
         // ── Aura ──
+        BaseCard(innerSpacing = 0.dp) {
         Text(t("Aura"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
@@ -2521,6 +2456,7 @@ private fun MigraineNowStep(
                     Icon(Icons.Outlined.Close, t("Remove"), tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
                 }
             }
+        }
         }
         if (showAuraSheet) {
             AuraDetailSheet(
@@ -2558,6 +2494,7 @@ private fun SideEffectsPageV2(
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
         // Title "Side effects" + regimen name underneath + amount/frequency meta.
+        HeroCard { Column(Modifier.fillMaxWidth()) {
         Text(t("Side effects"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Text(regimen.name, color = Color.White,
@@ -2567,9 +2504,11 @@ private fun SideEffectsPageV2(
             Spacer(Modifier.height(2.dp))
             Text(parts, color = accentColor, style = MaterialTheme.typography.labelSmall)
         }
+        } }
 
         Spacer(Modifier.height(12.dp))
 
+        if (items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
         if (favourites.isNotEmpty()) {
             Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(12.dp))
@@ -2578,7 +2517,7 @@ private fun SideEffectsPageV2(
                     CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
         }
 
         if (others.isNotEmpty()) {
@@ -2604,6 +2543,7 @@ private fun SideEffectsPageV2(
                     }
                 }
             }
+        }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -2635,6 +2575,7 @@ private fun SideEffectsPageV2(
         // The dictated text was previously invisible: launchVoice() appended
         // into freeText but no field rendered it. This field shows and edits
         // it, with the mic as the trailing icon (house pattern).
+        BaseCard(innerSpacing = 0.dp) {
         OutlinedTextField(
             value = freeText,
             onValueChange = onFreeTextChange,
@@ -2657,6 +2598,7 @@ private fun SideEffectsPageV2(
             minLines = 2,
             maxLines = 4,
         )
+        }
 
         Spacer(Modifier.height(80.dp))
     }

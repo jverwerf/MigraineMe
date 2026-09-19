@@ -373,9 +373,12 @@ fun ImportHistoryScreen(
 
 @Composable
 private fun Title(text: String, sub: String? = null) {
-    Text(text, color = AppTheme.TitleColor, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(horizontal = 4.dp))
-    if (sub != null) Text(sub, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 2.dp, bottom = 12.dp))
-    else Spacer(Modifier.height(12.dp))
+    BaseCard(innerSpacing = 0.dp) {
+        Text(text, color = AppTheme.TitleColor, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(horizontal = 4.dp))
+        if (sub != null) Text(sub, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 2.dp))
+    }
+    // The 12.dp gap below the title block now sits under the card.
+    Spacer(Modifier.height(12.dp))
 }
 
 @Composable
@@ -405,7 +408,7 @@ private fun PrimaryButton(text: String, enabled: Boolean = true, onClick: () -> 
 
 @Composable
 private fun GhostButton(text: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink)) {
+    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)), colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPink)) {
         Text(text, fontWeight = FontWeight.SemiBold)
     }
 }
@@ -513,7 +516,7 @@ private fun BusyScreen(text: String) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(16.dp))
-            Text(t(text), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            LabelPlate { Text(t(text), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) }
         }
     }
 }
@@ -578,13 +581,15 @@ private fun UseScreen(p: JsonObject, engineUse: MutableMap<String, Boolean>, pai
         val keys = items.filter { !it.bool("fixed") }.mapNotNull { it.str("key") }
         val onCount = keys.count { engineUse[it] ?: false }
         Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text((groupTitle[group] ?: group).uppercase(), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
-            if (keys.isNotEmpty()) Text(t("%1\$s of %2\$s", onCount, keys.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            if (keys.size > 1) {
-                Spacer(Modifier.width(12.dp))
-                Text(if (onCount == keys.size) t("None") else t("All"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { val v = onCount != keys.size; keys.forEach { engineUse[it] = v } }.padding(4.dp))
+        BaseCard(modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text((groupTitle[group] ?: group).uppercase(), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                if (keys.isNotEmpty()) Text(t("%1\$s of %2\$s", onCount, keys.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                if (keys.size > 1) {
+                    Spacer(Modifier.width(12.dp))
+                    Text(if (onCount == keys.size) t("None") else t("All"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { val v = onCount != keys.size; keys.forEach { engineUse[it] = v } }.padding(4.dp))
+                }
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -655,7 +660,7 @@ private fun AssumeScreen(p: JsonObject, answers: MutableMap<String, String?>, re
             }
         }
     }
-    Text(t("A phrase that names nothing specific is never guessed: it stays in your words unless you pick what it was."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp))
+    LabelPlate(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp)) { Text(t("A phrase that names nothing specific is never guessed: it stays in your words unless you pick what it was."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
     Spacer(Modifier.height(16.dp))
     PrimaryButton(t("Done"), onClick = onDone)
 }
@@ -713,10 +718,13 @@ private fun ListScreen(attacks: List<ImpAttack>, days: List<ImpDay>, onAttack: (
 @Composable
 private fun AttackScreen(a: ImpAttack, editing: Boolean, setEditing: (Boolean) -> Unit, onDone: () -> Unit) {
     Title(fmtDate(a.date()), t("Everything we read from this entry."))
-    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(if (editing) t("Tap a × to remove an item, type to add one.") else t("Looks wrong? Tap Edit."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        if (!a.removed) TextButton(onClick = { setEditing(!editing) }, colors = ButtonDefaults.textButtonColors(contentColor = if (editing) Color(0xFF20062F) else AppTheme.AccentPurple, containerColor = if (editing) AppTheme.AccentPurple else Color.White.copy(alpha = 0.07f)), shape = RoundedCornerShape(999.dp)) {
-            Text(if (editing) t("Done editing") else t("Edit"), fontWeight = FontWeight.SemiBold)
+    // The row's 4.dp vertical padding moves onto the card so the gap to the next card stays.
+    BaseCard(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (editing) t("Tap a × to remove an item, type to add one.") else t("Looks wrong? Tap Edit."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+            if (!a.removed) TextButton(onClick = { setEditing(!editing) }, colors = ButtonDefaults.textButtonColors(contentColor = if (editing) Color(0xFF20062F) else AppTheme.AccentPurple, containerColor = if (editing) AppTheme.AccentPurple else Color.White.copy(alpha = 0.07f)), shape = RoundedCornerShape(999.dp)) {
+                Text(if (editing) t("Done editing") else t("Edit"), fontWeight = FontWeight.SemiBold)
+            }
         }
     }
     if (a.removed) {
@@ -803,7 +811,7 @@ private fun DayScreen(d: ImpDay, onDone: () -> Unit) {
         if (d.foods.isNotEmpty()) ChipGroup(t("Foods"), d.foods.map { it to "" }, false, null, null)
         if (d.missed.isNotEmpty()) ChipGroup(t("Missed plans"), d.missed.map { it.name to it.extra() }, false, null, null)
     }
-    Text(t("Days without an attack are kept as they are. Untick their category under Use for insights if you don't want them counted."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp))
+    LabelPlate(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp)) { Text(t("Days without an attack are kept as they are. Untick their category under Use for insights if you don't want them counted."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
     Spacer(Modifier.height(16.dp))
     PrimaryButton(t("Done"), onClick = onDone)
 }

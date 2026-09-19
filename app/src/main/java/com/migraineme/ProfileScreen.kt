@@ -375,7 +375,7 @@ fun ProfileScreen(
 
         // ── Error ──
         profileError.value?.let {
-            Text(it, color = Color(0xFFEF5350), style = MaterialTheme.typography.bodySmall)
+            LabelPlate { Text(it, color = Color(0xFFEF5350), style = MaterialTheme.typography.bodySmall) }
         }
 
         // ── Subscription ──
@@ -383,7 +383,7 @@ fun ProfileScreen(
 
         // ── AI Migraine Profile ──
         if (aiProfileLoading) {
-            Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer), shape = AppTheme.BaseCardShape, border = AppTheme.BaseCardBorder) {
+            Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid), shape = AppTheme.BaseCardShape, border = AppTheme.BaseCardBorder) {
                 Row(Modifier.padding(20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(18.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
@@ -618,7 +618,7 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
 
     Box(modifier = Modifier.fillMaxWidth()) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         shape = AppTheme.BaseCardShape,
         border = AppTheme.BaseCardBorder,
     ) {
@@ -762,7 +762,7 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
                 .size(34.dp)
         ) {
             Icon(Icons.Outlined.Info, contentDescription = t("About your migraine profile"),
-                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
         }
     }
 
@@ -801,7 +801,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxWidth()) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         shape = AppTheme.BaseCardShape,
         border = AppTheme.BaseCardBorder,
     ) {
@@ -939,7 +939,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                 .size(34.dp)
         ) {
             Icon(Icons.Outlined.Info, contentDescription = t("About your subscription"),
-                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
         }
     }
 

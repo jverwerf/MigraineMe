@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -263,7 +264,7 @@ fun QuickLogStrip(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .background(Color(0xFF2E7D32).copy(alpha = 0.85f), RoundedCornerShape(12.dp))
+                    .background(Color(0xFF2E7D32).copy(alpha = 0.85f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp))
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -324,7 +325,7 @@ fun QuickLogStrip(
                     Icons.Outlined.Info,
                     contentDescription = t("About Quick log"),
                     tint = AppTheme.SubtleTextColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp).infoDisc()
                 )
             }
         }
@@ -402,7 +403,7 @@ fun QuickLogStrip(
             text = {
                 Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             },
-            containerColor = AppTheme.BaseCardContainer
+            containerColor = AppTheme.DialogContainer
         )
     }
 }
@@ -479,7 +480,7 @@ private fun QuickLogFavoritesSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = AppTheme.BaseCardContainer.copy(alpha = 0.92f),
+        containerColor = AppTheme.DialogContainer,
         contentColor = Color.White,
         dragHandle = {
             Box(

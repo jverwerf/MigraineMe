@@ -281,7 +281,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                 .size(34.dp)
         ) {
             Icon(Icons.Outlined.Info, contentDescription = t("About Migraines"),
-                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
         }
     }
 

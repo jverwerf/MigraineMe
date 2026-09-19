@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -262,6 +263,8 @@ fun DataSettingsScreen(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = AppTheme.AccentPurple,
+                    focusedContainerColor = AppTheme.BaseCardSolid,
+                    unfocusedContainerColor = AppTheme.BaseCardSolid,
                     focusedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
                     unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
                 )
@@ -333,7 +336,7 @@ fun DataSettingsScreen(
             // ═══════════════════════════════════════════════════════════
             if (q.isBlank()) {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f).compositeOver(AppTheme.FadeColor)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

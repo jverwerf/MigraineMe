@@ -609,17 +609,19 @@ fun InsightsReportScreen(
                 }
 
                 Spacer(Modifier.height(4.dp))
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BrainyBlobIcon(resId = R.drawable.brainy_migraines_small, flip = true)
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(t("Frequency Trends"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("When the attacks fall and how that is moving"),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                BaseCard {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BrainyBlobIcon(resId = R.drawable.brainy_migraines_small, flip = true)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(t("Frequency Trends"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("When the attacks fall and how that is moving"),
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -814,9 +816,12 @@ fun InsightsReportScreen(
                         locationTriggers = locationTriggerStats,
                         onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
                     )
-                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    // 4.dp so the plate does not butt against the card above it.
+                    LabelPlate(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    }
                 }
             }
 
@@ -880,9 +885,12 @@ fun InsightsReportScreen(
                         // hide control of its own.
                         canHide = false,
                     )
-                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    // 4.dp so the plate does not butt against the card above it.
+                    LabelPlate(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    }
                 }
             }
             if (reportEasers.isNotEmpty()) {
@@ -927,9 +935,12 @@ fun InsightsReportScreen(
                         previewWellDone.forEach { stat -> WellDoneDirectRow(stat) }
                         previewWellDoneChains.forEach { stat -> WellDoneChainRow(stat) }
                     }
-                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    // 4.dp so the plate does not butt against the card above it.
+                    LabelPlate(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    }
                 }
             }
 
@@ -971,9 +982,12 @@ fun InsightsReportScreen(
             painMigration?.let { pm ->
                 Column {
                     PainMigrationCard(pm)
-                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    // 4.dp so the plate does not butt against the card above it.
+                    LabelPlate(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    }
                 }
             }
 
@@ -983,21 +997,28 @@ fun InsightsReportScreen(
             // PDF prints, so the screen and the report cannot disagree.
             if (filteredSorted.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                ReportSectionHeader(
-                    title = t("Attack log"),
-                    subtitle = t("Every attack in range, in the order things happened"),
-                    resId = R.drawable.brainy_briefcase_small,
-                )
+                // Carded at the call: the helper is also used inside the
+                // Treatments card, where a card of its own would nest.
+                BaseCard {
+                    ReportSectionHeader(
+                        title = t("Attack log"),
+                        subtitle = t("Every attack in range, in the order things happened"),
+                        resId = R.drawable.brainy_briefcase_small,
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
 
                 // Window stepper: every attack card honours it, so the reader
                 // can widen the context without leaving the report.
-                WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
+                // Carded at the call: Insights detail uses it inside a card.
+                BaseCard {
+                    WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
+                }
 
                 val metricSources by vm.metricSources.collectAsState()
                 if (metricSources.isNotEmpty()) {
                     Spacer(Modifier.height(6.dp))
-                    SourceBadgeRow(metricSources.sorted())
+                    LabelPlate { SourceBadgeRow(metricSources.sorted()) }
                 }
                 Spacer(Modifier.height(8.dp))
 
@@ -1037,12 +1058,14 @@ fun InsightsReportScreen(
                     )
                 }
                 if (filteredSorted.size > ATTACK_CARDS_SHOWN) {
-                    Text(
-                        t("Showing %1\$s of %2\$s attacks · the PDF includes all %3\$s", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    )
+                    LabelPlate {
+                        Text(
+                            t("Showing %1\$s of %2\$s attacks · the PDF includes all %3\$s", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        )
+                    }
                 }
             }
 
@@ -1051,11 +1074,13 @@ fun InsightsReportScreen(
             // the attack log above. Listed in full, with their reasons.
             if (anticipatedRows.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                ReportSectionHeader(
-                    title = t("Given up with no attack"),
-                    subtitle = t("Days with no migraine where something was skipped anyway"),
-                    resId = R.drawable.brainy_recover_small,
-                )
+                BaseCard {
+                    ReportSectionHeader(
+                        title = t("Given up with no attack"),
+                        subtitle = t("Days with no migraine where something was skipped anyway"),
+                        resId = R.drawable.brainy_recover_small,
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
                 BaseCard {
                     anticipatedRows.forEach { row ->
@@ -1089,17 +1114,19 @@ fun InsightsReportScreen(
 
             if (filteredSorted.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BrainyBlobIcon(resId = R.drawable.brainy_migraines_small)
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(t("What You Logged"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("Every log type across the attacks in range"),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                BaseCard {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BrainyBlobIcon(resId = R.drawable.brainy_migraines_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(t("What You Logged"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Every log type across the attacks in range"),
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -1148,17 +1175,19 @@ fun InsightsReportScreen(
             // ========== 8. HEALTH METRICS (filtered) ==========
             if (enabledSeries.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BrainyBlobIcon(resId = R.drawable.brainy_physical_small)
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(t("Health Metrics"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("Everything tracked around the attacks in range"),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                BaseCard {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BrainyBlobIcon(resId = R.drawable.brainy_physical_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(t("Health Metrics"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Everything tracked around the attacks in range"),
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -1656,7 +1685,7 @@ private fun FilterCard(
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium)
                 },
-                containerColor = AppTheme.BaseCardContainer
+                containerColor = AppTheme.DialogContainer
             )
         }
         if (showOverlayMetricsInfo) {
@@ -1677,7 +1706,7 @@ private fun FilterCard(
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium)
                 },
-                containerColor = AppTheme.BaseCardContainer
+                containerColor = AppTheme.DialogContainer
             )
         }
     }

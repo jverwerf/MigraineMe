@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 private const val MANAGE_ITEMS_HERO_INFO =
-    "Your personal pools. These are the lists that drive everything you can pick in the migraine wizard, Quick Log, and Daily Check-In: every Trigger, Prodrome, Medicine, Relief, Migraine type, Location, Activity, Missed activity, and Treatment side effect you might ever tag on a log lives here.\n\n" +
+    "Your personal pools. These are the lists that drive everything you can pick in the migraine wizard, Quick Log, and Daily Check-In: every Trigger, Prodrome, Medicine, Relief, Migraine type, Location, Activity, Missed activity, and Side effect you might ever tag on a log lives here.\n\n" +
     "Defaults are pre-loaded based on what you said in AI Setup, but every list is fully editable. You can add new items, remove ones you'll never log, and set the severity weight on each one (HIGH / MILD / LOW / NONE). The weight drives the risk gauge: a HIGH trigger pushes the bucket up much more than a LOW one, and NONE means the item exists in the pool but doesn't contribute to your score.\n\n" +
     "Calendar opt-outs is the inverse list: events from your phone calendar that the app has tried to suggest and you've dismissed.\n\n" +
     "AI Companions also live here: curators that each focus on a different angle of migraine care (sleep, hormones, food, weather, etc.). Follow the ones whose focus matches you and your Articles feed re-ranks toward what they cover."
@@ -59,7 +59,7 @@ private val MANAGE_ITEM_INFO: Map<String, String> = mapOf(
     "Locations" to "Places you might tag with a migraine: home, work, specific rooms, outdoors. Useful for spotting environmental patterns.",
     "Activities" to "What you were doing around an attack: running, screen time, social events. Surfaces on \"What Were You Doing\" in Insights.",
     "Missed Activities" to "Things you skipped because of a migraine: a workout, a meeting, a meal, social plans. Surfaces on \"How Did It Impact You\" on Insights.",
-    "Treatment side effects" to "Symptoms you want flagged as caused by a treatment regimen. The Daily Check-In side-effects page uses this list, and the Treatments efficacy score weighs side effects against benefit.",
+    "Side effects" to "Symptoms you flag as caused by a treatment, a medicine or a relief. One list: the Daily Check-In side-effects page uses it, and so does \"Any side effects?\" on every medicine and relief log. The Treatments efficacy score weighs side effects against benefit.",
     "Calendar opt-outs" to "Event titles you've told the Daily Check-In calendar page to ignore. Anything in here won't be suggested again going forward.",
     "AI Companions" to "Curators that flag relevant articles for your migraine profile. Each one focuses on a different angle (sleep, hormones, stress, food, weather, etc.). Subscribe to the ones that match you and they'll surface useful content in your Articles feed.",
 )
@@ -97,7 +97,7 @@ fun ManageItemsScreen(navController: NavController) {
                         .size(34.dp)
                 ) {
                     Icon(Icons.Outlined.Info, contentDescription = t("About Manage Items"),
-                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                 }
             }
 
@@ -175,12 +175,12 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = t("Treatment side effects"),
-                subtitle = t("Symptoms you flag as caused by your treatments"),
+                title = t("Side effects"),
+                subtitle = t("Symptoms you flag as caused by your treatments, medicines or reliefs"),
                 iconColor = AppTheme.AccentPurple,
                 drawIcon = { HubIcons.run { drawCapsulePlus(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_TREATMENT_SIDE_EFFECTS) },
-                onInfo = { showInfoFor = "Treatment side effects" }
+                onInfo = { showInfoFor = "Side effects" }
             )
 
             ManageItemRow(
@@ -314,7 +314,7 @@ private fun ManageItemRow(
                     .size(28.dp)
             ) {
                 Icon(Icons.Outlined.Info, contentDescription = t("About %s", title),
-                    tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                    tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp).infoDisc())
             }
         }
     }

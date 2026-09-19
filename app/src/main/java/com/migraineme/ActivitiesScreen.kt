@@ -182,6 +182,8 @@ fun ActivitiesScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
+            // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
+            if (!quickLogMode) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -200,6 +202,7 @@ fun ActivitiesScreen(
                 } else {
                     Spacer(Modifier.size(28.dp))
                 }
+            }
             }
 
             HeroCard {
@@ -300,7 +303,7 @@ fun ActivitiesScreen(
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.ACTIVITIES)) },
                     enabled = !quickLogMode || draft.activities.isNotEmpty(),

@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,20 +61,20 @@ fun CalendarCheckInPage(
     }
 
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Header()
 
         if (!hasPermission) {
-            Text(
+            BaseCard { Text(
                 t("Connect your calendar in Data Settings to see suggestions here."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 24.dp),
-            )
+                modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth(),
+            ) }
             return@Column
         }
 
@@ -85,11 +86,10 @@ fun CalendarCheckInPage(
 
         val mappings = mappingsState.value
         if (mappings.isEmpty()) {
-            Text(t("No calendar events to log today."),
+            LabelPlate(Modifier.padding(vertical = 24.dp)) { Text(t("No calendar events to log today."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 24.dp))
+                textAlign = TextAlign.Center) }
         } else {
             mappings.forEach { m ->
                 val state = pendingState[m.compositeKey] ?: ItemState.Saved
@@ -197,12 +197,7 @@ private sealed interface ItemState {
 
 @Composable
 private fun Header() {
-    Column(
-        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-            .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
+    HeroCard {
         Icon(Icons.Filled.CalendarMonth, null, tint = Color(0xFF64B5F6),
             modifier = Modifier.size(36.dp))
         Text(t("From your calendar"), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -251,7 +246,7 @@ private fun EventCard(
 
     Column(
         Modifier.fillMaxWidth().background(
-            Color.White.copy(alpha = if (isUndone) 0.02f else 0.06f),
+            Color.White.copy(alpha = if (isUndone) 0.02f else 0.06f).compositeOver(AppTheme.FadeColor),
             RoundedCornerShape(12.dp)
         ).border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp)).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

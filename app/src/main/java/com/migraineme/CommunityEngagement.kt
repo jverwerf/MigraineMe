@@ -136,6 +136,8 @@ fun ThreadSummaryBanner(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
+            // Opaque ground under the tint: the banner sits straight on the lattice
+            .background(AppTheme.FadeColor, shape)
             .background(bgBrush, shape)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)

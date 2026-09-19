@@ -59,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -284,8 +285,8 @@ fun HelpScreen(
                 unfocusedTextColor = Color.White,
                 focusedBorderColor = Color.White.copy(alpha = 0.3f),
                 unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                focusedContainerColor = Color.White.copy(alpha = 0.04f),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.04f)
+                focusedContainerColor = Color.White.copy(alpha = 0.04f).compositeOver(AppTheme.FadeColor),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.04f).compositeOver(AppTheme.FadeColor)
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -305,9 +306,11 @@ fun HelpScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    BaseCard(modifier = Modifier.padding(horizontal = 16.dp)) { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Outlined.HelpOutline, null, tint = Color.White.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(8.dp))
                     Text(t("No help articles yet"), color = Color.White.copy(alpha = 0.6f))
+                    } }
                 }
             }
             else -> {
@@ -401,7 +404,7 @@ fun HelpSectionCard(section: HelpSection, onOpenArticle: (HelpArticle) -> Unit) 
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor))
             .padding(bottom = 6.dp)
     ) {
         Row(
@@ -507,7 +510,7 @@ fun HelpArticleDetailRoute(slug: String, onBack: () -> Unit) {
     if (article == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.isLoading) CircularProgressIndicator(color = AppTheme.AccentPurple)
-            else Text(t("Article not found"), color = Color.White.copy(alpha = 0.6f))
+            else LabelPlate { Text(t("Article not found"), color = Color.White.copy(alpha = 0.6f)) }
         }
     } else {
         HelpArticleDetailScreen(article = article, onBack = onBack)
@@ -522,16 +525,19 @@ fun HelpArticleDetailScreen(article: HelpArticle, onBack: () -> Unit) {
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Title and body share one card so the article never sits bare on the lattice
             item {
-                Text(
-                    article.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            items(parseMarkdown(stripDuplicateTitle(article.bodyMarkdown, article.title))) { block ->
-                MarkdownBlockView(block)
+                BaseCard(innerSpacing = 12.dp) {
+                    Text(
+                        article.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    parseMarkdown(stripDuplicateTitle(article.bodyMarkdown, article.title)).forEach { block ->
+                        MarkdownBlockView(block)
+                    }
+                }
             }
             item { Spacer(Modifier.height(40.dp)) }
         }

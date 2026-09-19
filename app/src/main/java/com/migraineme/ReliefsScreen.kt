@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -94,7 +95,7 @@ fun ReliefsScreen(
                 rebuildDraftWithRels(updated)
                 showAddDialog = false
             },
-            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes ->
+            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes, seItems ->
                 val updated = draft.rels + ReliefDraft(
                     type = pendingLabel!!,
                     startAtIso = startIso,
@@ -102,7 +103,8 @@ fun ReliefsScreen(
                     durationMinutes = minutes,
                     reliefScale = relief,
                     sideEffectScale = seScale,
-                    sideEffectNotes = seNotes.ifBlank { null }
+                    sideEffectNotes = seNotes.ifBlank { null },
+                    sideEffects = seItems
                 )
                 rebuildDraftWithRels(updated)
                 showAddDialog = false
@@ -122,8 +124,9 @@ fun ReliefsScreen(
             initialRelief = editing.reliefScale ?: "NONE",
             initialSideEffectScale = editing.sideEffectScale ?: "NONE",
             initialSideEffectNotes = editing.sideEffectNotes ?: "",
+            initialSideEffects = editing.sideEffects,
             onDismiss = { showEditDialog = false },
-            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes ->
+            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes, seItems ->
                 val updated = draft.rels.toMutableList().apply {
                     set(editIndex!!, editing.copy(
                         startAtIso = startIso,
@@ -131,7 +134,8 @@ fun ReliefsScreen(
                         durationMinutes = minutes,
                         reliefScale = relief,
                         sideEffectScale = seScale,
-                        sideEffectNotes = seNotes.ifBlank { null }
+                        sideEffectNotes = seNotes.ifBlank { null },
+                        sideEffects = seItems
                     ))
                 }
                 rebuildDraftWithRels(updated)
@@ -160,6 +164,8 @@ fun ReliefsScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
+            // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
+            if (!quickLogMode) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -180,6 +186,7 @@ fun ReliefsScreen(
                 } else {
                     Spacer(Modifier.size(28.dp))
                 }
+            }
             }
 
             // ── HeroCard ──
@@ -253,6 +260,14 @@ fun ReliefsScreen(
                                     color = relief.color,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                                 )
+                                // Side effects: the ticked items, or a legacy scale
+                                sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { se ->
+                                    Text(
+                                        se,
+                                        color = SideEffectScale.fromString(SideEffectItem.scaleFor(r.sideEffects, r.sideEffectScale)).color,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                             Icon(
                                 Icons.Outlined.Edit,
@@ -348,7 +363,7 @@ fun ReliefsScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) },
@@ -372,7 +387,7 @@ private fun ReliefAddDialog(
     takenOnly: Boolean,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String, sideEffects: List<SideEffectItem>) -> Unit
 ) {
     var startIso by remember { mutableStateOf<String?>(null) }
     var endIso by remember { mutableStateOf<String?>(null) }
@@ -380,6 +395,7 @@ private fun ReliefAddDialog(
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
     var sideEffectScale by remember { mutableStateOf("NONE") }
     var sideEffectNotes by remember { mutableStateOf("") }
+    var sideEffects by remember { mutableStateOf<List<SideEffectItem>>(emptyList()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -388,7 +404,7 @@ private fun ReliefAddDialog(
         textContentColor = AppTheme.BodyTextColor,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Start time
                 Text(t("When did you start?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
@@ -439,9 +455,11 @@ private fun ReliefAddDialog(
                     }
                 }
 
-                SideEffectChips(
+                SideEffectPicker(
                     sideEffectScale = sideEffectScale,
                     onScaleChange = { sideEffectScale = it },
+                    sideEffects = sideEffects,
+                    onSideEffectsChange = { sideEffects = it },
                     sideEffectNotes = sideEffectNotes,
                     onNotesChange = { sideEffectNotes = it }
                 )
@@ -450,7 +468,7 @@ private fun ReliefAddDialog(
         confirmButton = {
             TextButton(onClick = {
                 val minutes = if (takenOnly) null else durationText.toIntOrNull()?.takeIf { it > 0 }
-                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim(), sideEffects)
             }) {
                 Text(t("Add"), color = AppTheme.AccentPurple)
             }
@@ -482,8 +500,9 @@ private fun ReliefEditDialog(
     initialRelief: String,
     initialSideEffectScale: String = "NONE",
     initialSideEffectNotes: String = "",
+    initialSideEffects: List<SideEffectItem> = emptyList(),
     onDismiss: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String, sideEffects: List<SideEffectItem>) -> Unit
 ) {
     var startIso by remember { mutableStateOf(initialStartIso) }
     var endIso by remember { mutableStateOf(initialEndIso) }
@@ -491,6 +510,7 @@ private fun ReliefEditDialog(
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
     var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
     var sideEffectNotes by remember { mutableStateOf(initialSideEffectNotes) }
+    var sideEffects by remember { mutableStateOf(initialSideEffects) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -499,7 +519,7 @@ private fun ReliefEditDialog(
         textContentColor = AppTheme.BodyTextColor,
         title = { Text(t("Edit %s", title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                 AppDateTimePicker(label = t("Select start time"), onDateTimeSelected = { iso -> startIso = iso })
 
@@ -543,9 +563,11 @@ private fun ReliefEditDialog(
                     }
                 }
 
-                SideEffectChips(
+                SideEffectPicker(
                     sideEffectScale = sideEffectScale,
                     onScaleChange = { sideEffectScale = it },
+                    sideEffects = sideEffects,
+                    onSideEffectsChange = { sideEffects = it },
                     sideEffectNotes = sideEffectNotes,
                     onNotesChange = { sideEffectNotes = it }
                 )
@@ -554,7 +576,7 @@ private fun ReliefEditDialog(
         confirmButton = {
             TextButton(onClick = {
                 val minutes = if (takenOnly) null else durationText.toIntOrNull()?.takeIf { it > 0 }
-                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim(), sideEffects)
             }) {
                 Text(t("Save"), color = AppTheme.AccentPurple)
             }

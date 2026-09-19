@@ -254,18 +254,18 @@ fun QuickAddPainScreen(
                 onClick = { entries.add(QuickPainEntry(startAtIso = migraineStartAtIso)) },
                 modifier = Modifier.fillMaxWidth(),
                 border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.35f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
             ) { Text(t("+ Add another entry"), fontWeight = FontWeight.SemiBold) }
 
             if (error != null) {
-                Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                LabelPlate { Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall) }
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Cancel")) }
                 Button(
                     enabled = !saving,
@@ -547,14 +547,14 @@ fun QuickAddSymptomScreen(
             }
 
             if (error != null) {
-                Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                LabelPlate { Text(error!!, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall) }
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Cancel")) }
                 Button(
                     enabled = !saving && selected.isNotEmpty(),
@@ -774,7 +774,9 @@ fun MigraineInProgressCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+        colors = CardDefaults.cardColors(
+            containerColor = if (LocalSolidCards.current) AppTheme.HeroCardSolid else AppTheme.HeroCardContainer
+        ),
         elevation = CardDefaults.cardElevation(0.dp),
         border = BorderStroke(1.dp, MigraineCardRed.copy(alpha = 0.35f))
     ) {

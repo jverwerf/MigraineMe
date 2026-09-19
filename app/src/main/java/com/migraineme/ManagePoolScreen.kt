@@ -228,7 +228,7 @@ fun ManagePoolScreen(
                             .size(34.dp)
                     ) {
                         Icon(Icons.Outlined.Info, contentDescription = t("About %s", effectiveConfig.title),
-                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                     }
                 }
             }
@@ -253,6 +253,8 @@ fun ManagePoolScreen(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = effectiveConfig.iconColor,
+                    focusedContainerColor = AppTheme.BaseCardSolid,
+                    unfocusedContainerColor = AppTheme.BaseCardSolid,
                     focusedBorderColor = effectiveConfig.iconColor.copy(alpha = 0.5f),
                     unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
                 )
@@ -514,7 +516,7 @@ fun ManagePoolScreen(
                         else navController.popBackStack()
                     },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
 
                 if (isDirty) {

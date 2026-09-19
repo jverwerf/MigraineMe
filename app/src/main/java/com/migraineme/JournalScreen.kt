@@ -77,6 +77,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -206,7 +207,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text(t("Loading journal…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                LabelPlate { Text(t("Loading journal…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) }
             }
         }
         return
@@ -376,14 +377,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
         item(key = "header") {
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                // The app top bar already says "Journal": only the view switch lives here, on the right
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    t("Journal"),
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
                 JournalViewSwitch(viewMode) { viewMode = it; if (it != "Stream") streamDayFocus = null }
             }
         }
@@ -409,7 +406,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(14.dp))
-                                        .background(if (needsAttentionOnly) amber.copy(alpha = 0.18f) else Color.Transparent)
+                                        .background(if (needsAttentionOnly) amber.copy(alpha = 0.18f).compositeOver(AppTheme.FadeColor) else AppTheme.BaseCardSolid)
                                         .border(1.dp, amber.copy(alpha = if (needsAttentionOnly) 1f else 0.55f), RoundedCornerShape(14.dp))
                                         .clickable { needsAttentionOnly = !needsAttentionOnly }
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -426,6 +423,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(14.dp))
+                                        .background(AppTheme.BaseCardSolid)
                                         .border(
                                             1.dp,
                                             if (active) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
@@ -485,11 +483,13 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             )
                         }
                         Spacer(Modifier.width(8.dp))
-                        Text(
-                            t("%s entries", visible.size),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall
-                        )
+                        LabelPlate {
+                            Text(
+                                t("%s entries", visible.size),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
                     }
                 }
             } else {
@@ -538,7 +538,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .background(AppTheme.AccentPurple.copy(alpha = 0.18f))
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.18f).compositeOver(AppTheme.FadeColor))
                             .padding(horizontal = 9.dp, vertical = 5.dp)
                     )
                     Icon(
@@ -547,6 +547,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         modifier = Modifier
                             .size(22.dp)
                             .clip(CircleShape)
+                            .infoDisc()
                             .clickable { streamDayFocus = null }
                             .padding(3.dp)
                     )
@@ -567,16 +568,17 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     item(key = "attention") {
                         val amber = Color(0xFFFFB74D)
                         Column {
-                            Text(
-                                "${t("Needs attention")} · ${flagged.size}".uppercase(appLocale()),
-                                color = amber,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
-                            )
+                            LabelPlate(modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)) {
+                                Text(
+                                    "${t("Needs attention")} · ${flagged.size}".uppercase(appLocale()),
+                                    color = amber,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                            }
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = AppTheme.BaseCardShape,
-                                colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                                colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
                                 elevation = CardDefaults.cardElevation(0.dp),
                                 border = AppTheme.BaseCardBorder
                             ) {
@@ -609,12 +611,13 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                 streamGroups.forEach { (day, events) ->
                     item(key = "day-${day ?: "none"}") {
                         Column {
-                            Text(
-                                journalDayHeader(day, events.size),
-                                color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
-                            )
+                            LabelPlate(modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)) {
+                                Text(
+                                    journalDayHeader(day, events.size),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                            }
                             BaseCard(contentPadding = 8.dp) {
                                 events.forEach { ev ->
                                     JournalEntryRow(
@@ -660,12 +663,13 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     val dayEvents = dayGroups.firstOrNull { it.first == selDay }?.second ?: emptyList()
                     item(key = "cal-day") {
                         Column {
-                            Text(
-                                journalDayHeader(selDay, dayEvents.size),
-                                color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
-                            )
+                            LabelPlate(modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)) {
+                                Text(
+                                    journalDayHeader(selDay, dayEvents.size),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                            }
                             if (dayEvents.isEmpty()) {
                                 BaseCard {
                                     Text(t("No entries this day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -805,6 +809,12 @@ private fun timeLabel(iso: String?, zone: ZoneId = ZoneId.systemDefault()): Stri
 private fun prettyType(s: String?): String =
     s?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "-"
 
+/** A medicine/relief row's subtitle plus its side effects: "400mg · Side effects: Drowsiness (soft)". */
+private fun withSideEffects(sub: String?, items: List<SideEffectItem>, scale: String?): String? {
+    val se = sideEffectsLine(items, scale)
+    return listOfNotNull(sub?.takeIf { it.isNotBlank() }, se).joinToString(" · ").ifBlank { null }
+}
+
 private fun durationLabel(startIso: String?, endIso: String?): String? {
     val s = startIso?.let { parseJournalInstant(it) } ?: return null
     val e = endIso?.let { parseJournalInstant(it) } ?: return null
@@ -892,9 +902,12 @@ private fun entryRowInfo(ev: JournalEvent, labels: Map<String, String>): EntryRo
     }
     is JournalEvent.Medicine -> EntryRowInfo(
         title = ev.row.name ?: "-",
-        sub = ev.row.amount?.takeIf { it.isNotBlank() }
-            ?: ev.row.doseValue?.let { v -> "${if (v % 1.0 == 0.0) v.toInt() else v} ${ev.row.doseUnit ?: ""}".trim() }
-            ?: ev.row.notes,
+        sub = withSideEffects(
+            ev.row.amount?.takeIf { it.isNotBlank() }
+                ?: ev.row.doseValue?.let { v -> "${if (v % 1.0 == 0.0) v.toInt() else v} ${ev.row.doseUnit ?: ""}".trim() }
+                ?: ev.row.notes,
+            ev.row.sideEffects, ev.row.sideEffectScale
+        ),
         cat = journalEventCategory(ev),
         timeIso = ev.row.startAt,
         needsAttention = journalNeedsAttention(ev),
@@ -904,9 +917,12 @@ private fun entryRowInfo(ev: JournalEvent, labels: Map<String, String>): EntryRo
     )
     is JournalEvent.Relief -> EntryRowInfo(
         title = prettyType(ev.row.type),
-        sub = durationLabel(ev.row.startAt, ev.row.endAt)
-            ?: ev.row.durationMinutes?.takeIf { it > 0 }?.let { "${it}m" }
-            ?: ev.row.notes,
+        sub = withSideEffects(
+            durationLabel(ev.row.startAt, ev.row.endAt)
+                ?: ev.row.durationMinutes?.takeIf { it > 0 }?.let { "${it}m" }
+                ?: ev.row.notes,
+            ev.row.sideEffects, ev.row.sideEffectScale
+        ),
         cat = journalEventCategory(ev),
         timeIso = ev.row.startAt,
         needsAttention = journalNeedsAttention(ev),
@@ -975,7 +991,7 @@ private fun JournalViewSwitch(mode: String, onMode: (String) -> Unit) {
     Row(
         Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor))
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
@@ -1005,7 +1021,7 @@ private fun JournalSearchField(query: String, onQuery: (String) -> Unit) {
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.06f))
+            .background(Color.White.copy(alpha = 0.06f).compositeOver(AppTheme.FadeColor))
             .border(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1052,7 +1068,7 @@ private fun JournalPopupChip(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
                 .clickable { open = true }
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(Color.White.copy(alpha = 0.05f).compositeOver(AppTheme.FadeColor))
                 .padding(horizontal = 9.dp, vertical = 5.dp)
         )
         DropdownMenu(
@@ -1291,7 +1307,7 @@ private fun JournalDaySummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {

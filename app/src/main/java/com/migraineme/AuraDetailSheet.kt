@@ -159,7 +159,7 @@ fun AuraDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = AppTheme.BaseCardContainer.copy(alpha = 0.96f),
+        containerColor = AppTheme.DialogContainer.copy(alpha = 0.96f),
         contentColor = Color.White,
         dragHandle = {
             Box(Modifier.fillMaxWidth().padding(top = 12.dp), contentAlignment = Alignment.Center) {

@@ -150,6 +150,7 @@ fun RecalibrationReviewScreen(
                     onClick = { vm.acceptAll() },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid),
                 ) {
                     Text(t("Accept all"), color = Color.White)
                 }
@@ -157,6 +158,7 @@ fun RecalibrationReviewScreen(
                     onClick = { vm.rejectAll() },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid),
                 ) {
                     Text(t("Reject all"), color = Color.White)
                 }
@@ -344,7 +346,7 @@ private fun ProposalRow(
                 )
 
                 if (proposal.fromValue != null && proposal.toValue != null &&
-                    proposal.type !in listOf("data_warning", "clinical_assessment", "gauge_decay", "menstruation_decay")) {
+                    proposal.type !in listOf("data_warning", "clinical_assessment", "gauge_decay", "menstruation_decay", "ovulation_decay")) {
                     Spacer(Modifier.width(8.dp))
                     if (proposal.type == "gauge_threshold") {
                         Text(t("Was "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -368,7 +370,8 @@ private fun ProposalRow(
 
             // Menstrual cycle / ovulation decay visualization (15 days m7..0..p7)
             if ((proposal.type == "menstruation_decay" || proposal.type == "ovulation_decay") && proposal.fromValue != null && proposal.toValue != null
-                && proposal.fromValue.contains("day_")) {
+                // The ovulation curve arrives with UPPERCASE day keys and an empty "was" ({}), so test the new value, any case
+                && proposal.toValue.contains("day_", ignoreCase = true)) {
                 Spacer(Modifier.height(4.dp))
                 MenstrualDecayComparison(proposal.fromValue, proposal.toValue, proposal.accepted)
             }
@@ -663,7 +666,9 @@ private val MENSTRUAL_LABELS = listOf(
 private fun parseMenstrualDays(json: String): List<Double> {
     return try {
         val obj = org.json.JSONObject(json)
-        MENSTRUAL_KEYS.map { obj.optDouble(it, 0.0) }
+        // Keys come as day_m7 (menstrual) or DAY_M7 (ovulation): read them case-insensitively
+        val byLower = obj.keys().asSequence().associate { it.lowercase() to obj.optDouble(it, 0.0) }
+        MENSTRUAL_KEYS.map { byLower[it] ?: 0.0 }
     } catch (_: Exception) { emptyList() }
 }
 

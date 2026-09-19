@@ -244,7 +244,7 @@ fun PractitionerPanel(
             }
 
             error?.let {
-                Text(it, color = AppTheme.AccentPink, style = MaterialTheme.typography.bodySmall)
+                LabelPlate { Text(it, color = AppTheme.AccentPink, style = MaterialTheme.typography.bodySmall) }
             }
 
             if (active.isNotEmpty()) {
@@ -291,18 +291,21 @@ fun PractitionerPanel(
 
             if (nearby.isNotEmpty()) {
                 SectionLabel(t("Near you"))
-                Text(
-                    t("Practices we found near you. Not part of MigraineMe, and they cannot see your diary."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.SubtleTextColor,
-                    modifier = Modifier.padding(bottom = 2.dp),
-                )
+                BaseCard(modifier = Modifier.padding(bottom = 2.dp)) {
+                    Text(
+                        t("Practices we found near you. Not part of MigraineMe, and they cannot see your diary."),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.SubtleTextColor,
+                    )
+                }
                 nearby.forEach { NearbyCard(it) }
-                Text(
-                    t("Listings from Google. Powered by Google."),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = AppTheme.SubtleTextColor,
-                )
+                LabelPlate {
+                    Text(
+                        t("Listings from Google. Powered by Google."),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AppTheme.SubtleTextColor,
+                    )
+                }
             }
 
         Spacer(Modifier.height(28.dp))
@@ -418,12 +421,13 @@ fun PractitionerPanel(
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = AppTheme.SubtleTextColor,
-        modifier = Modifier.padding(top = 8.dp),
-    )
+    LabelPlate(modifier = Modifier.padding(top = 8.dp)) {
+        Text(
+            text.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = AppTheme.SubtleTextColor,
+        )
+    }
 }
 
 @Composable
@@ -440,7 +444,7 @@ private fun ActiveCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         shape = AppTheme.BaseCardShape,
         border = AppTheme.BaseCardBorder,
     ) {
@@ -1082,10 +1086,17 @@ fun PractitionerDetailSheet(
     val uriHandler = LocalUriHandler.current
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(
-            color = AppTheme.FadeColor,
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        // A Dialog is its own window, so MainActivity's lattice and scroll fade do not reach it:
+        // draw the same pair here.
+        val detailScroll = rememberScrollState()
+        val fadePx = with(androidx.compose.ui.platform.LocalDensity.current) { AppTheme.FadeDistance.toPx() }
+        Box(Modifier.fillMaxSize()) {
+            ObLatticeBackground()
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(AppTheme.FadeColor.copy(alpha = (detailScroll.value / fadePx).coerceIn(0f, 1f)))
+            )
             Column(Modifier.fillMaxSize()) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
@@ -1108,7 +1119,7 @@ fun PractitionerDetailSheet(
                 Column(
                     Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(detailScroll)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
@@ -1127,7 +1138,7 @@ fun PractitionerDetailSheet(
                     bio?.bio?.takeIf { it.isNotBlank() }?.let { about ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
                             shape = AppTheme.BaseCardShape,
                             border = AppTheme.BaseCardBorder,
                         ) {
@@ -1192,7 +1203,7 @@ fun PractitionerDetailSheet(
                     if (practical.isNotEmpty()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
                             shape = AppTheme.BaseCardShape,
                             border = AppTheme.BaseCardBorder,
                         ) {
@@ -1215,7 +1226,7 @@ fun PractitionerDetailSheet(
                     p.website?.takeIf { it.isNotBlank() }?.let { site ->
                         Card(
                             modifier = Modifier.fillMaxWidth().clickable { uriHandler.openUri(site) },
-                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
                             shape = AppTheme.BaseCardShape,
                             border = AppTheme.BaseCardBorder,
                         ) {
@@ -1255,7 +1266,7 @@ fun PractitionerDetailSheet(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
                         shape = AppTheme.BaseCardShape,
                         border = AppTheme.BaseCardBorder,
                     ) {
@@ -1408,7 +1419,7 @@ private fun OfferCard(o: SupabasePractitionerService.Offer) {
 private fun SectionCard(sec: SupabasePractitionerService.Section) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         shape = AppTheme.BaseCardShape,
         border = AppTheme.BaseCardBorder,
     ) {

@@ -90,6 +90,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -920,6 +921,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         val backStack by nav.currentBackStackEntryAsState()
         val current = backStack?.destination?.route ?: Routes.LOGIN
 
+        // The pinned top bar keeps ONE scroll offset for the whole app. With the lattice
+        // behind every screen that offset shows (bar + page fade), so each back-stack
+        // entry keeps its own: a fresh screen starts clear, a restored one comes back faded.
+        val barOffsets = remember { mutableMapOf<String, Float>() }
+        val barEntryId = remember { mutableStateOf<String?>(null) }
+        val entryId = backStack?.id
+        LaunchedEffect(entryId) {
+            barEntryId.value?.let { barOffsets[it] = scrollBehavior.state.contentOffset }
+            scrollBehavior.state.contentOffset = entryId?.let { barOffsets[it] } ?: 0f
+            barEntryId.value = entryId
+        }
+
         // New-insight indicator on the Insights tab. The flag is set by the
         // new_insight FCM message and cleared as soon as the user opens Insights.
         var hasNewInsight by remember { mutableStateOf(false) }
@@ -1065,7 +1078,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
         Box(modifier = Modifier.fillMaxSize()) {
             when (current) {
-                Routes.HOME, Routes.PAYWALL -> {
+                // The paywall keeps the swing scene; every other screen sits on the intro lattice.
+                Routes.PAYWALL, "paywall_trial_ended" -> {
                     Image(
                         painter = painterResource(R.drawable.purple_sky_bg),
                         contentDescription = null,
@@ -1074,12 +1088,31 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     )
                 }
 
-                else -> {
+                // Screens that paint their own full-screen background inset for the system bars:
+                // keep the flat colour behind them, or the lattice shows as bands at top and bottom.
+                Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT, Routes.AI_SETUP, Routes.AI_SETUP_PATTERN,
+                Routes.CHAT_ASSISTANT, "subscribe", "backfill_loading",
+                Routes.ADJUST_TRIGGERS, Routes.ADJUST_MEDICINES, Routes.ADJUST_RELIEFS, Routes.ADJUST_MIGRAINES -> {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(AppTheme.FadeColor)
                     )
+                }
+
+                else -> {
+                    ObLatticeBackground()
+                    // Page fade for screens that do not bring their own ScrollFadeContainer:
+                    // same scroll signal as the top bar, so page and bar go solid together.
+                    if (PageFade.screenHandled == 0) {
+                        val fadePx = with(LocalDensity.current) { AppTheme.FadeDistance.toPx() }
+                        val veil = (-scrollBehavior.state.contentOffset / fadePx).coerceIn(0f, 1f)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(AppTheme.FadeColor.copy(alpha = veil))
+                        )
+                    }
                 }
             }
 
@@ -1698,7 +1731,19 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     val token = authVm.state.value.accessToken ?: return@launch
                                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
                                     quickLogVm.draft.value.meds.forEach { m ->
-                                        runCatching { db.insertMedicine(token, linkedMigraineId, m.name, m.amount, m.startAtIso ?: java.time.Instant.now().toString(), m.notes) }
+                                        // The rating, side effects and their notes ride along: this route
+                                        // saved only name/amount/time since Feb 2026, so every Quick Log
+                                        // rating was silently dropped and What Worked never saw it.
+                                        runCatching {
+                                            db.insertMedicine(
+                                                token, linkedMigraineId, m.name, m.amount,
+                                                m.startAtIso ?: java.time.Instant.now().toString(), m.notes,
+                                                reliefScale = m.reliefScale,
+                                                sideEffectScale = m.sideEffectScale,
+                                                sideEffectNotes = m.sideEffectNotes,
+                                                sideEffects = m.sideEffects
+                                            )
+                                        }
                                     }
                                     quickLogVm.clearDraft()
                                     nav.popBackStack()
@@ -1722,7 +1767,17 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
                                     quickLogVm.draft.value.rels.forEach { r ->
                                         runCatching {
-                                            val row = db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale)
+                                            // Named arguments on purpose: the positional call had end time and
+                                            // notes swapped, and dropped duration, side effects and their notes.
+                                            val rStart = r.startAtIso ?: java.time.Instant.now().toString()
+                                            val row = db.insertRelief(
+                                                token, linkedMigraineId, r.type, rStart, r.notes,
+                                                endAt = r.endAtIso ?: r.durationMinutes?.let { addMinutesToIso(rStart, it) },
+                                                reliefScale = r.reliefScale,
+                                                sideEffectScale = r.sideEffectScale,
+                                                sideEffectNotes = r.sideEffectNotes,
+                                                sideEffects = r.sideEffects
+                                            )
                                             // This is the live quick-log relief
                                             // route, and it was the only relief
                                             // path that never armed the 2h
@@ -2526,8 +2581,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             navController = nav,
                             config = PoolConfig(
                                 errors = tseVm.errors,
-                                title = t("Treatment side effects"),
-                                subtitle = t("Symptoms you flag as caused by your treatments"),
+                                title = t("Side effects"),
+                                subtitle = t("Symptoms you flag as caused by your treatments, medicines or reliefs"),
                                 iconColor = AppTheme.AccentPurple,
                                 drawHeroIcon = { HubIcons.run { drawCapsulePlus(it) } },
                                 items = items,

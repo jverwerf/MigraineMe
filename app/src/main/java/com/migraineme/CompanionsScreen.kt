@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -124,14 +125,14 @@ fun CompanionsOnboardingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.FadeColor)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Spacer(Modifier.height(24.dp))
 
-        // Title
+        // Title + intro share one card so nothing sits bare on the lattice
+        BaseCard(innerSpacing = 16.dp) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -154,6 +155,7 @@ fun CompanionsOnboardingScreen(
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
         )
+        }
 
         if (state.loading) {
             Box(
@@ -312,8 +314,8 @@ private fun CompanionSelectCard(
             .clickable(onClick = onToggle),
         shape = AppTheme.BaseCardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.10f)
-            else AppTheme.BaseCardContainer
+            containerColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.10f).compositeOver(AppTheme.FadeColor)
+            else AppTheme.BaseCardSolid
         ),
         elevation = CardDefaults.cardElevation(0.dp),
         border = androidx.compose.foundation.BorderStroke(

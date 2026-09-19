@@ -202,7 +202,7 @@ fun PainLocationScreen(
                 onClick = { vm.addPainEntry() },
                 modifier = Modifier.fillMaxWidth(),
                 border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.35f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
             ) { Text(t("+ Add pain entry"), fontWeight = FontWeight.SemiBold) }
 
             // Navigation
@@ -213,7 +213,7 @@ fun PainLocationScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
                     onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) },

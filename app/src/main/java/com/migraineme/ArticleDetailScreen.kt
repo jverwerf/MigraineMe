@@ -50,11 +50,10 @@ fun ArticleDetailScreen(
     if (article == null) {
         Box(
             Modifier
-                .fillMaxSize()
-                .background(AppTheme.FadeColor),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(t("Article not found"), color = AppTheme.SubtleTextColor)
+            LabelPlate { Text(t("Article not found"), color = AppTheme.SubtleTextColor) }
         }
         return
     }
@@ -69,7 +68,6 @@ fun ArticleDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.FadeColor)
             .clipToBounds()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
@@ -80,13 +78,8 @@ fun ArticleDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = t("Back"),
-                    tint = Color.White
-                )
-            }
+            // One way back only: the app top bar. The label keeps the old 12dp inset.
+            Spacer(Modifier.width(12.dp))
 
             Text(
                 formatSource(article.source),

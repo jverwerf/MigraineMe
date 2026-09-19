@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -98,8 +99,8 @@ fun MedicinesScreen(
                 rebuildDraftWithMeds(updated)
                 showAddDialog = false
             },
-            onConfirm = { amount, iso, relief, seScale, seNotes ->
-                val updated = draft.meds + MedicineDraft(name = pendingLabel!!, amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null })
+            onConfirm = { amount, iso, relief, seScale, seNotes, seItems ->
+                val updated = draft.meds + MedicineDraft(name = pendingLabel!!, amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null }, sideEffects = seItems)
                 rebuildDraftWithMeds(updated)
                 showAddDialog = false
             }
@@ -117,10 +118,11 @@ fun MedicinesScreen(
             initialRelief = editing.reliefScale ?: "NONE",
             initialSideEffectScale = editing.sideEffectScale ?: "NONE",
             initialSideEffectNotes = editing.sideEffectNotes ?: "",
+            initialSideEffects = editing.sideEffects,
             onDismiss = { showEditDialog = false },
-            onConfirm = { amount, iso, relief, seScale, seNotes ->
+            onConfirm = { amount, iso, relief, seScale, seNotes, seItems ->
                 val updated = draft.meds.toMutableList().apply {
-                    set(editIndex!!, editing.copy(amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null }))
+                    set(editIndex!!, editing.copy(amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null }, sideEffects = seItems))
                 }
                 rebuildDraftWithMeds(updated)
                 showEditDialog = false
@@ -148,6 +150,8 @@ fun MedicinesScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
+            // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
+            if (!quickLogMode) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -168,6 +172,7 @@ fun MedicinesScreen(
                 } else {
                     Spacer(Modifier.size(28.dp))
                 }
+            }
             }
 
             // ── HeroCard: icon + title + subtitle + selected list ──
@@ -226,6 +231,14 @@ fun MedicinesScreen(
                                     color = relief.color,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                                 )
+                                // Side effects: the ticked items, or a legacy scale
+                                sideEffectsLine(m.sideEffects, m.sideEffectScale)?.let { se ->
+                                    Text(
+                                        se,
+                                        color = SideEffectScale.fromString(SideEffectItem.scaleFor(m.sideEffects, m.sideEffectScale)).color,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                             Icon(
                                 Icons.Outlined.Edit,
@@ -323,7 +336,7 @@ fun MedicinesScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MEDICINES)) },
@@ -347,7 +360,7 @@ private fun MedicineAddDialog(
     doseUnit: String,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
-    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String, sideEffects: List<SideEffectItem>) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
     var inputUnit by remember { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
@@ -355,6 +368,7 @@ private fun MedicineAddDialog(
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
     var sideEffectScale by remember { mutableStateOf("NONE") }
     var sideEffectNotes by remember { mutableStateOf("") }
+    var sideEffects by remember { mutableStateOf<List<SideEffectItem>>(emptyList()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -363,7 +377,7 @@ private fun MedicineAddDialog(
         textContentColor = AppTheme.BodyTextColor,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Amount — number only, unit is fixed by the medicine
                 DoseAmountInput(
                     doseUnit = doseUnit,
@@ -414,9 +428,11 @@ private fun MedicineAddDialog(
                 }
 
                 // Side effects
-                SideEffectChips(
+                SideEffectPicker(
                     sideEffectScale = sideEffectScale,
                     onScaleChange = { sideEffectScale = it },
+                    sideEffects = sideEffects,
+                    onSideEffectsChange = { sideEffects = it },
                     sideEffectNotes = sideEffectNotes,
                     onNotesChange = { sideEffectNotes = it }
                 )
@@ -429,7 +445,7 @@ private fun MedicineAddDialog(
                 val mirror = DoseUnits.parseNumber(amount)
                     ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
                     ?: ""
-                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim(), sideEffects)
             }) {
                 Text(t("Add"), color = AppTheme.AccentPurple)
             }
@@ -460,8 +476,9 @@ private fun MedicineEditDialog(
     initialRelief: String,
     initialSideEffectScale: String = "NONE",
     initialSideEffectNotes: String = "",
+    initialSideEffects: List<SideEffectItem> = emptyList(),
     onDismiss: () -> Unit,
-    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String, sideEffects: List<SideEffectItem>) -> Unit
 ) {
     var amount by remember {
         mutableStateOf(DoseUnits.parseLegacy(initialAmount)?.first?.let { DoseUnits.formatValue(it) } ?: "")
@@ -471,6 +488,7 @@ private fun MedicineEditDialog(
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
     var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
     var sideEffectNotes by remember { mutableStateOf(initialSideEffectNotes) }
+    var sideEffects by remember { mutableStateOf(initialSideEffects) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -479,7 +497,7 @@ private fun MedicineEditDialog(
         textContentColor = AppTheme.BodyTextColor,
         title = { Text(t("Edit %s", title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 DoseAmountInput(
                     doseUnit = doseUnit,
                     valueText = amount,
@@ -526,9 +544,11 @@ private fun MedicineEditDialog(
                 }
 
                 // Side effects
-                SideEffectChips(
+                SideEffectPicker(
                     sideEffectScale = sideEffectScale,
                     onScaleChange = { sideEffectScale = it },
+                    sideEffects = sideEffects,
+                    onSideEffectsChange = { sideEffects = it },
                     sideEffectNotes = sideEffectNotes,
                     onNotesChange = { sideEffectNotes = it }
                 )
@@ -539,7 +559,7 @@ private fun MedicineEditDialog(
                 val mirror = DoseUnits.parseNumber(amount)
                     ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
                     ?: ""
-                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim(), sideEffects)
             }) {
                 Text(t("Save"), color = AppTheme.AccentPurple)
             }

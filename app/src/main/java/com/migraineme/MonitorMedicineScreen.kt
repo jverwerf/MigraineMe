@@ -510,7 +510,7 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
                 .size(34.dp)
         ) {
             Icon(Icons.Outlined.Info, contentDescription = t("About Medicines"),
-                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
         }
     }
 
@@ -1388,9 +1388,16 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                                         color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall)
                                     Spacer(Modifier.width(8.dp))
                                 }
-                                e.sideEffectScale?.takeIf { it != "NONE" }?.let {
+                                // Legacy rows (scale, no items) keep the short chip; items get their own line below.
+                                e.sideEffectScale?.takeIf { it != "NONE" && e.sideEffects.isEmpty() }?.let {
                                     Text(t("SE: %s", it.lowercase().replaceFirstChar { c -> c.uppercase() }),
                                         color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            if (e.sideEffects.isNotEmpty()) {
+                                sideEffectsLine(e.sideEffects, e.sideEffectScale)?.let {
+                                    Text(it, color = Color(0xFFE57373),
+                                        style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                             e.sideEffectNotes?.takeIf { it.isNotBlank() }?.let {
@@ -1411,6 +1418,7 @@ data class MedicineLogRow(
     val doseValue: Double? = null, val doseUnit: String? = null,
     val reliefScale: String?, val sideEffectScale: String?, val sideEffectNotes: String?,
     val timeOfDay: String,
+    val sideEffects: List<SideEffectItem> = emptyList(),
 )
 
 private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): List<MedicineLogRow> = withContext(Dispatchers.IO) {
@@ -1421,7 +1429,7 @@ private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): Lis
     val start = date.atStartOfDay(zone).toOffsetDateTime().toString()
     val end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime().toString()
     val url = "$base/rest/v1/medicines" +
-        "?select=id,name,category,amount,dose_value,dose_unit,relief_scale,side_effect_scale,side_effect_notes,start_at" +
+        "?select=id,name,category,amount,dose_value,dose_unit,relief_scale,side_effect_scale,side_effect_notes,side_effects,start_at" +
         "&start_at=gte.${java.net.URLEncoder.encode(start, "UTF-8")}" +
         "&start_at=lt.${java.net.URLEncoder.encode(end, "UTF-8")}" +
         "&order=start_at.asc&limit=500"
@@ -1476,6 +1484,13 @@ private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): Lis
             sideEffectScale = safe("side_effect_scale"),
             sideEffectNotes = safe("side_effect_notes"),
             timeOfDay = timeOfDay,
+            sideEffects = o.optJSONArray("side_effects")?.let { seArr ->
+                (0 until seArr.length()).mapNotNull { i ->
+                    seArr.optJSONObject(i)?.let { se ->
+                        se.optString("label").takeIf { it.isNotBlank() }?.let { SideEffectItem(it, se.optString("severity", "SOFT")) }
+                    }
+                }
+            } ?: emptyList(),
         ))
     }
     out

@@ -144,8 +144,10 @@ fun WizardStepsConfigScreen(
 
         item(key = "wizard_steps_reset") {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = { updateConfig(WizardSteps()) }) {
-                    Text(t("Reset to default"), color = AppTheme.AccentPurple)
+                LabelPlate {
+                    TextButton(onClick = { updateConfig(WizardSteps()) }) {
+                        Text(t("Reset to default"), color = AppTheme.AccentPurple)
+                    }
                 }
             }
             Spacer(Modifier.height(32.dp))
@@ -167,10 +169,10 @@ private fun WizardStepConfigItem(
     BaseCard(
         modifier = modifier
             .shadow(elevation, shape = AppTheme.BaseCardShape)
-            .alpha(if (isVisible) 1f else 0.6f)
     ) {
+        // Hidden rows dim their CONTENT, not the card: on the lattice a see-through card shows the pattern
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().alpha(if (isVisible) 1f else 0.6f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (!showHandle) {

@@ -213,7 +213,7 @@ fun MigraineHubScreen(navController: NavController) {
                         Icons.Outlined.Info,
                         contentDescription = t("About Log Migraine"),
                         tint = AppTheme.SubtleTextColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp).infoDisc()
                     )
                 }
                 // Page order / hide list lives on this card now, not in every
@@ -229,7 +229,8 @@ fun MigraineHubScreen(navController: NavController) {
                         Icons.Outlined.Edit,
                         contentDescription = t("Customize log pages"),
                         tint = AppTheme.SubtleTextColor,
-                        modifier = Modifier.size(18.dp)
+                        // Overhangs the card's top edge like the (i) next to it.
+                        modifier = Modifier.size(18.dp).infoDisc()
                     )
                 }
             }
@@ -276,7 +277,7 @@ fun MigraineHubScreen(navController: NavController) {
                         Icons.Outlined.Info,
                         contentDescription = t("About Daily Check-In"),
                         tint = AppTheme.SubtleTextColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp).infoDisc()
                     )
                 }
             }
@@ -312,7 +313,7 @@ fun MigraineHubScreen(navController: NavController) {
                         Icons.Outlined.Info,
                         contentDescription = t("About Quick Log"),
                         tint = AppTheme.SubtleTextColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp).infoDisc()
                     )
                 }
             }
@@ -332,7 +333,7 @@ fun MigraineHubScreen(navController: NavController) {
                         Text(LogQuickLogInfoCopy.text, color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium)
                     },
-                    containerColor = AppTheme.BaseCardContainer
+                    containerColor = AppTheme.DialogContainer
                 )
             }
 
@@ -434,7 +435,7 @@ fun MigraineHubScreen(navController: NavController) {
                 Text(LogMigraineInfoCopy.text, color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium)
             },
-            containerColor = AppTheme.BaseCardContainer
+            containerColor = AppTheme.DialogContainer
         )
     }
 
@@ -454,7 +455,7 @@ fun MigraineHubScreen(navController: NavController) {
                 Text(CheckInInfoCopy.text, color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium)
             },
-            containerColor = AppTheme.BaseCardContainer
+            containerColor = AppTheme.DialogContainer
         )
     }
 }

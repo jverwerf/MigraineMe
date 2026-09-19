@@ -123,8 +123,10 @@ fun InsightsWhatChangedScreen(
             }
 
             InsightsSections.CHANGES_ITEMS -> {
-                Text(t("Occurrences on your attacks, last 30 days vs the 30 before."),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                LabelPlate {
+                    Text(t("Occurrences on your attacks, last 30 days vs the 30 before."),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
 
                 MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_risk, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

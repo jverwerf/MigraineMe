@@ -169,7 +169,7 @@ fun InsightsExploreScreen(
                             Icons.Outlined.Info,
                             contentDescription = t("About Migraine Timeline"),
                             tint = AppTheme.SubtleTextColor,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp).infoDisc()
                         )
                 }
             }
@@ -189,7 +189,7 @@ fun InsightsExploreScreen(
                         Text(MigraineTimelineInfoCopy.text, color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium)
                     },
-                    containerColor = AppTheme.BaseCardContainer
+                    containerColor = AppTheme.DialogContainer
                 )
             }
 

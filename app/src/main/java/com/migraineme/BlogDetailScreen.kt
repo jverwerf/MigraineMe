@@ -50,11 +50,10 @@ fun BlogDetailScreen(
     if (blog == null) {
         Box(
             Modifier
-                .fillMaxSize()
-                .background(AppTheme.FadeColor),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(t("Blog not found"), color = AppTheme.SubtleTextColor)
+            LabelPlate { Text(t("Blog not found"), color = AppTheme.SubtleTextColor) }
         }
         return
     }
@@ -62,7 +61,6 @@ fun BlogDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.FadeColor)
             .clipToBounds()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
@@ -70,11 +68,13 @@ fun BlogDetailScreen(
     ) {
         // ── Tag (back handled by the app top bar) ──
         if (!blog.tag.isNullOrBlank()) {
-            Text(
-                blog.tag,
-                color = AppTheme.AccentPurple,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-            )
+            LabelPlate {
+                Text(
+                    blog.tag,
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
         }
 
         // ── Main card ──

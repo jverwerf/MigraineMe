@@ -249,7 +249,7 @@ fun ManageSymptomsScreen(
                         .size(34.dp)
                 ) {
                     Icon(Icons.Outlined.Info, contentDescription = t("About Migraines"),
-                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp).infoDisc())
                 }
             }
 
@@ -356,7 +356,7 @@ fun ManageSymptomsScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
             }
 

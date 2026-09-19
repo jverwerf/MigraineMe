@@ -157,11 +157,13 @@ fun ExercisePlayerScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (showNoConnection) {
-                Text(
-                    t("No connection. This routine plays offline once it has been downloaded."),
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                LabelPlate {
+                    Text(
+                        t("No connection. This routine plays offline once it has been downloaded."),
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
             BaseCard {

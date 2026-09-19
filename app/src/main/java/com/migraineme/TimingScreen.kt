@@ -103,6 +103,8 @@ fun TimingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
+                    // Opaque base under the 35% gradient so the lattice does not show through.
+                    .background(AppTheme.FadeColor)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
@@ -233,7 +235,7 @@ fun TimingScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
                     onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) },

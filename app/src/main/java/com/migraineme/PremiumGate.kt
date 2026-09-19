@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -71,7 +72,7 @@ private fun PremiumLoadingPlaceholder(
                 .matchParentSize()
                 .padding(1.dp)
                 .clip(RoundedCornerShape(17.dp))
-                .background(AppTheme.BaseCardContainer),
+                .background(if (LocalSolidCards.current) AppTheme.BaseCardSolid else AppTheme.BaseCardContainer),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
@@ -411,11 +412,11 @@ fun TrialBanner(
     val isUrgent = premiumState.isTrialUrgent
     val days = premiumState.trialDaysRemaining
 
-    val bgColor = if (isUrgent) {
+    val bgColor = (if (isUrgent) {
         Color(0xFFFF8A65).copy(alpha = 0.5f)
     } else {
         AppTheme.AccentPurple.copy(alpha = 0.5f)
-    }
+    }).let { if (LocalSolidCards.current) it.compositeOver(AppTheme.FadeColor) else it }
 
     val textColor = if (isUrgent) Color(0xFFFF8A65) else AppTheme.AccentPurple
 

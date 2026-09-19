@@ -165,12 +165,12 @@ fun PaintThePictureScreen(
             MedicineDraft(name = it.label, amount = it.amount, notes = null,
                 startAtIso = it.startAtIso,
                 reliefScale = it.reliefScale ?: "NONE", sideEffectScale = it.sideEffectScale ?: "NONE",
-                sideEffectNotes = it.sideEffectNotes)
+                sideEffectNotes = it.sideEffectNotes, sideEffects = it.sideEffects)
         })
         vm.replaceReliefs(editMatches.filter { it.category == "relief" }.map {
             ReliefDraft(type = it.label, startAtIso = it.startAtIso, endAtIso = it.endAtIso,
                 reliefScale = it.reliefScale ?: "NONE",
-                sideEffectScale = it.sideEffectScale ?: "NONE", sideEffectNotes = it.sideEffectNotes)
+                sideEffectScale = it.sideEffectScale ?: "NONE", sideEffectNotes = it.sideEffectNotes, sideEffects = it.sideEffects)
         })
         vm.replaceActivities(editMatches.filter { it.category == "activity" }.map {
             ActivityDraft(type = it.label, startAtIso = it.startAtIso, endAtIso = it.endAtIso)
@@ -232,12 +232,12 @@ fun PaintThePictureScreen(
             MedicineDraft(name = it.label, amount = it.amount, notes = null,
                 startAtIso = it.startAtIso,
                 reliefScale = it.reliefScale ?: "NONE", sideEffectScale = it.sideEffectScale ?: "NONE",
-                sideEffectNotes = it.sideEffectNotes)
+                sideEffectNotes = it.sideEffectNotes, sideEffects = it.sideEffects)
         })
         vm.replaceReliefs(editMatches.filter { it.category == "relief" }.map {
             ReliefDraft(type = it.label, startAtIso = it.startAtIso, endAtIso = it.endAtIso,
                 reliefScale = it.reliefScale ?: "NONE",
-                sideEffectScale = it.sideEffectScale ?: "NONE", sideEffectNotes = it.sideEffectNotes)
+                sideEffectScale = it.sideEffectScale ?: "NONE", sideEffectNotes = it.sideEffectNotes, sideEffects = it.sideEffects)
         })
         vm.replaceActivities(editMatches.filter { it.category == "activity" }.map {
             ActivityDraft(type = it.label, startAtIso = it.startAtIso, endAtIso = it.endAtIso)
@@ -668,7 +668,7 @@ fun PaintThePictureScreen(
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
                 Button(
                     onClick = {
@@ -965,8 +965,6 @@ private fun ItemEditorPill(
     // side_effect_scale NONE/SOFT/MODERATE/SEVERE — off-set values reject the row.
     val reliefOptions = listOf("NONE", "LOW", "MILD", "HIGH")
     val reliefLabels = listOf("None", "Low", "Mild", "High")
-    val sideEffectOptions = listOf("NONE", "SOFT", "MODERATE", "SEVERE")
-    val sideEffectLabels = listOf("None", "Soft", "Moderate", "Severe")
 
     val parsedTime = remember(match.startAtIso) {
         match.startAtIso?.let { try { OffsetDateTime.parse(it) } catch (_: Exception) { null } }
@@ -984,22 +982,7 @@ private fun ItemEditorPill(
     var reliefScale by remember(match.label) { mutableStateOf(match.reliefScale ?: "NONE") }
     var sideEffectScale by remember(match.label) { mutableStateOf(match.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(match.label) { mutableStateOf(match.sideEffectNotes ?: "") }
-
-    // Voice input for the side-effect details field, same contract as
-    // JournalEditScreen: appends the spoken text to what is already there.
-    val seCtx = LocalContext.current
-    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-            if (!spoken.isNullOrBlank()) {
-                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
-            }
-        }
-    }
+    var sideEffects by remember(match.label) { mutableStateOf(match.sideEffects) }
 
     fun commitChanges() {
         val zone = java.time.ZoneId.systemDefault()
@@ -1022,7 +1005,8 @@ private fun ItemEditorPill(
             amount = if (match.category == "medicine") mirror else match.amount,
             reliefScale = reliefScale,
             sideEffectScale = sideEffectScale,
-            sideEffectNotes = sideEffectNotes.ifBlank { null }
+            sideEffectNotes = sideEffectNotes.ifBlank { null },
+            sideEffects = sideEffects
         ))
     }
 
@@ -1219,71 +1203,15 @@ private fun ItemEditorPill(
 
         Spacer(Modifier.height(10.dp))
 
-        // Side effect scale
-        Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-        Spacer(Modifier.height(4.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            sideEffectOptions.forEachIndexed { idx, scale ->
-                val selected = sideEffectScale == scale
-                val chipColor = when (scale) {
-                    "SEVERE" -> Color(0xFFEF5350)
-                    "MODERATE" -> Color(0xFFFFB74D)
-                    "SOFT" -> Color(0xFF81C784)
-                    else -> Color.White.copy(alpha = 0.2f)
-                }
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (selected) chipColor.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f))
-                        .border(1.dp, if (selected) chipColor else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .clickable { sideEffectScale = scale }
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        sideEffectLabels[idx],
-                        color = if (selected) Color.White else AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    )
-                }
-            }
-        }
-
-        // Side effect notes (only if side effects aren't NONE)
-        if (sideEffectScale != "NONE") {
-            Spacer(Modifier.height(10.dp))
-            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = sideEffectNotes,
-                onValueChange = { sideEffectNotes = it },
-                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
-                    cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f),
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
-                ),
-                trailingIcon = {
-                    IconButton(onClick = {
-                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
-                        }
-                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }) {
-                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
-                    }
-                },
-                singleLine = true
-            )
-        }
+        // Side effects: shared Brainy picker (collapsed by default) + notes
+        SideEffectPicker(
+            sideEffectScale = sideEffectScale,
+            onScaleChange = { sideEffectScale = it },
+            sideEffects = sideEffects,
+            onSideEffectsChange = { sideEffects = it },
+            sideEffectNotes = sideEffectNotes,
+            onNotesChange = { sideEffectNotes = it },
+        )
         } // end medicine/relief fields
     }
 }

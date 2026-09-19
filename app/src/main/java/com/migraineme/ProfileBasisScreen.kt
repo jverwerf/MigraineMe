@@ -198,14 +198,16 @@ private fun BasisContent(
     // ── Divider: the answers ──
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
         HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.12f))
-        Text(t("What you told us").uppercase(), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+        LabelPlate { Text(t("What you told us").uppercase(), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall) }
         HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.12f))
     }
-    Text(
-        if (setupDate != null) t("Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup.", setupDate)
-        else t("Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup."),
-        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 4.dp)
-    )
+    BaseCard {
+        Text(
+            if (setupDate != null) t("Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup.", setupDate)
+            else t("Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup."),
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 4.dp)
+        )
+    }
 
     // ── 1. About you ──
     AnswerSection(Icons.Outlined.Person, t("About you"), 1, AiSetupEntry.ABOUT, onEditSection, listOf(
@@ -340,10 +342,12 @@ private fun BasisContent(
         }
     }
 
-    Text(
-        t("These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away."),
-        color = AppTheme.SubtleTextColor.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 4.dp)
-    )
+    BaseCard {
+        Text(
+            t("These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away."),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 4.dp)
+        )
+    }
 
     // ── Redo — same card, same action as on Profile ──
     BaseCard {

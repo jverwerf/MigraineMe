@@ -1,6 +1,5 @@
 package com.migraineme
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.Instant
@@ -93,7 +93,6 @@ fun FullScreenGraphScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.FadeColor)
             .verticalScroll(scrollState)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -114,9 +113,9 @@ fun FullScreenGraphScreen(
                     },
                     label = { Text(text = t(label), style = MaterialTheme.typography.labelSmall) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.3f),
+                        selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.3f).compositeOver(AppTheme.FadeColor),
                         selectedLabelColor = AppTheme.AccentPurple,
-                        containerColor = AppTheme.BaseCardContainer,
+                        containerColor = AppTheme.BaseCardSolid,
                         labelColor = AppTheme.SubtleTextColor
                     ),
                     border = FilterChipDefaults.filterChipBorder(
@@ -141,9 +140,9 @@ fun FullScreenGraphScreen(
                 )
             },
             colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f),
+                selectedContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f).compositeOver(AppTheme.FadeColor),
                 selectedLabelColor = AppTheme.AccentPink,
-                containerColor = AppTheme.BaseCardContainer,
+                containerColor = AppTheme.BaseCardSolid,
                 labelColor = AppTheme.SubtleTextColor
             ),
             border = FilterChipDefaults.filterChipBorder(
@@ -168,15 +167,17 @@ fun FullScreenGraphScreen(
                     Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = t("Earlier"),
                     tint = if (isCustomRange) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(28.dp).infoDisc()
                 )
             }
 
-            Text(
-                text = dateRangeLabel,
-                color = if (isAtPresent && !isCustomRange) AppTheme.TitleColor else AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-            )
+            LabelPlate {
+                Text(
+                    text = dateRangeLabel,
+                    color = if (isAtPresent && !isCustomRange) AppTheme.TitleColor else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                )
+            }
 
             IconButton(
                 onClick = { if (canGoForward) periodOffset -= 1 },
@@ -186,7 +187,7 @@ fun FullScreenGraphScreen(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = t("Later"),
                     tint = if (!canGoForward) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(28.dp).infoDisc()
                 )
             }
         }

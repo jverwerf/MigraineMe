@@ -242,7 +242,10 @@ internal fun BrainyWatermarkCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        // Same switch as BaseCard: opaque on the lattice, see-through only over artwork
+        colors = CardDefaults.cardColors(
+            containerColor = if (LocalSolidCards.current) AppTheme.BaseCardSolid else AppTheme.BaseCardContainer
+        ),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
@@ -569,7 +572,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         // rows have no fair comparison, so they only say how often.
                         // A chronic row (long attacks expanded into flare days)
                         // counts days, not attacks, and says so.
-                        val stat = if (it.mode == "prevalence")
+                        // A metric row's pct_migraine_windows is its MEAN, not a
+                        // share (isMeanNotPercent) — appending "%" turned a resting
+                        // HR of 68 bpm into "68% of attacks". Metric previews
+                        // carry the likelihood alone.
+                        val stat = if (it.isMeanNotPercent)
+                            liftTimesText(it.liftRatio)
+                        else if (it.mode == "prevalence")
                             (if (it.isChronic) tSync("in %s%% of flare days", it.pctMigraineWindows.toInt())
                              else tSync("in %s%% of attacks", it.pctMigraineWindows.toInt()))
                         else
@@ -696,14 +705,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     if (spiderLoading || correlationsLoading) {
         Box(
             Modifier
-                .fillMaxSize()
-                .background(AppTheme.FadeColor),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text(t("Loading insights\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                LabelPlate { Text(t("Loading insights\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) }
             }
         }
         return
@@ -807,7 +815,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 Icons.Outlined.Info,
                                 contentDescription = t("About Full Report"),
                                 tint = AppTheme.SubtleTextColor,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp).infoDisc()
                             )
                     }
                 }
@@ -827,7 +835,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(FullReportInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -887,7 +895,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                         Icons.Outlined.Info,
                                         contentDescription = t("About AI Recommendations"),
                                         tint = AppTheme.SubtleTextColor,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp).infoDisc()
                                     )
                             }
                         }
@@ -909,7 +917,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(AiRecommendationsInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -944,7 +952,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About Accuracy"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -965,7 +973,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(AccuracyInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -999,7 +1007,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About What Happened"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -1020,7 +1028,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(WhatHappenedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1054,7 +1062,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About What Worked"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -1075,7 +1083,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(WhatWorkedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1111,7 +1119,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About What Strengthens You"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -1132,7 +1140,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(WhatsHelpingInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1168,7 +1176,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                         Icons.Outlined.Info,
                                         contentDescription = t("About What Changed"),
                                         tint = AppTheme.SubtleTextColor,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp).infoDisc()
                                     )
                             }
                         }
@@ -1190,7 +1198,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(WhatChangedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1224,7 +1232,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About What Were You Doing"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -1245,7 +1253,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(ContextInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1287,7 +1295,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     Icons.Outlined.Info,
                                     contentDescription = t("About How Did It Impact You"),
                                     tint = AppTheme.SubtleTextColor,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp).infoDisc()
                                 )
                         }
                     }
@@ -1308,7 +1316,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             Text(ImpactInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
-                        containerColor = AppTheme.BaseCardContainer
+                        containerColor = AppTheme.DialogContainer
                     )
                 }
 
@@ -1631,13 +1639,22 @@ internal fun LiftBadge(lift: Float) {
 @Composable
 internal fun PatternBadge(stat: EdgeFunctionsService.CorrelationStat) {
     val pct = stat.pctMigraineWindows.toInt()
+    // METRIC rows carry MEANS, not percentages (isMeanNotPercent): the two
+    // numbers are the metric's mean on attack days and on normal days. Through
+    // the percentage path a barometric pressure row read "454 of 46 (988%)".
+    val isMean = stat.isMeanNotPercent
     // Chronic rows count flare days inside long attacks, so the unit is named;
     // plain rows keep the bare "in N of M" the badge has always shown.
-    val countBase = if (stat.isChronic)
+    val countBase = if (isMean)
+        t("%1\$s vs %2\$s on normal days",
+            formatMetricMean(stat.pctMigraineWindows), formatMetricMean(stat.pctControlWindows))
+    else if (stat.isChronic)
         t("in %1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, pct)
     else "in ${stat.attackHits} of ${stat.sampleSize} ($pct%)"
-    // 0 normal days: the strongest part of the finding, said instead of a fake multiplier.
-    val countLabel = if (stat.neverOnNormalDay) "$countBase · ${t("never on a normal day")}" else countBase
+    // 0 normal days: the strongest part of the finding, said instead of a fake
+    // multiplier. Never appended to a metric row — that line already names both
+    // kinds of day, and the engine tags mode on trigger/interaction rows only.
+    val countLabel = if (!isMean && stat.neverOnNormalDay) "$countBase · ${t("never on a normal day")}" else countBase
     if (stat.mode == "prevalence") {
         Text(countLabel, color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
@@ -2138,12 +2155,18 @@ private fun PatternTile(
         1 -> "1 day before"
         else -> "${stat.bestLagDays} days before"
     }
+    // METRIC rows carry MEANS, not percentages (isMeanNotPercent).
+    val isMean = stat.isMeanNotPercent
     // Chronic rows count flare days inside long attacks, not attack rows.
-    val occBase = if (stat.isChronic)
+    val occBase = if (isMean)
+        t("%1\$s vs %2\$s on normal days",
+            formatMetricMean(stat.pctMigraineWindows), formatMetricMean(stat.pctControlWindows))
+    else if (stat.isChronic)
         t("%1\$s of %2\$s flare days (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
     else
         t("%1\$s of %2\$s attacks (%3\$s%%)", stat.attackHits, stat.sampleSize, stat.pctMigraineWindows.toInt())
-    val occText = if (stat.neverOnNormalDay) "$occBase · ${t("never on a normal day")}" else occBase
+    // Never on a metric row: the mean line already names both kinds of day.
+    val occText = if (!isMean && stat.neverOnNormalDay) "$occBase · ${t("never on a normal day")}" else occBase
     val isCombo = stat.factorType == "interaction"
     val metaColor = Color(0xFF9C8BB0)
     val tileShape = RoundedCornerShape(18.dp)
@@ -2158,7 +2181,9 @@ private fun PatternTile(
             .padding(horizontal = 16.dp, vertical = 13.dp)
     ) {
         val titleIsPair = stat.factorB != null
-        val headlineStat = if (stat.mode != "prevalence") {
+        // A metric row's "percentage" is its mean, so it can never headline as a
+        // share; it keeps the multiplier and the mean comparison sits below it.
+        val headlineStat = if (stat.mode != "prevalence" || isMean) {
             liftTimesText(stat.liftRatio)
         } else if (stat.isChronic) {
             tSync("in %s%% of flare days", stat.pctMigraineWindows.toInt())
@@ -3549,7 +3574,7 @@ object WhatsHelpingInfoCopy {
 }
 
 object WhatChangedInfoCopy {
-    val text: String get() = tSync("A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report.") + MEDICAL_NOTE
+    val text: String get() = tSync("A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the two biggest movers. Tap in for the full list, matching the What changed page of the PDF report.") + MEDICAL_NOTE
 }
 
 object ContextInfoCopy {

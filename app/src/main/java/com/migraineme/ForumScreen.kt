@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -67,7 +68,7 @@ fun ForumPostCard(
             .fillMaxWidth()
             .clickable(onClick = onOpen),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
@@ -350,7 +351,7 @@ fun ForumPostDetailScreen(
 
     if (!isPinned && post == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(t("Discussion not found"), color = AppTheme.SubtleTextColor)
+            LabelPlate { Text(t("Discussion not found"), color = AppTheme.SubtleTextColor) }
         }
         return
     }
@@ -410,7 +411,6 @@ fun ForumPostDetailScreen(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .background(AppTheme.FadeColor)
                 .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
@@ -421,9 +421,8 @@ fun ForumPostDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, t("Back"), tint = Color.White)
-                }
+                // One way back only: the app top bar. The label keeps the old 12dp inset.
+                Spacer(Modifier.width(12.dp))
                 Text(
                     t("Discussion"),
                     color = AppTheme.AccentPurple,
@@ -580,7 +579,7 @@ fun ForumPostDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .background(AppTheme.AccentPurple.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                    .background(AppTheme.AccentPurple.copy(alpha = 0.1f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(8.dp))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

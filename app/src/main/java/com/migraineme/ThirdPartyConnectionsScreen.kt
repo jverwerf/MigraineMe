@@ -969,12 +969,13 @@ fun ThirdPartyConnectionsScreen(
     ) {
         // Connected Services section
             Box(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    t("Connected Services"),
-                    color = AppTheme.AccentPurple,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                LabelPlate(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Text(
+                        t("Connected Services"),
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
                 IconButton(
                     onClick = { showInfo = true },
                     modifier = Modifier
@@ -982,7 +983,7 @@ fun ThirdPartyConnectionsScreen(
                         .size(28.dp)
                 ) {
                     Icon(Icons.Outlined.Info, contentDescription = t("About Connections"),
-                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp).infoDisc())
                 }
             }
 

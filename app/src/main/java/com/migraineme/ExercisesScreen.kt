@@ -61,12 +61,15 @@ fun ExercisesScreen(
 
 @Composable
 private fun ExerciseGroupHeading(text: String) {
-    Text(
-        text,
-        color = AppTheme.TitleColor,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        modifier = Modifier.padding(top = 4.dp)
-    )
+    // Same build as the "Quick Log" header on the Log tab: a full-width card with the title in it
+    BaseCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Text(
+            text,
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
 
 @Composable

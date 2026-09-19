@@ -42,7 +42,7 @@ fun BlogsContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text(t("Loading blogs…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                LabelPlate { Text(t("Loading blogs…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) }
             }
         }
     } else if (state.blogs.isEmpty()) {
@@ -52,11 +52,11 @@ fun BlogsContent(
                 .height(200.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            BaseCard { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(t("No blogs yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                 Spacer(Modifier.height(4.dp))
                 Text(t("Check back soon!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
+            } }
         }
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -82,7 +82,7 @@ private fun BlogCard(
             .fillMaxWidth()
             .clickable(onClick = onOpen),
         shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardSolid),
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
