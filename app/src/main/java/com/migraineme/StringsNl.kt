@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4636 entries.
+ * 4637 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -1871,6 +1871,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Kept up to date" to "Up-to-date",
     "Kneading + heat combo" to "Kneden plus warmte",
     "LOW" to "LAAG",
+    "Lamotrigine" to "Lamotrigine",
     "Lamp that emits a narrow band of green light you can sit and read under during an attack." to "Lamp die een smalle band groen licht geeft waaronder je tijdens een aanval kunt zitten lezen.",
     "Language" to "Taal",
     "Languages" to "Talen",

@@ -1226,7 +1226,7 @@ object BrainyLogManifest {
             Regex("reyvow|lasmiditan") to "medcat_ditan",
             Regex("tylenol|panadol|advil|nurofen|aleve|excedrin|solpadeine|migraleve|anadin|syndol") to "medcat_analgesic",
             Regex("zofran|phenergan|stemetil|buccastem|motilium|domperidone|ondansetron|metoclopramide|maxolon") to "medcat_anti_nausea",
-            Regex("topamax|topiramate|depakote|epilim|inderal|propranolol|elavil|amitriptyline|candesartan|pizotifen|sandomigran") to "medcat_preventive",
+            Regex("topamax|topiramate|lamotrigine|lamictal|depakote|epilim|inderal|propranolol|elavil|amitriptyline|candesartan|pizotifen|sandomigran") to "medcat_preventive",
             Regex("cafergot|migranal|dihydroergotamine|ergotamine") to "medcat_ergotamine",
             Regex("aspirin") to "medcat_analgesic",
             Regex("celecoxib") to "medcat_analgesic",

@@ -695,6 +695,7 @@ const TABLE: Record<string, string> = {
   "Top of Back Head Left": "Achterhoofd boven links",
   "Top of Back Head Right": "Achterhoofd boven rechts",
   "Top of Head": "Kruin",
+  "Lamotrigine": "Lamotrigine",
   "Topiramate": "Topiramaat",
   "Tracking since": "Bijgehouden sinds",
   "Train": "Trein",

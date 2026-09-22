@@ -56,15 +56,15 @@
     "line": "                t(\"Please enable these metrics first, then you can enable Stress Index.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:342",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:345",
     "line": "                            t(\"Toggle the metrics MigraineMe collects each day. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:343",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:346",
     "line": "                            t(\"Enabled metrics feed into your daily risk score and AI insights. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:344",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:347",
     "line": "                            t(\"Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.\"),"
   },
   {
@@ -72,39 +72,39 @@
     "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1251",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1272",
     "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1401",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1428",
     "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1408",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1435",
     "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2387",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2449",
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:102",
+    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:105",
     "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:823",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:831",
     "line": "        newItems.forEachIndexed { i, o -> if (i > 0) HorizontalDivider(color = Edge); Column(Modifier.padding(vertical = 6.dp)) { PairRow(o.str(\"phrase\") ?: \"\", o.str(\"label\") ?: \"\", newItem = true); Text(listOfNotNull(t(\"New\"), o.str(\"class\")?.replace('_', ' '), o.str(\"category\")).joinToString(\" · \") + \" · \" + t(\"seen %1\\$s×\", o.int(\"count\") ?: 0), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:881",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:889",
     "line": "        Text(\"• \" + t(\"Journal, calendar and the doctor report show these attacks.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:882",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:890",
     "line": "        Text(\"• \" + (if (paid) t(\"Insights use what you ticked under Use for insights. The rest stays in the journal only.\") else t(\"Insights use what you ticked once you have a paid subscription. The rest stays in the journal only.\")), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:883",
+    "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:891",
     "line": "        Text(\"• \" + t(\"Your imported medicines and reliefs are now favourites in the log wizard.\"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
@@ -112,19 +112,19 @@
     "line": "                        t(\"Nearest: %s\", city.label) + (city.timezone?.let { \"  •  $it\" } ?: \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:227",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:228",
     "line": "                        t(\"Your predicted period date gets a single trigger. The risk curve controls \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:228",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:229",
     "line": "                        t(\"how many points it contributes on each day relative to the predicted date. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:229",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:230",
     "line": "                        t(\"When the predicted date arrives, it auto-converts to a real period log and \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:230",
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:231",
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {
@@ -224,43 +224,43 @@
     "line": "                        t(\"This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
     "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
     "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:572",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:578",
     "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:573",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
     "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:574",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:580",
     "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:575",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:581",
     "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:582",
     "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:583",
     "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:578",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:584",
     "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:585",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
@@ -268,15 +268,15 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:415",
+    "site": "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:413",
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:680",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:684",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:412",
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:416",
     "line": "                (if (latest != null) t(\"Latest %1\\$s. \", latest) else \"\") + t(\"Everything here is a change you accepted — nothing moves without you.\"),"
   },
   {
@@ -304,11 +304,11 @@
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:296",
     "line": "                    Text((if (acceptedCount == 1) t(\"Apply 1 change\") else t(\"Apply %s changes\", acceptedCount)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:295",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:297",
     "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
   },
   {
@@ -328,15 +328,15 @@
     "line": "                        t(\"You'll be taken to Settings where you can grant this permission.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:365",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:371",
     "line": "            t(\"MigraineMe is not a medical device and does not recommend treatments. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:366",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:372",
     "line": "                t(\"Prescription devices need a conversation with your doctor. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:367",
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:373",
     "line": "                t(\"We earn a commission on links to devices.\"),"
   },
   {
