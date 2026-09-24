@@ -28,12 +28,20 @@ data class HomeCardConfig(
         const val CARD_CONTRIBUTORS = "contributors"
         const val CARD_EXERCISES = "exercises"
 
+        /**
+         * Exercises is switched off (Jordy 2026-09-24): the physio said the neck
+         * routines are not good yet. Off = the card is not on Home and not in
+         * Customize Home, so nothing reaches the Exercises screens. Flip to true
+         * to bring it back; users who saved a Home order get it appended at the end.
+         */
+        const val EXERCISES_ENABLED = false
+
         // Default order = the fixed order Home had before it became configurable,
         // with Exercises placed right after the risk gauge.
-        val DEFAULT_ORDER = listOf(
+        val DEFAULT_ORDER = listOfNotNull(
             CARD_QUICKLOG,
             CARD_RISK,
-            CARD_EXERCISES,
+            CARD_EXERCISES.takeIf { EXERCISES_ENABLED },
             CARD_LOCATION,
             CARD_ASK,
             CARD_WELLDONE,
