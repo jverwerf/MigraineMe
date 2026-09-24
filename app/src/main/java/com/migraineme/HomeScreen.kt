@@ -298,6 +298,7 @@ fun HomeScreenRoot(
                     MigraineInProgressCard(
                         open = openMigraines,
                         ending = endingMigraine,
+                        onUpgrade = onNavigateToPaywall,
                         onAdd = { row, kind ->
                             val start = java.net.URLEncoder.encode(row.startAt, "UTF-8")
                             when (kind) {

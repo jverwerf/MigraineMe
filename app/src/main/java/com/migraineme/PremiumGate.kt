@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -519,6 +520,91 @@ fun PremiumRecoveryPrompt(
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * Food Risk Analysis is premium. True for the exposure verdicts (tyramine,
+ * alcohol, gluten, histamine) whether passed bare ("tyramine_exposure") or as a
+ * fav key ("nutrition:tyramine_exposure"). Calories, protein, caffeine and the
+ * other nutrients stay free.
+ */
+fun isFoodRiskMetric(metric: String): Boolean =
+    ExposureScale.isExposureMetric(metric.substringAfter(':'))
+
+/**
+ * A metric tile (same look as MetricTile) that locks food-risk metrics for free
+ * users: padlock in the value slot, label underneath, whole tile taps through
+ * to the paywall. While entitlement is loading the value reads "-" so a free
+ * user never sees the verdict flash up. Everything else renders as normal.
+ */
+@Composable
+fun FoodRiskGatedMetricTile(
+    metric: String,
+    value: String,
+    label: String,
+    valueColor: Color,
+    onUpgrade: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val access = PremiumManager.state.collectAsState().value.access
+    if (!isFoodRiskMetric(metric) || access == PremiumAccess.ENTITLED) {
+        MetricTile(value, label, valueColor, modifier)
+        return
+    }
+    if (access == PremiumAccess.LOADING) {
+        MetricTile("-", label, valueColor, modifier)
+        return
+    }
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.055f), RoundedCornerShape(12.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onUpgrade)
+            .padding(vertical = 7.dp, horizontal = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(Modifier.height(20.dp), contentAlignment = Alignment.Center) {
+            Icon(
+                Icons.Outlined.Lock,
+                contentDescription = t("Premium"),
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Text(
+            t(label),
+            color = AppTheme.AccentPurple,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Inline value for a food-risk metric in a text row: the value itself for
+ * premium users, a tappable padlock for free users, "-" while loading.
+ */
+@Composable
+fun FoodRiskGatedValue(
+    metric: String,
+    value: String,
+    onUpgrade: () -> Unit,
+    content: @Composable (String) -> Unit
+) {
+    val access = PremiumManager.state.collectAsState().value.access
+    when {
+        !isFoodRiskMetric(metric) || access == PremiumAccess.ENTITLED -> content(value)
+        access == PremiumAccess.LOADING -> content("-")
+        else -> Icon(
+            Icons.Outlined.Lock,
+            contentDescription = t("Premium"),
+            tint = AppTheme.AccentPurple,
+            modifier = Modifier.size(14.dp).clickable(onClick = onUpgrade)
         )
     }
 }

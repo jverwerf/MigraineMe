@@ -203,18 +203,29 @@ fun MonitorRiskScreen(
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 effectiveFavs.take(3).forEachIndexed { i, fav ->
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(resolveValue(fav.key), color = slotColors.getOrElse(i) { slotColors.last() }, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                                        FoodRiskGatedValue(fav.key, resolveValue(fav.key), { navController.navigate(Routes.PAYWALL) }) { v ->
+                                            Text(v, color = slotColors.getOrElse(i) { slotColors.last() }, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                                        }
                                         Text(t(fav.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
                         }
 
-                        // Trigger breakdown
+                        // Trigger breakdown — the paid "Active Trigger Breakdown".
+                        // Free users see their own rows blurred under the upsell
+                        // (same key as the Home gate). Guarded by isNotEmpty so the
+                        // gate never wraps nothing.
                         if (parsedTriggers.isNotEmpty()) {
                             Spacer(Modifier.height(6.dp))
                             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
                             Spacer(Modifier.height(6.dp))
+                            PremiumGate(
+                                message = t("Unlock trigger breakdown"),
+                                subtitle = t("See what\u2019s driving your risk score"),
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                            ) {
+                            Column(Modifier.fillMaxWidth()) {
                             parsedTriggers.forEach { trigger ->
                                 val sevColor = when (trigger.severity.uppercase()) {
                                     "HIGH" -> Color(0xFFEF5350); "MILD" -> Color(0xFFFFB74D); else -> Color(0xFF81C784)
@@ -230,6 +241,8 @@ fun MonitorRiskScreen(
                                         Text(trigger.severity, color = sevColor, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
+                            }
+                            }
                             }
                         }
                     } else {
@@ -252,7 +265,7 @@ fun MonitorRiskScreen(
                             }
                             Spacer(Modifier.height(2.dp))
                             entries.forEach { entry ->
-                                MetricRowItem(entry.label, resolveValue(entry.key))
+                                MetricRowItem(entry.label, resolveValue(entry.key), entry.key) { navController.navigate(Routes.PAYWALL) }
                             }
                         }
                     }
@@ -277,10 +290,13 @@ fun MonitorRiskScreen(
 // ═════════════════════════════════════════════════════════════════════════════
 
 @Composable
-private fun MetricRowItem(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+private fun MetricRowItem(label: String, value: String, key: String, onUpgrade: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-        Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+        // Food risk verdicts are premium: padlock → paywall for free users.
+        FoodRiskGatedValue(key, value, onUpgrade) { v ->
+            Text(v, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+        }
     }
 }
 

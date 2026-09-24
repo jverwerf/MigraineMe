@@ -2793,7 +2793,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.PRACTITIONERS) {
-                        PractitionerScreen(onBack = { nav.popBackStack() }, authVm = authVm)
+                        // Plain navigate: the practitioners route itself is not
+                        // gated, so Back from the paywall lands here (no popUpTo loop).
+                        PractitionerScreen(
+                            onBack = { nav.popBackStack() },
+                            authVm = authVm,
+                            onUpgrade = { nav.navigate(Routes.PAYWALL) }
+                        )
                     }
 
                     composable(Routes.LANGUAGE) {

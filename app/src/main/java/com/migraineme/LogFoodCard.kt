@@ -95,10 +95,12 @@ fun LogFoodCard(navController: NavController) {
                         RiskColors.formatRiskLevel(metric, total.toInt()).first
                     } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
 
-                    MetricTile(
+                    FoodRiskGatedMetricTile(
+                        metric,
                         formatted,
                         label,
                         slotColors.getOrElse(index) { slotColors.last() },
+                        { navController.navigate(Routes.PAYWALL) },
                         Modifier.weight(1f)
                     )
                 }

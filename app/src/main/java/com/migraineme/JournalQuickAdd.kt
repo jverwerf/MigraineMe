@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -747,6 +748,7 @@ fun MigraineInProgressCard(
     onFullLog: (SupabaseDbService.MigraineRow) -> Unit,
     onEndNow: (SupabaseDbService.MigraineRow) -> Unit,
     ending: Boolean = false,
+    onUpgrade: () -> Unit = {},
 ) {
     if (open.isEmpty()) return
     var index by remember(open.size) { mutableStateOf(0) }
@@ -757,13 +759,20 @@ fun MigraineInProgressCard(
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var forecast by remember { mutableStateOf<EdgeFunctionsService.SimilarAttacksResponse?>(null) }
     var showForecast by remember { mutableStateOf(false) }
-    LaunchedEffect(open.firstOrNull()?.id) {
+    // Premium only: free users (and a still-loading entitlement) never call
+    // similar-attacks; free users get a locked pill that opens the paywall.
+    val forecastAccess = PremiumManager.state.collectAsState().value.access
+    LaunchedEffect(open.firstOrNull()?.id, forecastAccess) {
+        if (forecastAccess != PremiumAccess.ENTITLED) {
+            forecast = null
+            return@LaunchedEffect
+        }
         forecast = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching { EdgeFunctionsService().getSimilarAttacks(ctx) }.getOrNull()
         }
     }
     val fc = forecast
-    if (showForecast && fc != null) {
+    if (showForecast && fc != null && forecastAccess == PremiumAccess.ENTITLED) {
         AttackForecastSheet(
             forecast = fc,
             nowMs = System.currentTimeMillis(),
@@ -813,6 +822,34 @@ fun MigraineInProgressCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     PagerArrow("›") { index = (index + 1) % open.size }
+                }
+                if (forecastAccess == PremiumAccess.NOT_ENTITLED) {
+                    Spacer(Modifier.width(8.dp))
+                    Row(
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(MigraineCardRed.copy(alpha = 0.16f))
+                            .border(1.dp, MigraineCardRed.copy(alpha = 0.34f), RoundedCornerShape(999.dp))
+                            .clickable { onUpgrade() }
+                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = MigraineCardRed,
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            t("Premium"),
+                            color = MigraineCardRed,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text("›", color = MigraineCardRed, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
                 forecast?.let { f ->
                     forecastPillLabel(f)?.let { pill ->

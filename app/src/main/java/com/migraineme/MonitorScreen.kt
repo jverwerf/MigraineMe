@@ -382,13 +382,15 @@ fun MonitorScreen(
                         isLoading = riskHistoryLoading,
                         favOfFavs = effectiveFavs.map { it.key to it.label },
                         resolveFavValue = ::resolveFavValue,
-                        onClick = { navController.navigate(Routes.MONITOR_RISK) }
+                        onClick = { navController.navigate(Routes.MONITOR_RISK) },
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     )
                 } else if (cardConfig.isVisible(cardId)) {
                     when (cardId) {
                         MonitorCardConfig.CARD_MIGRAINES -> {
                             MigrainesMonitorCard(
-                                onClick = { navController.navigate(Routes.INSIGHTS_DETAIL) }
+                                onClick = { navController.navigate(Routes.INSIGHTS_DETAIL) },
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
                             )
                         }
                         MonitorCardConfig.CARD_NUTRITION -> {
@@ -397,7 +399,8 @@ fun MonitorScreen(
                                 nutritionLoading = nutritionLoading,
                                 nutritionItems = nutritionItems,
                                 displayMetrics = nutDisplayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
-                                onClick = { navController.navigate(Routes.MONITOR_NUTRITION) }
+                                onClick = { navController.navigate(Routes.MONITOR_NUTRITION) },
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
                             )
                         }
                         MonitorCardConfig.CARD_ENVIRONMENT -> {
@@ -473,7 +476,8 @@ private fun NutritionCard(
     nutritionLoading: Boolean,
     nutritionItems: List<NutritionLogItem>,
     displayMetrics: List<String>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onUpgrade: () -> Unit = {}
 ) {
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_diet,
@@ -506,7 +510,8 @@ private fun NutritionCard(
                     } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
 
-                    MetricTile(formatted, label, color, Modifier.weight(1f))
+                    // Food risk verdicts are premium (Food Risk Analysis).
+                    FoodRiskGatedMetricTile(metric, formatted, label, color, onUpgrade, Modifier.weight(1f))
                 }
             }
 
@@ -1704,7 +1709,8 @@ private fun RiskCard(
     isLoading: Boolean,
     favOfFavs: List<Pair<String, String>>, // key to label
     resolveFavValue: (String) -> String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onUpgrade: () -> Unit = {}
 ) {
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_risk,
@@ -1754,7 +1760,7 @@ private fun RiskCard(
                 val favColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     favOfFavs.take(3).forEachIndexed { i, (key, label) ->
-                        MetricTile(resolveFavValue(key), label, favColors.getOrElse(i) { favColors.last() }, Modifier.weight(1f))
+                        FoodRiskGatedMetricTile(key, resolveFavValue(key), label, favColors.getOrElse(i) { favColors.last() }, onUpgrade, Modifier.weight(1f))
                     }
                 }
             }

@@ -141,10 +141,11 @@ private fun agoText(iso: String?): String {
 fun PractitionerScreen(
     onBack: () -> Unit,
     authVm: AuthViewModel = viewModel(),
+    onUpgrade: () -> Unit = {},
 ) {
     // Standalone, nothing above it scrolls, so it provides its own.
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        PractitionerPanel(authVm, scrolls = false)
+        PractitionerPanel(authVm, scrolls = false, onUpgrade = onUpgrade)
     }
 }
 

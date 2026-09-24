@@ -36,7 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 @Composable
-fun MigrainesMonitorCard(onClick: () -> Unit) {
+fun MigrainesMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit = {}) {
     val ctx = LocalContext.current
     val owner = ctx as? ViewModelStoreOwner
     val vm: InsightsViewModel = if (owner != null) viewModel(owner) else viewModel()
@@ -66,11 +66,19 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             openAttacks = withContext(Dispatchers.IO) {
                 runCatching { db.getOpenMigraines(token) }.getOrDefault(emptyList())
             }
-            if (openAttacks.isNotEmpty()) {
-                forecast = withContext(Dispatchers.IO) {
-                    runCatching { EdgeFunctionsService().getSimilarAttacks(ctx) }.getOrNull()
-                }
-            }
+        }
+    }
+
+    // The forecast is premium: never call similar-attacks for a free user
+    // (or while entitlement is still loading). Re-keys when access resolves.
+    val forecastAccess = PremiumManager.state.collectAsState().value.access
+    LaunchedEffect(openAttacks.isNotEmpty(), forecastAccess) {
+        if (openAttacks.isEmpty() || forecastAccess != PremiumAccess.ENTITLED) {
+            if (forecastAccess != PremiumAccess.ENTITLED) forecast = null
+            return@LaunchedEffect
+        }
+        forecast = withContext(Dispatchers.IO) {
+            runCatching { EdgeFunctionsService().getSimilarAttacks(ctx) }.getOrNull()
         }
     }
 
@@ -83,7 +91,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     }
 
     val fc = forecast
-    if (showForecast && fc != null) {
+    if (showForecast && fc != null && forecastAccess == PremiumAccess.ENTITLED) {
         AttackForecastSheet(forecast = fc, nowMs = nowMs, onDismiss = { showForecast = false })
     }
 
@@ -128,7 +136,12 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                             .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
                             .background(AttackRed.copy(alpha = 0.14f))
                             .border(1.dp, AttackRed.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                            .clickable { if (forecast != null) showForecast = true }
+                            .clickable {
+                                when {
+                                    forecastAccess == PremiumAccess.NOT_ENTITLED -> onUpgrade()
+                                    forecast != null -> showForecast = true
+                                }
+                            }
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Row(
@@ -156,7 +169,30 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                                 )
                             }
                         }
-                        if (inline != null) {
+                        if (forecastAccess == PremiumAccess.NOT_ENTITLED) {
+                            // Free tier: a locked line in place of the forecast read;
+                            // the whole red row taps through to the paywall.
+                            Spacer(Modifier.height(5.dp))
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(AttackRed.copy(alpha = 0.22f)))
+                            Spacer(Modifier.height(5.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.Lock,
+                                    contentDescription = t("Premium"),
+                                    tint = AttackRed,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    t("How similar migraines went"),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text("\u203a", color = AttackRed, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        } else if (inline != null) {
                             Spacer(Modifier.height(5.dp))
                             Box(Modifier.fillMaxWidth().height(1.dp).background(AttackRed.copy(alpha = 0.22f)))
                             Spacer(Modifier.height(5.dp))
