@@ -369,11 +369,13 @@ fun OnboardingPaywallScreen(
                                 scope.launch {
                                     val result = withContext(Dispatchers.IO) { redeemOnboardingPromo(context, promoCode.trim()) }
                                     promoLoading = false
-                                    if (result.first) {
-                                        promoSuccess = result.second
+                                    if (result.success) {
+                                        promoSuccess = result.message
                                         PremiumManager.loadState(context)
+                                    } else if (result.isPlayCode) {
+                                        openPlayRedeem(context, promoCode.trim())
                                     } else {
-                                        error = result.second
+                                        error = result.message
                                     }
                                 }
                             },
@@ -493,8 +495,8 @@ fun OnboardingPaywallScreen(
     }
 }
 
-private suspend fun redeemOnboardingPromo(context: android.content.Context, code: String): Pair<Boolean, String> {
-    val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return Pair(false, "Not signed in")
+private suspend fun redeemOnboardingPromo(context: android.content.Context, code: String): PromoResult {
+    val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return PromoResult(false, "Not signed in")
     val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
     val jsonBody = """{"code":"$code"}"""
     val request = Request.Builder()
@@ -510,12 +512,12 @@ private suspend fun redeemOnboardingPromo(context: android.content.Context, code
             val json = org.json.JSONObject(body)
             if (response.isSuccessful && json.optBoolean("ok")) {
                 val days = json.optInt("days_granted", 0)
-                Pair(true, "🎉 $days days of Premium unlocked!")
+                PromoResult(true, "🎉 $days days of Premium unlocked!")
             } else {
-                Pair(false, json.optString("message", "Invalid promo code"))
+                PromoResult(false, json.optString("message", "Invalid promo code"), json.optString("error") == "play_code")
             }
         }
     } catch (e: Exception) {
-        Pair(false, "Connection error. Please try again.")
+        PromoResult(false, "Connection error. Please try again.")
     }
 }

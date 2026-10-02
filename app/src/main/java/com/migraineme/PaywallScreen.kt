@@ -470,6 +470,8 @@ fun PaywallScreen(
                                 if (result.success) {
                                     promoSuccess = result.message
                                     PremiumManager.loadState(context)
+                                } else if (result.isPlayCode) {
+                                    openPlayRedeem(context, promoCode.trim())
                                 } else {
                                     error = result.message
                                 }
@@ -584,7 +586,22 @@ private data class FeatureItem(
     val subtitle: String
 )
 
-private data class PromoResult(val success: Boolean, val message: String)
+internal data class PromoResult(val success: Boolean, val message: String, val isPlayCode: Boolean = false)
+
+/**
+ * Winback emails carry a one-time Google Play code. Pasted into our own promo
+ * box it can't work (redeem-promo answers error "play_code"), so hand it to the
+ * Play Store's redeem screen instead, which starts the store subscription.
+ */
+internal fun openPlayRedeem(context: android.content.Context, code: String) {
+    val uri = android.net.Uri.parse("https://play.google.com/redeem?code=" + android.net.Uri.encode(code))
+    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+        .setPackage("com.android.vending")
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    try { context.startActivity(intent) } catch (e: android.content.ActivityNotFoundException) {
+        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
 
 private suspend fun redeemPromoCode(context: android.content.Context, code: String): PromoResult {
     val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return PromoResult(false, "Not signed in")
@@ -605,7 +622,7 @@ private suspend fun redeemPromoCode(context: android.content.Context, code: Stri
                 val days = json.optInt("days_granted", 0)
                 PromoResult(true, "🎉 $days days of Premium unlocked!")
             } else {
-                PromoResult(false, json.optString("message", "Invalid promo code"))
+                PromoResult(false, json.optString("message", "Invalid promo code"), json.optString("error") == "play_code")
             }
         }
     } catch (e: Exception) {
