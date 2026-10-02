@@ -1,7 +1,7 @@
 // Daily winback: emails users whose trial ended ~3 days ago and didn't subscribe.
 // Cohort from public.winback_due(); each send logged to public.winback_emails_sent.
-// Branded template with one claim button (winback-claim adds the month server-side,
-// any platform). Sends via Resend from help@.
+// New branded template + per-user Android Play code (claim_winback_android_code, Android-only) + iOS
+// Apple offer-code redeem link. Sends via Resend from help@.
 //
 // Rendered in the recipient's display language (profiles.lang via winback_due,
 // English fallback). An email is like a push: the finished text is all the
@@ -11,13 +11,12 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { t, toLang, type Lang } from "../_shared/i18n.ts";
-import { winbackSig } from "../_shared/winback_sig.ts";
 
 const TOKEN = "wb-2026-migraineme-x7q9";
 const FROM = "Jordy at MigraineMe <help@migraineme.app>";
 const REPLY_TO = "help@migraineme.app";
 const SUBJECT = "A free month on us, and a quick question";
-const CLAIM_URL = "https://qykflarpibofvffmzghi.supabase.co/functions/v1/winback-claim";
+const IOS_LINK = "https://apps.apple.com/redeem?ctx=offercodes&id=6760654324&code=WELCOMEBACK";
 const HEADER = "https://qykflarpibofvffmzghi.supabase.co/storage/v1/object/public/public-assets/winback/header4.png";
 const BANNER = "#2E1065", DPURPLE = "#5B21B6", PINK = "#E879A0";
 const FONT = "-apple-system,Segoe UI,Roboto,Helvetica,sans-serif";
@@ -25,33 +24,34 @@ const FONT = "-apple-system,Segoe UI,Roboto,Helvetica,sans-serif";
 function greeting(lang: Lang, name: string | null): string {
   return name && name.trim() ? t(lang, "Hi %1$s,", name.trim()) : t(lang, "Hi there,");
 }
-async function claimLink(serviceKey: string, userId: string, lang: Lang): Promise<string> {
-  return `${CLAIM_URL}?u=${userId}&s=${await winbackSig(serviceKey, userId)}&lang=${lang}`;
+async function claimAndroidCode(admin: any, email: string): Promise<string | null> {
+  const { data, error } = await admin.rpc("claim_winback_android_code", { p_email: email.toLowerCase() });
+  if (error) { console.error("claim code error:", error.message); return null; }
+  return (data as string) ?? null;
 }
-// One button for everyone: it adds the month server-side (winback-claim), so
-// it works the same on iPhone and Android and there is no code to type.
-const BTN_LABEL: Record<string, string> = {
-  en: "Turn on my free month", de: "Gratismonat aktivieren", es: "Activar mi mes gratis",
-  fr: "Activer mon mois gratuit", it: "Attiva il mio mese gratis", nl: "Zet mijn gratis maand aan",
-  pt: "Ativar o meu mês grátis",
-};
-const btnLabel = (lang: Lang) => BTN_LABEL[lang] ?? BTN_LABEL.en;
-function ctaHtml(lang: Lang, link: string): string {
+const BTN = (href: string, label: string) =>
+  `<a href="${href}" style="display:inline-block;width:140px;background:${DPURPLE};color:#ffffff;text-decoration:none;padding:13px 0;text-align:center;border-radius:10px;font-weight:700;font-family:${FONT};font-size:15px;">${label}</a>`;
+function ctaHtml(lang: Lang, code: string | null): string {
   const head = `<p style="margin:20px 0 12px;text-align:center;"><strong>${t(lang, "Claim your free month:")}</strong></p>`;
-  return `${head}<p style="margin:0;text-align:center;"><a href="${link}" style="display:inline-block;background:${DPURPLE};color:#ffffff;text-decoration:none;padding:14px 28px;text-align:center;border-radius:10px;font-weight:700;font-family:${FONT};font-size:16px;">${btnLabel(lang)}</a></p>`;
+  // "iPhone" and "Android" are product names, the same in every language.
+  if (code) return `${head}<p style="margin:0;text-align:center;">${BTN(IOS_LINK, "iPhone")}&nbsp;&nbsp;${BTN(`https://play.google.com/redeem?code=${code}`, "Android")}</p>`;
+  return `${head}<p style="margin:0 0 10px;text-align:center;">${BTN(IOS_LINK, "iPhone")}</p><p style="margin:0;text-align:center;">${t(lang, "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.", `<strong style="color:${DPURPLE};">WELCOMEBACK</strong>`)}</p>`;
 }
-function ctaText(lang: Lang, link: string): string {
-  return `${t(lang, "Claim your free month:")}\n${link}`;
+function ctaText(lang: Lang, code: string | null): string {
+  const a = code
+    ? `Android: https://play.google.com/redeem?code=${code}`
+    : t(lang, "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.", "WELCOMEBACK");
+  return `${t(lang, "Claim your free month:")}\niPhone: ${IOS_LINK}\n${a}`;
 }
-function textBody(lang: Lang, name: string | null, link: string): string {
+function textBody(lang: Lang, name: string | null, code: string | null): string {
   const p1 = t(lang, "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.");
   const p2 = `${t(lang, "If you've got a second, I'd really like to know what made you stop.")} ${t(lang, "Was it the price, something missing, or just not the right time?")} ${t(lang, "Even a one-line reply genuinely helps shape what we build next.")}`;
   const p3 = `${t(lang, "And if it was timing or cost, I'd love to give you")} ${t(lang, "another month, free, cancel anytime.")} ${t(lang, "MigraineMe's insights get better the more you log.")} ${t(lang, "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.")} ${t(lang, "Everything's still there, right where you left it.")}`;
   const p4 = `${t(lang, "We're building MigraineMe into a place where")} ${t(lang, "data and evidence come first")} ${t(lang, "for people living with migraine. It's still early, and I'd love to have you along.")}`;
   const p5 = t(lang, "Either way, thanks for giving MigraineMe a go.");
-  return `${greeting(lang, name)}\n\n${p1}\n\n${p2}\n\n${p3}\n\n${ctaText(lang, link)}\n\n${p4}\n\n${p5}\n\nJordy\nMigraineMe`;
+  return `${greeting(lang, name)}\n\n${p1}\n\n${p2}\n\n${p3}\n\n${ctaText(lang, code)}\n\n${p4}\n\n${p5}\n\nJordy\nMigraineMe`;
 }
-function htmlBody(lang: Lang, name: string | null, link: string): string {
+function htmlBody(lang: Lang, name: string | null, code: string | null): string {
   const bv = (s: string) => `<strong style="color:${DPURPLE};">${s}</strong>`;
   const bk = (s: string) => `<strong style="color:${PINK};">${s}</strong>`;
   return `<div style="margin:0;padding:24px 12px;background:#f4f2fb;font-family:${FONT};">
@@ -65,7 +65,7 @@ function htmlBody(lang: Lang, name: string | null, link: string): string {
       <p>${t(lang, "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.")}</p>
       <p>${t(lang, "If you've got a second, I'd really like to know what made you stop.")} ${bv(t(lang, "Was it the price, something missing, or just not the right time?"))} ${t(lang, "Even a one-line reply genuinely helps shape what we build next.")}</p>
       <p>${t(lang, "And if it was timing or cost, I'd love to give you")} ${bk(t(lang, "another month, free, cancel anytime."))} ${bv(t(lang, "MigraineMe's insights get better the more you log."))} ${t(lang, "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.")} ${bk(t(lang, "Everything's still there, right where you left it."))}</p>
-      ${ctaHtml(lang, link)}
+      ${ctaHtml(lang, code)}
       <p style="margin-top:20px;">${t(lang, "We're building MigraineMe into a place where")} ${bv(t(lang, "data and evidence come first"))} ${t(lang, "for people living with migraine. It's still early, and I'd love to have you along.")}</p>
       <p>${t(lang, "Either way, thanks for giving MigraineMe a go.")}</p>
       <p style="margin-bottom:0;">Jordy<br><span style="color:${DPURPLE};font-weight:700;">MigraineMe</span></p>
@@ -77,27 +77,19 @@ function htmlBody(lang: Lang, name: string | null, link: string): string {
 </div>`;
 }
 
-async function sendOne(resendKey: string, serviceKey: string, to: string, userId: string, name: string | null, lang: Lang) {
-  const link = await claimLink(serviceKey, userId, lang);
+async function sendOne(resendKey: string, admin: any, to: string, name: string | null, lang: Lang, platform: string) {
+  // Play promo codes are a finite purchased pool and an iPhone user can never
+  // redeem one, so only claim for people who have actually opened the app on
+  // Android. 'unknown' (no recorded activity) still gets one: a wasted code is
+  // cheaper than an Android user getting an email with no way to claim.
+  const code = platform === "ios" ? null : await claimAndroidCode(admin, to);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
-    body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: t(lang, SUBJECT), text: textBody(lang, name, link), html: htmlBody(lang, name, link) }),
+    body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: t(lang, SUBJECT), text: textBody(lang, name, code), html: htmlBody(lang, name, code) }),
   });
   const data = await res.json();
   return { ok: res.ok, id: data?.id ?? null, error: res.ok ? null : data };
-}
-// winback_due returns emails; the claim link is signed on the user id.
-async function userIdsByEmail(admin: any, emails: string[]): Promise<Map<string, string>> {
-  const want = new Set(emails.map((e) => e.toLowerCase()));
-  const out = new Map<string, string>();
-  for (let page = 1; out.size < want.size; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw error;
-    for (const u of data.users) if (u.email && want.has(u.email.toLowerCase())) out.set(u.email.toLowerCase(), u.id);
-    if (data.users.length < 1000) break;
-  }
-  return out;
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -110,21 +102,13 @@ serve(async (req) => {
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) return new Response(JSON.stringify({ error: "Missing RESEND_API_KEY" }), { status: 500, headers: { "Content-Type": "application/json" } });
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-    // Test hook: { testTo, testUserId, lang? } mails one copy whose button claims for testUserId. Not logged.
-    if (body?.testTo && body?.testUserId) {
-      const r = await sendOne(resendKey, serviceKey, body.testTo, body.testUserId, body.name ?? null, toLang(body.lang));
-      return new Response(JSON.stringify({ test: true, ...r }), { status: r.ok ? 200 : 500, headers: { "Content-Type": "application/json" } });
-    }
     const { data: due, error: dueErr } = await admin.rpc("winback_due");
     if (dueErr) return new Response(JSON.stringify({ error: dueErr.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     const rows = (due ?? []) as { email: string; first_name: string | null; lang?: string | null; platform?: string | null }[];
     if (body?.dryRun === true) return new Response(JSON.stringify({ dryRun: true, due: rows.length, recipients: rows }), { status: 200, headers: { "Content-Type": "application/json" } });
-    const ids = await userIdsByEmail(admin, rows.map((r) => r.email));
     const results: any[] = [];
     for (const row of rows) {
-      const userId = ids.get(row.email.toLowerCase());
-      if (!userId) { results.push({ to: row.email, ok: false, error: "no user id" }); continue; }
-      const r = await sendOne(resendKey, serviceKey, row.email, userId, row.first_name, toLang(row.lang));
+      const r = await sendOne(resendKey, admin, row.email, row.first_name, toLang(row.lang), row.platform ?? "unknown");
       if (r.ok) await admin.from("winback_emails_sent").insert({ email: row.email.toLowerCase(), source: "daily-cron" });
       results.push({ to: row.email, ok: r.ok, id: r.id, error: r.error });
       await sleep(600);

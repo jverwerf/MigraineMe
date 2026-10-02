@@ -15,6 +15,16 @@ import { getLang, t, type Lang } from "../_shared/i18n.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const PLAY_CODE_MSG: Record<string, string> = {
+  en: "This is a Google Play code. Tap the Android button in our email to redeem it in the Play Store.",
+  de: "Das ist ein Google-Play-Code. Tippe in unserer E-Mail auf den Android-Button, um ihn im Play Store einzulösen.",
+  es: "Es un código de Google Play. Toca el botón Android de nuestro correo para canjearlo en Play Store.",
+  fr: "C'est un code Google Play. Touche le bouton Android de notre e-mail pour l'utiliser dans le Play Store.",
+  it: "Questo è un codice Google Play. Tocca il pulsante Android nella nostra email per riscattarlo nel Play Store.",
+  nl: "Dit is een Google Play-code. Tik op de Android-knop in onze e-mail om hem in de Play Store te verzilveren.",
+  pt: "Este é um código Google Play. Toca no botão Android do nosso email para o resgatar na Play Store.",
+};
+
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -60,18 +70,14 @@ serve(async (req: Request) => {
     if (!rawCode) return json({ error: "missing_code", message: t(lang, "Please enter a promo code.") }, 400);
 
     // ── Look up code ──
-    let { data: promo, error: lookupErr } = await supabase
+    const { data: promo, error: lookupErr } = await supabase
       .from("promo_codes").select("*").eq("code", rawCode).maybeSingle();
-
-    // Winback emails sent before 2026-10-02 carry a one-time Google Play code.
-    // People paste it into this box, so honour it here as the WELCOMEBACK month.
     if (!promo && !lookupErr) {
+      // Winback emails carry a one-time Google Play code; people paste it here.
+      // It only works through Play, so say so instead of "doesn't exist".
       const { data: playCode } = await supabase
         .from("winback_android_codes").select("id").eq("code", rawCode).maybeSingle();
-      if (playCode) {
-        ({ data: promo, error: lookupErr } = await supabase
-          .from("promo_codes").select("*").eq("code", "WELCOMEBACK").maybeSingle());
-      }
+      if (playCode) return json({ error: "play_code", message: PLAY_CODE_MSG[lang] ?? PLAY_CODE_MSG.en }, 404);
     }
     if (lookupErr || !promo) return json({ error: "invalid_code", message: t(lang, "This promo code doesn't exist.") }, 404);
 
