@@ -322,7 +322,7 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
 }
 
 /** Bar fill/direction/colour + caption for one habit row. */
-private data class HabitRowSpec(
+internal data class HabitRowSpec(
     val fill: Float?,       // null = no bar (steady / one-sided)
     val positive: Boolean,  // bar right of centre (metric went up)
     val color: Color,
@@ -331,7 +331,7 @@ private data class HabitRowSpec(
 
 /** Mean value for one side of the table: clock time for bedtime, 0-3 level
  *  for risk exposures, otherwise number + unit; "—" when that window is empty. */
-private fun habitValue(h: InsightsViewModel.HabitTrend, v: Double?): String {
+internal fun habitValue(h: InsightsViewModel.HabitTrend, v: Double?): String {
     if (v == null) return "—"
     if (h.isTime) {
         val hod = ((v % 24.0) + 24.0) % 24.0
@@ -354,7 +354,7 @@ private fun habitValue(h: InsightsViewModel.HabitTrend, v: Double?): String {
  * favourable, red when it isn't, with the fill proportional to |percent
  * change| capped at 100%. One-sided rows show values only, no bar.
  */
-private fun habitRowSpec(h: InsightsViewModel.HabitTrend): HabitRowSpec {
+internal fun habitRowSpec(h: InsightsViewModel.HabitTrend): HabitRowSpec {
     val prior = h.prior
     val current = h.current
     if (prior == null || current == null) {

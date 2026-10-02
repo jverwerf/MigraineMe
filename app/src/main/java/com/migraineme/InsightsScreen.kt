@@ -1148,21 +1148,23 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
 
                 InsightsCardConfig.CARD_CHANGES -> {
                 // ── 6c. WHAT CHANGED (last 30 days vs the 30 before) ──
-                // Mirrors the PDF report's What changed page; hidden entirely
-                // when no item's count moved between the two windows.
+                // Mirrors the PDF report's What changed page. Always shown (10-02):
+                // the habits half needs no attacks, and with nothing to compare
+                // yet the card says so instead of disappearing.
                 val itemTrends by vm.itemTrends.collectAsState()
+                val habitTrends by vm.habitTrends.collectAsState()
                 val changedTrends = remember(itemTrends) {
                     itemTrends.filter { it.current != it.prior }
                 }
                 var showWhatChangedInfo by remember { mutableStateOf(false) }
-                if (changedTrends.isNotEmpty()) {
+                run {
                     PremiumGate(
                         message = t("Unlock What Changed"),
                         subtitle = t("See which logged items moved over the last month"),
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            WhatChangedCard(changedTrends) {
+                            WhatChangedCard(changedTrends, habitTrends) {
                                 navController.navigate(Routes.INSIGHTS_WHAT_CHANGED)
                             }
                             IconButton(
@@ -3486,7 +3488,11 @@ internal fun medicationRising(changed: List<InsightsViewModel.ItemTrend>): Boole
     }
 
 @Composable
-internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick: () -> Unit) {
+internal fun WhatChangedCard(
+    changed: List<InsightsViewModel.ItemTrend>,
+    habits: List<InsightsViewModel.HabitTrend> = emptyList(),
+    onClick: () -> Unit
+) {
     val top = remember(changed) {
         changed.sortedByDescending { kotlin.math.abs(it.delta) }.take(2)
     }
@@ -3532,6 +3538,35 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
                 Spacer(Modifier.width(6.dp))
                 Text(if (tr.delta > 0) "↑" else "↓", color = color,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
+            }
+        }
+        // No logged item moved: preview the first two daily habits instead
+        // (same caption as the detail page, "steady" when under 3%).
+        val habitPreview = habits.filter { it.prior != null && it.current != null }.take(2)
+        if (top.isEmpty() && habitPreview.isEmpty()) {
+            Text(t("Not enough data yet"), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall)
+        }
+        if (top.isEmpty()) {
+            habitPreview.forEachIndexed { i, h ->
+                val spec = habitRowSpec(h)
+                if (i > 0) Spacer(Modifier.height(6.dp))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BrainyRowIcon(h.label, size = 18.dp)
+                    Text(t(h.label), color = Color.White,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(8.dp))
+                    Text(t(spec.caption), color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
         if (changed.size > top.size) {
