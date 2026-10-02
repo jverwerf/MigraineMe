@@ -60,8 +60,19 @@ serve(async (req: Request) => {
     if (!rawCode) return json({ error: "missing_code", message: t(lang, "Please enter a promo code.") }, 400);
 
     // ── Look up code ──
-    const { data: promo, error: lookupErr } = await supabase
+    let { data: promo, error: lookupErr } = await supabase
       .from("promo_codes").select("*").eq("code", rawCode).maybeSingle();
+
+    // Winback emails sent before 2026-10-02 carry a one-time Google Play code.
+    // People paste it into this box, so honour it here as the WELCOMEBACK month.
+    if (!promo && !lookupErr) {
+      const { data: playCode } = await supabase
+        .from("winback_android_codes").select("id").eq("code", rawCode).maybeSingle();
+      if (playCode) {
+        ({ data: promo, error: lookupErr } = await supabase
+          .from("promo_codes").select("*").eq("code", "WELCOMEBACK").maybeSingle());
+      }
+    }
     if (lookupErr || !promo) return json({ error: "invalid_code", message: t(lang, "This promo code doesn't exist.") }, 404);
 
     // ── Validate code ──
