@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -12,10 +13,15 @@ import io.ktor.client.request.post
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -253,6 +259,106 @@ object SupabasePractitionerService {
         val created_at: String? = null,
     )
 
+    // ---- goals (set by a practitioner on the web dashboard, or by the client
+    // in the app; practitioner_id NULL = the client's own, which only the
+    // client may edit or delete) ----
+
+    /** One goal. `title` is an English key for the presets ("Heart rate
+     *  training", "Chin tucks", "Meditation", a film title); free text falls
+     *  back to itself through t(). */
+    @Serializable
+    data class GoalRow(
+        val id: String,
+        val practitioner_id: String? = null,
+        val user_id: String,
+        val kind: String,
+        val title: String = "",
+        val exercise_id: String? = null,
+        val threshold_bpm: Int? = null,
+        val target_minutes: Double? = null,
+        val target_count: Int? = null,
+        val times_per_week: Int? = null,
+        val reminder_times: List<String> = emptyList(),
+        val reminders_enabled: Boolean = true,
+        val status: String = "active",
+        val note: String? = null,
+        val created_at: String? = null,
+        val updated_at: String? = null,
+        /** Filled by a DB trigger from practitioners.display_name; clients
+         *  cannot read most practitioner rows, so the name is copied here. */
+        val practitioner_name: String? = null,
+    ) {
+        /** Set by the client in the app: editable and deletable here. */
+        val isOwn: Boolean get() = practitioner_id == null
+        val practitionerName: String? get() = practitioner_name?.takeIf { it.isNotBlank() }
+        val isActive: Boolean get() = status == "active"
+        val isPaused: Boolean get() = status == "paused"
+        val isHr: Boolean get() = kind == KIND_HR
+        val isExercise: Boolean get() = kind == KIND_EXERCISE
+        val isMindfulness: Boolean get() = kind == KIND_MINDFULNESS
+        val isDaily: Boolean get() = kind == KIND_DAILY
+        /** Logged as a count, one tap = one: exercise films and free daily counters. */
+        val isCounter: Boolean get() = isExercise || isDaily
+        /** null times_per_week means every day. */
+        val daysPerWeek: Int get() = times_per_week ?: 7
+        val everyDay: Boolean get() = times_per_week == null || times_per_week >= 7
+        /** "08:00:00" -> "08:00". */
+        val reminderLabels: List<String> get() = reminder_times.map { it.take(5) }
+    }
+
+    const val KIND_HR = "hr_threshold"
+    const val KIND_EXERCISE = "exercise_count"
+    const val KIND_MINDFULNESS = "mindfulness_minutes"
+    /** A free counter the client names: "Drink water, 8 times a day". */
+    const val KIND_DAILY = "daily_count"
+
+    /** What the goal editor saves. Fields that do not belong to [kind] are
+     *  written as null, so switching kind on an edit leaves nothing stale. */
+    data class GoalDraft(
+        val kind: String,
+        val title: String,
+        val exerciseId: String? = null,
+        val thresholdBpm: Int? = null,
+        val targetMinutes: Double? = null,
+        val targetCount: Int? = null,
+        /** null = every day. */
+        val timesPerWeek: Int? = null,
+        /** "HH:mm:ss" */
+        val reminderTimes: List<String> = emptyList(),
+    )
+
+    @Serializable
+    data class GoalLogRow(
+        val id: String? = null,
+        val goal_id: String,
+        val user_id: String,
+        val date: String,
+        val count: Int = 0,
+        val minutes: Double = 0.0,
+        val source: String = "manual",
+    )
+
+    /** One day from goal_daily_progress: value = count for exercise goals,
+     *  minutes for the others (hr: longest stretch at or above threshold). */
+    @Serializable
+    data class GoalProgressRow(
+        val day: String,
+        val value: Double = 0.0,
+        val achieved: Boolean = false,
+        val is_estimate: Boolean = false,
+    )
+
+    @Serializable
+    data class HrThresholdDailyRow(
+        val user_id: String,
+        val date: String,
+        val threshold_bpm: Int,
+        val minutes_above: Double,
+        val longest_run_minutes: Double,
+        val is_estimate: Boolean = false,
+        val source: String = "health_connect",
+    )
+
     private const val PRAC_SELECT =
         "id,slug,display_name,practice_name,discipline,photo_url,banner_url,logo_url,facts," +
             "website,languages,country,city,consult_mode,listing_mode,booking_url,booking_urls," +
@@ -287,7 +393,12 @@ object SupabasePractitionerService {
 
     /** Every practitioner this patient is connected to or has been asked by. */
     suspend fun myLinks(accessToken: String): List<LinkRow> {
-        val url = "$baseUrl/rest/v1/practitioner_clients?" +
+        // Filter to the caller's own links. A practitioner who also uses the app
+        // can read every link where SHE is the practitioner (RLS "practitioner
+        // reads own links"), and without this filter each of her clients showed
+        // up as a card she could not stop sharing (Jordy, 10-01).
+        val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
+        val url = "$baseUrl/rest/v1/practitioner_clients?user_id=eq.$uid&" +
             "select=id,practitioner_id,user_id,status,initiated_by,requested_scopes,scopes," +
             "connected_at,revoked_at,last_viewed_at,created_at,practitioners($PRAC_SELECT)" +
             "&order=created_at.desc"
@@ -320,6 +431,152 @@ object SupabasePractitionerService {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")
         }.body()
+    }
+
+    /** Every goal that is still on the client's plate: active and paused, never ended. */
+    suspend fun myGoals(accessToken: String): List<GoalRow> {
+        // Own goals only: a practitioner using the app also reads the goals she set.
+        val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
+        val url = "$baseUrl/rest/v1/practitioner_goals?user_id=eq.$uid&status=neq.ended" +
+            "&select=id,practitioner_id,user_id,kind,title,exercise_id,threshold_bpm,target_minutes," +
+            "target_count,times_per_week,reminder_times,reminders_enabled,status,note,created_at,updated_at," +
+            "practitioner_name" +
+            "&order=created_at.asc"
+        return client.get(url) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.body()
+    }
+
+    /** Per-day progress for one goal, both dates inclusive (ISO yyyy-MM-dd). */
+    suspend fun goalProgress(accessToken: String, goalId: String, from: String, to: String): List<GoalProgressRow> {
+        val body = buildJsonObject {
+            put("p_goal_id", goalId); put("p_from", from); put("p_to", to)
+        }
+        return client.post("$baseUrl/rest/v1/rpc/goal_daily_progress") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.body()
+    }
+
+    /**
+     * Add to today's manual log for a goal. One row per (goal, day, source):
+     * the current row is read first and the new totals upserted, so two taps
+     * make two chin tucks rather than overwriting each other.
+     */
+    suspend fun logGoal(
+        accessToken: String,
+        goal: GoalRow,
+        date: String,
+        countDelta: Int = 0,
+        minutesDelta: Double = 0.0,
+    ): GoalLogRow {
+        val existing: List<GoalLogRow> = client.get(
+            "$baseUrl/rest/v1/practitioner_goal_logs?goal_id=eq.${goal.id}&date=eq.$date&source=eq.manual" +
+                "&select=id,goal_id,user_id,date,count,minutes,source&limit=1"
+        ) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.body()
+        val cur = existing.firstOrNull()
+        val row = GoalLogRow(
+            goal_id = goal.id,
+            user_id = goal.user_id,
+            date = date,
+            count = ((cur?.count ?: 0) + countDelta).coerceAtLeast(0),
+            minutes = ((cur?.minutes ?: 0.0) + minutesDelta).coerceAtLeast(0.0),
+            source = "manual",
+        )
+        client.post("$baseUrl/rest/v1/practitioner_goal_logs?on_conflict=goal_id,date,source") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            header("Prefer", "resolution=merge-duplicates,return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(row)
+        }
+        return row
+    }
+
+    /** Mute or unmute a goal's reminder pushes. The server owns the schedule. */
+    suspend fun setGoalReminders(accessToken: String, goalId: String, enabled: Boolean) {
+        client.post("$baseUrl/rest/v1/rpc/set_goal_reminders") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("goal_id", goalId); put("enabled", enabled) })
+        }
+    }
+
+    private fun JsonObjectBuilder.putDraft(d: GoalDraft) {
+        put("kind", d.kind)
+        put("title", d.title)
+        if (d.exerciseId != null) put("exercise_id", d.exerciseId) else put("exercise_id", JsonNull)
+        if (d.thresholdBpm != null) put("threshold_bpm", d.thresholdBpm) else put("threshold_bpm", JsonNull)
+        if (d.targetMinutes != null) put("target_minutes", d.targetMinutes) else put("target_minutes", JsonNull)
+        if (d.targetCount != null) put("target_count", d.targetCount) else put("target_count", JsonNull)
+        if (d.timesPerWeek != null) put("times_per_week", d.timesPerWeek) else put("times_per_week", JsonNull)
+        putJsonArray("reminder_times") { d.reminderTimes.forEach { add(it) } }
+    }
+
+    private suspend fun HttpResponse.requireOk(what: String): HttpResponse {
+        if (!status.isSuccess()) error("$what failed: ${status.value} ${runCatching { bodyAsText() }.getOrDefault("")}")
+        return this
+    }
+
+    /** Add one of the client's own goals (practitioner_id NULL). */
+    suspend fun insertGoal(accessToken: String, draft: GoalDraft): GoalRow? {
+        val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: error("no user id in token")
+        val body = buildJsonObject {
+            put("user_id", uid)
+            put("practitioner_id", JsonNull)
+            putDraft(draft)
+            put("status", "active")
+            put("reminders_enabled", true)
+        }
+        val rows: List<GoalRow> = client.post("$baseUrl/rest/v1/practitioner_goals") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            header("Prefer", "return=representation")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.requireOk("insertGoal").body()
+        return rows.firstOrNull()
+    }
+
+    /** Change one of the client's own goals. RLS refuses practitioner-set rows. */
+    suspend fun updateGoal(accessToken: String, goalId: String, draft: GoalDraft) {
+        val body = buildJsonObject {
+            putDraft(draft)
+            put("updated_at", nowIso())
+        }
+        client.patch("$baseUrl/rest/v1/practitioner_goals?id=eq.$goalId") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.requireOk("updateGoal")
+    }
+
+    /** End one of the client's own goals: deleted, not kept as ended. */
+    suspend fun deleteGoal(accessToken: String, goalId: String) {
+        client.delete("$baseUrl/rest/v1/practitioner_goals?id=eq.$goalId") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.requireOk("deleteGoal")
+    }
+
+    /** Phone-side heart rate stretches, one row per (day, threshold). */
+    suspend fun upsertHrThresholdDaily(accessToken: String, rows: List<HrThresholdDailyRow>) {
+        if (rows.isEmpty()) return
+        client.post("$baseUrl/rest/v1/hr_threshold_daily?on_conflict=user_id,date,threshold_bpm,source") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            header("Prefer", "resolution=merge-duplicates,return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
     }
 
     // ---- writes ----

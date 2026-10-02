@@ -39,6 +39,7 @@ import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.NutritionRecord
@@ -131,13 +132,15 @@ fun ThirdPartyConnectionsScreen(
     val respiratoryRatePermission = HealthPermission.getReadPermission(RespiratoryRateRecord::class)
     val bodyTempPermission = HealthPermission.getReadPermission(BodyTemperatureRecord::class)
     val bloodGlucosePermission = HealthPermission.getReadPermission(BloodGlucoseRecord::class)
+    // Heart rate samples feed the practitioner "heart rate training" goals only.
+    val heartRatePermission = HealthPermission.getReadPermission(HeartRateRecord::class)
 
     val allHealthConnectPermissions = setOf(
         nutritionPermission, menstruationPermission, sleepPermission, hrvPermission,
         stepsPermission, restingHrPermission, spo2Permission,
         exercisePermission, respiratoryRatePermission, bodyTempPermission,
         bloodGlucosePermission
-    )
+    ) + (if (MonitorCardConfig.GOALS_ENABLED) setOf(heartRatePermission) else emptySet())
 
     val anyWearablePermissionGranted = remember {
         derivedStateOf {

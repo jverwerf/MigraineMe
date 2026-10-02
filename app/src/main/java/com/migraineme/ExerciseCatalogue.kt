@@ -31,7 +31,9 @@ class ExerciseRoutine(
     val props: String,
     val film: String,
     val poster: String,
-    val sections: List<ExerciseSection>
+    val sections: List<ExerciseSection>,
+    /** Reachable only through a practitioner goal: never listed on the Exercises screen, never premium gated. */
+    val practitionerOnly: Boolean = false
 )
 
 object ExerciseCatalogue {
@@ -49,9 +51,40 @@ object ExerciseCatalogue {
     fun byId(id: String?): ExerciseRoutine? = ROUTINES.firstOrNull { it.id == id }
 
     fun forWhen(whenToUse: ExerciseWhen): List<ExerciseRoutine> =
-        ROUTINES.filter { it.whenToUse == whenToUse }
+        ROUTINES.filter { it.whenToUse == whenToUse && !it.practitionerOnly }
 
     val ROUTINES: List<ExerciseRoutine> = listOf(
+        ExerciseRoutine(
+            "chin_tuck",
+            "Chin tuck",
+            "Easy",
+            2,
+            ExerciseWhen.PREVENT,
+            "A chair, or standing",
+            "chin_tuck.mp4",
+            "chin_tuck.jpg",
+            listOf(
+                ExerciseSection(
+                    "How to do it",
+                    listOf(
+                        "The nose slides straight back, like making a double chin, then forward again. Eyes level. Hold a moment, release."
+                    )
+                ),
+                ExerciseSection(
+                    "Why this helps",
+                    listOf(
+                        "The muscles at the top of your neck and the nerves that carry migraine pain meet in the same part of the brainstem. When those muscles are tight and sore, the brain can read it as head pain, and a neck that is already irritated makes an attack easier to set off."
+                    )
+                ),
+                ExerciseSection(
+                    "When to do it",
+                    listOf(
+                        "Go gently. Move only as far as feels easy, never into pain. Check with a clinician first if your neck pain started after an injury, or comes with dizziness or tingling in your arms."
+                    )
+                )
+            ),
+            practitionerOnly = true
+        ),
         ExerciseRoutine(
             "neck",
             "Neck reset",

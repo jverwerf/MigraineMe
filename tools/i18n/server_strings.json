@@ -2284,6 +2284,46 @@
    "sites": [
     "build-report-html/render.ts"
    ]
+  },
+  {
+   "en": "A reminder from your practitioner",
+   "class": "hard",
+   "max_len": 48,
+   "sites": [
+    "supabase/functions/goal-reminders/index.ts (push title)"
+   ]
+  },
+  {
+   "en": "Time for {0}. Today's goal: {1} times.",
+   "class": "soft",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/goal-reminders/index.ts (push body, exercise goal)"
+   ]
+  },
+  {
+   "en": "Time for {0}. Today's goal: {1} minutes.",
+   "class": "soft",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/goal-reminders/index.ts (push body, meditation goal)"
+   ]
+  },
+  {
+   "en": "Time for {0}.",
+   "class": "soft",
+   "max_len": 60,
+   "sites": [
+    "supabase/functions/goal-reminders/index.ts (push body, other goals)"
+   ]
+  },
+  {
+   "en": "Your goal reminder",
+   "class": "hard",
+   "max_len": 48,
+   "sites": [
+    "supabase/functions/goal-reminders/index.ts (push title, self-set goal)"
+   ]
   }
  ]
 }

@@ -161,6 +161,7 @@ object Routes {
     const val INSIGHTS_CONFIG = "insights_config"
     const val HOME_CONFIG = "home_config"
     const val EXERCISES = "exercises"
+    const val EXERCISES_LIBRARY = "exercises_library"
     /** Player for one routine. Navigate with [exercisePlayer]. */
     const val EXERCISE_PLAYER = "exercise/{id}"
     fun exercisePlayer(id: String): String = "exercise/$id"
@@ -183,6 +184,13 @@ object Routes {
     const val MONITOR_MEDICINES = "monitor_medicines"
     const val MONITOR_TREATMENTS = "monitor_treatments"
     const val MONITOR_TREATMENT_DETAIL = "monitor_treatment_detail/{regimenId}"
+    /** One practitioner goal. Navigate with [practitionerGoal]. */
+    const val MONITOR_PRACTITIONER_GOAL = "monitor_practitioner_goal"
+    fun practitionerGoal(goalId: String): String = "$MONITOR_PRACTITIONER_GOAL/$goalId"
+    /** Add (no id) or edit one of the client's own goals. Navigate with [goalEditor]. */
+    const val GOAL_EDITOR_BASE = "goal_editor"
+    const val GOAL_EDITOR = "$GOAL_EDITOR_BASE?goalId={goalId}"
+    fun goalEditor(goalId: String?): String = if (goalId == null) GOAL_EDITOR_BASE else "$GOAL_EDITOR_BASE?goalId=$goalId"
     const val MEDICINE_CONFIG = "medicine_config"
     const val MEDICINE_DATA_HISTORY = "medicine_data_history"
     const val NUTRITION_CONFIG = "nutrition_config"
@@ -494,6 +502,8 @@ class MainActivity : ComponentActivity() {
         // lands on the page the push is about, not just the Insights hub.
         val route = intent.getStringExtra("navigate_to")
             ?: intent.getStringExtra("screen")?.takeIf { intent.getStringExtra("type") == "new_insight" }?.let { insightsRouteForScreen(it) }
+            // Practitioner reminders are tray-rendered; the goal id rides in the data fields.
+            ?: intent.getStringExtra("goal_id")?.takeIf { intent.getStringExtra("type") == "practitioner_goal" }?.let { Routes.practitionerGoal(it) }
             ?: intent.getStringExtra("type")?.let { routeForPushType(it) }
             ?: routeForLink(intent.data)
         if (route != null) {
@@ -502,6 +512,7 @@ class MainActivity : ComponentActivity() {
             intent.removeExtra("navigate_to")
             intent.removeExtra("type")
             intent.removeExtra("screen")
+            intent.removeExtra("goal_id")
             if (routeForLink(intent.data) != null) intent.data = null
         }
     }
@@ -537,6 +548,7 @@ class MainActivity : ComponentActivity() {
         "evening_checkin" -> Routes.EVENING_CHECKIN
         "daily_gauge" -> Routes.HOME
         "ongoing_migraine", "trigger_alert" -> Routes.JOURNAL
+        "practitioner_goal" -> Routes.MONITOR
         else -> null
     }
 }
@@ -976,6 +988,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.INSIGHTS_CONFIG ||
             current == Routes.HOME_CONFIG ||
             current == Routes.EXERCISES ||
+            current == Routes.EXERCISES_LIBRARY ||
             current == Routes.EXERCISE_PLAYER ||
             current?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true ||
             current == Routes.INSIGHTS_CONTEXT ||
@@ -1140,6 +1153,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.INSIGHTS_CONFIG -> "Customize Insights"
                                     Routes.HOME_CONFIG -> "Customize Home"
                                     Routes.EXERCISES -> "Exercises"
+                                    Routes.EXERCISES_LIBRARY -> "All exercises"
                                     Routes.INSIGHTS -> "Insights"
                                     Routes.INSIGHTS_DETAIL -> "Explore Migraines"
                                     Routes.INSIGHTS_TIMELINE -> "Migraine Timeline"
@@ -1251,6 +1265,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         current?.startsWith(Routes.BLOG_DETAIL) == true -> "Blog"
                                         current?.startsWith(Routes.FORUM_POST_DETAIL) == true -> "Post"
                                         current?.startsWith("monitor_treatment_detail") == true -> "Treatment"
+                                        // The goal's title is an English key (the presets) or the practitioner's own words.
+                                        current?.startsWith(Routes.MONITOR_PRACTITIONER_GOAL) == true ->
+                                            PractitionerGoalsStore.goals.value
+                                                .firstOrNull { it.id == backStack?.arguments?.getString("goalId") }?.title
+                                                ?: "Goals"
+                                        current?.startsWith(Routes.GOAL_EDITOR_BASE) == true ->
+                                            if (backStack?.arguments?.getString("goalId").isNullOrBlank()) "New goal" else "Edit goal"
                                         else -> ""
                                     }
                                 }
@@ -1387,6 +1408,24 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) {
                             MonitorTreatmentDetailScreen(navController = nav, regimenId = regimenId)
                         }
+                    }
+                    composable(
+                        "${Routes.MONITOR_PRACTITIONER_GOAL}/{goalId}",
+                        arguments = listOf(navArgument("goalId") { type = NavType.StringType })
+                    ) { backStack ->
+                        // Not premium gated: the practitioner set the goal.
+                        MonitorPractitionerGoalScreen(navController = nav, goalId = backStack.arguments?.getString("goalId") ?: "")
+                    }
+                    composable(
+                        Routes.GOAL_EDITOR,
+                        arguments = listOf(navArgument("goalId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        })
+                    ) { backStack ->
+                        // Not premium gated: anyone may set their own goals.
+                        GoalEditorScreen(navController = nav, goalId = backStack.arguments?.getString("goalId"))
                     }
                     composable(Routes.MEDICINE_CONFIG) { MonitorMedicineConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MEDICINE_DATA_HISTORY) {
@@ -1571,16 +1610,31 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
                     composable(Routes.HOME_CONFIG) { HomeConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.EXERCISES) {
-                        // PREMIUM GATE (assumption, owner to confirm): to make the list free, drop the PremiumRoute wrapper.
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
-                            ExercisesScreen(onOpenRoutine = { id -> nav.navigate(Routes.exercisePlayer(id)) })
-                        }
+                        // The list is open to everyone so exercises a practitioner set are
+                        // reachable on the free plan; the PLAYER keeps the premium gate for
+                        // anything she did not set (Routes.EXERCISE_PLAYER below).
+                        ExercisesScreen(
+                            onOpenRoutine = { id -> nav.navigate(Routes.exercisePlayer(id)) },
+                            onOpenLibrary = { nav.navigate(Routes.EXERCISES_LIBRARY) }
+                        )
+                    }
+                    composable(Routes.EXERCISES_LIBRARY) {
+                        ExercisesScreen(onOpenRoutine = { id -> nav.navigate(Routes.exercisePlayer(id)) })
                     }
                     composable(Routes.EXERCISE_PLAYER) { backStack ->
                         val routineId = backStack.arguments?.getString("id")
                         // PREMIUM GATE (assumption, owner to confirm): to make the player free, drop the PremiumRoute wrapper.
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                        // A practitioner-assigned routine is never gated: she set it, the client does it.
+                        val assignedGoals by PractitionerGoalsStore.goals.collectAsState()
+                        val assignedByPractitioner = assignedGoals.any {
+                            it.isActive && !it.isOwn && it.exercise_id == routineId
+                        }
+                        if (ExerciseCatalogue.byId(routineId)?.practitionerOnly == true || assignedByPractitioner) {
                             ExercisePlayerScreen(routineId = routineId, onBack = { nav.popBackStack() })
+                        } else {
+                            PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                                ExercisePlayerScreen(routineId = routineId, onBack = { nav.popBackStack() })
+                            }
                         }
                     }
                     composable(Routes.CHAT_ASSISTANT) {
@@ -3332,7 +3386,7 @@ private fun BottomBar(
             val showInsightsDot = item.route == Routes.INSIGHTS && insightsHasNew
             val selected = currentRoute == item.route ||
                     (item.route == Routes.HOME && currentRoute == Routes.HOME_CONFIG) ||
-                    (item.route == Routes.HOME && currentRoute == Routes.EXERCISES) ||
+                    (item.route == Routes.HOME && (currentRoute == Routes.EXERCISES || currentRoute == Routes.EXERCISES_LIBRARY)) ||
                     (item.route == Routes.HOME && currentRoute == Routes.EXERCISE_PLAYER) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_CONFIG) ||

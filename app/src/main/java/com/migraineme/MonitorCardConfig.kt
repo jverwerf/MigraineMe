@@ -26,8 +26,18 @@ data class MonitorCardConfig(
         const val CARD_MENSTRUATION = "menstruation"
         const val CARD_RISK = "risk"
         const val CARD_MIGRAINES = "migraines"
+        /** The one "Goals" card: practitioner-set and own goals, with a + to add. Always shown unless hidden. */
+        const val CARD_PRACTITIONER_GOALS = "practitioner_goals"
 
-        val DEFAULT_ORDER = listOf(
+        /**
+         * Goals are switched off for the next release (Jordy 2026-10-02: "I don't want that yet").
+         * Off = no Goals card on Monitor or in Customize, no goal reminder rows in Data settings,
+         * goal pushes dropped. Screens and data stay; flip to true to bring it all back.
+         */
+        const val GOALS_ENABLED = false
+
+        val DEFAULT_ORDER = listOfNotNull(
+            CARD_PRACTITIONER_GOALS.takeIf { GOALS_ENABLED },
             CARD_RISK,
             CARD_MIGRAINES,
             CARD_MEDICINES,
@@ -50,7 +60,8 @@ data class MonitorCardConfig(
             CARD_MEDICINES to "Medicines",
             CARD_TREATMENTS to "Treatments",
             CARD_MENSTRUATION to "Menstruation",
-            CARD_MIGRAINES to "Migraines"
+            CARD_MIGRAINES to "Migraines",
+            CARD_PRACTITIONER_GOALS to "Goals"
         )
         
         // Nutrition metric identifiers
@@ -292,9 +303,13 @@ object MonitorCardConfigStore {
         }
         // Migration: ensure new card types are in the order
         val missing = MonitorCardConfig.DEFAULT_ORDER.filter { it !in config.cardOrder }
-        return if (missing.isNotEmpty()) {
+        val withNew = if (missing.isNotEmpty()) {
             config.copy(cardOrder = missing + config.cardOrder)
         } else config
+        // A saved order from a build that had Goals on must not bring the card back.
+        return if (!MonitorCardConfig.GOALS_ENABLED && MonitorCardConfig.CARD_PRACTITIONER_GOALS in withNew.cardOrder) {
+            withNew.copy(cardOrder = withNew.cardOrder - MonitorCardConfig.CARD_PRACTITIONER_GOALS)
+        } else withNew
     }
     
     fun save(context: Context, config: MonitorCardConfig) {

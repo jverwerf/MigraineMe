@@ -262,6 +262,10 @@ fun HomeScreenRoot(
         // says it is updating, rather than vanishing mid-switch and coming back.
         val insightVisible = selectedDay == 0 && (!state.dailyInsight.isNullOrBlank() || aiRegenerating)
         val orderedHomeCards = homeConfig.getOrderedVisibleCards()
+        // Goals a linked practitioner set. Active only: a paused goal has nothing to do today.
+        val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
+        val practitionerProgress by PractitionerGoalsStore.progress.collectAsState()
+        LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appCtx) }
         val watermarkOn = orderedHomeCards.lastOrNull { id ->
             when (id) {
                 HomeCardConfig.CARD_CONTRIBUTORS -> contributorsVisible
@@ -377,17 +381,15 @@ fun HomeScreenRoot(
                 }
                 }
 
-                HomeCardConfig.CARD_EXERCISES -> {
-                // ── Exercises — guided routines (list → player) ──
-                // PREMIUM GATE (assumption, owner to confirm): to make the card
-                // free, drop this PremiumGate wrapper and keep ExercisesHomeCard.
-                PremiumGate(
-                    message = t("Unlock Exercises"),
-                    subtitle = t("Guided routines for your neck, and for during an attack"),
-                    onUpgrade = onNavigateToPaywall
-                ) {
-                    ExercisesHomeCard(onTap = { onNavigateRoute(Routes.EXERCISES) })
+                HomeCardConfig.CARD_PRACTITIONER -> {
+                // Retired 10-01: the exercises live in the Exercises card below.
                 }
+
+                HomeCardConfig.CARD_EXERCISES -> {
+                // ── Exercises: one plain card, as before (Jordy 10-02). The list of
+                // your exercises and the Add buttons live on the Exercises screen.
+                // No counts on Home; those are Monitor's. ──
+                ExercisesHomeCard(onTap = { onNavigateRoute(Routes.EXERCISES) })
                 }
 
                 HomeCardConfig.CARD_LOCATION -> {
@@ -613,6 +615,7 @@ fun HomeScreenRoot(
  * "Ask MigraineMe" card (same surface, blob icon, title/subtitle, arrow), minus
  * the info button. Static: no motion.
  */
+
 @Composable
 private fun ExercisesHomeCard(onTap: () -> Unit) {
     Box(

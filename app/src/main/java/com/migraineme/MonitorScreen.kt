@@ -110,6 +110,11 @@ fun MonitorScreen(
         )
     }
     
+    // Goals (practitioner-set and the client's own): one "Goals" card
+    val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
+    val practitionerProgress by PractitionerGoalsStore.progress.collectAsState()
+    LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(ctx) }
+
     // Refresh config when returning to screen
     LaunchedEffect(Unit) {
         cardConfig = MonitorCardConfigStore.load(ctx)
@@ -387,6 +392,17 @@ fun MonitorScreen(
                     )
                 } else if (cardConfig.isVisible(cardId)) {
                     when (cardId) {
+                        MonitorCardConfig.CARD_PRACTITIONER_GOALS -> {
+                            // One card, every goal a row. Ended goals never come back
+                            // from the store; paused ones show with a chip and no buttons.
+                            // Shown with zero goals too: the + is how a goal is added.
+                            GoalsMonitorCard(
+                                goals = practitionerGoals,
+                                progress = practitionerProgress,
+                                onAdd = { navController.navigate(Routes.goalEditor(null)) },
+                                onOpen = { goal -> navController.navigate(Routes.practitionerGoal(goal.id)) }
+                            )
+                        }
                         MonitorCardConfig.CARD_MIGRAINES -> {
                             MigrainesMonitorCard(
                                 onClick = { navController.navigate(Routes.INSIGHTS_DETAIL) },

@@ -27,12 +27,15 @@ data class HomeCardConfig(
         const val CARD_INSIGHT = "insight"
         const val CARD_CONTRIBUTORS = "contributors"
         const val CARD_EXERCISES = "exercises"
+        /** Today's goals from a linked practitioner. Not drawn at all while there are none. */
+        const val CARD_PRACTITIONER = "practitioner"
 
         /**
          * Exercises is switched off (Jordy 2026-09-24): the physio said the neck
          * routines are not good yet. Off = the card is not on Home and not in
          * Customize Home, so nothing reaches the Exercises screens. Flip to true
          * to bring it back; users who saved a Home order get it appended at the end.
+         * Off again for the next release (Jordy 2026-10-02: "I don't want that yet").
          */
         const val EXERCISES_ENABLED = false
 

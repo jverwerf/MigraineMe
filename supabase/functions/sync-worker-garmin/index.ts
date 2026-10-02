@@ -111,6 +111,42 @@ async function mapLimit(items, limit, fn) {
   }, ()=>worker()));
   return results;
 }
+
+/**
+ * Reduce heart-rate samples [[offsetSeconds, bpm], ...] (sorted) to the minutes at
+ * or above `thr` and the longest continuous stretch at or above it.
+ * Same rule as the phones (HealthKit / Health Connect), so every source agrees:
+ *   - a sample covers the time until the next sample, capped at HR_MAX_STEP_S;
+ *   - a stretch survives dips below the threshold of up to HR_GRACE_S in a row,
+ *     and ends on a gap in samples longer than HR_MAX_STEP_S (watch off).
+ */
+const HR_GRACE_S = 60;
+const HR_MAX_STEP_S = 60;
+const HR_DEFAULT_STEP_S = 15;
+function hrThresholdSummary(samples: number[][], thr: number) {
+  let above = 0, longest = 0;
+  let runStart = -1, lastAbove = -1, lastAboveEnd = -1;
+  for (let i = 0; i < samples.length; i++) {
+    const [t, bpm] = samples[i];
+    const next = i + 1 < samples.length ? samples[i + 1][0] : t + HR_DEFAULT_STEP_S;
+    const step = Math.min(Math.max(next - t, 0), HR_MAX_STEP_S) || HR_DEFAULT_STEP_S;
+    const prevT = i > 0 ? samples[i - 1][0] : t;
+    if (runStart >= 0 && t - prevT > HR_MAX_STEP_S) {           // watch off: close the stretch
+      longest = Math.max(longest, lastAboveEnd - runStart); runStart = -1;
+    }
+    if (bpm >= thr) {
+      above += step;
+      if (runStart < 0) runStart = t;
+      lastAbove = t; lastAboveEnd = t + step;
+    } else if (runStart >= 0 && t - lastAbove > HR_GRACE_S) {   // dipped too long: close the stretch
+      longest = Math.max(longest, lastAboveEnd - runStart); runStart = -1;
+    }
+  }
+  if (runStart >= 0) longest = Math.max(longest, lastAboveEnd - runStart);
+  const r1 = (x: number) => Math.round(x / 60 * 10) / 10;
+  return { minutesAbove: r1(above), longestRunMinutes: r1(longest) };
+}
+
 serve(async (req)=>{
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -208,6 +244,13 @@ serve(async (req)=>{
       function garminEnabled(metric) {
         return enabledMap.get(metric) === true;
       }
+      // Heart-rate threshold goals set by a linked practitioner (practitioner_goals,
+      // kind hr_threshold). Garmin's dailies carry 15-second heart-rate samples
+      // (timeOffsetHeartRateSamples); we reduce them to "minutes at or above N bpm"
+      // and "longest stretch" per day and store only that (hr_threshold_daily).
+      const { data: hrGoalRows } = await supabase.from("practitioner_goals")
+        .select("threshold_bpm").eq("user_id", userId).eq("kind", "hr_threshold").eq("status", "active");
+      const hrThresholds = Array.from(new Set((hrGoalRows ?? []).map((r) => Number(r.threshold_bpm)).filter((n) => n > 0)));
       async function tryMarkMetricRan(metric, localDate) {
         const { error } = await supabase.from("backend_metric_runs").insert({
           user_id: userId,
@@ -300,6 +343,27 @@ serve(async (req)=>{
                   source: "garmin", source_device: d?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
+              }
+            }
+            if (hrThresholds.length && d.timeOffsetHeartRateSamples && typeof d.timeOffsetHeartRateSamples === "object") {
+              const samples = Object.entries(d.timeOffsetHeartRateSamples)
+                .map(([off, bpm]) => [Number(off), Number(bpm)])
+                .filter(([off, bpm]) => Number.isFinite(off) && Number.isFinite(bpm) && bpm > 0)
+                .sort((x, y) => x[0] - y[0]);
+              for (const thr of hrThresholds) {
+                const { minutesAbove, longestRunMinutes } = hrThresholdSummary(samples, thr);
+                const { error } = await supabase.from("hr_threshold_daily").upsert({
+                  user_id: userId,
+                  date: calDate,
+                  threshold_bpm: thr,
+                  minutes_above: minutesAbove,
+                  longest_run_minutes: longestRunMinutes,
+                  is_estimate: false,
+                  source: "garmin",
+                  updated_at: new Date().toISOString()
+                }, { onConflict: "user_id,date,threshold_bpm,source" });
+                if (error) console.error("upsert hr_threshold_daily:", error.message);
+                else anyData = true;
               }
             }
             if (garminEnabled("time_in_high_hr_zones_daily")) {

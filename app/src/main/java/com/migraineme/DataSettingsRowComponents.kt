@@ -652,7 +652,12 @@ fun NotificationsCard(
     val showDeviceOutcome = hit("Device check-ins", "Ask how a neuromodulation device session went, 2 hours after you log it")
     val showCompanion = hit("AI companion", "Get notified when an AI companion adds to your community feed")
     val showPermission = hit("Notification permission")
-    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission) return
+    // Goal reminders (practitioner-set and own): one row per goal with reminder times, none otherwise.
+    val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
+    LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appContext) }
+    val goalRows = practitionerGoals.filter { it.reminder_times.isNotEmpty() }
+    val showGoals = MonitorCardConfig.GOALS_ENABLED && goalRows.isNotEmpty() && (hit("Goal reminders") || goalRows.any { hit(it.title) })
+    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission && !showGoals) return
 
     // Dividers only make sense on the full card — a filtered result list would
     // otherwise start or end with a stray rule.
@@ -872,8 +877,59 @@ fun NotificationsCard(
             }
         }
 
-        if (showDividers) {
-            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        // Goal reminders — server-scheduled (practitioner_goals.reminders_enabled).
+        // Times are set by the practitioner or, for own goals, in the goal editor; this only mutes them.
+        if (showGoals) {
+            for (goal in goalRows) {
+                var saving by remember(goal.id) { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp)
+                    ) {
+                        Text(
+                            t(goal.title) + " · " + goal.reminderLabels.joinToString(", "),
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            t("Goal reminders"),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.width(toggleColWidth),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Switch(
+                            checked = notificationPermissionGranted && goal.reminders_enabled,
+                            enabled = !saving,
+                            modifier = Modifier.scale(0.8f),
+                            onCheckedChange = { newValue ->
+                                if (newValue && !notificationPermissionGranted) {
+                                    onRequestNotificationPermission()
+                                } else {
+                                    saving = true
+                                    scope.launch {
+                                        PractitionerGoalsStore.setReminders(appContext, goal.id, newValue)
+                                        saving = false
+                                    }
+                                }
+                            },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                        )
+                    }
+                }
+            }
+            if (showDividers) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+            }
         }
 
         // Trigger alerts row — DB-backed preference (notification_settings.trigger_alert).

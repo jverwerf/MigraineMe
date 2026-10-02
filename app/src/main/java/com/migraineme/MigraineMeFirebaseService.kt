@@ -28,6 +28,9 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
  *   to go back and close it
  * - trigger_alert: A trigger or prodrome the user follows auto-fired for today
  *   (threshold or 2SD from baseline) — shows a notification naming the item
+ * - practitioner_goal: a reminder for a goal the user's practitioner set — opens
+ *   that goal's detail. Title/body come from the server; shown here only when
+ *   the app is in the foreground (otherwise the tray renders the payload).
  */
 class MigraineMeFirebaseService : FirebaseMessagingService() {
 
@@ -122,6 +125,16 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     itemType = message.data["item_type"].orEmpty(),
                     stage = message.data["stage"] ?: "today",
                     date = message.data["date"].orEmpty()
+                )
+            }
+            "practitioner_goal" -> {
+                if (!MonitorCardConfig.GOALS_ENABLED) return   // goals hidden this release
+                val goalId = message.data["goal_id"] ?: return
+                Log.d(TAG, "Practitioner goal reminder: goal=$goalId")
+                showPractitionerGoalNotification(
+                    goalId = goalId,
+                    title = message.notification?.title ?: message.data["title"],
+                    body = message.notification?.body ?: message.data["body"]
                 )
             }
             else -> {
@@ -436,6 +449,45 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             .build()
 
         nm.notify(8024, notification)
+    }
+
+    /**
+     * A reminder for a goal the practitioner set. The server writes the copy
+     * (it knows the goal and the client's language); this only renders it and
+     * points the tap at the goal's detail screen.
+     */
+    private fun showPractitionerGoalNotification(goalId: String, title: String?, body: String?) {
+        val channelId = "practitioner_goal"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, tSync("Goal reminders"),
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = tSync("Reminders for your goals") }
+        nm.createNotificationChannel(channel)
+
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.practitionerGoal(goalId))
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 4, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val text = body?.takeIf { it.isNotBlank() } ?: tSync("Time for the goal your practitioner set. Tap to log it.")
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title?.takeIf { it.isNotBlank() } ?: tSync("From your practitioner"))
+            .setContentText(text)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        // One slot per goal so two goals due at the same time both show.
+        nm.notify(8026 + (goalId.hashCode() and 0xFFFF), notification)
     }
 
     private suspend fun saveFcmTokenToSupabase(fcmToken: String) {

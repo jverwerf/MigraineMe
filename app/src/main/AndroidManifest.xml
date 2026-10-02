@@ -29,6 +29,9 @@
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
     <!-- Health Connect - Heart & Vitals (minimum scope: only record types the app reads) -->
+    <!-- READ_HEART_RATE (heart rate training goals) is left out while goals are hidden
+         (MonitorCardConfig.GOALS_ENABLED = false): a new Health Connect permission needs a new
+         Play health declaration. Add it back together with the flag. -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />

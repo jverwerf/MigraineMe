@@ -14,6 +14,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -34,6 +35,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.KClass
@@ -96,7 +98,7 @@ class HealthConnectChangesWorker(
 
         fun getRequiredPermissions(): Set<String> = SUPPORTED_RECORDS.keys.map {
             HealthPermission.getReadPermission(it)
-        }.toSet()
+        }.toSet() + (if (MonitorCardConfig.GOALS_ENABLED) setOf(HealthPermission.getReadPermission(HeartRateRecord::class)) else emptySet())
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -187,6 +189,14 @@ class HealthConnectChangesWorker(
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing $recordType: ${e.message}", e)
                 }
+            }
+
+            // Practitioner heart-rate goals: computed from raw samples, written
+            // straight to Supabase (no outbox: two days, a handful of rows, idempotent).
+            try {
+                syncHrThresholdGoals(hc, granted)
+            } catch (e: Exception) {
+                Log.e(TAG, "HR threshold goals failed: ${e.message}", e)
             }
 
             // Update sync state
@@ -471,6 +481,59 @@ class HealthConnectChangesWorker(
         }
     }
 
+    /**
+     * For every active hr_threshold goal: today's and yesterday's heart rate
+     * samples (local days) → minutes at or above the threshold and the longest
+     * stretch, one hr_threshold_daily row per (day, threshold). Same rule as
+     * the server uses for Garmin, see [HrThresholdMath]. Needs the heart rate
+     * read permission; without it there is nothing to measure and the detail
+     * screen says so.
+     */
+    private suspend fun syncHrThresholdGoals(hc: HealthConnectClient, granted: Set<String>) {
+        if (HealthPermission.getReadPermission(HeartRateRecord::class) !in granted) return
+        val token = SessionStore.getValidAccessToken(applicationContext) ?: return
+        val userId = SessionStore.readUserId(applicationContext) ?: return
+        val goals = PractitionerGoalsStore.goals.value.ifEmpty {
+            runCatching { SupabasePractitionerService.myGoals(token) }.getOrDefault(emptyList())
+        }
+        val thresholds = goals.filter { it.isHr && it.isActive }.mapNotNull { it.threshold_bpm }.toSet()
+        if (thresholds.isEmpty()) return
+
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val rows = mutableListOf<SupabasePractitionerService.HrThresholdDailyRow>()
+        for (day in listOf(today.minusDays(1), today)) {
+            val start = day.atStartOfDay(zone).toInstant()
+            val end = day.plusDays(1).atStartOfDay(zone).toInstant()
+            val samples = mutableListOf<Pair<Long, Long>>()
+            var pageToken: String? = null
+            do {
+                val resp = hc.readRecords(
+                    ReadRecordsRequest(
+                        recordType = HeartRateRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(start, end),
+                        pageToken = pageToken
+                    )
+                )
+                for (rec in resp.records) for (smp in rec.samples) {
+                    if (smp.time >= start && smp.time < end) samples += smp.time.toEpochMilli() to smp.beatsPerMinute
+                }
+                pageToken = resp.pageToken
+            } while (pageToken != null)
+            if (samples.isEmpty()) continue
+            samples.sortBy { it.first }
+            for (th in thresholds) {
+                val (above, longest) = HrThresholdMath.compute(samples, th)
+                rows += SupabasePractitionerService.HrThresholdDailyRow(
+                    user_id = userId, date = day.toString(), threshold_bpm = th,
+                    minutes_above = above, longest_run_minutes = longest
+                )
+            }
+        }
+        Log.d(TAG, "HR threshold goals: ${rows.size} rows for ${thresholds.size} thresholds")
+        SupabasePractitionerService.upsertHrThresholdDaily(token, rows)
+    }
+
     private fun getTokenForType(state: HealthConnectSyncStateEntity, recordType: String): String? {
         return when (recordType) {
             HealthConnectRecordTypes.SLEEP -> state.sleepToken
@@ -500,3 +563,56 @@ class HealthConnectChangesWorker(
     }
 }
 
+
+/**
+ * Time at or above a heart rate threshold from raw samples. The rule, shared
+ * with the server's Garmin path so both sources read the same:
+ *  - samples sorted by time; each covers the time until the next sample,
+ *    capped at 60 s (the last one covers 15 s);
+ *  - a stretch starts at the first sample at or above the threshold, survives
+ *    dips below it of up to 60 s, and ends on a gap in samples over 60 s or a
+ *    longer dip;
+ *  - longest_run = the longest stretch; minutes_above = the covered seconds of
+ *    every sample at or above the threshold. Both rounded to 0.1 min.
+ */
+object HrThresholdMath {
+    private const val CAP_S = 60.0
+    private const val LAST_S = 15.0
+    private const val DIP_S = 60.0
+    private const val GAP_S = 60.0
+
+    /** [samples] = (epoch millis, bpm), sorted ascending. Returns (minutesAbove, longestRunMinutes). */
+    fun compute(samples: List<Pair<Long, Long>>, threshold: Int): Pair<Double, Double> {
+        var aboveS = 0.0
+        var longestS = 0.0
+        var runStartMs: Long? = null
+        var runEndMs = 0L
+        var dipSinceMs: Long? = null
+        for (i in samples.indices) {
+            val (t, bpm) = samples[i]
+            val next = samples.getOrNull(i + 1)?.first
+            val coverS = if (next == null) LAST_S else minOf((next - t) / 1000.0, CAP_S)
+            val gapS = if (i == 0) 0.0 else (t - samples[i - 1].first) / 1000.0
+            if (runStartMs != null && gapS > GAP_S) {
+                longestS = maxOf(longestS, (runEndMs - runStartMs) / 1000.0)
+                runStartMs = null; dipSinceMs = null
+            }
+            if (bpm >= threshold) {
+                aboveS += coverS
+                if (runStartMs == null) runStartMs = t
+                dipSinceMs = null
+                runEndMs = t + (coverS * 1000).toLong()
+            } else if (runStartMs != null) {
+                if (dipSinceMs == null) dipSinceMs = t
+                val dipS = (t - dipSinceMs) / 1000.0 + coverS
+                if (dipS > DIP_S) {
+                    longestS = maxOf(longestS, (runEndMs - runStartMs) / 1000.0)
+                    runStartMs = null; dipSinceMs = null
+                }
+            }
+        }
+        if (runStartMs != null) longestS = maxOf(longestS, (runEndMs - runStartMs) / 1000.0)
+        fun tenthMin(s: Double) = Math.round(s / 60.0 * 10.0) / 10.0
+        return tenthMin(aboveS) to tenthMin(longestS)
+    }
+}

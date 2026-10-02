@@ -32,6 +32,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,13 +63,17 @@ fun MonitorConfigScreen(
         MonitorCardConfigStore.save(context, newConfig)
     }
 
+    // Every card is listed, the Goals card included (it shows with zero goals).
+    val shownOrder = config.cardOrder
+
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
-            // Adjust for header items (spacer + back button + header = 3 items)
-            val fromIndex = from.index - 3
-            val toIndex = to.index - 3
-            if (fromIndex >= 0 && toIndex >= 0) {
-                updateConfig(config.moveCard(fromIndex, toIndex))
+            // Adjust for header items (spacer + back button + header = 3 items),
+            // then map through the shown list back to the stored order.
+            val fromId = shownOrder.getOrNull(from.index - 3)
+            val toId = shownOrder.getOrNull(to.index - 3)
+            if (fromId != null && toId != null) {
+                updateConfig(config.moveCard(config.cardOrder.indexOf(fromId), config.cardOrder.indexOf(toId)))
             }
         }
     )
@@ -104,7 +109,7 @@ fun MonitorConfigScreen(
 
         // Card items
         itemsIndexed(
-            items = config.cardOrder,
+            items = shownOrder,
             key = { _, cardId -> cardId }
         ) { _, cardId ->
             ReorderableItem(reorderState, key = cardId) { isDragging ->
@@ -215,6 +220,7 @@ private fun getCardIcon(cardId: String): ImageVector {
         MonitorCardConfig.CARD_MENSTRUATION -> Icons.Outlined.FavoriteBorder
         MonitorCardConfig.CARD_RISK -> Icons.Outlined.TrendingUp
         MonitorCardConfig.CARD_MIGRAINES -> Icons.Outlined.TrendingUp // unused — Canvas drawing used instead
+        MonitorCardConfig.CARD_PRACTITIONER_GOALS -> Icons.Outlined.FitnessCenter
         else -> Icons.Outlined.Cloud
     }
 }
@@ -231,6 +237,7 @@ private fun getCardIconTint(cardId: String): Color {
         MonitorCardConfig.CARD_MENSTRUATION -> Color(0xFFE57373)
         MonitorCardConfig.CARD_RISK -> Color(0xFFEF5350)
         MonitorCardConfig.CARD_MIGRAINES -> AppTheme.AccentPink
+        MonitorCardConfig.CARD_PRACTITIONER_GOALS -> AppTheme.AccentPurple
         else -> Color(0xFF4FC3F7)
     }
 }
