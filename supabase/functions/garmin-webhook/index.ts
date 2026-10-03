@@ -19,6 +19,7 @@
 //     Garmin retries on non-200 and marks endpoints as failing in prod verification.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { garminHrSamples, hrThresholdSummary } from "../_shared/hrThreshold.ts";
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -381,6 +382,31 @@ serve(async (req)=>{
                 activity_type: "daily_total"
               }, { onConflict: "user_id,source,source_measure_id" });
             }
+          }
+        }
+        // hr_threshold_daily — heart-rate goals (practitioner_goals, kind
+        // hr_threshold). Every dailies push carries the day's 15-second
+        // heart-rate samples so far; reduce them to minutes at or above the
+        // goal's bpm and the longest stretch, and overwrite the day's row.
+        // Not tied to metric_settings: having an active goal is the switch.
+        const hrSamples = garminHrSamples(d.timeOffsetHeartRateSamples);
+        if (hrSamples.length) {
+          const { data: hrGoals } = await supabase.from("practitioner_goals")
+            .select("threshold_bpm").eq("user_id", userId).eq("kind", "hr_threshold").eq("status", "active");
+          const thresholds = Array.from(new Set((hrGoals ?? []).map((r) => Number(r.threshold_bpm)).filter((n) => n > 0)));
+          for (const thr of thresholds) {
+            const { minutesAbove, longestRunMinutes } = hrThresholdSummary(hrSamples, thr);
+            const { error: hrErr } = await supabase.from("hr_threshold_daily").upsert({
+              user_id: userId,
+              date: localDate,
+              threshold_bpm: thr,
+              minutes_above: minutesAbove,
+              longest_run_minutes: longestRunMinutes,
+              is_estimate: false,
+              source: "garmin",
+              updated_at: new Date().toISOString()
+            }, { onConflict: "user_id,date,threshold_bpm,source" });
+            if (hrErr) console.error("upsert hr_threshold_daily:", hrErr.message);
           }
         }
         results.push({
