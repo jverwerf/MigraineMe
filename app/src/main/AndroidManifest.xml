@@ -34,6 +34,8 @@
          (MonitorCardConfig.GOALS_ENABLED). Jordy 2026-10-03: declare it now; the Play
          health declaration must list heart rate before the next release. -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <!-- READ_MINDFULNESS: meditation goals; runtime request only when goals are on. Owner decision 2026-10-03: declare now, Play health declaration is updated at publish. -->
+    <uses-permission android:name="android.permission.health.READ_MINDFULNESS" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />

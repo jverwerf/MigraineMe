@@ -1,3 +1,5 @@
+@file:OptIn(androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi::class)
+
 package com.migraineme
 
 import android.app.Activity
@@ -41,6 +43,7 @@ import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
@@ -134,13 +137,15 @@ fun ThirdPartyConnectionsScreen(
     val bloodGlucosePermission = HealthPermission.getReadPermission(BloodGlucoseRecord::class)
     // Heart rate samples feed the practitioner "heart rate training" goals only.
     val heartRatePermission = HealthPermission.getReadPermission(HeartRateRecord::class)
+    // Mindfulness sessions feed the meditation goals only.
+    val mindfulnessPermission = HealthPermission.getReadPermission(MindfulnessSessionRecord::class)
 
     val allHealthConnectPermissions = setOf(
         nutritionPermission, menstruationPermission, sleepPermission, hrvPermission,
         stepsPermission, restingHrPermission, spo2Permission,
         exercisePermission, respiratoryRatePermission, bodyTempPermission,
         bloodGlucosePermission
-    ) + (if (MonitorCardConfig.GOALS_ENABLED) setOf(heartRatePermission) else emptySet())
+    ) + (if (MonitorCardConfig.GOALS_ENABLED) setOf(heartRatePermission, mindfulnessPermission) else emptySet())
 
     val anyWearablePermissionGranted = remember {
         derivedStateOf {

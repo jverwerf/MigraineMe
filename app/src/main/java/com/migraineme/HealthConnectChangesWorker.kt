@@ -1,3 +1,5 @@
+@file:OptIn(androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi::class)
+
 package com.migraineme
 
 import android.app.NotificationChannel
@@ -8,6 +10,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
@@ -16,6 +19,7 @@ import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
@@ -98,7 +102,10 @@ class HealthConnectChangesWorker(
 
         fun getRequiredPermissions(): Set<String> = SUPPORTED_RECORDS.keys.map {
             HealthPermission.getReadPermission(it)
-        }.toSet() + (if (MonitorCardConfig.GOALS_ENABLED) setOf(HealthPermission.getReadPermission(HeartRateRecord::class)) else emptySet())
+        }.toSet() + (if (MonitorCardConfig.GOALS_ENABLED) setOf(
+            HealthPermission.getReadPermission(HeartRateRecord::class),
+            HealthPermission.getReadPermission(MindfulnessSessionRecord::class)
+        ) else emptySet())
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -197,6 +204,13 @@ class HealthConnectChangesWorker(
                 syncHrThresholdGoals(hc, granted)
             } catch (e: Exception) {
                 Log.e(TAG, "HR threshold goals failed: ${e.message}", e)
+            }
+
+            // Meditation goals: mindfulness sessions, same direct-write path.
+            try {
+                syncMindfulness(hc, granted)
+            } catch (e: Exception) {
+                Log.e(TAG, "Mindfulness sync failed: ${e.message}", e)
             }
 
             // Update sync state
@@ -532,6 +546,57 @@ class HealthConnectChangesWorker(
         }
         Log.d(TAG, "HR threshold goals: ${rows.size} rows for ${thresholds.size} thresholds")
         SupabasePractitionerService.upsertHrThresholdDaily(token, rows)
+    }
+
+    /**
+     * Meditation goals: mindfulness sessions from yesterday 00:00 (local) to
+     * now → minutes and session count per local day (a session counts on the
+     * day it started), one mindfulness_daily row per day that has a session.
+     * Only when goals are on, the device's Health Connect has mindfulness
+     * sessions, and the read permission is granted.
+     */
+    private suspend fun syncMindfulness(hc: HealthConnectClient, granted: Set<String>) {
+        if (!MonitorCardConfig.GOALS_ENABLED) return
+        if (hc.features.getFeatureStatus(HealthConnectFeatures.FEATURE_MINDFULNESS_SESSION) !=
+            HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+        ) return
+        if (HealthPermission.getReadPermission(MindfulnessSessionRecord::class) !in granted) return
+        val token = SessionStore.getValidAccessToken(applicationContext) ?: return
+        val userId = SessionStore.readUserId(applicationContext) ?: return
+
+        val zone = ZoneId.systemDefault()
+        val start = LocalDate.now(zone).minusDays(1).atStartOfDay(zone).toInstant()
+        val now = Instant.now()
+        val secondsByDay = mutableMapOf<LocalDate, Long>()
+        val countByDay = mutableMapOf<LocalDate, Int>()
+        var pageToken: String? = null
+        do {
+            val resp = hc.readRecords(
+                ReadRecordsRequest(
+                    recordType = MindfulnessSessionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(start, now),
+                    pageToken = pageToken
+                )
+            )
+            for (rec in resp.records) {
+                if (rec.startTime < start) continue
+                val day = rec.startTime.atZone(zone).toLocalDate()
+                val seconds = Duration.between(rec.startTime, rec.endTime).seconds.coerceAtLeast(0)
+                secondsByDay[day] = (secondsByDay[day] ?: 0L) + seconds
+                countByDay[day] = (countByDay[day] ?: 0) + 1
+            }
+            pageToken = resp.pageToken
+        } while (pageToken != null)
+
+        val rows = countByDay.map { (day, count) ->
+            SupabasePractitionerService.MindfulnessDailyRow(
+                user_id = userId, date = day.toString(),
+                duration_minutes = Math.round((secondsByDay[day] ?: 0L) / 60.0).toInt(),
+                session_count = count
+            )
+        }
+        Log.d(TAG, "Mindfulness: ${rows.size} day rows")
+        SupabasePractitionerService.upsertMindfulnessDaily(token, rows)
     }
 
     private fun getTokenForType(state: HealthConnectSyncStateEntity, recordType: String): String? {

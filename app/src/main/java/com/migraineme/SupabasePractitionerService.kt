@@ -395,6 +395,15 @@ object SupabasePractitionerService {
         val source: String = "health_connect",
     )
 
+    @Serializable
+    data class MindfulnessDailyRow(
+        val user_id: String,
+        val date: String,
+        val duration_minutes: Int,
+        val session_count: Int,
+        val source: String = "health_connect",
+    )
+
     private const val PRAC_SELECT =
         "id,slug,display_name,practice_name,discipline,photo_url,banner_url,logo_url,facts," +
             "website,languages,country,city,consult_mode,listing_mode,booking_url,booking_urls," +
@@ -620,6 +629,18 @@ object SupabasePractitionerService {
     suspend fun upsertHrThresholdDaily(accessToken: String, rows: List<HrThresholdDailyRow>) {
         if (rows.isEmpty()) return
         client.post("$baseUrl/rest/v1/hr_threshold_daily?on_conflict=user_id,date,threshold_bpm,source") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            header("Prefer", "resolution=merge-duplicates,return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
+    }
+
+    /** Phone-side mindfulness sessions from Health Connect, one row per day. */
+    suspend fun upsertMindfulnessDaily(accessToken: String, rows: List<MindfulnessDailyRow>) {
+        if (rows.isEmpty()) return
+        client.post("$baseUrl/rest/v1/mindfulness_daily?on_conflict=user_id,date,source") {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")
             header("Prefer", "resolution=merge-duplicates,return=minimal")
