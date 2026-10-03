@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,6 +44,22 @@ fun MonitorGoalsScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            // Notes a practitioner left on active goals. Hidden when there are none.
+            val noted = orderedGoals(goals).filter { it.isActive && !it.isOwn && !it.note.isNullOrBlank() }
+            if (noted.isNotEmpty()) {
+                BaseCard {
+                    Text(t("Notes"), color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    noted.forEachIndexed { i, goal ->
+                        if (i > 0) HorizontalDivider(color = AppTheme.TrackColor, modifier = Modifier.padding(vertical = 4.dp))
+                        Text(t(goal.title), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(goal.note!!.trim(), color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.GOALS_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Tune, contentDescription = t("Configure"), tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))

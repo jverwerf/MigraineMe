@@ -85,6 +85,38 @@ object ExerciseCatalogue {
             ),
             practitionerOnly = true
         ),
+        // Chin tuck with a neck pinch (Jordy 2026-10-03, approved film): one hand anchors the
+        // back of the neck, the other pushes the chin straight back. Listed in the library.
+        ExerciseRoutine(
+            "chin_tuck_pinch",
+            "Chin tuck with pinch",
+            "Easy",
+            2,
+            ExerciseWhen.PREVENT,
+            "A chair, or standing",
+            "chin_tuck_pinch.mp4",
+            "chin_tuck_pinch.jpg",
+            listOf(
+                ExerciseSection(
+                    "How to do it",
+                    listOf(
+                        "One hand holds the back of your neck between thumb and index finger. Two fingers of the other hand rest on your chin and push it straight back, eyes level. Hold a moment, release."
+                    )
+                ),
+                ExerciseSection(
+                    "Why this helps",
+                    listOf(
+                        "The muscles at the top of your neck and the nerves that carry migraine pain meet in the same part of the brainstem. When those muscles are tight and sore, the brain can read it as head pain, and a neck that is already irritated makes an attack easier to set off."
+                    )
+                ),
+                ExerciseSection(
+                    "When to do it",
+                    listOf(
+                        "Go gently. Move only as far as feels easy, never into pain. Check with a clinician first if your neck pain started after an injury, or comes with dizziness or tingling in your arms."
+                    )
+                )
+            )
+        ),
         ExerciseRoutine(
             "neck",
             "Neck reset",
