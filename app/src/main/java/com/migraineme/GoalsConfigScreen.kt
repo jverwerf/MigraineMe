@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Pick up to three goals for the Monitor "Goals" card. Same build as
+ * Pick the goals for the Monitor "Goals" card. Same build as
  * PhysicalConfigScreen; every change is saved to GoalsCardConfigStore at once.
  */
 @Suppress("UNUSED_PARAMETER")
@@ -63,9 +63,9 @@ fun GoalsConfigScreen(onBack: () -> Unit) {
                 }
             } else {
                 BaseCard {
-                    Text(t("Display goals (%s/3)", selected.size), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Display goals (%s)", selected.size), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
-                    Text(t("Select up to 3 goals to show on the Monitor card."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Choose the goals to show on the Monitor card."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(12.dp))
 
                     FlowRow(
@@ -77,17 +77,15 @@ fun GoalsConfigScreen(onBack: () -> Unit) {
                         for (goal in ordered) {
                             val isSelected = goal.id in selected
                             val slotIndex = selected.indexOf(goal.id)
-                            val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
+                            val slotColor = if (slotIndex >= 0) slotColors[slotIndex % slotColors.size] else AppTheme.AccentPurple
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = {
                                     selected = if (isSelected) {
                                         selected - goal.id
-                                    } else if (selected.size < GoalsCardConfigStore.MAX_GOALS) {
-                                        selected + goal.id
                                     } else {
-                                        selected
+                                        selected + goal.id
                                     }
                                     GoalsCardConfigStore.save(context, selected)
                                 },

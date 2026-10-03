@@ -293,15 +293,24 @@ fun GoalsMonitorCard(
         }
         val shown = remember(goals) { GoalsCardConfigStore.displayGoals(ctx, goals) }
         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            shown.forEachIndexed { index, goal ->
-                MetricTile(
-                    value = goalProgressShort(goal, progress[goal.id]),
-                    label = goal.title,
-                    valueColor = slotColors.getOrElse(index) { slotColors.last() },
-                    modifier = Modifier.weight(1f),
-                    labelMaxLines = 1
-                )
+        // Three tiles per row; a short last row is padded with empty slots so
+        // its tiles keep the same width as a full row.
+        val perRow = 3
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            shown.chunked(perRow).forEachIndexed { rowIndex, rowGoals ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    rowGoals.forEachIndexed { col, goal ->
+                        val index = rowIndex * perRow + col
+                        MetricTile(
+                            value = goalProgressShort(goal, progress[goal.id]),
+                            label = goal.title,
+                            valueColor = slotColors[index % slotColors.size],
+                            modifier = Modifier.weight(1f),
+                            labelMaxLines = 1
+                        )
+                    }
+                    repeat(perRow - rowGoals.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
         }
     }
