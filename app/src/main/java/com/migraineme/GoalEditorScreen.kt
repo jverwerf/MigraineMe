@@ -218,13 +218,18 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                                         for (m in metrics.filter { it.grp == g }) {
                                             val unit = m.unit.trim()
                                             EditorChip(
-                                                label = if (unit.isEmpty()) t(m.label) else t(m.label) + " · " + t(unit),
+                                                label = if (unit.isEmpty() || m.isLevel) t(m.label) else t(m.label) + " · " + t(unit),
                                                 selected = metricKey == m.key,
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
                                                 metricKey = m.key
                                                 metricDirection = m.default_direction
                                                 metricTarget = m.default_target ?: 0.0
+                                                if (m.isLevel) {
+                                                    if (metricDirection == SupabasePractitionerService.DIR_CONSISTENT)
+                                                        metricDirection = SupabasePractitionerService.DIR_LTE
+                                                    metricTarget = Math.rint(metricTarget).coerceIn(0.0, 3.0)
+                                                }
                                                 error = null
                                             }
                                         }
@@ -235,10 +240,12 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                         if (selectedMetric != null || existing != null) {
                             Spacer(Modifier.height(4.dp))
                             EditorHeading(t("Goal"))
-                            val dirs = listOf(
+                            val isLevel = selectedMetric?.isLevel == true
+                            // Level metrics (None / Low / Medium / High) have no "stay consistent"
+                            val dirs = listOfNotNull(
                                 SupabasePractitionerService.DIR_GTE to t("At least"),
                                 SupabasePractitionerService.DIR_LTE to t("At most"),
-                                SupabasePractitionerService.DIR_CONSISTENT to t("Stay consistent"),
+                                (SupabasePractitionerService.DIR_CONSISTENT to t("Stay consistent")).takeIf { !isLevel },
                             )
                             // Stacked: three side by side wrap unevenly in the longer languages
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -248,7 +255,25 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                                     }
                                 }
                             }
-                            if (metricDirection == SupabasePractitionerService.DIR_CONSISTENT) {
+                            if (isLevel) {
+                                val rank = Math.rint(metricTarget).coerceIn(0.0, 3.0)
+                                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(t("Value"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f))
+                                    StepperButton("−", enabled = rank > 0.0) { metricTarget = rank - 1.0 }
+                                    Box(
+                                        Modifier.padding(horizontal = 6.dp)
+                                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(10.dp))
+                                            .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(goalLevelWord(rank), color = Color.White,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    }
+                                    StepperButton("+", enabled = rank < 3.0) { metricTarget = rank + 1.0 }
+                                }
+                            } else if (metricDirection == SupabasePractitionerService.DIR_CONSISTENT) {
                                 Text(t("Within your usual range: no more than 2 standard deviations from your 14-day average."),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             } else {
@@ -349,10 +374,11 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                             // Title = the catalogue's English label; an edit keeps the saved one if the catalogue did not load
                             val title = selectedMetric?.label ?: existing?.title
                             if (key == null || title == null) { error = metricMissing; return@Button }
-                            val consistent = metricDirection == SupabasePractitionerService.DIR_CONSISTENT
+                            val level = selectedMetric?.isLevel == true
+                            val consistent = !level && metricDirection == SupabasePractitionerService.DIR_CONSISTENT
                             SupabasePractitionerService.GoalDraft(
                                 kind = kind, title = title, metricKey = key, direction = metricDirection,
-                                targetValue = if (consistent) null else metricTarget,
+                                targetValue = if (consistent) null else if (level) Math.rint(metricTarget).coerceIn(0.0, 3.0) else metricTarget,
                                 timesPerWeek = metricDays.takeIf { it < 7 }, reminderTimes = reminders
                             )
                         }

@@ -337,7 +337,11 @@ object SupabasePractitionerService {
         val default_target: Double? = null,
         val step: Double = 1.0,
         val sort: Int = 0,
-    )
+        /** 'number' or 'level'. Level: target and readings are ranks 0..3 (None / Low / Medium / High). */
+        val scale: String = "number",
+    ) {
+        val isLevel: Boolean get() = scale == "level"
+    }
 
     /** What the goal editor saves. Fields that do not belong to [kind] are
      *  written as null, so switching kind on an edit leaves nothing stale. */
@@ -483,7 +487,7 @@ object SupabasePractitionerService {
     /** The metrics a goal can be set on (weather is not in it), in display order. */
     suspend fun goalMetrics(accessToken: String): List<GoalMetric> {
         val url = "$baseUrl/rest/v1/goal_metric_catalog" +
-            "?select=key,label,grp,unit,default_direction,default_target,step,sort&order=sort.asc"
+            "?select=key,label,grp,unit,default_direction,default_target,step,sort,scale&order=sort.asc"
         return client.get(url) {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")

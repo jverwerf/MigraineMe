@@ -56,16 +56,28 @@ fun fmtGoalNumber(v: Double): String {
     else String.format(appLocale(), "%,.1f", r)
 }
 
+/** A level metric's rank as a word: 0 None, 1 Low, 2 Medium, 3 High. */
+@Composable
+fun goalLevelWord(rank: Double): String = when (Math.rint(rank).toInt().coerceIn(0, 3)) {
+    0 -> t("None")
+    1 -> t("Low")
+    2 -> t("Medium")
+    else -> t("High")
+}
+
 /** "Steps: at least 8,000 steps", "Screen time: at most 3 h, 5 days a week",
  *  "Sleep duration: stay consistent". Unit comes from the catalogue. */
 @Composable
 private fun metricAskText(goal: GoalRow): String {
     val metrics by PractitionerGoalsStore.metrics.collectAsState()
     val label = t(goal.title)
-    val unit = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)?.unit?.trim().orEmpty()
+    val metric = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)
+    val isLevel = metric?.isLevel == true
+    // Level metrics read as a word, never with a unit: "Alcohol: at most None"
+    val unit = if (isLevel) "" else metric?.unit?.trim().orEmpty()
         .let { if (it.isEmpty()) "" else t(it) }
     val days = goal.daysPerWeek
-    val v = fmtGoalNumber(goal.target_value ?: 0.0)
+    val v = if (isLevel) goalLevelWord(goal.target_value ?: 0.0) else fmtGoalNumber(goal.target_value ?: 0.0)
     return when {
         goal.isConsistent ->
             if (goal.everyDay) t("%1\$s: stay consistent", label)
@@ -93,10 +105,12 @@ fun goalTodayReadingText(goal: GoalRow, rows: List<GoalProgressRow>?): String? {
     val metrics by PractitionerGoalsStore.metrics.collectAsState()
     val today = PractitionerGoalsStore.rowFor(rows, LocalDate.now())
     val value = today?.value
-    val unit = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)?.unit?.trim().orEmpty()
+    val metric = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)
+    val unit = metric?.unit?.trim().orEmpty()
     return when {
         goal.isConsistent && today?.is_estimate == true -> t("Building your baseline")
         value == null -> t("No data yet today")
+        metric?.isLevel == true -> t("Today: %s", goalLevelWord(value))
         unit.isEmpty() -> t("Today: %s", fmtGoalNumber(value))
         else -> t("Today: %1\$s %2\$s", fmtGoalNumber(value), t(unit))
     }
