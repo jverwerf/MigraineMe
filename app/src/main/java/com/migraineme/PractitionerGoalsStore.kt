@@ -33,6 +33,26 @@ object PractitionerGoalsStore {
     private val _progress = MutableStateFlow<Map<String, List<SupabasePractitionerService.GoalProgressRow>>>(emptyMap())
     val progress: StateFlow<Map<String, List<SupabasePractitionerService.GoalProgressRow>>> = _progress
 
+    /** goal_metric_catalog, in display order. Fetched once; it only changes with a server release. */
+    private val _metrics = MutableStateFlow<List<SupabasePractitionerService.GoalMetric>>(emptyList())
+    val metrics: StateFlow<List<SupabasePractitionerService.GoalMetric>> = _metrics
+
+    fun metricFor(list: List<SupabasePractitionerService.GoalMetric>, key: String?) =
+        key?.let { k -> list.firstOrNull { it.key == k } }
+
+    private suspend fun loadMetrics(token: String) {
+        if (_metrics.value.isNotEmpty()) return
+        runCatching { svc.goalMetrics(token) }
+            .onFailure { Log.w(TAG, "goalMetrics failed: ${it.message}") }
+            .getOrNull()?.let { _metrics.value = it }
+    }
+
+    /** For the editor, which can open before any refresh has run. */
+    suspend fun ensureMetrics(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
+        loadMetrics(token)
+    }
+
     suspend fun refresh(context: Context) {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return
         refresh(token)
@@ -46,6 +66,7 @@ object PractitionerGoalsStore {
             .onFailure { Log.w(TAG, "myGoals failed: ${it.message}") }
             .getOrNull() ?: return@withContext
         _goals.value = rows
+        loadMetrics(token)
         val today = LocalDate.now()
         val from = today.minusDays(PROGRESS_DAYS - 1).toString()
         val map = LinkedHashMap<String, List<SupabasePractitionerService.GoalProgressRow>>()

@@ -109,6 +109,21 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
                 }
             }
 
+            // Metric goals: today's reading, and where it comes from
+            if (goal.isMetric) {
+                BaseCard {
+                    Text(t("Today"), color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(goalTodayReadingText(goal, rows).orEmpty(), color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(
+                        if (goalHasNoMetricData(goal, rows)) t("No data for this metric yet. Connect a source in Data settings.")
+                        else t("Filled in from your own data."),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
             // This week
             BaseCard {
                 Text(t("This week"), color = AppTheme.TitleColor,

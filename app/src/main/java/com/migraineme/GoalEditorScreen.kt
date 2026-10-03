@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,9 +46,12 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 /**
- * Add (goalId null) or edit one of the client's own goals. Four kinds:
+ * Add (goalId null) or edit one of the client's own goals. Five kinds:
  * an exercise film so many times a day, meditation minutes a day, a heart
- * rate stretch so many days a week, or a free counter the client names.
+ * rate stretch so many days a week, a free counter the client names, or a
+ * catalogue metric (at least / at most a value, or staying consistent) that
+ * the server marks from the client's own data. The kind, and a metric goal's
+ * metric, are fixed once the goal exists.
  * Static: steppers and chips, no motion. Practitioner-set goals are not
  * editable here (the server refuses it too).
  */
@@ -58,6 +63,8 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
     val existing = goalId?.let { id -> goals.firstOrNull { it.id == id } }
 
     LaunchedEffect(Unit) { if (goalId != null && existing == null) PractitionerGoalsStore.refresh(ctx) }
+    val metrics by PractitionerGoalsStore.metrics.collectAsState()
+    LaunchedEffect(Unit) { PractitionerGoalsStore.ensureMetrics(ctx) }
 
     val routines = ExerciseCatalogue.ROUTINES
     var kind by remember { mutableStateOf(SupabasePractitionerService.KIND_EXERCISE) }
@@ -69,6 +76,12 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
     var hrDays by remember { mutableIntStateOf(4) }
     var dailyName by remember { mutableStateOf("") }
     var dailyCount by remember { mutableIntStateOf(1) }
+    var metricKey by remember { mutableStateOf<String?>(null) }
+    var metricDirection by remember { mutableStateOf(SupabasePractitionerService.DIR_GTE) }
+    var metricTarget by remember { mutableStateOf(0.0) }
+    var metricDays by remember { mutableIntStateOf(7) }
+    var openGroup by remember { mutableStateOf<String?>(null) }
+    var showValueDialog by remember { mutableStateOf(false) }
     var reminders by remember { mutableStateOf(listOf<String>()) }
     var initialized by remember { mutableStateOf(goalId == null) }
     var showHourPicker by remember { mutableStateOf(false) }
@@ -96,6 +109,12 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 dailyName = g.title
                 dailyCount = (g.target_count ?: 1).coerceIn(1, 50)
             }
+            SupabasePractitionerService.KIND_METRIC -> {
+                metricKey = g.metric_key
+                metricDirection = g.direction ?: SupabasePractitionerService.DIR_GTE
+                metricTarget = g.target_value ?: 0.0
+                metricDays = (g.times_per_week ?: 7).coerceIn(1, 7)
+            }
         }
         reminders = g.reminder_times.distinct().sorted()
         initialized = true
@@ -119,14 +138,17 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 return@ScrollableScreenContent
             }
 
-            // Kind
-            BaseCard {
+            val selectedMetric = PractitionerGoalsStore.metricFor(metrics, metricKey)
+
+            // Kind: chosen when the goal is made, fixed after that
+            if (existing == null) BaseCard {
                 EditorHeading(t("What kind of goal?"))
                 val kinds = listOf(
                     SupabasePractitionerService.KIND_EXERCISE to t("Exercise"),
                     SupabasePractitionerService.KIND_MINDFULNESS to t("Meditation"),
                     SupabasePractitionerService.KIND_HR to t("Heart rate"),
                     SupabasePractitionerService.KIND_DAILY to t("Something else"),
+                    SupabasePractitionerService.KIND_METRIC to t("A metric"),
                 )
                 for (pair in kinds.chunked(2)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -135,6 +157,7 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                                 kind = k; error = null
                             }
                         }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
             }
@@ -163,6 +186,98 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                         EditorStepper(t("At or above (bpm)"), bpm, 60, 220, step = 5) { bpm = it }
                         EditorStepper(t("Minutes in one go"), hrMinutes, 1, 240) { hrMinutes = it }
                         EditorStepper(t("Days a week"), hrDays, 1, 7) { hrDays = it }
+                    }
+                    SupabasePractitionerService.KIND_METRIC -> {
+                        if (existing != null) {
+                            // Editing: the metric is fixed
+                            EditorHeading(t(selectedMetric?.label ?: existing.title))
+                        } else {
+                            EditorHeading(t("Pick a metric"))
+                            if (metrics.isEmpty()) {
+                                Text(t("Could not load the metrics. Check your connection and open this page again."),
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                            // One group open at a time: Diet alone is long
+                            val groups = (listOf("Sleep", "Physical Health", "Cognitive", "Diet") +
+                                metrics.map { it.grp }).distinct().filter { g -> metrics.any { it.grp == g } }
+                            val open = openGroup ?: selectedMetric?.grp ?: groups.firstOrNull()
+                            for (g in groups) {
+                                Row(
+                                    Modifier.fillMaxWidth().clickable { openGroup = if (open == g) "" else g }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(t(g), color = AppTheme.TitleColor,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        modifier = Modifier.weight(1f))
+                                    Text(if (open == g) "−" else "+", color = AppTheme.AccentPurple,
+                                        style = MaterialTheme.typography.titleMedium)
+                                }
+                                if (open == g) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        for (m in metrics.filter { it.grp == g }) {
+                                            val unit = m.unit.trim()
+                                            EditorChip(
+                                                label = if (unit.isEmpty()) t(m.label) else t(m.label) + " · " + t(unit),
+                                                selected = metricKey == m.key,
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                metricKey = m.key
+                                                metricDirection = m.default_direction
+                                                metricTarget = m.default_target ?: 0.0
+                                                error = null
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (selectedMetric != null || existing != null) {
+                            Spacer(Modifier.height(4.dp))
+                            EditorHeading(t("Goal"))
+                            val dirs = listOf(
+                                SupabasePractitionerService.DIR_GTE to t("At least"),
+                                SupabasePractitionerService.DIR_LTE to t("At most"),
+                                SupabasePractitionerService.DIR_CONSISTENT to t("Stay consistent"),
+                            )
+                            // Stacked: three side by side wrap unevenly in the longer languages
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                for ((d, label) in dirs) {
+                                    EditorChip(label = label, selected = metricDirection == d, modifier = Modifier.fillMaxWidth()) {
+                                        metricDirection = d
+                                    }
+                                }
+                            }
+                            if (metricDirection == SupabasePractitionerService.DIR_CONSISTENT) {
+                                Text(t("Within your usual range: no more than 2 standard deviations from your 14-day average."),
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            } else {
+                                val step = (selectedMetric?.step ?: 1.0).takeIf { it > 0.0 } ?: 1.0
+                                val unit = selectedMetric?.unit?.trim().orEmpty()
+                                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(if (unit.isEmpty()) t("Value") else t("Value (%s)", t(unit)),
+                                        color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f))
+                                    StepperButton("−", enabled = metricTarget > 0.0) {
+                                        metricTarget = roundTarget((metricTarget - step).coerceAtLeast(0.0))
+                                    }
+                                    // Tap the number to type it
+                                    Box(
+                                        Modifier.padding(horizontal = 6.dp)
+                                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(10.dp))
+                                            .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                            .clickable { showValueDialog = true }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(fmtTarget(metricTarget), color = Color.White,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    }
+                                    StepperButton("+", enabled = true) { metricTarget = roundTarget(metricTarget + step) }
+                                }
+                            }
+                            EditorStepper(t("Days a week"), metricDays, 1, 7) { metricDays = it }
+                        }
                     }
                     else -> {
                         EditorHeading(t("Something else"))
@@ -209,6 +324,7 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
             }
 
             val nameMissing = t("Give your goal a name.")
+            val metricMissing = t("Pick a metric first.")
             val saveFailed = t("Could not save. Try again.")
             Button(
                 onClick = {
@@ -228,6 +344,18 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                             kind = kind, title = "Heart rate training", thresholdBpm = bpm,
                             targetMinutes = hrMinutes.toDouble(), timesPerWeek = hrDays, reminderTimes = reminders
                         )
+                        SupabasePractitionerService.KIND_METRIC -> {
+                            val key = metricKey
+                            // Title = the catalogue's English label; an edit keeps the saved one if the catalogue did not load
+                            val title = selectedMetric?.label ?: existing?.title
+                            if (key == null || title == null) { error = metricMissing; return@Button }
+                            val consistent = metricDirection == SupabasePractitionerService.DIR_CONSISTENT
+                            SupabasePractitionerService.GoalDraft(
+                                kind = kind, title = title, metricKey = key, direction = metricDirection,
+                                targetValue = if (consistent) null else metricTarget,
+                                timesPerWeek = metricDays.takeIf { it < 7 }, reminderTimes = reminders
+                            )
+                        }
                         else -> {
                             val name = dailyName.trim()
                             if (name.isEmpty()) { error = nameMissing; return@Button }
@@ -253,6 +381,46 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 Text(t("Save"), fontWeight = FontWeight.SemiBold)
             }
         }
+    }
+
+    if (showValueDialog) {
+        var typed by remember { mutableStateOf(if (metricTarget == 0.0) "" else trimTarget(metricTarget)) }
+        val unit = PractitionerGoalsStore.metricFor(metrics, metricKey)?.unit?.trim().orEmpty()
+        val parsed = typed.replace(',', '.').toDoubleOrNull()?.takeIf { it >= 0.0 && it.isFinite() }
+        AlertDialog(
+            onDismissRequest = { showValueDialog = false },
+            confirmButton = {
+                TextButton(enabled = parsed != null, onClick = {
+                    parsed?.let { metricTarget = roundTarget(it) }
+                    showValueDialog = false
+                }) { Text(t("OK"), color = if (parsed != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showValueDialog = false }) {
+                    Text(t("Cancel"), color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text(if (unit.isEmpty()) t("Value") else t("Value (%s)", t(unit)),
+                    color = Color.White, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                OutlinedTextField(
+                    value = typed,
+                    onValueChange = { v -> typed = v.filter { it.isDigit() || it == '.' || it == ',' }.take(9) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
+                    )
+                )
+            },
+            containerColor = Color(0xFF1A0029),
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 
     if (showHourPicker) {
@@ -289,6 +457,17 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
         )
     }
 }
+
+/** Steps of 0.1 or 0.25 must not drift into 7.300000001. */
+private fun roundTarget(v: Double): Double = Math.round(v * 100.0) / 100.0
+
+/** As fmtGoalNumber, but a quarter step (0.25) keeps its second decimal. */
+private fun fmtTarget(v: Double): String =
+    if (Math.round(v * 10.0) / 10.0 == v) fmtGoalNumber(v) else String.format(appLocale(), "%,.2f", v)
+
+/** Plain digits for the type-it field: "8000", "7.5". */
+private fun trimTarget(v: Double): String =
+    if (v == Math.rint(v)) v.toLong().toString() else v.toString()
 
 @Composable
 private fun EditorHeading(text: String) {

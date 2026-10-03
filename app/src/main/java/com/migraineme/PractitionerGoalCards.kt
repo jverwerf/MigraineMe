@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,11 +49,69 @@ typealias GoalProgressRow = SupabasePractitionerService.GoalProgressRow
 private fun fmtMinutes(v: Double): String =
     if (v == Math.rint(v)) v.toInt().toString() else String.format("%.1f", v)
 
+/** Metric values: no decimals when whole, else one; thousands grouped. */
+fun fmtGoalNumber(v: Double): String {
+    val r = Math.round(v * 10.0) / 10.0
+    return if (r == Math.rint(r)) String.format(appLocale(), "%,d", r.toLong())
+    else String.format(appLocale(), "%,.1f", r)
+}
+
+/** "Steps: at least 8,000 steps", "Screen time: at most 3 h, 5 days a week",
+ *  "Sleep duration: stay consistent". Unit comes from the catalogue. */
+@Composable
+private fun metricAskText(goal: GoalRow): String {
+    val metrics by PractitionerGoalsStore.metrics.collectAsState()
+    val label = t(goal.title)
+    val unit = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)?.unit?.trim().orEmpty()
+        .let { if (it.isEmpty()) "" else t(it) }
+    val days = goal.daysPerWeek
+    val v = fmtGoalNumber(goal.target_value ?: 0.0)
+    return when {
+        goal.isConsistent ->
+            if (goal.everyDay) t("%1\$s: stay consistent", label)
+            else t("%1\$s: stay consistent, %2\$s days a week", label, days)
+        goal.direction == SupabasePractitionerService.DIR_LTE -> when {
+            unit.isEmpty() && goal.everyDay -> t("%1\$s: at most %2\$s", label, v)
+            unit.isEmpty() -> t("%1\$s: at most %2\$s, %3\$s days a week", label, v, days)
+            goal.everyDay -> t("%1\$s: at most %2\$s %3\$s", label, v, unit)
+            else -> t("%1\$s: at most %2\$s %3\$s, %4\$s days a week", label, v, unit, days)
+        }
+        else -> when {
+            unit.isEmpty() && goal.everyDay -> t("%1\$s: at least %2\$s", label, v)
+            unit.isEmpty() -> t("%1\$s: at least %2\$s, %3\$s days a week", label, v, days)
+            goal.everyDay -> t("%1\$s: at least %2\$s %3\$s", label, v, unit)
+            else -> t("%1\$s: at least %2\$s %3\$s, %4\$s days a week", label, v, unit, days)
+        }
+    }
+}
+
+/** Metric goals only, else null: "Today: 7,412 steps", "No data yet today",
+ *  or "Building your baseline" while a consistent goal has under 7 days of data. */
+@Composable
+fun goalTodayReadingText(goal: GoalRow, rows: List<GoalProgressRow>?): String? {
+    if (!goal.isMetric) return null
+    val metrics by PractitionerGoalsStore.metrics.collectAsState()
+    val today = PractitionerGoalsStore.rowFor(rows, LocalDate.now())
+    val value = today?.value
+    val unit = PractitionerGoalsStore.metricFor(metrics, goal.metric_key)?.unit?.trim().orEmpty()
+    return when {
+        goal.isConsistent && today?.is_estimate == true -> t("Building your baseline")
+        value == null -> t("No data yet today")
+        unit.isEmpty() -> t("Today: %s", fmtGoalNumber(value))
+        else -> t("Today: %1\$s %2\$s", fmtGoalNumber(value), t(unit))
+    }
+}
+
+/** A metric goal with no reading on any of the 28 days the store holds. */
+fun goalHasNoMetricData(goal: GoalRow, rows: List<GoalProgressRow>?): Boolean =
+    goal.isMetric && rows != null && rows.none { it.value != null }
+
 /** The ask, in one line: "3 times a day", "5 minutes every day",
  *  "At or above 130 bpm for 20 min, 4 days a week". */
 @Composable
 fun goalAskText(goal: GoalRow): String {
     val days = goal.daysPerWeek
+    if (goal.isMetric) return metricAskText(goal)
     return when {
         goal.isCounter -> {
             val n = goal.target_count ?: 1
@@ -77,7 +136,7 @@ fun goalAskText(goal: GoalRow): String {
     }
 }
 
-/** "2 of 3 today", "0 of 5 min today", "1 of 4 days this week". */
+/** "2 of 3 today", "0 of 5 min today", "1 of 4 days this week" (heart rate and metric goals). */
 @Composable
 fun goalProgressText(goal: GoalRow, rows: List<GoalProgressRow>?): String = when {
     goal.isCounter ->
@@ -104,11 +163,11 @@ fun GoalPillButton(label: String, enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** The +1 / add-minutes button for a goal, or nothing for hr and paused goals.
+/** The +1 / add-minutes button for a goal, or nothing for hr, metric and paused goals.
  *  Writes through the store, so every surface updates together. */
 @Composable
 fun GoalLogButton(goal: GoalRow) {
-    if (goal.isHr || !goal.isActive) return
+    if (goal.isHr || goal.isMetric || !goal.isActive) return
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
@@ -134,7 +193,8 @@ fun GoalPausedChip() {
     }
 }
 
-/** One dot per day: filled when the day was achieved, hollow otherwise,
+/** One dot per day: filled when the day was achieved, hollow otherwise
+ *  (a "building baseline" day is never achieved, so it is hollow too),
  *  dimmed for days still to come. */
 @Composable
 fun GoalDayDot(day: LocalDate, row: GoalProgressRow?, size: Int = 12) {
@@ -182,7 +242,7 @@ fun goalSetByText(goal: GoalRow): String? = null
 fun orderedGoals(goals: List<GoalRow>): List<GoalRow> = goals.sortedBy { it.isOwn }
 
 /** Short progress for a Monitor tile: "2/3" today for counters, "0/5 min" today
- *  for meditation, "2/4" days this week for heart rate. */
+ *  for meditation, "2/4" days this week for heart rate and metric goals. */
 fun goalProgressShort(goal: GoalRow, rows: List<GoalProgressRow>?): String = when {
     goal.isCounter -> "${PractitionerGoalsStore.todayValue(rows).toInt()}/${goal.target_count ?: 1}"
     goal.isMindfulness ->

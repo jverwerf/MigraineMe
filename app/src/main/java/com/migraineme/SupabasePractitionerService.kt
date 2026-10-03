@@ -278,6 +278,11 @@ object SupabasePractitionerService {
         val target_minutes: Double? = null,
         val target_count: Int? = null,
         val times_per_week: Int? = null,
+        /** kind 'metric' only: the goal_metric_catalog key, 'gte' | 'lte' |
+         *  'consistent', and the target (null for 'consistent'). */
+        val metric_key: String? = null,
+        val direction: String? = null,
+        val target_value: Double? = null,
         val reminder_times: List<String> = emptyList(),
         val reminders_enabled: Boolean = true,
         val status: String = "active",
@@ -297,6 +302,9 @@ object SupabasePractitionerService {
         val isExercise: Boolean get() = kind == KIND_EXERCISE
         val isMindfulness: Boolean get() = kind == KIND_MINDFULNESS
         val isDaily: Boolean get() = kind == KIND_DAILY
+        /** Filled in by the server from the client's own data; never logged by hand. */
+        val isMetric: Boolean get() = kind == KIND_METRIC
+        val isConsistent: Boolean get() = direction == DIR_CONSISTENT
         /** Logged as a count, one tap = one: exercise films and free daily counters. */
         val isCounter: Boolean get() = isExercise || isDaily
         /** null times_per_week means every day. */
@@ -311,6 +319,25 @@ object SupabasePractitionerService {
     const val KIND_MINDFULNESS = "mindfulness_minutes"
     /** A free counter the client names: "Drink water, 8 times a day". */
     const val KIND_DAILY = "daily_count"
+    /** Any catalogue metric: at least / at most a value, or staying consistent. */
+    const val KIND_METRIC = "metric"
+    const val DIR_GTE = "gte"
+    const val DIR_LTE = "lte"
+    /** Within 2 standard deviations of the 14-day average. */
+    const val DIR_CONSISTENT = "consistent"
+
+    /** One row of goal_metric_catalog. `label` is an English key for t(). */
+    @Serializable
+    data class GoalMetric(
+        val key: String,
+        val label: String = "",
+        val grp: String = "",
+        val unit: String = "",
+        val default_direction: String = DIR_GTE,
+        val default_target: Double? = null,
+        val step: Double = 1.0,
+        val sort: Int = 0,
+    )
 
     /** What the goal editor saves. Fields that do not belong to [kind] are
      *  written as null, so switching kind on an edit leaves nothing stale. */
@@ -323,6 +350,9 @@ object SupabasePractitionerService {
         val targetCount: Int? = null,
         /** null = every day. */
         val timesPerWeek: Int? = null,
+        val metricKey: String? = null,
+        val direction: String? = null,
+        val targetValue: Double? = null,
         /** "HH:mm:ss" */
         val reminderTimes: List<String> = emptyList(),
     )
@@ -339,11 +369,13 @@ object SupabasePractitionerService {
     )
 
     /** One day from goal_daily_progress: value = count for exercise goals,
-     *  minutes for the others (hr: longest stretch at or above threshold). */
+     *  minutes for the others (hr: longest stretch at or above threshold),
+     *  that day's reading for metric goals (null = no data that day).
+     *  is_estimate on a 'consistent' metric goal = baseline still building. */
     @Serializable
     data class GoalProgressRow(
         val day: String,
-        val value: Double = 0.0,
+        val value: Double? = null,
         val achieved: Boolean = false,
         val is_estimate: Boolean = false,
     )
@@ -439,13 +471,23 @@ object SupabasePractitionerService {
         val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
         val url = "$baseUrl/rest/v1/practitioner_goals?user_id=eq.$uid&status=neq.ended" +
             "&select=id,practitioner_id,user_id,kind,title,exercise_id,threshold_bpm,target_minutes," +
-            "target_count,times_per_week,reminder_times,reminders_enabled,status,note,created_at,updated_at," +
+            "target_count,times_per_week,metric_key,direction,target_value,reminder_times,reminders_enabled,status,note,created_at,updated_at," +
             "practitioner_name" +
             "&order=created_at.asc"
         return client.get(url) {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")
         }.body()
+    }
+
+    /** The metrics a goal can be set on (weather is not in it), in display order. */
+    suspend fun goalMetrics(accessToken: String): List<GoalMetric> {
+        val url = "$baseUrl/rest/v1/goal_metric_catalog" +
+            "?select=key,label,grp,unit,default_direction,default_target,step,sort&order=sort.asc"
+        return client.get(url) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.requireOk("goalMetrics").body()
     }
 
     /** Per-day progress for one goal, both dates inclusive (ISO yyyy-MM-dd). */
@@ -479,7 +521,7 @@ object SupabasePractitionerService {
         ) {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")
-        }.body()
+        }.requireOk("logGoal read").body()
         val cur = existing.firstOrNull()
         val row = GoalLogRow(
             goal_id = goal.id,
@@ -495,7 +537,7 @@ object SupabasePractitionerService {
             header("Prefer", "resolution=merge-duplicates,return=minimal")
             contentType(ContentType.Application.Json)
             setBody(row)
-        }
+        }.requireOk("logGoal")
         return row
     }
 
@@ -506,7 +548,7 @@ object SupabasePractitionerService {
             header("Authorization", "Bearer $accessToken")
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("goal_id", goalId); put("enabled", enabled) })
-        }
+        }.requireOk("setGoalReminders")
     }
 
     private fun JsonObjectBuilder.putDraft(d: GoalDraft) {
@@ -517,6 +559,9 @@ object SupabasePractitionerService {
         if (d.targetMinutes != null) put("target_minutes", d.targetMinutes) else put("target_minutes", JsonNull)
         if (d.targetCount != null) put("target_count", d.targetCount) else put("target_count", JsonNull)
         if (d.timesPerWeek != null) put("times_per_week", d.timesPerWeek) else put("times_per_week", JsonNull)
+        if (d.metricKey != null) put("metric_key", d.metricKey) else put("metric_key", JsonNull)
+        if (d.direction != null) put("direction", d.direction) else put("direction", JsonNull)
+        if (d.targetValue != null) put("target_value", d.targetValue) else put("target_value", JsonNull)
         putJsonArray("reminder_times") { d.reminderTimes.forEach { add(it) } }
     }
 

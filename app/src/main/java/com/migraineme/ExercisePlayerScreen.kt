@@ -1,5 +1,6 @@
 package com.migraineme
 
+import kotlinx.coroutines.launch
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -72,8 +73,19 @@ fun ExercisePlayerScreen(
     // as playback starts. Play retries: PlayerView re-prepares an idle player.
     var showNoConnection by remember(routine.id) { mutableStateOf(false) }
 
+    // Set when a finished play-through was added to a linked goal; shown as one
+    // static line under the film.
+    var countedTowardGoal by remember(routine.id) { mutableStateOf(false) }
+    // Goals may not be loaded yet when the player is opened straight from the list.
+    androidx.compose.runtime.LaunchedEffect(routine.id) {
+        if (MonitorCardConfig.GOALS_ENABLED && PractitionerGoalsStore.goals.value.isEmpty()) {
+            PractitionerGoalsStore.refresh(context.applicationContext)
+        }
+    }
+
     val player = remember(routine.id) {
         var usingFallback = langCode == ExerciseCatalogue.FALLBACK_LANG
+        var endCounted = false
         ExoPlayer.Builder(context)
             .setMediaSourceFactory(
                 DefaultMediaSourceFactory(ExerciseVideoCache.dataSourceFactory(context))
@@ -103,7 +115,30 @@ fun ExercisePlayerScreen(
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         // Keep the screen awake while the film is actually playing.
                         view.keepScreenOn = isPlaying
-                        if (isPlaying) showNoConnection = false
+                        if (isPlaying) { showNoConnection = false; endCounted = false }
+                    }
+
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        // The film ran to its end: that is one set done. Count it toward
+                        // every active goal linked to this exercise (Jordy 2026-10-03:
+                        // "chin tucks done in exercise should auto top it up"). Once per
+                        // play-through; playing it again counts again.
+                        if (playbackState == Player.STATE_ENDED && !endCounted) {
+                            endCounted = true
+                            if (MonitorCardConfig.GOALS_ENABLED) {
+                                val linked = PractitionerGoalsStore.goals.value.filter {
+                                    it.isActive && it.isCounter && it.exercise_id == routine.id
+                                }
+                                if (linked.isNotEmpty()) {
+                                    val appCtx = context.applicationContext
+                                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                        var any = false
+                                        for (g in linked) if (PractitionerGoalsStore.log(appCtx, g, countDelta = 1)) any = true
+                                        if (any) countedTowardGoal = true
+                                    }
+                                }
+                            }
+                        }
                     }
                 })
                 setMediaItem(MediaItem.fromUri(ExerciseCatalogue.filmUrl(routine, langCode)), resumePositionMs)
@@ -156,6 +191,16 @@ fun ExercisePlayerScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (countedTowardGoal) {
+                LabelPlate {
+                    Text(
+                        t("Counted toward your goal."),
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             if (showNoConnection) {
                 LabelPlate {
                     Text(

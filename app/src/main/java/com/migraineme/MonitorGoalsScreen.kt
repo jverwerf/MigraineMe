@@ -71,6 +71,10 @@ fun MonitorGoalsScreen(navController: NavController) {
                                     maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Text(goalProgressText(goal, rows), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.bodySmall)
+                                goalTodayReadingText(goal, rows)?.let {
+                                    Text(it, color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                             Spacer(Modifier.width(8.dp))
                             if (goal.isPaused) GoalPausedChip() else GoalLogButton(goal)
