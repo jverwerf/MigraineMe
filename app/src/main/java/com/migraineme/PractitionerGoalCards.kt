@@ -177,14 +177,31 @@ fun GoalPillButton(label: String, enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** The +1 / add-minutes button for a goal, or nothing for hr, metric and paused goals.
- *  Writes through the store, so every surface updates together. */
+/** The manual button every active goal has (Jordy 2026-10-03: "always make it possible on
+ *  each goal to press done"): "Done one" for counters, "Add 5 min" for meditation, and
+ *  "Done today" for heart-rate and metric goals while today is not met yet (the server
+ *  counts a hand tick as that day done; the measured value is left alone).
+ *  Nothing for paused goals. Writes through the store, so every surface updates together. */
 @Composable
 fun GoalLogButton(goal: GoalRow) {
-    if (goal.isHr || goal.isMetric || !goal.isActive) return
+    if (!goal.isActive) return
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
+    if (goal.isHr || goal.isMetric) {
+        val progress by PractitionerGoalsStore.progress.collectAsState()
+        val rows = progress[goal.id] ?: return          // not loaded yet: no button
+        val today = LocalDate.now().toString()
+        if (rows.firstOrNull { it.day == today }?.achieved == true) return
+        GoalPillButton(label = t("Done today"), enabled = !busy) {
+            busy = true
+            scope.launch {
+                PractitionerGoalsStore.log(ctx, goal, countDelta = 1)
+                busy = false
+            }
+        }
+        return
+    }
     val label = if (goal.isCounter) t("Done one") else t("Add 5 min")
     GoalPillButton(label = label, enabled = !busy) {
         busy = true

@@ -32,9 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.HeartRateRecord
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,23 +57,9 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
     var deleting by remember { mutableStateOf(false) }
     var deleteFailed by remember { mutableStateOf(false) }
 
-    // Heart rate goals are measured, not logged: say where the number comes
-    // from, or what to connect. Health Connect counts once the app may read
-    // heart rate; the wearable token stores are what the server reads.
-    var hrSourceReady by remember { mutableStateOf<Boolean?>(null) }
-    LaunchedEffect(goal?.isHr) {
-        if (goal?.isHr != true) return@LaunchedEffect
-        hrSourceReady = withContext(Dispatchers.IO) {
-            val hc = runCatching {
-                HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE &&
-                    HealthPermission.getReadPermission(HeartRateRecord::class) in
-                    HealthConnectClient.getOrCreate(ctx).permissionController.getGrantedPermissions()
-            }.getOrDefault(false)
-            hc || runCatching { GarminTokenStore(ctx).load() != null }.getOrDefault(false) ||
-                runCatching { OuraTokenStore(ctx).load() != null }.getOrDefault(false) ||
-                runCatching { PolarTokenStore(ctx).load() != null }.getOrDefault(false)
-        }
-    }
+    // Heart rate goals are measured, not logged: the store knows whether a
+    // source that carries heart rate is connected (see HrGoalFeed.kt).
+    val hrFeed by PractitionerGoalsStore.hrFeed.collectAsState()
 
     val scrollState = rememberScrollState()
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -109,6 +92,11 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
                 }
             }
 
+            // Heart rate goal with no heart rate source: say so right under the ask
+            if (goal.isHr && hrFeed?.fed == false) {
+                HrNotFedWarning(onOpenConnections = { navController.navigate(Routes.THIRD_PARTY_CONNECTIONS) })
+            }
+
             // Metric goals: today's reading, and where it comes from
             if (goal.isMetric) {
                 BaseCard {
@@ -135,16 +123,10 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
                     GoalLogButton(goal)
                 }
                 GoalWeekStrip(rows)
-                if (goal.isHr) {
+                if (goal.isHr && hrFeed?.fed == true) {
                     Spacer(Modifier.height(2.dp))
-                    Text(
-                        when (hrSourceReady) {
-                            true -> t("Measured from your heart rate in Health Connect")
-                            false -> t("Connect a watch or Health Connect to measure this.")
-                            null -> ""
-                        },
-                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall
-                    )
+                    Text(t("Measured from your heart rate in Health Connect"),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 

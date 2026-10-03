@@ -348,6 +348,11 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 Text(it, color = AppTheme.AccentPink, style = MaterialTheme.typography.bodySmall)
             }
 
+            // Heart rate goal with no heart rate source: warn, saving stays allowed
+            if (kind == SupabasePractitionerService.KIND_HR && hrGoalNotFed()) {
+                HrNotFedWarning(onOpenConnections = { navController.navigate(Routes.THIRD_PARTY_CONNECTIONS) })
+            }
+
             val nameMissing = t("Give your goal a name.")
             val metricMissing = t("Pick a metric first.")
             val saveFailed = t("Could not save. Try again.")

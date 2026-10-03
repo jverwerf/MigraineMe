@@ -37,6 +37,7 @@ fun MonitorGoalsScreen(navController: NavController) {
     val goals by PractitionerGoalsStore.goals.collectAsState()
     val progress by PractitionerGoalsStore.progress.collectAsState()
     LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(ctx) }
+    val hrNotFed = hrGoalNotFed()
 
     val scrollState = rememberScrollState()
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -73,6 +74,10 @@ fun MonitorGoalsScreen(navController: NavController) {
                                     style = MaterialTheme.typography.bodySmall)
                                 goalTodayReadingText(goal, rows)?.let {
                                     Text(it, color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.bodySmall)
+                                }
+                                if (goal.isHr && !goal.isPaused && hrNotFed) {
+                                    Text(t("Not filling in automatically"), color = HrWarningOrange,
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                             }

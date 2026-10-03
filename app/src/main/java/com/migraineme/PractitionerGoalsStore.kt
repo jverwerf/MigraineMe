@@ -37,6 +37,17 @@ object PractitionerGoalsStore {
     private val _metrics = MutableStateFlow<List<SupabasePractitionerService.GoalMetric>>(emptyList())
     val metrics: StateFlow<List<SupabasePractitionerService.GoalMetric>> = _metrics
 
+    /**
+     * Whether heart rate goals can fill in by themselves; null until first checked.
+     * Local reads only, refreshed with every goals refresh.
+     */
+    private val _hrFeed = MutableStateFlow<HrFeed?>(null)
+    val hrFeed: StateFlow<HrFeed?> = _hrFeed
+
+    suspend fun refreshHrFeed(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        _hrFeed.value = hrGoalFeed(context)
+    }
+
     fun metricFor(list: List<SupabasePractitionerService.GoalMetric>, key: String?) =
         key?.let { k -> list.firstOrNull { it.key == k } }
 
@@ -49,11 +60,13 @@ object PractitionerGoalsStore {
 
     /** For the editor, which can open before any refresh has run. */
     suspend fun ensureMetrics(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        refreshHrFeed(context)
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
         loadMetrics(token)
     }
 
     suspend fun refresh(context: Context) {
+        refreshHrFeed(context)
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return
         refresh(token)
     }
