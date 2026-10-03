@@ -184,6 +184,9 @@ object Routes {
     const val MONITOR_MEDICINES = "monitor_medicines"
     const val MONITOR_TREATMENTS = "monitor_treatments"
     const val MONITOR_TREATMENT_DETAIL = "monitor_treatment_detail/{regimenId}"
+    /** All goals, plus the + and the Monitor-card picker. */
+    const val MONITOR_GOALS = "monitor_goals"
+    const val GOALS_CONFIG = "goals_config"
     /** One practitioner goal. Navigate with [practitionerGoal]. */
     const val MONITOR_PRACTITIONER_GOAL = "monitor_practitioner_goal"
     fun practitionerGoal(goalId: String): String = "$MONITOR_PRACTITIONER_GOAL/$goalId"
@@ -1241,6 +1244,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MONITOR_MEDICINES -> "Medicines"
                                     Routes.MONITOR_TREATMENTS -> "Treatments"
                                     "monitor_treatments_config" -> "Customize Treatments"
+                                    Routes.MONITOR_GOALS -> "Goals"
+                                    Routes.GOALS_CONFIG -> "Customize Goals"
                                     Routes.MEDICINE_CONFIG -> "Customize Medicines"
                                     Routes.MEDICINE_DATA_HISTORY -> "Medicines Data"
                                     Routes.FULL_GRAPH_PHYSICAL -> "Physical History"
@@ -1409,6 +1414,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             MonitorTreatmentDetailScreen(navController = nav, regimenId = regimenId)
                         }
                     }
+                    // Not premium gated: goals are open to everyone.
+                    composable(Routes.MONITOR_GOALS) { MonitorGoalsScreen(navController = nav) }
+                    composable(Routes.GOALS_CONFIG) { GoalsConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(
                         "${Routes.MONITOR_PRACTITIONER_GOAL}/{goalId}",
                         arguments = listOf(navArgument("goalId") { type = NavType.StringType })

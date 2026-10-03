@@ -393,14 +393,13 @@ fun MonitorScreen(
                 } else if (cardConfig.isVisible(cardId)) {
                     when (cardId) {
                         MonitorCardConfig.CARD_PRACTITIONER_GOALS -> {
-                            // One card, every goal a row. Ended goals never come back
-                            // from the store; paused ones show with a chip and no buttons.
-                            // Shown with zero goals too: the + is how a goal is added.
+                            // Up to three picked goals as tiles; the whole card opens the
+                            // Goals detail screen, where every goal and the + live.
+                            // Shown with zero goals too, so the detail screen stays reachable.
                             GoalsMonitorCard(
                                 goals = practitionerGoals,
                                 progress = practitionerProgress,
-                                onAdd = { navController.navigate(Routes.goalEditor(null)) },
-                                onOpen = { goal -> navController.navigate(Routes.practitionerGoal(goal.id)) }
+                                onClick = { navController.navigate(Routes.MONITOR_GOALS) }
                             )
                         }
                         MonitorCardConfig.CARD_MIGRAINES -> {
@@ -910,7 +909,7 @@ internal fun MonitorBrainyCard(
 
 /** Quiet rounded tile for one metric: bold coloured value over a muted label. */
 @Composable
-internal fun MetricTile(value: String, label: String, valueColor: Color, modifier: Modifier = Modifier) {
+internal fun MetricTile(value: String, label: String, valueColor: Color, modifier: Modifier = Modifier, labelMaxLines: Int = 2) {
     Column(
         modifier = modifier
             .background(Color.White.copy(alpha = 0.055f), RoundedCornerShape(12.dp))
@@ -928,7 +927,7 @@ internal fun MetricTile(value: String, label: String, valueColor: Color, modifie
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = labelMaxLines,
             overflow = TextOverflow.Ellipsis
         )
     }

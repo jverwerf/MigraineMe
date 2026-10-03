@@ -16,11 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -174,29 +169,39 @@ fun GoalWeekStrip(rows: List<GoalProgressRow>?, withLabels: Boolean = true) {
     }
 }
 
-/** "Set by Anna", or null for the client's own goals. */
-@Composable
-fun goalSetByText(goal: GoalRow): String? = when {
-    goal.isOwn -> null
-    goal.practitionerName != null -> t("Set by %s", goal.practitionerName!!)
-    else -> t("Set by your practitioner")
-}
+/**
+ * The "Set by <name>" caption. Not shown anywhere (Jordy 2026-10-03: "takes space
+ * for no good reason"), so this always returns null and every call site draws
+ * nothing. Who set a goal still decides what the client may edit (GoalRow.isOwn).
+ */
+@Suppress("UNUSED_PARAMETER")
+fun goalSetByText(goal: GoalRow): String? = null
 
 /** Practitioner goals first, then the client's own, each oldest first
  *  (the store already holds them by created_at). */
 fun orderedGoals(goals: List<GoalRow>): List<GoalRow> = goals.sortedBy { it.isOwn }
 
-/** Monitor: one "Goals" card holding every goal as a compact row, with a +
- *  to add your own. Same build as the other Monitor category cards. */
+/** Short progress for a Monitor tile: "2/3" today for counters, "0/5 min" today
+ *  for meditation, "2/4" days this week for heart rate. */
+fun goalProgressShort(goal: GoalRow, rows: List<GoalProgressRow>?): String = when {
+    goal.isCounter -> "${PractitionerGoalsStore.todayValue(rows).toInt()}/${goal.target_count ?: 1}"
+    goal.isMindfulness ->
+        "${fmtMinutes(PractitionerGoalsStore.todayValue(rows))}/${fmtMinutes(goal.target_minutes ?: 0.0)} min"
+    else -> "${PractitionerGoalsStore.achievedThisWeek(rows)}/${goal.daysPerWeek}"
+}
+
+/** Monitor: the "Goals" card. Same build as the other Monitor category cards:
+ *  header, then up to three tiles for the goals picked in GoalsConfigScreen.
+ *  No buttons here; the whole card opens the Goals detail screen. */
 @Composable
 fun GoalsMonitorCard(
     goals: List<GoalRow>,
     progress: Map<String, List<GoalProgressRow>>,
-    onAdd: () -> Unit,
-    onOpen: (GoalRow) -> Unit
+    onClick: () -> Unit
 ) {
+    val ctx = LocalContext.current
     MonitorBrainyCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         resId = R.drawable.brainy_goals,
         flipWatermark = true
     ) {
@@ -204,42 +209,26 @@ fun GoalsMonitorCard(
             MonitorBlobIcon(resId = R.drawable.brainy_goals_small)
             Spacer(Modifier.width(10.dp))
             Text(t("Goals"), color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.weight(1f))
-            IconButton(onClick = onAdd, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Outlined.Add, contentDescription = t("Add a goal"), tint = AppTheme.AccentPurple)
-            }
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.weight(1f))
+            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
         }
         if (goals.isEmpty()) {
-            Text(t("No goals yet. Tap + to set one, or ask your practitioner."),
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("No goals yet"), color = AppTheme.SubtleTextColor)
             return@MonitorBrainyCard
         }
-        val ordered = orderedGoals(goals)
-        ordered.forEachIndexed { i, goal ->
-            val rows = progress[goal.id]
-            Column(
-                Modifier.fillMaxWidth().clickable { onOpen(goal) }.padding(vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(t(goal.title), color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                        goalSetByText(goal)?.let {
-                            Text(it, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        }
-                        Text(goalProgressText(goal, rows), color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall)
-                    }
-                    if (goal.isPaused) GoalPausedChip() else GoalLogButton(goal)
-                    Spacer(Modifier.width(8.dp))
-                    Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
-                }
-                GoalWeekStrip(rows, withLabels = false)
+        val shown = remember(goals) { GoalsCardConfigStore.displayGoals(ctx, goals) }
+        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            shown.forEachIndexed { index, goal ->
+                MetricTile(
+                    value = goalProgressShort(goal, progress[goal.id]),
+                    label = goal.title,
+                    valueColor = slotColors.getOrElse(index) { slotColors.last() },
+                    modifier = Modifier.weight(1f),
+                    labelMaxLines = 1
+                )
             }
-            if (i != ordered.lastIndex) HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
         }
     }
 }
-

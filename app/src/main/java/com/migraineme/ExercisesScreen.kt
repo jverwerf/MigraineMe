@@ -144,8 +144,9 @@ fun ExercisesScreen(
     }
 }
 
+/** Shared heading card with an optional round + on the right (also used by MonitorGoalsScreen). */
 @Composable
-private fun ExerciseGroupHeading(text: String, onPlus: (() -> Unit)? = null) {
+internal fun ExerciseGroupHeading(text: String, onPlus: (() -> Unit)? = null) {
     // Same build as the "Quick Log" header on the Log tab: a full-width card with the title in it
     BaseCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
