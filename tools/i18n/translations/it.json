@@ -4657,5 +4657,8 @@
  "Describe the side effect": "Descrivi l'effetto collaterale",
  "%s linked": "%s collegati",
  "Name is required": "Serve un nome",
- "Save failed": "Non salvato"
+ "Save failed": "Non salvato",
+ "drug": "farmaco",
+ "lifestyle": "abitudini",
+ "device": "dispositivo"
 }

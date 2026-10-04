@@ -587,7 +587,7 @@ private fun LeaderboardRow(row: SupabaseDbService.TreatmentLeaderboardRow, maxPc
                     }
                 }
             }
-            val sub = listOfNotNull(row.kind, row.amount, row.frequency).joinToString(" · ")
+            val sub = listOfNotNull(t(row.kind), row.amount, row.frequency).joinToString(" · ")
             Text(sub, color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
         Box(modifier = Modifier.width(60.dp).height(6.dp).background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(3.dp))) {

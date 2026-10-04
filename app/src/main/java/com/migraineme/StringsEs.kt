@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4659 entries.
+ * 4662 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -4351,6 +4351,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "days a month" to "días al mes",
     "days migraine-free" to "días sin migraña",
     "dehydration" to "deshidratación",
+    "device" to "aparato",
     "dietitian" to "dietista",
     "dot%s" to "punto%s",
     "down" to "abajo",
@@ -4359,6 +4360,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "down from %s free last month" to "menos que %s el mes pasado",
     "down from %s last month" to "menos que %s el mes pasado",
     "drops below" to "baja de",
+    "drug" to "fármaco",
     "e.g. \"I'm 34, female, and I've had migraines for six years — 2 to 4 a month, one-sided and throbbing, lasting 12 to 24 hours. The day before I yawn a lot and get irritable. During one I'm nauseous and light and sound are unbearable, so I lie in a dark room. My triggers are work stress, under 6 hours' sleep, and red wine. I sleep badly, drink 2 coffees a day, skip lunch when I'm busy, and I'm on screens 8 hours. They're worse around my period. I take sumatriptan at the first sign and it works within 2 hours.\"" to "p. ej. \"Tengo 34 años, soy mujer y llevo seis años con migrañas: de 2 a 4 al mes, en un lado y punzantes, de 12 a 24 horas. El día antes bostezo mucho y me pongo irritable. Durante el ataque tengo náuseas y la luz y el ruido son insoportables, así que me tumbo a oscuras. Mis factores son el estrés del trabajo, dormir menos de 6 horas y el vino tinto. Duermo mal, tomo 2 cafés al día, me salto la comida cuando hay lío y paso 8 horas ante pantallas. Empeoran con la regla. Tomo sumatriptán al primer aviso y me hace efecto en 2 horas.\"",
     "e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\"" to "p. ej. \"vino tinto en la cena. cuello rígido. 2 ibuprofenos. ayudó algo.\"",
     "e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\"" to "p. ej. \"desperté con la sien izquierda a martillazos, con náuseas, tomé sumatriptán y me tumbé a oscuras…\"",
@@ -4426,6 +4428,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "last %s wks" to "últimas %s sem",
     "leave the tracking to me" to "déjame el seguimiento a mí",
     "let-down effect" to "efecto de relajación",
+    "lifestyle" to "hábitos",
     "light sensitivity" to "sensibilidad a la luz",
     "likely" to "probable",
     "longer than usual" to "más largo que normal",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4659 entries.
+ * 4662 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -4351,6 +4351,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "days a month" to "dagen per maand",
     "days migraine-free" to "dagen migrainevrij",
     "dehydration" to "uitdroging",
+    "device" to "apparaat",
     "dietitian" to "diëtist",
     "dot%s" to "stip%s",
     "down" to "omlaag",
@@ -4359,6 +4360,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "down from %s free last month" to "minder dan %s vorige maand",
     "down from %s last month" to "minder dan %s vorige maand",
     "drops below" to "daalt onder",
+    "drug" to "middel",
     "e.g. \"I'm 34, female, and I've had migraines for six years — 2 to 4 a month, one-sided and throbbing, lasting 12 to 24 hours. The day before I yawn a lot and get irritable. During one I'm nauseous and light and sound are unbearable, so I lie in a dark room. My triggers are work stress, under 6 hours' sleep, and red wine. I sleep badly, drink 2 coffees a day, skip lunch when I'm busy, and I'm on screens 8 hours. They're worse around my period. I take sumatriptan at the first sign and it works within 2 hours.\"" to "bijv. \"Ik ben 34, vrouw, en heb al zes jaar migraine: 2 tot 4 per maand, eenzijdig en bonzend, 12 tot 24 uur lang. De dag ervoor gaap ik veel en word ik prikkelbaar. Tijdens een aanval ben ik misselijk en zijn licht en geluid niet te harden, dus lig ik in een donkere kamer. Mijn triggers zijn werkstress, minder dan 6 uur slaap en rode wijn. Ik slaap slecht, drink 2 koffie per dag, sla de lunch over als het druk is en zit 8 uur voor een scherm. Rond mijn menstruatie is het erger. Ik neem sumatriptan bij het eerste teken en het werkt binnen 2 uur.\"",
     "e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\"" to "bijv. \"rode wijn bij het eten. stijve nek. 2 ibuprofen genomen. hielp een beetje.\"",
     "e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\"" to "bijv. \"wakker met bonzende linkerslaap, misselijk, sumatriptan genomen en in het donker gaan liggen…\"",
@@ -4426,6 +4428,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "last %s wks" to "laatste %s wk",
     "leave the tracking to me" to "laat het bijhouden aan mij over",
     "let-down effect" to "ontspanningseffect",
+    "lifestyle" to "gewoonten",
     "light sensitivity" to "lichtgevoeligheid",
     "likely" to "waarschijnlijk",
     "longer than usual" to "langer dan normaal",

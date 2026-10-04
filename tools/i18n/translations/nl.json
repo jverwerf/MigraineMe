@@ -4657,5 +4657,8 @@
  "Describe the side effect": "Beschrijf de bijwerking",
  "%s linked": "%s gekoppeld",
  "Name is required": "Naam is verplicht",
- "Save failed": "Niet bewaard"
+ "Save failed": "Niet bewaard",
+ "drug": "middel",
+ "lifestyle": "gewoonten",
+ "device": "apparaat"
 }

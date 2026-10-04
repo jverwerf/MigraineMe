@@ -4657,5 +4657,8 @@
  "Describe the side effect": "Beschreibe die Nebenwirkung",
  "%s linked": "%s verknüpft",
  "Name is required": "Name fehlt",
- "Save failed": "Speicherfehler"
+ "Save failed": "Speicherfehler",
+ "drug": "Mittel",
+ "lifestyle": "Lebensstil",
+ "device": "Gerät"
 }

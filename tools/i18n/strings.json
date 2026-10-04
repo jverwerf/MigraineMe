@@ -34437,6 +34437,15 @@
     "count": 1
   },
   {
+    "en": "device",
+    "class": "soft",
+    "sites": [
+      "MonitorTreatmentDetailScreen.kt:comparison-row-kind"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
     "en": "dietitian",
     "class": "hard",
     "sites": [
@@ -34506,6 +34515,15 @@
       "app/src/main/java/com/migraineme/EdgeFunctionsService.kt:2208"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "drug",
+    "class": "soft",
+    "sites": [
+      "MonitorTreatmentDetailScreen.kt:comparison-row-kind"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -34990,6 +35008,15 @@
     "class": "soft",
     "sites": [
       "ai_companions:triggers/interests (DB rows, rendered via tSync)"
+    ],
+    "max_len": 48,
+    "count": 1
+  },
+  {
+    "en": "lifestyle",
+    "class": "soft",
+    "sites": [
+      "MonitorTreatmentDetailScreen.kt:comparison-row-kind"
     ],
     "max_len": 48,
     "count": 1
