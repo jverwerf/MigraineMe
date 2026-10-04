@@ -112,9 +112,9 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
     ) {
             val r = regimen
             if (r != null) {
-                val period = r.stopDate?.let { "${r.startDate} → $it" } ?: "since ${r.startDate}"
+                val period = r.stopDate?.let { "${r.startDate} → $it" } ?: t("since %s", r.startDate)
                 val sub = listOfNotNull(
-                    r.kind.replaceFirstChar { it.uppercase() },
+                    t(r.kind.replaceFirstChar { it.uppercase() }),
                     r.amount, r.frequency, period
                 ).joinToString(" · ")
                 LabelPlate { Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall, maxLines = 2) }
@@ -271,7 +271,7 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
         }
         Text(pctText, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.displayMedium)
         Spacer(Modifier.height(2.dp))
-        Text(BAND_LABELS[e.band] ?: "-", color = bandColor(e.band), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+        Text(BAND_LABELS[e.band]?.let { t(it) } ?: "-", color = bandColor(e.band), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         if (noBaseline) {
             if (r != null) {
@@ -295,7 +295,7 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
         ClinicalBandScale(pct = e.pctChangeMmd, hasData = e.band != "not_enough_data" && e.band != "no_baseline")
         Spacer(Modifier.height(12.dp))
 
-        val trustNote = if (e.rampComplete) " · enough data to trust this" else " · still in 8-week ramp"
+        val trustNote = " · " + if (e.rampComplete) t("enough data to trust this") else t("still in 8-week ramp")
         Text(t("%1\$s weeks in · %2\$s attacks tracked%3\$s", e.weeksActive, e.nAttacksRolling, trustNote),
             color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
     }
@@ -512,7 +512,7 @@ private fun TriggerShiftCard(shifts: List<SupabaseDbService.TreatmentTriggerShif
                     color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.weight(1f))
                 val (label, color) = triggerChangeLabel(t)
-                Text(t(label), color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+                Text(label, color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
             }
             Divider(color = Color.White.copy(alpha = 0.08f))
         }
@@ -523,15 +523,15 @@ private fun triggerChangeLabel(t: SupabaseDbService.TreatmentTriggerShiftRow): P
     val change = t.rankChange
     if (change == null) {
         return when {
-            t.rollingRank != null && t.baselineRank == null -> "new" to Color(0xFFE0492B)
-            t.rollingRank == null && t.baselineRank != null -> "gone" to Color(0xFF6ED69E)
+            t.rollingRank != null && t.baselineRank == null -> tSync("new") to Color(0xFFE0492B)
+            t.rollingRank == null && t.baselineRank != null -> tSync("gone") to Color(0xFF6ED69E)
             else -> "-" to Color.White.copy(alpha = 0.62f)
         }
     }
     return when {
-        change == 0 -> "no change" to Color.White.copy(alpha = 0.62f)
-        change > 0 -> "down $change rank${if (change == 1) "" else "s"}" to Color(0xFF6ED69E)
-        else -> "up ${-change} rank${if (-change == 1) "" else "s"}" to Color(0xFFE0492B)
+        change == 0 -> tSync("no change") to Color.White.copy(alpha = 0.62f)
+        change > 0 -> (if (change == 1) tSync("down 1 rank") else tSync("down %s ranks", change)) to Color(0xFF6ED69E)
+        else -> (if (-change == 1) tSync("up 1 rank") else tSync("up %s ranks", -change)) to Color(0xFFE0492B)
     }
 }
 
@@ -642,7 +642,7 @@ private fun ConfoundersCard(
                         "stable" -> t("stable")
                         "concurrent" -> {
                             val n = (c.rollingValue ?: 0.0).toInt()
-                            if (n == 1) "1 added" else "$n added"
+                            if (n == 1) t("1 added") else t("%s added", n)
                         }
                         else -> "-"
                     }
@@ -659,7 +659,7 @@ private fun ConfoundersCard(
                             .padding(horizontal = 10.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(prettyMetric(c.metric), color = Color.White.copy(alpha = 0.86f),
+                        Text(t(prettyMetric(c.metric)), color = Color.White.copy(alpha = 0.86f),
                             style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.weight(1f))
                         Text(t(label), color = color, fontWeight = FontWeight.SemiBold,
@@ -743,7 +743,7 @@ private fun SideEffectsCard(
                                     color = Color(0xFFB97BFF).copy(alpha = 0.22f),
                                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB97BFF))
                                 ) {
-                                    Text(p, color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold,
+                                    Text(t(p), color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         style = MaterialTheme.typography.labelSmall)
                                 }
@@ -874,8 +874,8 @@ private fun LinkRegimenDialog(
     val candidates = allRows.filter { it.id != current.id }
     val suggested = candidates.filter { it.name.equals(current.name, ignoreCase = true) }
     val others = candidates.filter { !it.name.equals(current.name, ignoreCase = true) }
-    val confirmLabel = if (selected.isEmpty()) "Unlink"
-        else "Link ${selected.size} treatment${if (selected.size == 1) "" else "s"}"
+    val confirmLabel = if (selected.isEmpty()) t("Unlink")
+        else if (selected.size == 1) t("Link 1 treatment") else t("Link %s treatments", selected.size)
 
     AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
@@ -981,7 +981,7 @@ private fun LinkRow(r: SupabaseDbService.TreatmentRegimenRow, isSelected: Boolea
         Column(modifier = Modifier.weight(1f)) {
             Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
-            val period = r.stopDate?.let { "${r.startDate} → $it" } ?: "since ${r.startDate}"
+            val period = r.stopDate?.let { "${r.startDate} → $it" } ?: t("since %s", r.startDate)
             Text(listOfNotNull(dose.ifBlank { null }, period).joinToString(" · "),
                 color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
@@ -1016,7 +1016,7 @@ private fun AddSideEffectDialog(regimenId: String, onDismiss: () -> Unit, onSave
     fun launchVoice() {
         val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe the side effect")
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Describe the side effect"))
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()

@@ -5947,6 +5947,198 @@
         "ExerciseCatalogue.kt:routine-table"
       ],
       "max_len": 197
+    },
+    {
+      "en": "since %s",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "enough data to trust this",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 50
+    },
+    {
+      "en": "still in 8-week ramp",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "migraine days/week",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "baseline",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "working-well line",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "new",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "gone",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "no change",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "down 1 rank",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "down %s ranks",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "up 1 rank",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "up %s ranks",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "1 added",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "%s added",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Unlink",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Link 1 treatment",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Link %s treatments",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Describe the side effect",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "%s linked",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Name is required",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Save failed",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "%s days/mo",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "%s days",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 48
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

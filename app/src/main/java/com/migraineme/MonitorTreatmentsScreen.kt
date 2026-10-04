@@ -146,7 +146,8 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
                             val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
-                            val sub = if (dose.isEmpty()) "since ${r.startDate}" else "$dose · since ${r.startDate}"
+                            val since = t("since %s", r.startDate)
+                            val sub = if (dose.isEmpty()) since else "$dose · $since"
                             Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
                         }
                         if (isSelected && orderIndex >= 0) {
@@ -361,7 +362,7 @@ private fun soloMeta(r: SupabaseDbService.TreatmentRegimenRow): String {
     val parts = mutableListOf<String>()
     if (!r.amount.isNullOrEmpty()) parts.add(r.amount!!)
     if (!r.frequency.isNullOrEmpty()) parts.add(r.frequency!!)
-    parts.add(r.stopDate?.let { "${r.startDate} → $it" } ?: "since ${r.startDate}")
+    parts.add(r.stopDate?.let { "${r.startDate} → $it" } ?: tSync("since %s", r.startDate))
     return parts.joinToString(" · ")
 }
 
@@ -375,10 +376,10 @@ private fun groupMeta(
         val amounts = members.mapNotNull { it.amount?.takeIf { a -> a.isNotEmpty() } }.distinct()
         if (amounts.isNotEmpty()) parts.add(amounts.joinToString(" + "))
     } else {
-        parts.add("${members.size} linked")
+        parts.add(tSync("%s linked", members.size))
     }
     if (ge != null) {
-        parts.add(ge.latestStop?.let { "${ge.earliestStart} → $it" } ?: "since ${ge.earliestStart}")
+        parts.add(ge.latestStop?.let { "${ge.earliestStart} → $it" } ?: tSync("since %s", ge.earliestStart))
     }
     return parts.joinToString(" · ")
 }
@@ -602,9 +603,9 @@ private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
         val pct = r.pctChangeMmd
         val (label, color) = when {
             r.band == "no_baseline" && r.rollingMmd != null ->
-                String.format("%.1f days/mo", r.rollingMmd) to Color.White.copy(alpha = 0.86f)
+                t("%s days/mo", String.format("%.1f", r.rollingMmd)) to Color.White.copy(alpha = 0.86f)
             r.band == "not_enough_data" -> "not enough data" to Color.White.copy(alpha = 0.55f)
-            pct != null -> String.format("%+.0f%% days", pct) to bandPctColor(r.band)
+            pct != null -> t("%s days", String.format("%+.0f%%", pct)) to bandPctColor(r.band)
             else -> bandPillLabel(r.band) to bandPctColor(r.band)
         }
         Text(t(label), color = color,
@@ -688,7 +689,7 @@ private fun AddTreatmentRegimenDialog(
     fun save() {
         if (saving) return
         val trimmedName = name.trim()
-        if (trimmedName.isEmpty()) { error = "Name is required"; return }
+        if (trimmedName.isEmpty()) { error = tSync("Name is required"); return }
         saving = true; error = null
         scope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -721,7 +722,7 @@ private fun AddTreatmentRegimenDialog(
             }
             saving = false
             result.onSuccess { onSaved() }
-                .onFailure { error = it.message ?: "Save failed" }
+                .onFailure { error = it.message ?: tSync("Save failed") }
         }
     }
 

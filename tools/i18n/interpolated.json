@@ -88,8 +88,12 @@
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:105",
+    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:209",
     "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/GoalEditorScreen.kt:172",
+    "line": "                                label = t(r.title) + \" · \" + t(\"%s min\", r.minutes),"
   },
   {
     "site": "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:831",
@@ -128,51 +132,51 @@
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:302",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:338",
     "line": "                    t(\"Your overview of logged migraine attacks. The card shows three things side-by-side: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:303",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:339",
     "line": "                    t(\"the number of attacks this week (with an up/down arrow comparing to last week), \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:304",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:340",
     "line": "                    t(\"your average severity this week (green / amber / red), and your all-time total.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:305",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:341",
     "line": "                    t(\"Tap into the detail screen and you'll get:\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:306",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:342",
     "line": "                    t(\"• The full weekly summary hero (this week vs last week, average per month)\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:307",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:343",
     "line": "                    t(\"• Frequency charts — by month, week, day-of-week, and severity\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:308",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:344",
     "line": "                    t(\"• The Migraine Timeline: scroll through every attack you've logged, with \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:309",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:345",
     "line": "                    t(\"category-count chips showing how many triggers / prodromes / medicines / reliefs / \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:310",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:346",
     "line": "                    t(\"activities / locations were linked to each one\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:311",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:347",
     "line": "                    t(\"• Spider cards breaking down what was happening around each attack\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:312",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:348",
     "line": "                    t(\"Use the card for a quick weekly trend read; tap in when you want to understand \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:313",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:349",
     "line": "                    t(\"the pattern behind a specific attack.\"),"
   },
   {
@@ -224,43 +228,47 @@
     "line": "                        t(\"This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
-    "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
+    "site": "app/src/main/java/com/migraineme/MonitorPractitionerGoalScreen.kt:163",
+    "line": "                            Text(t(routine.title) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
-    "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
+    "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:578",
-    "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
+    "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
-    "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
+    "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:580",
-    "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
+    "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:581",
-    "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
+    "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:582",
-    "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
+    "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:583",
-    "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
+    "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:584",
-    "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
+    "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:585",
+    "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:586",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
@@ -272,7 +280,7 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:684",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:685",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
