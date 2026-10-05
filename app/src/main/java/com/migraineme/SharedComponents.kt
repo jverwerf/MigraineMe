@@ -259,7 +259,7 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
                 .clickable(onClick = onSkip)
                 .padding(horizontal = 8.dp, vertical = 6.dp)
         ) {
-            Text(t("Skip"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Next"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.width(4.dp))
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
