@@ -68,14 +68,16 @@ fun MonitorConfigScreen(
 
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
-            // Adjust for header items (spacer + back button + header = 3 items),
-            // then map through the shown list back to the stored order.
-            val fromId = shownOrder.getOrNull(from.index - 3)
-            val toId = shownOrder.getOrNull(to.index - 3)
-            if (fromId != null && toId != null) {
-                updateConfig(config.moveCard(config.cardOrder.indexOf(fromId), config.cardOrder.indexOf(toId)))
+            // Map by card id, never by list position: the header rows shift the indices.
+            val fromKey = from.key as? String ?: return@rememberReorderableLazyListState
+            val toKey = to.key as? String ?: return@rememberReorderableLazyListState
+            val fromIndex = config.cardOrder.indexOf(fromKey)
+            val toIndex = config.cardOrder.indexOf(toKey)
+            if (fromIndex >= 0 && toIndex >= 0) {
+                updateConfig(config.moveCard(fromIndex, toIndex))
             }
-        }
+        },
+        canDragOver = { draggedOver, _ -> draggedOver.key in config.cardOrder }
     )
 
     LazyColumn(
@@ -146,7 +148,7 @@ private fun CardConfigItem(
 ) {
     val iconTint = getCardIconTint(cardId)
     val effectiveTint = if (isVisible) iconTint else iconTint.copy(alpha = 0.4f)
-    val label = MonitorCardConfig.CARD_LABELS[cardId] ?: cardId
+    val label = t(MonitorCardConfig.CARD_LABELS[cardId] ?: cardId)
 
     BaseCard(
         modifier = modifier
