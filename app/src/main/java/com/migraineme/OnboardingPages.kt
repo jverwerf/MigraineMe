@@ -639,9 +639,11 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         hasCal.value = granted
         if (granted) {
             // Combined permission + data: opt into calendar_events in the same step.
+            // hasCal flipping to true already advances the page (the LaunchedEffect below). Calling
+            // onGrant() here as well moved on twice, which skipped the Screen Time page for everyone
+            // who allowed the calendar.
             CoroutineScope(Dispatchers.IO).launch {
                 EdgeFunctionsService().upsertMetricSetting(context, "calendar_events", true)
-                withContext(Dispatchers.Main) { onGrant() }
             }
         }
     }
