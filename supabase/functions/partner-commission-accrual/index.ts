@@ -21,6 +21,11 @@
 // Negative deltas (refunds/chargebacks) are skipped rather than written
 // as negative rows — flagged in the response for manual review.
 //
+// BASELINE: what the user had already paid BEFORE they were attributed is
+// stored on the attribution row (baseline_proceeds_usd) and subtracted, so
+// an existing subscriber who redeems a partner code does not hand that
+// partner commission on their whole history.
+//
 // APP_USER_ID CASING: iOS registers the Supabase user id as an UPPERCASE
 // UUID (Swift's uuidString), Android lowercase — the same person can be
 // two RevenueCat customers. Both spellings are queried and summed; miss
@@ -31,57 +36,17 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchProceeds } from "../_shared/rcProceeds.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("PARTNER_ACCRUAL_SECRET")!;
-const RC_KEY = Deno.env.get("REVENUECAT_SECRET_KEY")!;
-const RC_PROJECT = "ec488213"; // MigraineMe
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
   });
-
-type RcSubscription = {
-  country?: string | null;
-  store?: string | null;
-  total_revenue_in_usd?: { proceeds?: number; currency?: string } | null;
-};
-
-// Sum lifetime proceeds across every subscription RevenueCat holds for
-// this user, under either id casing. Returns null if the customer is not
-// found at all (vs 0, which means "found but no money yet").
-async function fetchProceeds(userId: string): Promise<
-  { proceeds: number; country: string | null; store: string | null; found: boolean }
-> {
-  const variants = [userId.toUpperCase(), userId.toLowerCase()];
-  let proceeds = 0;
-  let country: string | null = null;
-  let store: string | null = null;
-  let found = false;
-
-  for (const id of variants) {
-    const res = await fetch(
-      `https://api.revenuecat.com/v2/projects/${RC_PROJECT}/customers/${id}/subscriptions?limit=50`,
-      { headers: { Authorization: `Bearer ${RC_KEY}` } },
-    );
-    if (res.status === 404) continue; // customer doesn't exist under this casing
-    if (!res.ok) throw new Error(`RC ${res.status} for ${id}: ${await res.text()}`);
-    found = true;
-    const body = await res.json();
-    for (const sub of (body.items ?? []) as RcSubscription[]) {
-      proceeds += sub.total_revenue_in_usd?.proceeds ?? 0;
-      country ??= sub.country ?? null;
-      store ??= sub.store ?? null;
-    }
-    // Uppercase and lowercase can BOTH exist (same human, two devices),
-    // so keep going rather than breaking on the first hit.
-  }
-
-  return { proceeds: Math.round(proceeds * 100) / 100, country, store, found };
-}
 
 serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -102,7 +67,7 @@ serve(async (req: Request) => {
 
   const { data: attributions, error: attrErr } = await supabase
     .from("partner_attributions")
-    .select("user_id, partner_id, partners(commission_pct, status)");
+    .select("user_id, partner_id, baseline_proceeds_usd, partners(commission_pct, status)");
   if (attrErr) return json({ error: "query_failed", message: attrErr.message }, 500);
   if (!attributions?.length) return json({ ok: true, accrued: 0, message: "No attributions." });
 
@@ -144,13 +109,15 @@ serve(async (req: Request) => {
     }
 
     const alreadyAccrued = priorByPair.get(`${attr.partner_id}|${attr.user_id}`) ?? 0;
-    const delta = Math.round((rc.proceeds - alreadyAccrued) * 100) / 100;
+    const baseline = Number((attr as any).baseline_proceeds_usd ?? 0);
+    const delta = Math.round((rc.proceeds - baseline - alreadyAccrued) * 100) / 100;
 
     if (delta <= 0) {
       skipped.push({
         user_id: attr.user_id,
         reason: delta === 0 ? "nothing_new_this_period" : "negative_delta_refund_review",
         lifetime_proceeds: rc.proceeds,
+        baseline,
         already_accrued: alreadyAccrued,
       });
       continue;

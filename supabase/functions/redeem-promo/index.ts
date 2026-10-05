@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getLang, t, type Lang } from "../_shared/i18n.ts";
+import { baselineProceeds } from "../_shared/rcProceeds.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -131,13 +132,19 @@ serve(async (req: Request) => {
     // If this code belongs to a partner, tag the user to that partner once.
     // user_id is unique on partner_attributions, so a later non-partner or
     // different-partner code redemption never overwrites the first tag.
+    // baseline_proceeds_usd = what they had already paid before today, so the
+    // partner earns only on revenue from here on.
     if (promo.partner_id) {
-      await supabase.from("partner_attributions").upsert({
+      const { error: attrErr } = await supabase.from("partner_attributions").upsert({
         user_id: userId,
         partner_id: promo.partner_id,
         promo_code_id: promo.id,
         source: "promo_code",
+        baseline_proceeds_usd: await baselineProceeds(userId),
       }, { onConflict: "user_id", ignoreDuplicates: true });
+      // The redemption itself succeeded, so don't fail the user — but a lost
+      // attribution is lost partner money, so make it findable in the logs.
+      if (attrErr) console.error(`redeem-promo: attribution failed user=${userId} partner=${promo.partner_id}: ${attrErr.message}`);
     }
 
     console.log(`Promo redeemed: user=${userId}, code=${rawCode}, days=${promo.days_granted}, new_trial_end=${newTrialEnd.toISOString()}`);

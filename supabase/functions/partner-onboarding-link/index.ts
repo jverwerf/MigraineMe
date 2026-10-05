@@ -68,7 +68,7 @@ serve(async (req) => {
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const { data: partner, error } = await db
     .from("partners")
-    .select("id, name, contact_email, stripe_connect_account_id")
+    .select("id, name, contact_email, stripe_connect_account_id, stripe_country")
     .eq("onboarding_token", token)
     .maybeSingle();
 
@@ -91,15 +91,27 @@ serve(async (req) => {
 
   let account = partner.stripe_connect_account_id;
   if (!account) {
-    const created = await stripe("accounts", {
+    // The account must be opened in the country the partner banks in, and
+    // Stripe never lets it be changed afterwards. Transfers from our UK
+    // platform reach the UK, EEA, Switzerland, US and Canada.
+    const country = (partner.stripe_country || "GB").toUpperCase();
+    const base = {
       type: "express",
-      country: "GB",
+      country,
       email: partner.contact_email || "",
       business_type: "individual",
       "capabilities[transfers][requested]": "true",
       "metadata[partner_id]": partner.id,
-    });
+    };
+    let created = await stripe("accounts", base);
+    if (!created.ok && country !== "GB") {
+      // Outside the platform's own country Stripe can refuse an account that
+      // asks for transfers alone; it then wants card_payments alongside.
+      console.error(`[partner-onboarding-link] transfers-only refused for ${country}: ${JSON.stringify(created.data?.error ?? created.data)}`);
+      created = await stripe("accounts", { ...base, "capabilities[card_payments][requested]": "true" });
+    }
     if (!created.ok || !created.data?.id) {
+      console.error(`[partner-onboarding-link] account create failed for partner ${partner.id}: ${JSON.stringify(created.data?.error ?? created.data)}`);
       return page("Something went wrong", "<p>We could not start the payout setup. Please let us know.</p>", 502);
     }
     account = created.data.id as string;
@@ -117,6 +129,7 @@ serve(async (req) => {
     type: "account_onboarding",
   });
   if (!link.ok || !link.data?.url) {
+    console.error(`[partner-onboarding-link] account link failed for partner ${partner.id}: ${JSON.stringify(link.data?.error ?? link.data)}`);
     return page("Something went wrong", "<p>We could not open the payout setup. Please try again shortly.</p>", 502);
   }
 

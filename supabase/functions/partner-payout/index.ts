@@ -11,12 +11,16 @@
 //     than silently pretending. (Jordy, 2026-08-08: "MAKE SURE YOU DO NOT
 //     STAY IN SANDBOX MODE!")
 //  2. IDEMPOTENCY. Every transfer carries an idempotency key derived from
-//     partner + period, so a re-run, retry or double-fire can never pay
-//     twice — Stripe returns the original transfer instead.
+//     the partner and the exact ledger rows it pays, so a re-run, retry or
+//     double-fire can never pay those rows twice — Stripe returns the
+//     original transfer instead.
 //  3. DRY RUN BY DEFAULT. Nothing is sent unless {"confirm": true} is
 //     passed explicitly. A cron with an empty body previews only.
 //  4. MINIMUM THRESHOLD. Below MIN_PAYOUT_GBP the fees cost more than the
-//     transfer moves, so it rolls over to next month instead.
+//     transfer moves, so it rolls over to next month instead. Everything a
+//     partner is owed is paid in ONE transfer across all open periods:
+//     judged period by period, a partner earning a few pounds a month
+//     would stay under the minimum forever and never be paid.
 //  5. BALANCE CHECK. Refuses to attempt transfers exceeding the available
 //     GBP balance, so we fail loudly rather than half-paying a run.
 //
@@ -58,6 +62,15 @@ async function stripe(path: string, body?: Record<string, string>, idempotencyKe
   return data;
 }
 
+// Stripe idempotency key for one partner's transfer: the partner plus the
+// exact set of ledger rows, hashed because Stripe caps keys at 255 chars.
+async function payoutKey(partnerId: string, rowIds: string[]): Promise<string> {
+  const data = new TextEncoder().encode([...rowIds].sort().join(","));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const hex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `partner-payout:${partnerId}:${hex}`;
+}
+
 async function usdToGbpRate(): Promise<number> {
   // ECB rates via Frankfurter — no key, no account.
   const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=GBP");
@@ -95,21 +108,24 @@ serve(async (req: Request) => {
   if (rowsErr) return json({ error: "query_failed", message: rowsErr.message }, 500);
   if (!rows?.length) return json({ ok: true, paid: 0, message: "Nothing accrued." });
 
-  // Group by partner + period — one transfer per partner per period.
-  const groups = new Map<string, { partnerId: string; period: string; usd: number; ids: string[]; partner: any }>();
+  // Group by partner — one transfer per partner, covering every period
+  // still owed (including months that rolled over under the minimum).
+  const groups = new Map<string, { partnerId: string; from: string; to: string; usd: number; ids: string[]; partner: any }>();
   for (const r of rows) {
     const partner = (r as any).partners;
-    const key = `${r.partner_id}|${r.period_start}|${r.period_end}`;
-    const g = groups.get(key) ?? {
+    const g = groups.get(r.partner_id) ?? {
       partnerId: r.partner_id,
-      period: `${r.period_start}..${r.period_end}`,
+      from: r.period_start,
+      to: r.period_end,
       usd: 0,
-      ids: [],
+      ids: [] as string[],
       partner,
     };
+    if (r.period_start < g.from) g.from = r.period_start;
+    if (r.period_end > g.to) g.to = r.period_end;
     g.usd += Number(r.commission_amount);
     g.ids.push(r.id);
-    groups.set(key, g);
+    groups.set(r.partner_id, g);
   }
 
   const rate = await usdToGbpRate();
@@ -117,7 +133,7 @@ serve(async (req: Request) => {
   const planned: Array<Record<string, unknown>> = [];
   const skipped: Array<Record<string, unknown>> = [];
 
-  for (const [key, g] of groups) {
+  for (const g of groups.values()) {
     if (!g.partner || g.partner.status !== "active") {
       skipped.push({ partner_id: g.partnerId, reason: "partner_not_active" });
       continue;
@@ -133,11 +149,11 @@ serve(async (req: Request) => {
       continue;
     }
     planned.push({
-      key,
+      key: await payoutKey(g.partnerId, g.ids),
       partner_id: g.partnerId,
       partner: g.partner.name,
       destination: g.partner.stripe_connect_account_id,
-      period: g.period,
+      period: `${g.from}..${g.to}`,
       usd: Math.round(g.usd * 100) / 100,
       gbp,
       row_ids: g.ids,
@@ -179,11 +195,11 @@ serve(async (req: Request) => {
           destination: p.destination as string,
           description: `MigraineMe affiliate commission ${p.period}`,
         },
-        // Guard 2: same partner+period can never pay twice.
-        `partner-payout:${p.key}`,
+        // Guard 2: the same rows can never be paid twice.
+        p.key as string,
       );
 
-      await supabase
+      const { error: markErr } = await supabase
         .from("partner_commission_ledger")
         .update({
           status: "paid",
@@ -193,6 +209,20 @@ serve(async (req: Request) => {
           fx_rate_usd_gbp: rate,
         })
         .in("id", p.row_ids as string[]);
+
+      if (markErr) {
+        // The money HAS moved but the ledger still says 'accrued'. Left
+        // alone, the next run would pay these rows again, so shout.
+        results.push({
+          partner: p.partner,
+          gbp: p.gbp,
+          transfer_id: transfer.id,
+          status: "TRANSFERRED_BUT_NOT_MARKED_PAID",
+          row_ids: p.row_ids,
+          error: markErr.message,
+        });
+        continue;
+      }
 
       results.push({ partner: p.partner, gbp: p.gbp, transfer_id: transfer.id, status: "paid" });
     } catch (err) {

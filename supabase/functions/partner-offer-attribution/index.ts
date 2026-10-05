@@ -25,9 +25,17 @@
 // event/store, so several known spellings are checked and the full event
 // is logged when none match — the first real redemption will show the
 // true shape in the function logs rather than silently dropping money.
+//
+// NOTE ON THE VALUE: for the App Store, Apple does not report the custom
+// code the customer typed (LUZERN). It reports the offer's REFERENCE NAME
+// (the offer's name in App Store Connect, e.g. "Affiliate Martina Dubach
+// Monthly"), and that is what RevenueCat forwards as offer_code. So the
+// lookup accepts either partners.apple_offer_code or
+// partners.apple_offer_ref_name.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { baselineProceeds } from "../_shared/rcProceeds.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -92,14 +100,24 @@ serve(async (req: Request) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  const { data: partner } = await supabase
+  // Compared in code, not with ilike: a reference name can contain % or _,
+  // which ilike would read as wildcards.
+  const wanted = offerCode.toLowerCase();
+  const { data: partners, error: partnersErr } = await supabase
     .from("partners")
-    .select("id, status")
-    .ilike("apple_offer_code", offerCode)
-    .maybeSingle();
+    .select("id, status, apple_offer_code, apple_offer_ref_name")
+    .or("apple_offer_code.not.is.null,apple_offer_ref_name.not.is.null");
+  if (partnersErr) {
+    console.error(`[partner-offer-attribution] partner lookup failed: ${partnersErr.message}`);
+    return json({ error: "lookup_failed", message: partnersErr.message }, 500);
+  }
+  const partner = (partners ?? []).find((p) =>
+    (p.apple_offer_code ?? "").trim().toLowerCase() === wanted ||
+    (p.apple_offer_ref_name ?? "").trim().toLowerCase() === wanted
+  );
 
   if (!partner) {
-    console.log(`[partner-offer-attribution] offer code "${offerCode}" matches no partner`);
+    console.log(`[partner-offer-attribution] offer code "${offerCode}" matches no partner; event=${JSON.stringify(ev)}`);
     return json({ ok: true, skipped: "unknown_offer_code", offerCode });
   }
   if (partner.status !== "active") {
@@ -109,7 +127,14 @@ serve(async (req: Request) => {
   // First-touch and permanent: user_id is unique, so an existing
   // attribution (from a code redemption or another partner) always wins.
   const { error } = await supabase.from("partner_attributions").upsert(
-    { user_id: userId, partner_id: partner.id, source: 'apple_offer_code' },
+    {
+      user_id: userId,
+      partner_id: partner.id,
+      source: "apple_offer_code",
+      // What they had paid before this offer, so the partner earns only on
+      // revenue from here on.
+      baseline_proceeds_usd: await baselineProceeds(userId),
+    },
     { onConflict: "user_id", ignoreDuplicates: true },
   );
   if (error) {
