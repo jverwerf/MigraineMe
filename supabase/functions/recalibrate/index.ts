@@ -205,9 +205,17 @@ serve(async (req: Request) => {
       .eq("status", "rejected")
       .gte("created_at", new Date(Date.now() - 60 * 86400000).toISOString());
 
+    // The summary row is bookkeeping and narratives/warnings are rewritten
+    // every run, so only real setting changes count as "declined".
+    const declinedRows = (rejectedRows ?? []).filter((r: any) =>
+      r.type !== "summary" && r.type !== "data_warning" && r.type !== "clinical_assessment");
+    const declinedKey = (p: any) =>
+      `${p.type}|${String(p.label ?? "").trim().toLowerCase()}|${String(p.to_value ?? "").trim().toLowerCase()}`;
+    const declinedKeys = new Set(declinedRows.map(declinedKey));
+
     let rejectionBlock = "";
-    if (rejectedRows && rejectedRows.length > 0) {
-      const lines = rejectedRows.map((r: any) =>
+    if (declinedRows.length > 0) {
+      const lines = declinedRows.map((r: any) =>
         `- ${r.type}: "${r.label}"${r.to_value ? ` → ${r.to_value}` : ""}`);
       rejectionBlock =
         "\n\n=== RECENTLY REJECTED (last 60 days) ===\n" +
@@ -411,7 +419,8 @@ serve(async (req: Request) => {
     const prodFavIds = new Set((prodFavs ?? []).map((f: any) => f.prodrome_id));
 
     // Favorites are stored by symptom_id (UUID) but the prompt below checks by
-    // label, so resolve to labels via user_symptoms.
+    // label, so resolve to labels via user_symptoms. Lowercased, because the
+    // usage counts they are checked against are keyed by lowercased label.
     const { data: symptomFavs } = await supabase
       .from("symptom_preferences")
       .select("symptom_id, user_symptoms(label)")
@@ -420,6 +429,7 @@ serve(async (req: Request) => {
       (symptomFavs ?? [])
         .map((f: any) => f.user_symptoms?.label)
         .filter((l: any): l is string => typeof l === "string" && l.length > 0)
+        .map((l: string) => l.trim().toLowerCase())
     );
 
     const { data: medFavs } = await supabase
@@ -430,6 +440,7 @@ serve(async (req: Request) => {
       (medFavs ?? [])
         .map((f: any) => f.user_medicines?.label)
         .filter((l: any): l is string => typeof l === "string" && l.length > 0)
+        .map((l: string) => l.trim().toLowerCase())
     );
 
     const { data: reliefFavs } = await supabase
@@ -440,6 +451,7 @@ serve(async (req: Request) => {
       (reliefFavs ?? [])
         .map((f: any) => f.user_reliefs?.label)
         .filter((l: any): l is string => typeof l === "string" && l.length > 0)
+        .map((l: string) => l.trim().toLowerCase())
     );
 
     const { data: actFavs } = await supabase
@@ -450,6 +462,7 @@ serve(async (req: Request) => {
       (actFavs ?? [])
         .map((f: any) => f.user_activities?.label)
         .filter((l: any): l is string => typeof l === "string" && l.length > 0)
+        .map((l: string) => l.trim().toLowerCase())
     );
 
     const { data: missedFavs } = await supabase
@@ -460,6 +473,7 @@ serve(async (req: Request) => {
       (missedFavs ?? [])
         .map((f: any) => f.user_missed_activities?.label)
         .filter((l: any): l is string => typeof l === "string" && l.length > 0)
+        .map((l: string) => l.trim().toLowerCase())
     );
 
     // 6. Gauge data
@@ -832,13 +846,41 @@ serve(async (req: Request) => {
       : "unknown";
 
     // Gauge performance
+    //
+    // Judged on the last PERF_WINDOW_DAYS past days, each re-zoned against the
+    // thresholds in force NOW. The stored zone is the one stamped under
+    // whatever thresholds applied that day, so counting it over the whole
+    // history showed the same pile of old false alarms after every raise and
+    // the thresholds only ever went up. Forecast rows (future dates) are not
+    // outcomes and are left out.
+    const PERF_WINDOW_DAYS = 60;
+    const perfTodayIso = ymd(new Date());
+    const perfCutoff = new Date(); perfCutoff.setDate(perfCutoff.getDate() - PERF_WINDOW_DAYS);
+    const perfCutoffIso = ymd(perfCutoff);
+    const thresholdFor = (zone: string) => {
+      const row = (thresholdRows ?? []).find((r: any) => String(r.zone ?? "").toUpperCase() === zone);
+      const n = row?.min_value == null ? NaN : Number(row.min_value);
+      return Number.isFinite(n) ? n : null;
+    };
+    const thrLow = thresholdFor("LOW"), thrMild = thresholdFor("MILD"), thrHigh = thresholdFor("HIGH");
+    const zoneNow = (day: any): string => {
+      const score = day.score == null ? NaN : Number(day.score);
+      if (thrLow == null || thrMild == null || thrHigh == null || !Number.isFinite(score)) {
+        return (day.zone ?? "NONE").toUpperCase();
+      }
+      return score >= thrHigh ? "HIGH" : score >= thrMild ? "MILD" : score >= thrLow ? "LOW" : "NONE";
+    };
+
     const migDates = new Set(migraines.map((m: any) => m.start_at?.substring(0, 10)));
     let gaugeTP = 0, gaugeFP = 0, gaugeFN = 0, gaugeTN = 0;
     let greenDays = 0, amberDays = 0, yellowDays = 0, redDays = 0;
+    let totalDays = 0;
 
     for (const day of dailyScores ?? []) {
       const d = day.date?.substring(0, 10);
-      const zone = (day.zone ?? "NONE").toUpperCase();
+      if (!d || d > perfTodayIso || d <= perfCutoffIso) continue;
+      totalDays++;
+      const zone = zoneNow(day);
       const warned = zone === "HIGH" || zone === "MILD";
       const migraineNear = migDates.has(d);
 
@@ -852,8 +894,6 @@ serve(async (req: Request) => {
       else if (!warned && migraineNear) gaugeFN++;
       else gaugeTN++;
     }
-
-    const totalDays = (dailyScores ?? []).length;
 
     // ══════════════════════════════════════════════════════════════
     // CALL 1 — The Neurologist
@@ -1048,14 +1088,22 @@ serve(async (req: Request) => {
     // in the prodrome branch and wrote to_value ("favorite") straight into
     // user_prodromes.prediction_value — a value the risk engine ignores. There
     // is one such row in production. Drop anything unrecognised.
+    const favSetByType: Record<string, Set<string>> = {
+      medicine: medFavIds, relief: reliefFavIds, symptom: symptomFavIds,
+      activity: actFavIds, missed_activity: missedFavIds,
+    };
     for (const fav of call1Result.favorite_adjustments ?? []) {
       if (!FAVORITE_ITEM_TYPES.has(fav.item_type)) {
         console.warn(`recalibrate: dropping favorite_adjustment with item_type ${JSON.stringify(fav.item_type)}`);
         continue;
       }
+      // `from` is the real favorite state, not the model's claim, so a
+      // proposal to favorite something already favorited dies in the no-op
+      // filter below instead of coming back every week.
+      const isFav = favSetByType[fav.item_type]?.has(String(fav.label ?? "").trim().toLowerCase()) ?? false;
       proposals.push({
         user_id: userId, type: fav.item_type, label: fav.label,
-        from_value: fav.currently_favorite ? "favorite" : "not_favorite",
+        from_value: isFav ? "favorite" : "not_favorite",
         to_value: fav.should_favorite ? "favorite" : "not_favorite",
         should_favorite: fav.should_favorite,
         reasoning: fav.reasoning, status: "pending",
@@ -1092,10 +1140,19 @@ serve(async (req: Request) => {
     // Gauge thresholds (full mode only)
     if (mode === "full") {
       const gt = call2Result.gauge_thresholds;
+      // A raise is refused while the gauge, at the thresholds in force now,
+      // already misses at least as many migraine days as it catches. Higher
+      // thresholds can only miss more, and the model asks for a raise on
+      // false alarms alone.
+      const missesDominate = gaugeTP + gaugeFN > 0 && gaugeFN >= gaugeTP;
       if (gt) {
         for (const zone of ["low", "mild", "high"]) {
           const current = (thresholdRows ?? []).find((r: any) => r.zone?.toUpperCase() === zone.toUpperCase());
           if (gt[zone] != null) {
+            if (missesDominate && Number(gt[zone]) > Number(current?.min_value)) {
+              console.warn(`recalibrate: dropping ${zone} threshold raise to ${gt[zone]}: ${gaugeFN} missed vs ${gaugeTP} caught`);
+              continue;
+            }
             proposals.push({
               user_id: userId, type: "gauge_threshold", label: zone.toUpperCase(),
               from_value: String(current?.min_value ?? "?"),
@@ -1182,7 +1239,11 @@ serve(async (req: Request) => {
       }
       return false;
     };
-    const actionable = proposals.filter((p) => !isNoop(p));
+    // The prompt asks the model not to repeat a declined proposal, but it
+    // does anyway, so the same change (type + label + target value) declined
+    // in the last 60 days is dropped here.
+    const isDeclined = (p: any) => p.to_value != null && declinedKeys.has(declinedKey(p));
+    const actionable = proposals.filter((p) => !isNoop(p) && !isDeclined(p));
 
     // ── Materiality gate (automated runs only) ──
     // A weekly run whose only output is a rewritten narrative (or a repeat
@@ -1769,7 +1830,8 @@ function buildCall2Message(
   L.push("");
 
   L.push("=== ACTUAL GAUGE PERFORMANCE ===");
-  L.push(`Analysis period: ${totalDays} days, ${mc} migraines`);
+  L.push(`Analysis period: the last ${totalDays} days with a score, ${tp + fn} of them migraine days (${mc} migraines logged in total).`);
+  L.push("Every day below is re-scored against the CURRENT thresholds, so these numbers already include the effect of earlier adjustments.");
   L.push(`Correctly warned before migraine (true positive): ${tp}`);
   L.push(`False alarms — warned but no migraine (false positive): ${fp}`);
   L.push(`Missed — no warning but migraine happened (false negative): ${fn}`);
@@ -1783,6 +1845,11 @@ function buildCall2Message(
     L.push(`Specificity (% false alarms avoided): ${spec}%`);
   }
   L.push("");
+
+  if (tp + fn > 0 && fn >= tp) {
+    L.push("At the current thresholds the gauge already misses at least as many as it catches, so the thresholds will NOT be raised this run: do not propose higher values and do not describe a raise in calibration_notes.");
+    L.push("");
+  }
 
   L.push("=== CURRENT THRESHOLDS ===");
   for (const r of thresholdRows) {
