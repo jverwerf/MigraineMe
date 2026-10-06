@@ -141,6 +141,8 @@ fun PostdromesScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = accent)
 
             BaseCard {

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4662 entries.
+ * 4664 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -1175,6 +1175,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Dismiss" to "Sluiten",
     "Dismiss disclaimer" to "Melding sluiten",
     "Dismiss recommendation" to "Tip sluiten",
+    "Dismiss tip" to "Tip sluiten",
     "Display Metrics (%s/3)" to "Getoonde waarden (%s/3)",
     "Disturbances" to "Onderbreking",
     "Ditans" to "Ditanen",
@@ -2032,6 +2033,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Login failed." to "Login mislukt.",
     "Login failed: no userId in access token" to "Inloggen mislukt: geen userId in token",
     "Logout" to "Uitloggen",
+    "Long list? Tap Manage and star the ones you use. They move to the top." to "Lange lijst? Tik op Beheren en geef wat je gebruikt een ster. Dat komt dan bovenaan.",
     "Long-press and drag to reorder cards" to "Lang drukken en slepen om te ordenen",
     "Longest" to "Langste",
     "Looks wrong? Tap Edit." to "Klopt het niet? Tik op Bewerken.",

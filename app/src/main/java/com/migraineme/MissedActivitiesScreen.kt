@@ -223,6 +223,8 @@ fun MissedActivitiesScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             if (quickLogMode && onMigraineSelect != null) {
                 val firstIso = draft.missedActivities.firstOrNull()?.startAtIso
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)

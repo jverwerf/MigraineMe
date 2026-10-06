@@ -4660,5 +4660,7 @@
  "Save failed": "No se guardó",
  "drug": "fármaco",
  "lifestyle": "hábitos",
- "device": "aparato"
+ "device": "aparato",
+ "Long list? Tap Manage and star the ones you use. They move to the top.": "¿Lista larga? Toca Gestionar y marca con estrella lo que usas. Pasará arriba del todo.",
+ "Dismiss tip": "Cerrar consejo"
 }

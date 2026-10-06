@@ -129,6 +129,8 @@ fun LocationsScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             if (quickLogMode && onMigraineSelect != null) {
                 val firstIso = draft.locations.firstOrNull()?.startAtIso
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)

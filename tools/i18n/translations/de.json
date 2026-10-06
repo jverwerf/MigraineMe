@@ -4660,5 +4660,7 @@
  "Save failed": "Speicherfehler",
  "drug": "Mittel",
  "lifestyle": "Lebensstil",
- "device": "Gerät"
+ "device": "Gerät",
+ "Long list? Tap Manage and star the ones you use. They move to the top.": "Lange Liste? Tippe auf Verwalten und gib dem, was du nutzt, einen Stern. Es rückt nach oben.",
+ "Dismiss tip": "Hinweis schließen"
 }

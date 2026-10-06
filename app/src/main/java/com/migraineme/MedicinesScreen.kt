@@ -281,6 +281,8 @@ fun MedicinesScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             if (quickLogMode && onMigraineSelect != null) {
                 val firstIso = draft.meds.firstOrNull()?.startAtIso
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)

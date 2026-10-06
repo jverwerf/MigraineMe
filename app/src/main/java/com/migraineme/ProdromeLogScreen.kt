@@ -321,6 +321,8 @@ fun ProdromeLogScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             if (quickLogMode && onMigraineSelect != null) {
                 val firstIso = draft.prodromes.firstOrNull()?.startAtIso
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)

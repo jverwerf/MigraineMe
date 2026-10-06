@@ -315,6 +315,8 @@ fun TriggersScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             // ── Migraine picker (quick log only) ──
             if (quickLogMode && onMigraineSelect != null) {
                 val firstIso = draft.triggers.firstOrNull()?.startAtIso

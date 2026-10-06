@@ -233,6 +233,8 @@ fun LogHomeScreen(
                 }
             }
 
+            WizardFavouritesTip()
+
             // Split frequent by category
             val freqPainIds = favorites.filter { it.symptom?.category == "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
             val freqAccompIds = favorites.filter { it.symptom?.category != null && it.symptom?.category != "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
