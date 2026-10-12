@@ -27,6 +27,12 @@ function modelLanguageDirective(lang: Lang): string {
     + ` prose — "clinical_assessment", "reasoning", "message", "calibration_notes", "summary" —`
     + ` is written in the user's language.`;
 }
+// The person reading the prose IS the patient. Only clinical_assessment had a
+// "you/your" rule, so the short reasoning, notes and summary fields came back as
+// "the patient has..." on the review screen. Applies in every language.
+const VOICE_DIRECTIVE = `\n\nVOICE: every free-prose value ("clinical_assessment", "reasoning",`
+  + ` "message", "calibration_notes", "summary") is read by the person themselves. Address them as`
+  + ` "you"/"your". Never write "the patient", "the user", "this person" or "they" about them.`;
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 // Default model. Per-context overrides below — onboarding_parser uses a smarter model
 // because it runs ONCE per user and needs richer inference (vague stories → pool labels).
@@ -895,7 +901,7 @@ Deno.serve(async (req)=>{
     // Prose-bearing contexts get the language directive; see PROSE_CONTEXTS.
     if (PROSE_CONTEXTS.has(context_type)) {
       const lang = await getLang(supabaseAdmin, user.id);
-      system_prompt += modelLanguageDirective(lang);
+      system_prompt += VOICE_DIRECTIVE + modelLanguageDirective(lang);
     }
     const model = MODEL_BY_CONTEXT[context_type] ?? DEFAULT_MODEL;
     console.log(`AI setup [${context_type}] for ${user.id} — model: ${model} — usr: ${user_message.length}c`);
