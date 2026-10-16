@@ -652,10 +652,11 @@ fun NotificationsCard(
     val showDeviceOutcome = hit("Device check-ins", "Ask how a neuromodulation device session went, 2 hours after you log it")
     val showCompanion = hit("AI companion", "Get notified when an AI companion adds to your community feed")
     val showPermission = hit("Notification permission")
-    // Goal reminders (practitioner-set and own): one row per goal with reminder times, none otherwise.
+    // Goal reminders (practitioner-set and own): one row per active goal that can be logged.
+    // Metric goals are filled in by the server from the client's data, so they get no reminder.
     val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
     LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appContext) }
-    val goalRows = practitionerGoals.filter { it.reminder_times.isNotEmpty() }
+    val goalRows = practitionerGoals.filter { it.isActive && (it.isExercise || it.isMindfulness || it.isHr || it.isDaily) }
     val showGoals = MonitorCardConfig.GOALS_ENABLED && goalRows.isNotEmpty() && (hit("Goal reminders") || goalRows.any { hit(it.title) })
     if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission && !showGoals) return
 
@@ -877,11 +878,14 @@ fun NotificationsCard(
             }
         }
 
-        // Goal reminders — server-scheduled (practitioner_goals.reminders_enabled).
-        // Times are set by the practitioner or, for own goals, in the goal editor; this only mutes them.
+        // Goal reminders: server-scheduled (practitioner_goals.reminders_enabled + reminder_times).
+        // This is the one place the times are set, for own and practitioner-set goals alike.
         if (showGoals) {
+            var editingGoalId by remember { mutableStateOf<String?>(null) }
             for (goal in goalRows) {
                 var saving by remember(goal.id) { mutableStateOf(false) }
+                // A goal switched on with no times left would send nothing, so it reads as off.
+                val on = notificationPermissionGranted && goal.reminders_enabled && goal.reminder_times.isNotEmpty()
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -892,15 +896,25 @@ fun NotificationsCard(
                             .padding(end = 10.dp)
                     ) {
                         Text(
-                            t(goal.title) + " · " + goal.reminderLabels.joinToString(", "),
+                            t(goal.title),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            t("Goal reminders"),
+                            if (on) goal.reminderLabels.joinToString(", ") else t("Goal reminders"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
+                    }
+
+                    if (on) {
+                        TextButton(
+                            onClick = { editingGoalId = goal.id },
+                            enabled = !saving,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                        ) {
+                            Text(t("Edit"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
 
                     Column(
@@ -908,7 +922,7 @@ fun NotificationsCard(
                         horizontalAlignment = Alignment.End
                     ) {
                         Switch(
-                            checked = notificationPermissionGranted && goal.reminders_enabled,
+                            checked = on,
                             enabled = !saving,
                             modifier = Modifier.scale(0.8f),
                             onCheckedChange = { newValue ->
@@ -917,7 +931,10 @@ fun NotificationsCard(
                                 } else {
                                     saving = true
                                     scope.launch {
-                                        PractitionerGoalsStore.setReminders(appContext, goal.id, newValue)
+                                        // No times yet: start with one at 09:00, then switch on.
+                                        val timesOk = !newValue || goal.reminder_times.isNotEmpty() ||
+                                            PractitionerGoalsStore.setReminderTimes(appContext, goal.id, listOf("09:00:00"))
+                                        if (timesOk) PractitionerGoalsStore.setReminders(appContext, goal.id, newValue)
                                         saving = false
                                     }
                                 }
@@ -929,6 +946,10 @@ fun NotificationsCard(
             }
             if (showDividers) {
                 HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+            }
+
+            goalRows.firstOrNull { it.id == editingGoalId }?.let { goal ->
+                GoalReminderTimesDialog(goal = goal, onDismiss = { editingGoalId = null })
             }
         }
 

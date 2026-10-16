@@ -357,8 +357,6 @@ object SupabasePractitionerService {
         val metricKey: String? = null,
         val direction: String? = null,
         val targetValue: Double? = null,
-        /** "HH:mm:ss" */
-        val reminderTimes: List<String> = emptyList(),
     )
 
     @Serializable
@@ -564,6 +562,16 @@ object SupabasePractitionerService {
         }.requireOk("setGoalReminders")
     }
 
+    /** Replace a goal's reminder times ("HH:mm:ss", at most 6). Own and practitioner-set goals. */
+    suspend fun setGoalReminderTimes(accessToken: String, goalId: String, times: List<String>) {
+        client.post("$baseUrl/rest/v1/rpc/set_goal_reminder_times") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("goal_id", goalId); putJsonArray("times") { times.forEach { add(it) } } })
+        }.requireOk("setGoalReminderTimes")
+    }
+
     private fun JsonObjectBuilder.putDraft(d: GoalDraft) {
         put("kind", d.kind)
         put("title", d.title)
@@ -575,7 +583,6 @@ object SupabasePractitionerService {
         if (d.metricKey != null) put("metric_key", d.metricKey) else put("metric_key", JsonNull)
         if (d.direction != null) put("direction", d.direction) else put("direction", JsonNull)
         if (d.targetValue != null) put("target_value", d.targetValue) else put("target_value", JsonNull)
-        putJsonArray("reminder_times") { d.reminderTimes.forEach { add(it) } }
     }
 
     private suspend fun HttpResponse.requireOk(what: String): HttpResponse {
@@ -591,7 +598,9 @@ object SupabasePractitionerService {
             put("practitioner_id", JsonNull)
             putDraft(draft)
             put("status", "active")
-            put("reminders_enabled", true)
+            // Reminder times are set in Data settings only
+            putJsonArray("reminder_times") { }
+            put("reminders_enabled", false)
         }
         val rows: List<GoalRow> = client.post("$baseUrl/rest/v1/practitioner_goals") {
             header("apikey", anonKey)

@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +39,7 @@ import java.time.format.DateTimeFormatter
 /**
  * One goal (practitioner-set or the client's own): the ask and her note, this week, the last four
  * weeks day by day, the log buttons, the exercise film where there is one,
- * the reminder switch, and Edit / Delete for own goals. Reads the shared PractitionerGoalsStore.
+ * and Edit / Delete for own goals. Reminders live in Data settings. Reads the shared PractitionerGoalsStore.
  */
 @Composable
 fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) {
@@ -164,37 +162,6 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                         Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-            }
-
-            // Reminders: the server sends them; this only mutes or unmutes
-            if (goal.reminder_times.isNotEmpty()) {
-                var saving by remember { mutableStateOf(false) }
-                BaseCard {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(t("Reminders"), color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text(goal.reminderLabels.joinToString(", "), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.bodySmall)
-                        }
-                        Switch(
-                            checked = goal.reminders_enabled,
-                            enabled = !saving,
-                            onCheckedChange = { on ->
-                                saving = true
-                                scope.launch { PractitionerGoalsStore.setReminders(ctx, goal.id, on); saving = false }
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = AppTheme.AccentPurple,
-                                checkedBorderColor = AppTheme.AccentPurple,
-                                uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
-                                uncheckedTrackColor = AppTheme.TrackColor,
-                                uncheckedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.4f)
-                            )
-                        )
                     }
                 }
             }

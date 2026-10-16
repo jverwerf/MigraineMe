@@ -82,9 +82,7 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
     var metricDays by remember { mutableIntStateOf(7) }
     var openGroup by remember { mutableStateOf<String?>(null) }
     var showValueDialog by remember { mutableStateOf(false) }
-    var reminders by remember { mutableStateOf(listOf<String>()) }
     var initialized by remember { mutableStateOf(goalId == null) }
-    var showHourPicker by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -116,7 +114,6 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 metricDays = (g.times_per_week ?: 7).coerceIn(1, 7)
             }
         }
-        reminders = g.reminder_times.distinct().sorted()
         initialized = true
     }
 
@@ -326,24 +323,6 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                 }
             }
 
-            // Reminders: whole hours, sent by the server
-            BaseCard {
-                EditorHeading(t("Reminders"))
-                if (reminders.isEmpty()) {
-                    Text(t("No reminders"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-                for (time in reminders) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(time.take(5), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f))
-                        TextButton(onClick = { reminders = reminders - time }) {
-                            Text("×", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
-                }
-                GoalPillButton(label = t("Add reminder"), enabled = true) { showHourPicker = true }
-            }
-
             error?.let {
                 Text(it, color = AppTheme.AccentPink, style = MaterialTheme.typography.bodySmall)
             }
@@ -362,17 +341,15 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                         SupabasePractitionerService.KIND_EXERCISE -> {
                             val r = ExerciseCatalogue.byId(exerciseId) ?: routines.first()
                             SupabasePractitionerService.GoalDraft(
-                                kind = kind, title = r.title, exerciseId = r.id, targetCount = exerciseCount,
-                                reminderTimes = reminders
+                                kind = kind, title = r.title, exerciseId = r.id, targetCount = exerciseCount
                             )
                         }
                         SupabasePractitionerService.KIND_MINDFULNESS -> SupabasePractitionerService.GoalDraft(
-                            kind = kind, title = "Meditation", targetMinutes = meditationMinutes.toDouble(),
-                            reminderTimes = reminders
+                            kind = kind, title = "Meditation", targetMinutes = meditationMinutes.toDouble()
                         )
                         SupabasePractitionerService.KIND_HR -> SupabasePractitionerService.GoalDraft(
                             kind = kind, title = "Heart rate training", thresholdBpm = bpm,
-                            targetMinutes = hrMinutes.toDouble(), timesPerWeek = hrDays, reminderTimes = reminders
+                            targetMinutes = hrMinutes.toDouble(), timesPerWeek = hrDays
                         )
                         SupabasePractitionerService.KIND_METRIC -> {
                             val key = metricKey
@@ -384,7 +361,7 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                             SupabasePractitionerService.GoalDraft(
                                 kind = kind, title = title, metricKey = key, direction = metricDirection,
                                 targetValue = if (consistent) null else if (level) Math.rint(metricTarget).coerceIn(0.0, 3.0) else metricTarget,
-                                timesPerWeek = metricDays.takeIf { it < 7 }, reminderTimes = reminders
+                                timesPerWeek = metricDays.takeIf { it < 7 }
                             )
                         }
                         else -> {
@@ -392,7 +369,7 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                             if (name.isEmpty()) { error = nameMissing; return@Button }
                             SupabasePractitionerService.GoalDraft(
                                 kind = SupabasePractitionerService.KIND_DAILY, title = name,
-                                targetCount = dailyCount, reminderTimes = reminders
+                                targetCount = dailyCount
                             )
                         }
                     }
@@ -448,40 +425,6 @@ fun GoalEditorScreen(navController: NavController, goalId: String?) {
                         unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
                     )
                 )
-            },
-            containerColor = Color(0xFF1A0029),
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-
-    if (showHourPicker) {
-        AlertDialog(
-            onDismissRequest = { showHourPicker = false },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showHourPicker = false }) {
-                    Text(t("Cancel"), color = AppTheme.AccentPurple)
-                }
-            },
-            title = { Text(t("Pick an hour"), color = Color.White, fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for (row in (0..23).chunked(4)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            for (h in row) {
-                                val value = "%02d:00:00".format(h)
-                                EditorChip(
-                                    label = "%02d:00".format(h),
-                                    selected = value in reminders,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    reminders = (reminders + value).distinct().sorted()
-                                    showHourPicker = false
-                                }
-                            }
-                        }
-                    }
-                }
             },
             containerColor = Color(0xFF1A0029),
             shape = RoundedCornerShape(16.dp)

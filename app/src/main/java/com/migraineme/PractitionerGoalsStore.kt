@@ -120,6 +120,18 @@ object PractitionerGoalsStore {
         ok
     }
 
+    /** Save a goal's reminder times ("HH:mm:ss"); none also turns its reminders off. Then reload. */
+    suspend fun setReminderTimes(context: Context, goalId: String, times: List<String>): Boolean =
+        withContext(Dispatchers.IO + NonCancellable) {
+            val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
+            val ok = runCatching {
+                svc.setGoalReminderTimes(token, goalId, times)
+                if (times.isEmpty()) svc.setGoalReminders(token, goalId, false)
+            }.onFailure { Log.w(TAG, "setGoalReminderTimes failed: ${it.message}") }.isSuccess
+            if (ok) refresh(token)
+            ok
+        }
+
     /** Add (goalId null) or change one of the client's own goals, then reload. */
     suspend fun save(context: Context, goalId: String?, draft: SupabasePractitionerService.GoalDraft): Boolean =
         withContext(Dispatchers.IO + NonCancellable) {
