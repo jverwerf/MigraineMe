@@ -586,7 +586,8 @@ fun AiSetupScreen(
                                 avgCycleLength = DeterministicMapper.deriveCycleLength(answers),
                                 severity = mSeverity,
                                 decayCurve = curve,
-                                reasoning = "Based on your reported cycle patterns${if (answers.cycleMigraineTiming.isNotEmpty()) " (${answers.cycleMigraineTiming.joinToString(", ")})" else ""}",
+                                reasoning = if (answers.cycleMigraineTiming.isNotEmpty()) Strings.tSync("Based on your reported cycle patterns (%1\$s)", answers.cycleMigraineTiming.joinToString(", ") { Strings.tSync(it) })
+                                    else Strings.tSync("Based on your reported cycle patterns"),
                             ))
                         } else config
                         aiConfig = finalConfig; isProcessing = false; currentPage = AiPage.RESULTS

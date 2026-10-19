@@ -5,8 +5,8 @@
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:309",
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:389",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:929",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:969",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:930",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:970",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:155",
       "... 86 more"
     ],
@@ -21,7 +21,7 @@
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:196",
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:309",
       "app/src/main/java/com/migraineme/ActivitySessionsScreen.kt:79",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:937",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:938",
       "... 51 more"
     ],
     "max_len": 14,
@@ -116,7 +116,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:313",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:947",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:948",
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:151",
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:236",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:927",
@@ -1046,6 +1046,19 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1407"
     ],
     "max_len": 42,
+    "count": 5
+  },
+  {
+    "en": "%s in quick-log",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:265",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:272",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:279",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:286",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:293"
+    ],
+    "max_len": 18,
     "count": 5
   },
   {
@@ -3051,6 +3064,16 @@
       "app/src/main/java/com/migraineme/CompanionsScreen.kt:390"
     ],
     "max_len": 20,
+    "count": 2
+  },
+  {
+    "en": "%1$s high, %2$s mild, %3$s low",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:221",
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:247"
+    ],
+    "max_len": 43,
     "count": 2
   },
   {
@@ -5177,8 +5200,8 @@
     "en": "Skip Setup",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:954",
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:969"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:955",
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:970"
     ],
     "max_len": 14,
     "count": 2
@@ -5731,6 +5754,16 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:436"
     ],
     "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:658",
+      "app/src/main/java/com/migraineme/AiSetupQuestions.kt:1057"
+    ],
+    "max_len": 127,
     "count": 2
   },
   {
@@ -7432,7 +7465,7 @@
     "en": ", and suggested %s more",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:778"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:779"
     ],
     "max_len": 33,
     "count": 1
@@ -7777,6 +7810,15 @@
       "app/src/main/java/com/migraineme/HomeScreen.kt:896"
     ],
     "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "7-day risk forecast",
+    "class": "soft",
+    "sites": [
+      "ProfileScreen.kt:subscription features"
+    ],
+    "max_len": 29,
     "count": 1
   },
   {
@@ -8257,6 +8299,15 @@
     "count": 1
   },
   {
+    "en": "Accompanying Signs",
+    "class": "hard",
+    "sites": [
+      "AiSetupQuestions.kt:QPoolMultiSelect category header"
+    ],
+    "max_len": 21,
+    "count": 1
+  },
+  {
     "en": "Across %s attacks where you logged more than one pain entry",
     "class": "soft",
     "sites": [
@@ -8317,6 +8368,42 @@
       "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:219"
     ],
     "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "Active calories from Garmin dailies converted to kilojoules (×4.184).",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 100,
+    "count": 1
+  },
+  {
+    "en": "Active calories from Health Connect are converted to kilojoules (×4.184), matching Garmin's format.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 143,
+    "count": 1
+  },
+  {
+    "en": "Active calories from Oura's daily activity are converted to kilojoules (×4.184). Heart rate data is not available from Oura for this metric.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 203,
+    "count": 1
+  },
+  {
+    "en": "Active calories from Polar's daily activity are converted to kilojoules (×4.184).",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 117,
     "count": 1
   },
   {
@@ -8797,6 +8884,15 @@
     "count": 1
   },
   {
+    "en": "After the attack",
+    "class": "hard",
+    "sites": [
+      "AiSetupScreen.kt:AiSetupEntry.title"
+    ],
+    "max_len": 19,
+    "count": 1
+  },
+  {
     "en": "After {0}",
     "class": "soft",
     "sites": [
@@ -9223,7 +9319,7 @@
     "en": "Analyse & Configure",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:943"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:944"
     ],
     "max_len": 22,
     "count": 1
@@ -9688,6 +9784,15 @@
     "count": 1
   },
   {
+    "en": "Around ovulation",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 19,
+    "count": 1
+  },
+  {
     "en": "Around your logged migraines",
     "class": "soft",
     "sites": [
@@ -10102,6 +10207,15 @@
     "count": 1
   },
   {
+    "en": "Average breathing rate (breaths/min) measured during your longest sleep period.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 114,
+    "count": 1
+  },
+  {
     "en": "Average duration per month",
     "class": "soft",
     "sites": [
@@ -10336,6 +10450,24 @@
     "count": 1
   },
   {
+    "en": "Based on your reported cycle patterns",
+    "class": "soft",
+    "sites": [
+      "AiSetupScreen.kt:menstruation reasoning"
+    ],
+    "max_len": 53,
+    "count": 1
+  },
+  {
+    "en": "Based on your reported cycle patterns (%1$s)",
+    "class": "soft",
+    "sites": [
+      "AiSetupScreen.kt:menstruation reasoning"
+    ],
+    "max_len": 63,
+    "count": 1
+  },
+  {
     "en": "Bath",
     "class": "hard",
     "sites": [
@@ -10495,6 +10627,15 @@
       "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
     ],
     "max_len": 28,
+    "count": 1
+  },
+  {
+    "en": "Being ill",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -11110,6 +11251,15 @@
     "count": 1
   },
   {
+    "en": "Calendar: granted via the permissions step at onboarding rather than here. Once enabled, the Daily Check-In's \"From your calendar\" page suggests your day's events as triggers, reliefs, or activities.\n\n",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:78"
+    ],
+    "max_len": 291,
+    "count": 1
+  },
+  {
     "en": "Call",
     "class": "hard",
     "sites": [
@@ -11347,7 +11497,7 @@
     "en": "Check them as you go and change anything that doesn't fit.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:786"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:787"
     ],
     "max_len": 84,
     "count": 1
@@ -11839,12 +11989,48 @@
     "count": 1
   },
   {
+    "en": "Computed daily at 9 AM local from your HRV and resting HR vs your 14-day personal baseline. Requires HRV + RHR data flowing from Health Connect or a wearable.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 229,
+    "count": 1
+  },
+  {
+    "en": "Computed from Garmin sleep stages: (total − awake) ÷ total × 100.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 94,
+    "count": 1
+  },
+  {
+    "en": "Computed from Health Connect sleep stages: (total − awake) ÷ total × 100.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 105,
+    "count": 1
+  },
+  {
     "en": "Computer / screen",
     "class": "hard",
     "sites": [
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Concentrating",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 16,
     "count": 1
   },
   {
@@ -12334,6 +12520,15 @@
     "count": 1
   },
   {
+    "en": "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 143,
+    "count": 1
+  },
+  {
     "en": "Countdown",
     "class": "hard",
     "sites": [
@@ -12367,6 +12562,15 @@
       "app/src/main/java/com/migraineme/LoginScreen.kt:245"
     ],
     "max_len": 23,
+    "count": 1
+  },
+  {
+    "en": "Cured meats",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -12907,6 +13111,15 @@
       "ManagePoolScreen.kt:variable-render"
     ],
     "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Decay: %1$s",
+    "class": "soft",
+    "sites": [
+      "AiSetupApplier.kt:progress label"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -13756,6 +13969,15 @@
     "count": 1
   },
   {
+    "en": "Duration and HR zones from Polar exercise sessions. Mapped to zone 1–5 based on Polar's zone definitions.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 152,
+    "count": 1
+  },
+  {
     "en": "Duration minutes (optional)",
     "class": "soft",
     "sites": [
@@ -13957,7 +14179,7 @@
     "en": "Edit — %1$s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:756"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:757"
     ],
     "max_len": 14,
     "count": 1
@@ -14935,6 +15157,42 @@
     "count": 1
   },
   {
+    "en": "Fallback defaults",
+    "class": "soft",
+    "sites": [
+      "AiSetupResultsScreen.kt:decay reasoning"
+    ],
+    "max_len": 27,
+    "count": 1
+  },
+  {
+    "en": "Fallback: high trigger count (%1$s active)",
+    "class": "soft",
+    "sites": [
+      "AiCalibrationService.kt:fallback gauge reasoning"
+    ],
+    "max_len": 60,
+    "count": 1
+  },
+  {
+    "en": "Fallback: low trigger count (%1$s active)",
+    "class": "soft",
+    "sites": [
+      "AiCalibrationService.kt:fallback gauge reasoning"
+    ],
+    "max_len": 59,
+    "count": 1
+  },
+  {
+    "en": "Fallback: moderate trigger count (%1$s active)",
+    "class": "soft",
+    "sites": [
+      "AiCalibrationService.kt:fallback gauge reasoning"
+    ],
+    "max_len": 66,
+    "count": 1
+  },
+  {
     "en": "False alarm",
     "class": "hard",
     "sites": [
@@ -14993,6 +15251,15 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:749"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Feeling low",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
     ],
     "max_len": 14,
     "count": 1
@@ -15109,7 +15376,7 @@
     "en": "Find matches & continue",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:957"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:958"
     ],
     "max_len": 26,
     "count": 1
@@ -15175,6 +15442,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Fluorescent lights",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -15709,6 +15985,15 @@
     "count": 1
   },
   {
+    "en": "Full insights & spider charts",
+    "class": "soft",
+    "sites": [
+      "ProfileScreen.kt:subscription features"
+    ],
+    "max_len": 42,
+    "count": 1
+  },
+  {
     "en": "Full log",
     "class": "hard",
     "sites": [
@@ -15745,12 +16030,39 @@
     "count": 1
   },
   {
+    "en": "Garmin HRV status from overnight sleep window. Reports 7-day average and last-night values.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 131,
+    "count": 1
+  },
+  {
+    "en": "Garmin Pulse Ox reading during sleep. Requires SpO2-compatible device.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 101,
+    "count": 1
+  },
+  {
     "en": "Garmin auth error: %1$s",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MainActivity.kt:468"
     ],
     "max_len": 33,
+    "count": 1
+  },
+  {
+    "en": "Garmin authentication failed",
+    "class": "soft",
+    "sites": [
+      "ThirdPartyConnectionsScreen.kt:error dialog fallback"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15778,6 +16090,42 @@
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:870"
     ],
     "max_len": 23,
+    "count": 1
+  },
+  {
+    "en": "Garmin provides direct stress scores (1–100) from HRV-based algorithms. No proxy needed.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 127,
+    "count": 1
+  },
+  {
+    "en": "Garmin reports total awake duration during sleep. Converted to an approximate disturbance count: 1 per 5 awake minutes.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 172,
+    "count": 1
+  },
+  {
+    "en": "Garmin sleep skin temperature variation. Requires devices with skin temp sensor (e.g., Venu 3, Fenix 8).",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 150,
+    "count": 1
+  },
+  {
+    "en": "Garmin's Body Battery overnight recharge is used as recovery (0–100). Requires a compatible device.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 143,
     "count": 1
   },
   {
@@ -15841,6 +16189,15 @@
       "ManagePoolScreen.kt:variable-render"
     ],
     "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Gauge: %1$s",
+    "class": "soft",
+    "sites": [
+      "AiSetupApplier.kt:progress label"
+    ],
+    "max_len": 21,
     "count": 1
   },
   {
@@ -16384,12 +16741,39 @@
     "count": 1
   },
   {
+    "en": "Health Connect doesn't store a recovery score. Computed locally: HRV vs your 7-day baseline (50%), resting HR vs baseline (25%, lower is better), sleep score (25%). Requires at least 7 days of HRV/RHR history.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 303,
+    "count": 1
+  },
+  {
+    "en": "Health Connect doesn't store a sleep score. Computed locally: 60% duration (best at 7–9h) + 40% efficiency.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 155,
+    "count": 1
+  },
+  {
     "en": "Health Connect not available.",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1004"
     ],
     "max_len": 42,
+    "count": 1
+  },
+  {
+    "en": "Health Connect stores absolute body temperature. We compute deviation from your 7-day baseline (matches Whoop/Oura format). Requires at least 7 days of history; needs a compatible device.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 271,
     "count": 1
   },
   {
@@ -16408,6 +16792,15 @@
       "app/src/main/java/com/migraineme/OnboardingScreen.kt:699"
     ],
     "max_len": 60,
+    "count": 1
+  },
+  {
+    "en": "Health Connect: pulls health metrics from any app on your phone that's set up to share with it. If you log food in MyFitnessPal or Cronometer, sleep in Samsung Health, or activity from a Fitbit / Garmin / Wear OS watch through their official apps, all of that lands in MigraineMe through here.\n\n",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:76"
+    ],
+    "max_len": 427,
     "count": 1
   },
   {
@@ -18319,6 +18712,15 @@
     "count": 1
   },
   {
+    "en": "Light",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Light Sleep",
     "class": "hard",
     "sites": [
@@ -18442,6 +18844,15 @@
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:883"
     ],
     "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "Link your existing health platforms and wearables so MigraineMe can pull data automatically and you don't have to log everything manually.\n\n",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:75"
+    ],
+    "max_len": 203,
     "count": 1
   },
   {
@@ -19030,6 +19441,15 @@
     "count": 1
   },
   {
+    "en": "Loud noise",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Low blood sugar",
     "class": "hard",
     "sites": [
@@ -19279,6 +19699,15 @@
       "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1308"
     ],
     "max_len": 75,
+    "count": 1
+  },
+  {
+    "en": "Mapped from Oura's restless_periods count during sleep.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 79,
     "count": 1
   },
   {
@@ -19726,7 +20155,7 @@
     "en": "MigraineMe Setup — %1$s of %2$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:757"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:758"
     ],
     "max_len": 44,
     "count": 1
@@ -20251,6 +20680,15 @@
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:692"
     ],
     "max_len": 19,
+    "count": 1
+  },
+  {
+    "en": "Name not set",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ProfileScreen.kt:289"
+    ],
+    "max_len": 15,
     "count": 1
   },
   {
@@ -21631,6 +22069,15 @@
     "count": 1
   },
   {
+    "en": "Not sure which",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 17,
+    "count": 1
+  },
+  {
     "en": "Note",
     "class": "hard",
     "sites": [
@@ -21868,7 +22315,7 @@
     "en": "OR Continue and answer manually",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:961"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:962"
     ],
     "max_len": 34,
     "count": 1
@@ -22225,6 +22672,15 @@
     "count": 1
   },
   {
+    "en": "Oura authentication failed",
+    "class": "soft",
+    "sites": [
+      "ThirdPartyConnectionsScreen.kt:error dialog fallback"
+    ],
+    "max_len": 37,
+    "count": 1
+  },
+  {
     "en": "Oura callback opened.",
     "class": "soft",
     "sites": [
@@ -22249,6 +22705,33 @@
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:761"
     ],
     "max_len": 21,
+    "count": 1
+  },
+  {
+    "en": "Oura reports temperature as a deviation from your baseline in °C (e.g. +0.3 or −0.1), not absolute. Trigger thresholds are adjusted automatically: ±0.8°C deviation flags a significant change.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 276,
+    "count": 1
+  },
+  {
+    "en": "Oura workouts don't include HR zone breakdowns. Duration is mapped by intensity: hard → zone 5, moderate → zone 3, easy → zone 1.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 187,
+    "count": 1
+  },
+  {
+    "en": "Oura's Readiness Score (0–100) is used as recovery score.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 82,
     "count": 1
   },
   {
@@ -23332,12 +23815,39 @@
     "count": 1
   },
   {
+    "en": "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 118,
+    "count": 1
+  },
+  {
+    "en": "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.).",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 305,
+    "count": 1
+  },
+  {
     "en": "Polar auth error: %1$s",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MainActivity.kt:434"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Polar authentication failed",
+    "class": "soft",
+    "sites": [
+      "ThirdPartyConnectionsScreen.kt:error dialog fallback"
+    ],
+    "max_len": 39,
     "count": 1
   },
   {
@@ -23365,6 +23875,33 @@
       "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:816"
     ],
     "max_len": 22,
+    "count": 1
+  },
+  {
+    "en": "Polar reports total interruption duration. Converted to an approximate disturbance count: 1 per 5 interruption minutes.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 172,
+    "count": 1
+  },
+  {
+    "en": "Polar's Nightly Recharge status (1–5 stars) is converted to a percentage: status × 20. So 5★ → 100%, 4★ → 80%, etc.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 166,
+    "count": 1
+  },
+  {
+    "en": "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100.",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 142,
     "count": 1
   },
   {
@@ -23680,6 +24217,15 @@
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:310"
     ],
     "max_len": 17,
+    "count": 1
+  },
+  {
+    "en": "Pressure changes",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 19,
     "count": 1
   },
   {
@@ -24565,6 +25111,15 @@
     "count": 1
   },
   {
+    "en": "Renews %1$s",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ProfileScreen.kt:860"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Replies (%s)",
     "class": "hard",
     "sites": [
@@ -25042,6 +25597,15 @@
     "count": 1
   },
   {
+    "en": "Salty food",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Sat",
     "class": "soft",
     "sites": [
@@ -25099,7 +25663,7 @@
     "en": "Save & re-check",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:931"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:932"
     ],
     "max_len": 18,
     "count": 1
@@ -25915,6 +26479,15 @@
     "count": 1
   },
   {
+    "en": "Setup",
+    "class": "hard",
+    "sites": [
+      "AiSetupScreen.kt:AiSetupEntry.title"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Sev %s/10",
     "class": "hard",
     "sites": [
@@ -26437,6 +27010,15 @@
     "count": 1
   },
   {
+    "en": "Skipping meals",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 17,
+    "count": 1
+  },
+  {
     "en": "Sleep Eff.",
     "class": "hard",
     "sites": [
@@ -26734,6 +27316,24 @@
     "count": 1
   },
   {
+    "en": "Smart calibration",
+    "class": "soft",
+    "sites": [
+      "ProfileScreen.kt:subscription features"
+    ],
+    "max_len": 27,
+    "count": 1
+  },
+  {
+    "en": "Smell",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Smoke",
     "class": "hard",
     "sites": [
@@ -26878,6 +27478,15 @@
     "count": 1
   },
   {
+    "en": "Sound",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Sound sensitivity",
     "class": "hard",
     "sites": [
@@ -26954,6 +27563,24 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:889"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Spike in stress",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
+    "en": "Spinach",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
     ],
     "max_len": 14,
     "count": 1
@@ -27301,6 +27928,15 @@
     "count": 1
   },
   {
+    "en": "Strawberries",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 15,
+    "count": 1
+  },
+  {
     "en": "Stream",
     "class": "hard",
     "sites": [
@@ -27427,6 +28063,15 @@
     "count": 1
   },
   {
+    "en": "Strong smells",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
     "en": "Study",
     "class": "hard",
     "sites": [
@@ -27442,6 +28087,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Stuffy nose",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -27595,6 +28249,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Sunshine",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -27964,6 +28627,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1634"
     ],
     "max_len": 140,
+    "count": 1
+  },
+  {
+    "en": "Tap any provider card to connect or disconnect. Connecting opens the provider's own login screen; disconnecting stops the data pull but keeps everything you've already imported.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:79"
+    ],
+    "max_len": 256,
     "count": 1
   },
   {
@@ -28600,7 +29272,7 @@
     "en": "The suggestions come from your profile — worth tracking to find out. Change anything that doesn't fit as you go.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:784"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:785"
     ],
     "max_len": 162,
     "count": 1
@@ -29308,6 +29980,15 @@
     "count": 1
   },
   {
+    "en": "Tomatoes",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Too little sleep",
     "class": "hard",
     "sites": [
@@ -29512,6 +30193,15 @@
       "app/src/main/java/com/migraineme/MonitorSleepScreen.kt:238"
     ],
     "max_len": 38,
+    "count": 1
+  },
+  {
+    "en": "Tracking",
+    "class": "hard",
+    "sites": [
+      "ProfileScreen.kt:demographics chip (Cycle)"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -29764,6 +30454,15 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:2334"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "Trigger: %1$s",
+    "class": "soft",
+    "sites": [
+      "AiSetupApplier.kt:progress label"
+    ],
+    "max_len": 23,
     "count": 1
   },
   {
@@ -30397,6 +31096,15 @@
     "count": 1
   },
   {
+    "en": "Unusually happy",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 18,
+    "count": 1
+  },
+  {
     "en": "Unusually low recovery",
     "class": "hard",
     "sites": [
@@ -30523,6 +31231,15 @@
     "count": 1
   },
   {
+    "en": "Urination",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Usage access permission",
     "class": "hard",
     "sites": [
@@ -30556,6 +31273,15 @@
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:702"
     ],
     "max_len": 26,
+    "count": 1
+  },
+  {
+    "en": "Use search at the top to jump to a specific metric.",
+    "class": "soft",
+    "sites": [
+      "OnboardingCoach.kt:setupSteps-table"
+    ],
+    "max_len": 73,
     "count": 1
   },
   {
@@ -30752,6 +31478,15 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PhysicalDataHistoryScreen.kt:242"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Vinegar",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
     ],
     "max_len": 14,
     "count": 1
@@ -31045,6 +31780,15 @@
     "count": 1
   },
   {
+    "en": "WHOOP authentication failed",
+    "class": "soft",
+    "sites": [
+      "ThirdPartyConnectionsScreen.kt:error dialog fallback"
+    ],
+    "max_len": 39,
+    "count": 1
+  },
+  {
     "en": "WHOOP callback opened.",
     "class": "soft",
     "sites": [
@@ -31162,6 +31906,15 @@
     "count": 1
   },
   {
+    "en": "Warning sign: %1$s",
+    "class": "soft",
+    "sites": [
+      "AiSetupApplier.kt:progress label"
+    ],
+    "max_len": 28,
+    "count": 1
+  },
+  {
     "en": "Warning signs first",
     "class": "hard",
     "sites": [
@@ -31177,6 +31930,15 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:289"
     ],
     "max_len": 31,
+    "count": 1
+  },
+  {
+    "en": "Warning signs you log",
+    "class": "hard",
+    "sites": [
+      "AiSetupScreen.kt:AiSetupEntry.title"
+    ],
+    "max_len": 24,
     "count": 1
   },
   {
@@ -31336,7 +32098,7 @@
     "en": "We filled in %s from what you told us",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/AiSetupScreen.kt:777"
+      "app/src/main/java/com/migraineme/AiSetupScreen.kt:778"
     ],
     "max_len": 53,
     "count": 1
@@ -31465,6 +32227,15 @@
       "app/src/main/java/com/migraineme/DataSettingsScreen.kt:237"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Wearables (WHOOP, Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:77"
+    ],
+    "max_len": 568,
     "count": 1
   },
   {
@@ -32377,6 +33148,15 @@
     "count": 1
   },
   {
+    "en": "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores).",
+    "class": "soft",
+    "sites": [
+      "DataSettingsRow.kt:conversion note, t(note) in OuraConversionCard"
+    ],
+    "max_len": 281,
+    "count": 1
+  },
+  {
     "en": "When an item you follow becomes a trigger for the day",
     "class": "soft",
     "sites": [
@@ -32899,6 +33679,15 @@
     "count": 1
   },
   {
+    "en": "Words",
+    "class": "hard",
+    "sites": [
+      "ProfileBasisScreen.kt:pickCertMap key (AiSetupQuestions CertaintyItem key)"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Work",
     "class": "hard",
     "sites": [
@@ -33394,6 +34183,24 @@
     "count": 1
   },
   {
+    "en": "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan.",
+    "class": "soft",
+    "sites": [
+      "AiSetupScreen.kt:edit outcome"
+    ],
+    "max_len": 197,
+    "count": 1
+  },
+  {
+    "en": "Your answers are saved. The AI re-checked your profile and found nothing worth changing.",
+    "class": "soft",
+    "sites": [
+      "AiSetupScreen.kt:edit outcome"
+    ],
+    "max_len": 127,
+    "count": 1
+  },
+  {
     "en": "Your answers from %1$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup.",
     "class": "soft",
     "sites": [
@@ -33637,6 +34444,15 @@
     "count": 1
   },
   {
+    "en": "Your migraine triggers and warning signs have been configured based on your answers.",
+    "class": "soft",
+    "sites": [
+      "ProfileScreen.kt:AiMigraineProfileCard summary (stored English, AiCalibrationService fallback)"
+    ],
+    "max_len": 121,
+    "count": 1
+  },
+  {
     "en": "Your migraines",
     "class": "hard",
     "sites": [
@@ -33850,6 +34666,15 @@
       "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:89"
     ],
     "max_len": 105,
+    "count": 1
+  },
+  {
+    "en": "Your triggers",
+    "class": "hard",
+    "sites": [
+      "AiSetupScreen.kt:AiSetupEntry.title"
+    ],
+    "max_len": 16,
     "count": 1
   },
   {

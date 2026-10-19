@@ -1,10 +1,10 @@
 [
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:777",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:778",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:778",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:779",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {

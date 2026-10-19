@@ -627,7 +627,7 @@ private fun OuraConversionCard(note: String) {
             style = MaterialTheme.typography.labelMedium
         )
         Text(
-            note,
+            t(note),
             color = AppTheme.AccentPurple.copy(alpha = 0.85f),
             style = MaterialTheme.typography.bodySmall
         )

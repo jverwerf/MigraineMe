@@ -94,7 +94,7 @@ object AiSetupApplier {
                             .onFailure { Log.w(TAG, "Failed trigger '${rec.label}': ${it.message}") }
                     } else Log.w(TAG, "Trigger not found: '${rec.label}'")
                 }
-                progress("Trigger: ${rec.label}")
+                progress(Strings.tSync("Trigger: %1\$s", Strings.tSync(rec.label)))
             }
 
             // ── Prodrome severities (group-aware) ──
@@ -118,7 +118,7 @@ object AiSetupApplier {
                             .onFailure { Log.w(TAG, "Failed prodrome '${rec.label}': ${it.message}") }
                     } else Log.w(TAG, "Prodrome not found: '${rec.label}'")
                 }
-                progress("Prodrome: ${rec.label}")
+                progress(Strings.tSync("Warning sign: %1\$s", Strings.tSync(rec.label)))
             }
 
             // ── Trigger favorites (group-aware: use first member as representative) ──
@@ -136,7 +136,7 @@ object AiSetupApplier {
                     runCatching { db.insertTriggerPref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed trigger fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Prodrome favorites (group-aware) ──
@@ -153,7 +153,7 @@ object AiSetupApplier {
                     runCatching { db.insertProdromePref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed prodrome fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Medicine favorites ──
@@ -163,7 +163,7 @@ object AiSetupApplier {
                     runCatching { db.insertMedicinePref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed medicine fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Symptom favorites ──
@@ -173,7 +173,7 @@ object AiSetupApplier {
                     runCatching { db.insertSymptomPref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed symptom fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Relief favorites ──
@@ -183,7 +183,7 @@ object AiSetupApplier {
                     runCatching { db.insertReliefPref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed relief fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Activity favorites ──
@@ -193,7 +193,7 @@ object AiSetupApplier {
                     runCatching { db.insertActivityPref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed activity fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Missed activity favorites ──
@@ -203,7 +203,7 @@ object AiSetupApplier {
                     runCatching { db.insertMissedActivityPref(accessToken, id, pos++, "frequent") }
                         .onFailure { Log.w(TAG, "Failed missed fav '${rec.label}': ${it.message}") }
                 }
-                progress("★ ${rec.label}")
+                progress("★ ${Strings.tSync(rec.label)}")
             }
 
             // ── Location favorites (user-picked from Locations onboarding page) ──
@@ -234,11 +234,11 @@ object AiSetupApplier {
             val t = config.gaugeThresholds
             runCatching {
                 edge.upsertRiskGaugeThreshold(appCtx, "LOW", t.low.toDouble())
-                progress("Gauge: LOW")
+                progress(Strings.tSync("Gauge: %1\$s", Strings.tSync("LOW")))
                 edge.upsertRiskGaugeThreshold(appCtx, "MILD", t.mild.toDouble())
-                progress("Gauge: MILD")
+                progress(Strings.tSync("Gauge: %1\$s", Strings.tSync("MILD")))
                 edge.upsertRiskGaugeThreshold(appCtx, "HIGH", t.high.toDouble())
-                progress("Gauge: HIGH")
+                progress(Strings.tSync("Gauge: %1\$s", Strings.tSync("HIGH")))
             }.onFailure { Log.w(TAG, "Failed gauge thresholds: ${it.message}") }
 
             // ── Decay weights ──
@@ -247,7 +247,7 @@ object AiSetupApplier {
                     edge.upsertRiskDecayWeight(appCtx, dw.severity, dw.day0, dw.day1, dw.day2, dw.day3, dw.day4, dw.day5, dw.day6)
                     Log.d(TAG, "Decay weight ${dw.severity}: ${dw.day0}/${dw.day1}/${dw.day2}/${dw.day3}/${dw.day4}/${dw.day5}/${dw.day6}")
                 }.onFailure { Log.w(TAG, "Failed decay weight ${dw.severity}: ${it.message}") }
-                progress("Decay: ${dw.severity}")
+                progress(Strings.tSync("Decay: %1\$s", Strings.tSync(dw.severity)))
             }
 
             // ── Menstruation setup (if user tracks cycle AND didn't remove it from results) ──

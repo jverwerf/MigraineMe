@@ -218,7 +218,7 @@ fun AiSetupResultsScreen(
         val lowT = triggers.filter { it.severity == "LOW" }
 
         if (highT.isNotEmpty() || mildT.isNotEmpty() || lowT.isNotEmpty()) {
-            CollapsibleSection(t("Triggers"), Icons.Outlined.Bolt, Color(0xFFFFB74D), "${highT.size} high, ${mildT.size} mild, ${lowT.size} low") {
+            CollapsibleSection(t("Triggers"), Icons.Outlined.Bolt, Color(0xFFFFB74D), t("%1\$s high, %2\$s mild, %3\$s low", highT.size, mildT.size, lowT.size)) {
                 if (highT.isNotEmpty()) EditableSeverityGroup("HIGH", Color(0xFFEF5350), highT.map { TDI(it.label, it.favorite, it.reasoning, it.defaultThreshold) },
                     onDelete = { label -> triggers = triggers.filter { it.label != label } },
                     onChangeSeverity = { label, newSev -> triggers = triggers.map { if (it.label == label) it.copy(severity = newSev) else it } },
@@ -244,7 +244,7 @@ fun AiSetupResultsScreen(
         val lowP = activeP.filter { it.severity == "LOW" }
 
         if (activeP.isNotEmpty()) {
-            CollapsibleSection(t("Warning Signs"), Icons.Outlined.Sensors, Color(0xFFCE93D8), "${highP.size} high, ${mildP.size} mild, ${lowP.size} low") {
+            CollapsibleSection(t("Warning Signs"), Icons.Outlined.Sensors, Color(0xFFCE93D8), t("%1\$s high, %2\$s mild, %3\$s low", highP.size, mildP.size, lowP.size)) {
                 if (highP.isNotEmpty()) EditableSeverityGroup("HIGH", Color(0xFFEF5350), highP.map { TDI(it.label, it.favorite, it.reasoning, it.defaultThreshold) },
                     onDelete = { label -> prodromes = prodromes.filter { it.label != label } },
                     onChangeSeverity = { label, newSev -> prodromes = prodromes.map { if (it.label == label) it.copy(severity = newSev) else it } },
@@ -262,35 +262,35 @@ fun AiSetupResultsScreen(
 
         // ── Medicines ──
         if (medicines.isNotEmpty()) {
-            CollapsibleSection(t("Medicines"), Icons.Outlined.Medication, Color(0xFF4FC3F7), "${medicines.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Medicines"), Icons.Outlined.Medication, Color(0xFF4FC3F7), t("%s in quick-log", medicines.count { it.favorite })) {
                 medicines.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = medicineIcon(item.label), iconTint = Color(0xFF4FC3F7), favorite = item.favorite, onToggleFavorite = { medicines = medicines.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { medicines = medicines.filter { it.label != item.label } } }
             }
         }
 
         // ── Symptoms ──
         if (symptoms.isNotEmpty()) {
-            CollapsibleSection(t("Symptoms"), Icons.Outlined.Healing, AppTheme.AccentPink, "${symptoms.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Symptoms"), Icons.Outlined.Healing, AppTheme.AccentPink, t("%s in quick-log", symptoms.count { it.favorite })) {
                 symptoms.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = symptomIcon(item.label), iconTint = AppTheme.AccentPink, favorite = item.favorite, onToggleFavorite = { symptoms = symptoms.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { symptoms = symptoms.filter { it.label != item.label } } }
             }
         }
 
         // ── Reliefs ──
         if (reliefs.isNotEmpty()) {
-            CollapsibleSection(t("Reliefs"), Icons.Outlined.Spa, Color(0xFF81C784), "${reliefs.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Reliefs"), Icons.Outlined.Spa, Color(0xFF81C784), t("%s in quick-log", reliefs.count { it.favorite })) {
                 reliefs.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = reliefIcon(item.label), iconTint = Color(0xFF81C784), favorite = item.favorite, onToggleFavorite = { reliefs = reliefs.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { reliefs = reliefs.filter { it.label != item.label } } }
             }
         }
 
         // ── Activities ──
         if (activities.isNotEmpty()) {
-            CollapsibleSection(t("Activities"), Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), "${activities.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Activities"), Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), t("%s in quick-log", activities.count { it.favorite })) {
                 activities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = activityIcon(item.label), iconTint = Color(0xFFFF8A65), favorite = item.favorite, onToggleFavorite = { activities = activities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { activities = activities.filter { it.label != item.label } } }
             }
         }
 
         // ── Missed Activities ──
         if (missedActivities.isNotEmpty()) {
-            CollapsibleSection(t("Missed Activities"), Icons.Outlined.EventBusy, Color(0xFFFF7043), "${missedActivities.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Missed Activities"), Icons.Outlined.EventBusy, Color(0xFFFF7043), t("%s in quick-log", missedActivities.count { it.favorite })) {
                 missedActivities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = missedActivityIcon(item.label), iconTint = Color(0xFFFF7043), favorite = item.favorite, onToggleFavorite = { missedActivities = missedActivities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { missedActivities = missedActivities.filter { it.label != item.label } } }
             }
         }
@@ -344,7 +344,7 @@ fun AiSetupResultsScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(8.dp).clip(CircleShape).background(color))
                             Spacer(Modifier.width(8.dp))
-                            Text(dw.severity, color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+                            Text(t(dw.severity), color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                             IconButton(onClick = { decayWeights = decayWeights.toMutableList().also { it.removeAt(idx) } }, modifier = Modifier.size(24.dp)) {
                                 Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
                             }
@@ -400,7 +400,7 @@ fun AiSetupResultsScreen(
                         }
                         if (dw.reasoning.isNotBlank()) {
                             Spacer(Modifier.height(4.dp))
-                            Text(dw.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t(dw.reasoning), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -466,11 +466,11 @@ fun AiSetupResultsScreen(
                                     .clickable { showMcSeverity = true }
                                     .background(sevColor.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                    Text(mc.severity, color = sevColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    Text(t(mc.severity), color = sevColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
                                 DropdownMenu(expanded = showMcSeverity, onDismissRequest = { showMcSeverity = false }) {
                                     listOf("HIGH", "MILD", "LOW").forEach { sev ->
-                                        DropdownMenuItem(text = { Text(sev) }, onClick = {
+                                        DropdownMenuItem(text = { Text(t(sev)) }, onClick = {
                                             menstruationConfig = mc.copy(severity = sev); showMcSeverity = false
                                         })
                                     }
@@ -584,7 +584,7 @@ private data class TDI(val label: String, val favorite: Boolean, val reasoning: 
 
 @Composable
 private fun SeverityGroup(severity: String, color: Color, items: List<TDI>, iconResolver: ((String) -> ImageVector?)? = null) {
-    Text(severity, color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+    Text(t(severity), color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
     Spacer(Modifier.height(4.dp))
     items.forEach { item ->
         val icon = iconResolver?.invoke(item.label)
@@ -623,7 +623,7 @@ private fun ItemChip(label: String, severity: String, isFavorite: Boolean, reaso
             if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
         }
         Box(Modifier.background(color.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-            Text(severity, color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            Text(t(severity), color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
         }
     }
 }
@@ -642,7 +642,7 @@ private fun FavoriteChip(label: String, reasoning: String) {
 
 @Composable
 private fun EditableSeverityGroup(severity: String, color: Color, items: List<TDI>, onDelete: (String) -> Unit, onChangeSeverity: (String, String) -> Unit, onChangeThreshold: (String, Double) -> Unit = { _, _ -> }, iconResolver: ((String) -> ImageVector?)? = null) {
-    Text(severity, color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+    Text(t(severity), color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
     Spacer(Modifier.height(4.dp))
     items.forEach { item ->
         val icon = iconResolver?.invoke(item.label)
@@ -681,11 +681,11 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
             // Severity chip — tap to change
             Box {
                 Box(Modifier.clickable { showSeverityMenu = true }.background(color.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                    Text(severity, color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    Text(t(severity), color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
                 DropdownMenu(expanded = showSeverityMenu, onDismissRequest = { showSeverityMenu = false }) {
                     listOf("HIGH", "MILD", "LOW").forEach { sev ->
-                        DropdownMenuItem(text = { Text(sev) }, onClick = { onChangeSeverity(item.label, sev); showSeverityMenu = false })
+                        DropdownMenuItem(text = { Text(t(sev)) }, onClick = { onChangeSeverity(item.label, sev); showSeverityMenu = false })
                     }
                 }
             }

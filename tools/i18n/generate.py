@@ -57,8 +57,13 @@ HEADER = '''package com.migraineme
  *
  * {done} entries.
  */
-internal val {up}_STRINGS: Map<String, String> = mapOf(
 '''
+
+# A single mapOf(...) compiles into one static initialiser, and the JVM caps a
+# method at 64 KB of bytecode; past roughly 4,700 entries the build fails with
+# "Method too large". The table is therefore emitted in chunks, one function
+# each, joined once at class init.
+CHUNK = 1500
 
 
 def esc(s):
@@ -94,9 +99,16 @@ def main():
         out = os.path.join(DEST, f"Strings{title}.kt")
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(HEADER.format(name=name, code=code, up=up, done=len(table)))
-            for en in sorted(table):
-                fh.write(f'    "{esc(en)}" to "{esc(table[en])}",\n')
-            fh.write(")\n")
+            keys = sorted(table)
+            chunks = [keys[i:i + CHUNK] for i in range(0, len(keys), CHUNK)] or [[]]
+            fn = f"{code}Strings"
+            fh.write(f"internal val {up}_STRINGS: Map<String, String> =\n")
+            fh.write("    " + " + ".join(f"{fn}{n}()" for n in range(len(chunks))) + "\n")
+            for n, part in enumerate(chunks):
+                fh.write(f"\nprivate fun {fn}{n}(): Map<String, String> = mapOf(\n")
+                for en in part:
+                    fh.write(f'    "{esc(en)}" to "{esc(table[en])}",\n')
+                fh.write(")\n")
         print(f"{out}  {len(table)} entries")
 
     # The edge functions' subset. Only emitted on a full run: a single-language

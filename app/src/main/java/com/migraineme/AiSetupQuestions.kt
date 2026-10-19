@@ -196,7 +196,7 @@ private fun QPoolMultiSelect(
             QPoolChipGrid(suggestedItems, selected, onToggle, accentColor, poolType)
         }
         for ((category, poolItems) in grouped) {
-            Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(t(category), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             QPoolChipGrid(poolItems, selected, onToggle, accentColor, poolType)
         }
     }
@@ -655,7 +655,7 @@ fun AiQuestionsPage8(
         QCard(t("What helps relieve your migraines?"), Icons.Outlined.Spa, t("Tap all that apply")) { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784), PoolType.RELIEF) }
         QCard(t("What are you usually doing when migraines hit?"), Icons.Outlined.DirectionsRun, t("Tap all that apply")) { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65), PoolType.ACTIVITY) }
         QCard(t("What do you miss because of migraines?"), Icons.Outlined.EventBusy, t("Tap all that apply")) { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY) }
-        QCard(t("Anything else we should know?"), Icons.Outlined.Mic, t("Type or speak — helps AI understand you better")) { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...") }
+        QCard(t("Anything else we should know?"), Icons.Outlined.Mic, t("Type or speak — helps AI understand you better")) { QFreeText(additionalNotes ?: "", onAdditionalNotes, t("e.g. chocolate is really bad, I work night shifts, migraines always come after flying...")) }
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -1054,7 +1054,7 @@ private fun AiNotesCard(value: String, onChange: (String) -> Unit) {
             Text(t("Optional"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(12.dp))
             QFreeText(value, onChange,
-                "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...")
+                t("e.g. chocolate is really bad, I work night shifts, migraines always come after flying..."))
         }
     }
 }

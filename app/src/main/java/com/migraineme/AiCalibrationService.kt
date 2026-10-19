@@ -769,9 +769,9 @@ object AiCalibrationService {
         val activeCount = mapping.triggers.count { it.value.severity != "NONE" }
         val highCount = mapping.triggers.count { it.value.severity == "HIGH" }
         val fallbackGauge = when {
-            activeCount > 30 -> AiSetupService.AiGaugeThresholds(low = 12, mild = 25, high = 40, reasoning = "Fallback: high trigger count ($activeCount active)")
-            activeCount > 15 -> AiSetupService.AiGaugeThresholds(low = 8, mild = 18, high = 30, reasoning = "Fallback: moderate trigger count ($activeCount active)")
-            else -> AiSetupService.AiGaugeThresholds(low = 5, mild = 12, high = 20, reasoning = "Fallback: low trigger count ($activeCount active)")
+            activeCount > 30 -> AiSetupService.AiGaugeThresholds(low = 12, mild = 25, high = 40, reasoning = Strings.tSync("Fallback: high trigger count (%1\$s active)", activeCount))
+            activeCount > 15 -> AiSetupService.AiGaugeThresholds(low = 8, mild = 18, high = 30, reasoning = Strings.tSync("Fallback: moderate trigger count (%1\$s active)", activeCount))
+            else -> AiSetupService.AiGaugeThresholds(low = 5, mild = 12, high = 20, reasoning = Strings.tSync("Fallback: low trigger count (%1\$s active)", activeCount))
         }
 
         return AiSetupService.AiConfig(

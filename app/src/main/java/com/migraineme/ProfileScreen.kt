@@ -286,7 +286,7 @@ fun ProfileScreen(
 
         // ── Profile Card ──
         val current = profile.value
-        val headerName = current?.displayName?.takeIf { it.isNotBlank() } ?: "Name not set"
+        val headerName = current?.displayName?.takeIf { it.isNotBlank() } ?: t("Name not set")
 
         HeroCard {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -656,18 +656,18 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPink, modifier = Modifier.size(18.dp))
-                            Text(summary, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t(summary), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
 
                     // Quick stats row
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (frequency != null) ProfileStatChip(Icons.Outlined.CalendarMonth, frequency, Modifier.weight(1f))
-                        if (duration != null) ProfileStatChip(Icons.Outlined.Timer, duration, Modifier.weight(1f))
+                        if (frequency != null) ProfileStatChip(Icons.Outlined.CalendarMonth, t(frequency), Modifier.weight(1f))
+                        if (duration != null) ProfileStatChip(Icons.Outlined.Timer, t(duration), Modifier.weight(1f))
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (experience != null) ProfileStatChip(Icons.Outlined.History, experience, Modifier.weight(1f))
-                        if (trajectory != null) ProfileStatChip(Icons.Outlined.TrendingUp, trajectory, Modifier.weight(1f))
+                        if (experience != null) ProfileStatChip(Icons.Outlined.History, t(experience), Modifier.weight(1f))
+                        if (trajectory != null) ProfileStatChip(Icons.Outlined.TrendingUp, t(trajectory), Modifier.weight(1f))
                     }
 
                     // Demographics
@@ -690,7 +690,7 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(value, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
+                                        Text(t(value), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
                                         Text(t(label), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
@@ -857,7 +857,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                         try {
                             val instant = java.time.Instant.parse(raw)
                             val local = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                            "Renews ${local.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", appLocale()))}"
+                            tSync("Renews %1\$s", local.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", appLocale())))
                         } catch (_: Exception) { null }
                     }
 
