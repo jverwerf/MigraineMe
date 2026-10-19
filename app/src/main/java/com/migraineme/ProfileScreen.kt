@@ -857,7 +857,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                         try {
                             val instant = java.time.Instant.parse(raw)
                             val local = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                            "Renews ${local.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"))}"
+                            "Renews ${local.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", appLocale()))}"
                         } catch (_: Exception) { null }
                     }
 

@@ -152,7 +152,7 @@ private fun CoreCanvas(
                 DateTimeFormatter.ofPattern("d").withZone(zone)
             else
                 DateTimeFormatter.ofPattern("d").withZone(zone)
-            val monthFmt = DateTimeFormatter.ofPattern("MMM").withZone(zone)
+            val monthFmt = DateTimeFormatter.ofPattern("MMM", appLocale()).withZone(zone)
 
             var day = ZonedDateTime.ofInstant(windowStart, zone).truncatedTo(ChronoUnit.DAYS)
             val endDay = ZonedDateTime.ofInstant(windowEnd, zone).truncatedTo(ChronoUnit.DAYS).plusDays(1)

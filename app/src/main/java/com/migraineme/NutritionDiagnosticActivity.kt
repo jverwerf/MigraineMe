@@ -306,7 +306,7 @@ class NutritionDiagnosticActivity : ComponentActivity() {
                 results.healthConnectRecordDetails = response.records.map { record ->
                     val date = record.startTime.atZone(ZoneOffset.UTC).toLocalDate()
                     val time = record.startTime.atZone(ZoneOffset.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("MMM dd, HH:mm"))
+                        .format(DateTimeFormatter.ofPattern("MMM dd, HH:mm", appLocale()))
 
                     NutritionRecordDetail(
                         id = record.metadata.id,
@@ -326,11 +326,11 @@ class NutritionDiagnosticActivity : ComponentActivity() {
             results.syncTokenExists = !syncState?.nutritionChangesToken.isNullOrBlank()
             results.lastTokenUpdate = syncState?.lastHourlyRunAtEpochMs?.let { ms ->
                 Instant.ofEpochMilli(ms).atZone(ZoneOffset.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("MMM dd HH:mm:ss"))
+                    .format(DateTimeFormatter.ofPattern("MMM dd HH:mm:ss", appLocale()))
             }
             results.lastPushRun = syncState?.lastPushRunAtEpochMs?.let { ms ->
                 Instant.ofEpochMilli(ms).atZone(ZoneOffset.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("MMM dd HH:mm:ss"))
+                    .format(DateTimeFormatter.ofPattern("MMM dd HH:mm:ss", appLocale()))
             }
 
             // 4. Check outbox

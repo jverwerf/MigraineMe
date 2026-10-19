@@ -597,7 +597,7 @@ private fun BlogAttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
     if (windowStart == null || windowEnd == null) return
 
     val zone = ZoneId.systemDefault()
-    val fmt = DateTimeFormatter.ofPattern("d MMM").withZone(zone)
+    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(zone)
     val rangeLabel = "${fmt.format(windowStart)} - ${fmt.format(windowEnd)}"
 
     Card(
@@ -665,7 +665,7 @@ private fun BlogAttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
 
     if (riskDays.isEmpty()) return
 
-    val fmt = DateTimeFormatter.ofPattern("d MMM")
+    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
     val from = LocalDate.parse(riskDays.first().date).format(fmt)
     val to = LocalDate.parse(riskDays.last().date).format(fmt)
 
@@ -728,7 +728,7 @@ private fun formatBlogCommentDate(isoDate: String): String {
             hours < 24 -> tSync("%sh##forumage", hours)
             days < 7 -> tSync("%sd##forumage", days)
             else -> {
-                val fmt = DateTimeFormatter.ofPattern("d MMM").withZone(ZoneId.systemDefault())
+                val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(ZoneId.systemDefault())
                 fmt.format(instant)
             }
         }

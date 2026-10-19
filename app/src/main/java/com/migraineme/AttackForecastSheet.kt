@@ -73,7 +73,7 @@ private fun dayWord(target: ZonedDateTime, now: ZonedDateTime): String {
     return when (days) {
         0L -> tSync("today")
         1L -> tSync("tomorrow")
-        else -> target.format(DateTimeFormatter.ofPattern("EEEE"))
+        else -> target.format(DateTimeFormatter.ofPattern("EEEE", appLocale()))
     }
 }
 
@@ -146,7 +146,7 @@ fun AttackForecastSheet(
             }
             startZdt?.let {
                 Text(
-                    t("started %s", it.format(DateTimeFormatter.ofPattern("EEE HH:mm"))),
+                    t("started %s", it.format(DateTimeFormatter.ofPattern("EEE HH:mm", appLocale()))),
                     color = MetaColor, style = MaterialTheme.typography.labelSmall,
                 )
             }

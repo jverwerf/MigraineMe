@@ -76,7 +76,7 @@ class HomeViewModel : ViewModel() {
     private val _state = MutableStateFlow(HomeUiState(loading = true))
     val state: StateFlow<HomeUiState> = _state
 
-    private val timeFmt = DateTimeFormatter.ofPattern("EEE d MMM • HH:mm")
+    private val timeFmt get() = DateTimeFormatter.ofPattern("EEE d MMM • HH:mm", appLocale())
 
     /**
      * Read pre-computed score from risk_score_live.

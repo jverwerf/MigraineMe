@@ -285,7 +285,8 @@ fun PaintThePictureScreen(
     fun launchVoice() {
         val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Paint the picture — tell us about your migraine…")
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Paint the picture — tell us about your migraine…"))
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
@@ -593,7 +594,7 @@ fun PaintThePictureScreen(
                                         val odt = OffsetDateTime.parse(iso)
                                         val isToday = odt.toLocalDate() == java.time.LocalDate.now()
                                         if (isToday) odt.format(DateTimeFormatter.ofPattern("HH:mm"))
-                                        else odt.format(DateTimeFormatter.ofPattern("EEE d MMM, HH:mm"))
+                                        else odt.format(DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", appLocale()))
                                     } catch (_: Exception) { null }
                                 }
                                 val detailParts = mutableListOf<String>()
@@ -1059,7 +1060,7 @@ private fun ItemEditorPill(
         Spacer(Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM")),
+                selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale())),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier

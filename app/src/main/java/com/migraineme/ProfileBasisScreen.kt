@@ -695,7 +695,7 @@ private fun toneForSeverity(v: String?): PillTone = when (v?.uppercase()) {
 }
 
 private fun fmtDate(iso: String?): String? = try {
-    iso?.let { Instant.parse(it.replace(" ", "T").let { s -> if (s.endsWith("Z") || s.contains("+")) s else "${s}Z" }).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("d MMMM yyyy")) }
+    iso?.let { Instant.parse(it.replace(" ", "T").let { s -> if (s.endsWith("Z") || s.contains("+")) s else "${s}Z" }).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("d MMMM yyyy", appLocale())) }
 } catch (_: Exception) { null }
 
 // ═══════════════════════════════════════════════════════════════════════

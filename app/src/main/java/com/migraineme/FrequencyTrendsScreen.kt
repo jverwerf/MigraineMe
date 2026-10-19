@@ -350,7 +350,7 @@ internal fun MonthlyBarChart(
     avgCount: Float,
     modifier: Modifier = Modifier,
 ) {
-    val fmt = DateTimeFormatter.ofPattern("MMM")
+    val fmt = DateTimeFormatter.ofPattern("MMM", appLocale())
     val fmtYear = DateTimeFormatter.ofPattern("yy")
 
     Canvas(modifier) {
@@ -515,7 +515,7 @@ internal fun WeeklyBarChart(
 private fun SeverityMonthlyBars(data: List<Triple<LocalDate, Float, Int>>) {
     // Mirrors iOS SeverityOverTimeChart (InsightsSubScreens.swift L1236-1249):
     // horizontally-scrolling row of bars, value-on-top coloured by severity.
-    val fmt = DateTimeFormatter.ofPattern("MMM")
+    val fmt = DateTimeFormatter.ofPattern("MMM", appLocale())
     val maxAvg = data.maxOfOrNull { it.second } ?: 1f
     Row(
         modifier = Modifier

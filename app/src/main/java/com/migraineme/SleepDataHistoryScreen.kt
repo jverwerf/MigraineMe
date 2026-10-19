@@ -215,7 +215,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
     var editEntry by remember { mutableStateOf<SleepDataEntry?>(null) }
     var editValue by remember { mutableStateOf("") }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
 
     fun loadEntries() {
         scope.launch {

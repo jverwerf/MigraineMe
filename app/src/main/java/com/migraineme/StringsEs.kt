@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4664 entries.
+ * 4670 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -430,6 +430,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Add Treatment" to "Tratamiento",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Añade un fármaco, aparato o cambio de hábito para ver su efecto.",
     "Add any additional notes about this migraine" to "Añade más notas sobre esta migraña",
+    "Add any notes about this migraine…" to "Añade notas sobre esta migraña…",
     "Add as a treatment" to "Como tratamiento",
     "Add aura details" to "Detalles del aura",
     "Add failed: %1\$s" to "Error: %1\$s",
@@ -573,6 +574,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Any alcohol" to "Alcohol",
     "Any day, including the start of an attack if moving does not make the pain worse. A break from the desk is the natural moment." to "Cualquier día, también al empezar un ataque si moverte no empeora el dolor. Una pausa del escritorio es el momento natural.",
     "Any day. It suits the evening, and it is a reasonable thing to do when you feel an attack building, as long as tensing does not make the pain worse." to "Cualquier día. Encaja bien por la noche, y es razonable hacerlo cuando notas que se acerca un ataque, siempre que tensar no empeore el dolor.",
+    "Any extra notes on side effects?" to "¿Alguna nota más sobre efectos secundarios?",
     "Any high-histamine foods trigger migraines?" to "¿Alimentos ricos en histamina te dan migraña?",
     "Any lingering symptoms from %s?" to "¿Te queda algo de %s?",
     "Any new symptoms?" to "¿Síntomas nuevos?",
@@ -1134,6 +1136,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Borrar → Factores: %1\$s, Medicinas: %2\$s, Alivios: %3\$s",
     "Deleting account…" to "Borrando cuenta…",
     "Depression" to "Depresión",
+    "Describe side effects…" to "Describe efectos secundarios…",
     "Describe the side effect" to "Describe el efecto secundario",
     "Deselect all" to "Quitar todo",
     "Detachable eye cover" to "Antifaz desmontable",
@@ -2519,6 +2522,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Cuando ya tienes uno, lo importante es anotarlo: MigraineMe compara cómo van tus ataques ",
     "Ondansetron" to "Ondansetrón",
     "One tap to confirm or skip" to "Un toque para confirmar o saltar",
+    "One thing at a time — what happened today?" to "Una cosa a la vez: ¿qué pasó hoy?",
     "One-tap doctor-ready PDF of everything you've logged." to "Con un toque: un PDF listo para tu médico con todo lo registrado.",
     "Ongoing Migraine" to "Migraña en curso",
     "Ongoing migraine reminder" to "Aviso de migraña abierta",
@@ -2599,6 +2603,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Pain update" to "Cambio",
     "Paint the Picture" to "Pinta el cuadro",
     "Paint the picture" to "Cuéntanoslo",
+    "Paint the picture — tell us about your migraine…" to "Pinta el cuadro: cuéntanos sobre tu migraña…",
     "Pair watch" to "Vincular",
     "Pairs that worked better together" to "Parejas que funcionaron mejor juntas",
     "Pairs you reach for in the same attack, and how those attacks went." to "Parejas a las que recurres en el mismo ataque, y cómo fueron esos ataques.",
@@ -3462,6 +3467,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Tell us about a trigger you didn't expect — the one that took you ages to figure out." to "Cuéntanos un factor que no esperabas, ese que tardaste siglos en descubrir.",
     "Tell us about your day" to "Cuéntanos tu día",
     "Tell us about your migraines" to "Cuéntanos tus migrañas",
+    "Tell us about your migraines…" to "Cuéntanos sobre tus migrañas…",
     "Tell us about yourself and answer some questions." to "Cuéntanos de ti y responde unas preguntas.",
     "Temp" to "Temp.",
     "Temp %s" to "Temp %s",

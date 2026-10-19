@@ -1185,7 +1185,8 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
     fun launchVoice() {
         val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "One thing at a time — what happened today?")
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("One thing at a time — what happened today?"))
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
@@ -2107,7 +2108,7 @@ private fun PostdromeStep(
     val migraineLabel: String = openMigraine?.startAt?.let {
         try {
             val s = OffsetDateTime.parse(it)
-            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM"))}"
+            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale()))}"
         } catch (_: Exception) { "your open migraine" }
     } ?: "your open migraine"
 
@@ -2221,7 +2222,7 @@ private fun MigraineNowStep(
     val migraineLabel: String = openMigraine?.startAt?.let {
         try {
             val s = OffsetDateTime.parse(it)
-            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM"))}"
+            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale()))}"
         } catch (_: Exception) { "your open migraine" }
     } ?: "your open migraine"
 
@@ -2565,7 +2566,8 @@ private fun SideEffectsPageV2(
         fun launchVoice() {
             val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Any extra notes on side effects?")
+                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
+                putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Any extra notes on side effects?"))
             }
             try { voiceLauncher.launch(intent) } catch (_: Exception) {
                 android.widget.Toast.makeText(sideEffectsCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()

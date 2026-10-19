@@ -844,6 +844,7 @@ fun JournalEditScreen(
                         IconButton(onClick = {
                             val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                 putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
                             }
                             try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
                                 android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()

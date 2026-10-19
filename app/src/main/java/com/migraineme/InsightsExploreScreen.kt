@@ -336,8 +336,8 @@ private fun CompactMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
-    val tf = DateTimeFormatter.ofPattern("h:mm a").withZone(z)
+    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val tf = DateTimeFormatter.ofPattern("h:mm a", appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1, modifier = Modifier.size(32.dp)) {

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4664 entries.
+ * 4670 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -430,6 +430,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Add Treatment" to "Traitement",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Ajoute un médicament, appareil ou changement pour suivre son effet.",
     "Add any additional notes about this migraine" to "Ajoute d'autres notes sur cette migraine",
+    "Add any notes about this migraine…" to "Ajoute des notes sur cette migraine…",
     "Add as a treatment" to "Comme traitement",
     "Add aura details" to "Détails de l'aura",
     "Add failed: %1\$s" to "Ajout raté : %1\$s",
@@ -573,6 +574,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Any alcohol" to "Alcool",
     "Any day, including the start of an attack if moving does not make the pain worse. A break from the desk is the natural moment." to "N'importe quel jour, y compris au début d'une crise si bouger n'aggrave pas la douleur. Une pause loin du bureau est le moment naturel.",
     "Any day. It suits the evening, and it is a reasonable thing to do when you feel an attack building, as long as tensing does not make the pain worse." to "N'importe quel jour. Ça convient bien au soir, et c'est raisonnable de le faire quand tu sens une crise monter, tant que contracter n'aggrave pas la douleur.",
+    "Any extra notes on side effects?" to "D'autres notes sur les effets secondaires ?",
     "Any high-histamine foods trigger migraines?" to "Les aliments riches en histamine te donnent la migraine ?",
     "Any lingering symptoms from %s?" to "Encore des restes de %s ?",
     "Any new symptoms?" to "Nouveaux symptômes ?",
@@ -1134,6 +1136,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Supprimer → Facteurs : %1\$s, Médicaments : %2\$s, Soulagements : %3\$s",
     "Deleting account…" to "Suppression…",
     "Depression" to "Dépression",
+    "Describe side effects…" to "Décris les effets secondaires…",
     "Describe the side effect" to "Décris l'effet secondaire",
     "Deselect all" to "Tout enlever",
     "Detachable eye cover" to "Cache-yeux amovible",
@@ -2519,6 +2522,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Une fois que tu en as un, l'intérêt est de le noter : MigraineMe compare tes crises ",
     "Ondansetron" to "Ondansétron",
     "One tap to confirm or skip" to "Un geste pour confirmer ou passer",
+    "One thing at a time — what happened today?" to "Une chose à la fois : que s'est-il passé aujourd'hui ?",
     "One-tap doctor-ready PDF of everything you've logged." to "En un geste : un PDF prêt pour le médecin avec tout ton journal.",
     "Ongoing Migraine" to "Migraine en cours",
     "Ongoing migraine reminder" to "Rappel de crise en cours",
@@ -2599,6 +2603,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Pain update" to "Évolution",
     "Paint the Picture" to "Dessine la scène",
     "Paint the picture" to "Décris la scène",
+    "Paint the picture — tell us about your migraine…" to "Dépeins la scène : parle-nous de ta migraine…",
     "Pair watch" to "Associer",
     "Pairs that worked better together" to "Duos qui marchaient mieux ensemble",
     "Pairs you reach for in the same attack, and how those attacks went." to "Les duos que tu prends pendant une même crise, et comment ces crises se sont passées.",
@@ -3462,6 +3467,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Tell us about a trigger you didn't expect — the one that took you ages to figure out." to "Parle-nous d'un facteur inattendu, celui que tu as mis un temps fou à trouver.",
     "Tell us about your day" to "Parle-nous de ta journée",
     "Tell us about your migraines" to "Parle-nous de tes migraines",
+    "Tell us about your migraines…" to "Parle-nous de tes migraines…",
     "Tell us about yourself and answer some questions." to "Parle-nous de toi et réponds à quelques questions.",
     "Temp" to "T°",
     "Temp %s" to "Temp %s",

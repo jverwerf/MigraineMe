@@ -220,7 +220,7 @@ private fun MigraineRow(
             d == today.minusDays(1) -> "Yesterday"
             d == today.plusDays(1) -> "Tomorrow"
             d == today.minusDays(2) -> "2 days ago"
-            else -> d.format(DateTimeFormatter.ofPattern("EEE dd MMM"))
+            else -> d.format(DateTimeFormatter.ofPattern("EEE dd MMM", appLocale()))
         }
     } ?: "Unknown"
 

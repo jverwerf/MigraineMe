@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4664 entries.
+ * 4670 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -430,6 +430,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Add Treatment" to "Terapia",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Aggiungi un farmaco, dispositivo o cambio di abitudine per vederne l'effetto.",
     "Add any additional notes about this migraine" to "Aggiungi altre note su questa emicrania",
+    "Add any notes about this migraine…" to "Aggiungi note su questa emicrania…",
     "Add as a treatment" to "Come trattamento",
     "Add aura details" to "Dettagli aura",
     "Add failed: %1\$s" to "Errore: %1\$s",
@@ -573,6 +574,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Any alcohol" to "Alcol",
     "Any day, including the start of an attack if moving does not make the pain worse. A break from the desk is the natural moment." to "Qualsiasi giorno, anche all'inizio di un attacco se muoverti non peggiora il dolore. Una pausa dalla scrivania è il momento naturale.",
     "Any day. It suits the evening, and it is a reasonable thing to do when you feel an attack building, as long as tensing does not make the pain worse." to "Qualsiasi giorno. Si adatta bene alla sera, ed è una cosa sensata da fare quando senti arrivare un attacco, purché contrarre non peggiori il dolore.",
+    "Any extra notes on side effects?" to "Altre note sugli effetti collaterali?",
     "Any high-histamine foods trigger migraines?" to "I cibi ricchi di istamina ti scatenano emicranie?",
     "Any lingering symptoms from %s?" to "Resta qualcosa da %s?",
     "Any new symptoms?" to "Nuovi sintomi?",
@@ -1134,6 +1136,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Elimina → Fattori: %1\$s, Farmaci: %2\$s, Sollievi: %3\$s",
     "Deleting account…" to "Elimino l'account…",
     "Depression" to "Depressione",
+    "Describe side effects…" to "Descrivi effetti collaterali…",
     "Describe the side effect" to "Descrivi l'effetto collaterale",
     "Deselect all" to "Togli tutto",
     "Detachable eye cover" to "Copriocchi staccabile",
@@ -2519,6 +2522,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Quando ne hai uno, il punto è inserirlo: MigraineMe confronta come vanno i tuoi attacchi ",
     "Ondansetron" to "Ondansetron",
     "One tap to confirm or skip" to "Un tocco per confermare o saltare",
+    "One thing at a time — what happened today?" to "Una cosa alla volta: cos'è successo oggi?",
     "One-tap doctor-ready PDF of everything you've logged." to "Con un tocco: un PDF pronto per il medico con tutto ciò che hai segnato.",
     "Ongoing Migraine" to "Emicrania in corso",
     "Ongoing migraine reminder" to "Promemoria emicrania aperta",
@@ -2599,6 +2603,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Pain update" to "Aggiornamento",
     "Paint the Picture" to "Dipingi il quadro",
     "Paint the picture" to "Racconta com'era",
+    "Paint the picture — tell us about your migraine…" to "Descrivi il quadro: raccontaci della tua emicrania…",
     "Pair watch" to "Abbina",
     "Pairs that worked better together" to "Coppie che insieme hanno funzionato meglio",
     "Pairs you reach for in the same attack, and how those attacks went." to "Coppie che usi nello stesso attacco, e com'è andata in quegli attacchi.",
@@ -3462,6 +3467,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Tell us about a trigger you didn't expect — the one that took you ages to figure out." to "Raccontaci un fattore inaspettato, quello che ci hai messo un'eternità a scoprire.",
     "Tell us about your day" to "Raccontaci la giornata",
     "Tell us about your migraines" to "Raccontaci le tue emicranie",
+    "Tell us about your migraines…" to "Raccontaci delle tue emicranie…",
     "Tell us about yourself and answer some questions." to "Raccontaci di te e rispondi a qualche domanda.",
     "Temp" to "Temp.",
     "Temp %s" to "Temp %s",

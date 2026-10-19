@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4664 entries.
+ * 4670 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -430,6 +430,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Add Treatment" to "Behandeling",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Voeg een middel, apparaat of gewoonte toe om het effect te volgen.",
     "Add any additional notes about this migraine" to "Voeg extra notities toe over deze migraine",
+    "Add any notes about this migraine…" to "Voeg notities over deze migraine toe…",
     "Add as a treatment" to "Als behandeling",
     "Add aura details" to "Aura-details",
     "Add failed: %1\$s" to "Mislukt: %1\$s",
@@ -573,6 +574,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Any alcohol" to "Alcohol",
     "Any day, including the start of an attack if moving does not make the pain worse. A break from the desk is the natural moment." to "Elke dag, ook aan het begin van een aanval als bewegen de pijn niet erger maakt. Een pauze van je bureau is het natuurlijke moment.",
     "Any day. It suits the evening, and it is a reasonable thing to do when you feel an attack building, as long as tensing does not make the pain worse." to "Elke dag. Het past goed bij de avond, en het is zinvol als je een aanval voelt opkomen, zolang aanspannen de pijn niet erger maakt.",
+    "Any extra notes on side effects?" to "Nog notities over bijwerkingen?",
     "Any high-histamine foods trigger migraines?" to "Geven histaminerijke voedingsmiddelen migraine?",
     "Any lingering symptoms from %s?" to "Nog klachten van %s?",
     "Any new symptoms?" to "Nieuwe klachten?",
@@ -1134,6 +1136,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Wissen → Triggers: %1\$s, Medicijnen: %2\$s, Verlichting: %3\$s",
     "Deleting account…" to "Account verwijderen…",
     "Depression" to "Depressie",
+    "Describe side effects…" to "Beschrijf bijwerkingen…",
     "Describe the side effect" to "Beschrijf de bijwerking",
     "Deselect all" to "Niets kiezen",
     "Detachable eye cover" to "Afneembare oogkap",
@@ -2519,6 +2522,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Heb je er een, dan is noteren het punt: MigraineMe vergelijkt hoe je aanvallen verlopen ",
     "Ondansetron" to "Ondansetron",
     "One tap to confirm or skip" to "Eén tik: bevestigen of overslaan",
+    "One thing at a time — what happened today?" to "Eén ding tegelijk: wat gebeurde er vandaag?",
     "One-tap doctor-ready PDF of everything you've logged." to "Met één tik een dokterklaar PDF van alles wat je hebt gelogd.",
     "Ongoing Migraine" to "Lopende migraine",
     "Ongoing migraine reminder" to "Herinnering lopende migraine",
@@ -2599,6 +2603,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Pain update" to "Pijnupdate",
     "Paint the Picture" to "Teken het beeld",
     "Paint the picture" to "Schets het beeld",
+    "Paint the picture — tell us about your migraine…" to "Schets het beeld: vertel ons over je migraine…",
     "Pair watch" to "Koppelen",
     "Pairs that worked better together" to "Duo's die samen beter werkten",
     "Pairs you reach for in the same attack, and how those attacks went." to "Combinaties waar je bij dezelfde aanval naar grijpt, en hoe die aanvallen verliepen.",
@@ -3462,6 +3467,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Tell us about a trigger you didn't expect — the one that took you ages to figure out." to "Vertel over een trigger die je niet zag aankomen, die waar je eeuwen over deed.",
     "Tell us about your day" to "Vertel over je dag",
     "Tell us about your migraines" to "Vertel over je migraine",
+    "Tell us about your migraines…" to "Vertel ons over je migraines…",
     "Tell us about yourself and answer some questions." to "Vertel over jezelf en beantwoord een paar vragen.",
     "Temp" to "Temp",
     "Temp %s" to "Temp %s",

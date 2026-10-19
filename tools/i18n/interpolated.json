@@ -40,19 +40,19 @@
     "line": "                            t(\"These triggers are checked every hour as new data arrives.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:33",
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:45",
     "line": "                t(\"To record ambient noise levels, MigraineMe needs microphone access.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:34",
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:46",
     "line": "                t(\"The app only records noise levels (decibels), not conversations or identifiable audio.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:63",
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:75",
     "line": "                t(\"Stress Index requires both HRV and Resting Heart Rate to be enabled.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:64",
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:76",
     "line": "                t(\"Please enable these metrics first, then you can enable Stress Index.\")"
   },
   {
@@ -72,19 +72,19 @@
     "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1272",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1273",
     "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1428",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1429",
     "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1435",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1436",
     "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2449",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2450",
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
@@ -92,7 +92,7 @@
     "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/GoalEditorScreen.kt:172",
+    "site": "app/src/main/java/com/migraineme/GoalEditorScreen.kt:169",
     "line": "                                label = t(r.title) + \" · \" + t(\"%s min\", r.minutes),"
   },
   {
@@ -228,7 +228,7 @@
     "line": "                        t(\"This is information, not medical advice or a diagnosis, and nothing here is a reason to change or stop a medicine on your own. It is here so you can raise it with your doctor.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorPractitionerGoalScreen.kt:163",
+    "site": "app/src/main/java/com/migraineme/MonitorPractitionerGoalScreen.kt:161",
     "line": "                            Text(t(routine.title) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {

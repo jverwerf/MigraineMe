@@ -413,7 +413,7 @@ private fun FilterCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (timeFrame != InsightsViewModel.TimeFrame.ALL) {
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
-                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d")
+                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
                     } else t(timeFrame.label)
                     Row(
@@ -470,7 +470,7 @@ private fun FilterCard(
 
                 // Custom date range row (shown when custom is active or being set)
                 AnimatedVisibility(visible = timeFrame == InsightsViewModel.TimeFrame.CUSTOM) {
-                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")
+                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale())
                     Row(
                         Modifier.fillMaxWidth().padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -746,8 +746,8 @@ private fun DetailMigraineSelector(
     displayTitle: String? = null
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
-    val tf = DateTimeFormatter.ofPattern("h:mm a").withZone(z)
+    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val tf = DateTimeFormatter.ofPattern("h:mm a", appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {

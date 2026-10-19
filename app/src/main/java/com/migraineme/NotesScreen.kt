@@ -89,7 +89,8 @@ fun NotesScreen(
     fun launchVoice() {
         val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Add any notes about this migraine…")
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Add any notes about this migraine…"))
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()

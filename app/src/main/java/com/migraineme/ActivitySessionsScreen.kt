@@ -63,7 +63,7 @@ fun ActivitySessionsScreen(
     }
 
     val displayDate = try {
-        LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEEE, MMM d"))
+        LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale()))
     } catch (_: Exception) { date }
 
     Column(
@@ -298,7 +298,7 @@ fun activityEmoji(type: String?): String {
 
 private fun formatTimeRange(startAt: String?, endAt: String?): String? {
     if (startAt.isNullOrBlank()) return null
-    val fmt = DateTimeFormatter.ofPattern("h:mm a")
+    val fmt = DateTimeFormatter.ofPattern("h:mm a", appLocale())
     return try {
         val start = if (startAt.contains("T")) {
             java.time.LocalDateTime.parse(startAt.substringBefore("Z").substringBefore("+")).format(fmt)
