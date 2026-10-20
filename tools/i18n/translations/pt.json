@@ -4892,5 +4892,13 @@
  "New goals": "Novas metas",
  "Goal ideas from your own data. Keep checked to add them to your goals.": "Ideias de metas a partir dos teus dados. Mantém-nas marcadas para as adicionar às tuas metas.",
  "Your goals have been updated.": "As tuas metas foram atualizadas.",
- "Could not save your goals": "Metas não guardadas"
+ "Could not save your goals": "Metas não guardadas",
+ "hours": "horas",
+ "bpm": "bpm",
+ "mcg": "µg",
+ "count": "vezes",
+ "Goals that *fit you.*": "Metas *à tua medida.*",
+ "from your own data, or your physio": "dos teus próprios dados, ou do teu fisio",
+ "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working.": "Todas as segundas a IA sugere metas com a tua recalibração, como dormir mais ou menos ecrã. A tua revisão semanal mostra se estão a resultar.",
+ "{Monitor} tab › {Goals} card": "Separador {Monitor} › cartão {Goals}"
 }

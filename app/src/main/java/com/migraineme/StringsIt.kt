@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4894 entries.
+ * 4902 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -1440,6 +1440,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Every 1-2 months" to "Ogni 1-2 mesi",
     "Every Monday\nit *learns* you." to "Ogni lunedì\nti *impara.*",
     "Every Monday it *learns.*" to "Ogni lunedì *impara.*",
+    "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Ogni lunedì l'IA ti suggerisce obiettivi con la ritaratura, come dormire di più o meno schermo. La revisione settimanale mostra se funzionano.",
     "Every attack in range, in the order things happened" to "Ogni attacco del periodo, nell'ordine in cui è andata",
     "Every attack in the period, in the order things happened" to "Ogni attacco del periodo, nell'ordine in cui è avvenuto",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Ogni attacco registrato viene confrontato con questo su tutto ciò che hai annotato: fattori scatenanti, sonno, meteo, sintomi, cosa hai preso e quando. Più un attacco passato condivide con questo, più conta, e tutto quanto sopra è il punto medio ponderato di quegli attacchi. Con troppo pochi attacchi simili non mostriamo nulla piuttosto che una supposizione.",
@@ -1516,10 +1517,10 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Falling barometric pressure / storm fronts" to "Pressione in calo / fronti temporaleschi",
     "False alarm" to "Falso allarme",
     "False alarms" to "Falsi allarmi",
-    "False alarms — warnings with no migraine" to "Falsi allarmi: avvisi senza emicrania",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "False alarms — warnings with no migraine" to "Falsi allarmi: avvisi senza emicrania",
     "Family event" to "Evento in famiglia",
     "Fast breathing" to "Respiro veloce",
     "Fat" to "Grassi",
@@ -1708,6 +1709,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Goal reminders" to "Promemoria",
     "Goals" to "Obiettivi",
     "Goals are switched off in Data settings." to "Gli obiettivi sono disattivati nelle Impostazioni dati.",
+    "Goals that *fit you.*" to "Obiettivi *su misura.*",
     "Going to bed much later than usual" to "Andare a letto molto più tardi",
     "Good" to "Buono",
     "Good build quality" to "Buona fattura",
@@ -3018,11 +3020,11 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Registered with" to "Iscritto a",
     "Regular 9-5" to "Orario fisso",
     "Regular Migraine" to "Emicrania comune",
-    "Reject" to "Rifiuta",
-    "Reject all" to "Rifiuta tutto",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Reject" to "Rifiuta",
+    "Reject all" to "Rifiuta tutto",
     "Relaxation" to "Rilassamento",
     "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Questo tipo di allenamento al rilassamento si usa contro l'emicrania da decenni. Negli studi riduce la frequenza degli attacchi più o meno quanto alcune compresse preventive, se praticato con regolarità.",
     "Reliable background sync" to "Sync in background stabile",
@@ -4521,11 +4523,11 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Zinc high" to "Zinco alto",
     "Zinc low" to "Zinco basso",
     "Zolmitriptan" to "Zolmitriptan",
-    "Zone" to "Zona",
-    "Zone 0" to "Zona 0",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Zone" to "Zona",
+    "Zone 0" to "Zona 0",
     "Zone 1" to "Zona 1",
     "Zone 2" to "Zona 2",
     "Zone 3" to "Zona 3",
@@ -4574,6 +4576,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "bottom center" to "in basso centro",
     "bottom left" to "in basso sx",
     "bottom right" to "in basso dx",
+    "bpm" to "bpm",
     "bright lights" to "luci intense",
     "burnout" to "burnout",
     "by %1\$s, in %2\$s of %3\$s doses" to "di %1\$s, in %2\$s di %3\$s dosi",
@@ -4588,6 +4591,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "clinical trials" to "studi clinici",
     "confidence" to "fiducia",
     "contraceptives" to "contraccettivi",
+    "count" to "volte",
     "crosses" to "attraversa",
     "cycle tracking" to "monitoraggio del ciclo",
     "data and evidence come first" to "dati ed evidenze vengono prima di tutto",
@@ -4638,6 +4642,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "forecast" to "previsione",
     "free days so far this month" to "giorni liberi questo mese",
     "free days this month" to "giorni liberi nel mese",
+    "from your own data, or your physio" to "dai tuoi dati, o dal tuo fisioterapista",
     "gammaCore" to "gammaCore",
     "generated {0}" to "generato il {0}",
     "gepants" to "gepanti",
@@ -4656,6 +4661,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "history average" to "media storica",
     "homeopath" to "omeopata",
     "hormonal fluctuations" to "oscillazioni ormonali",
+    "hours" to "ore",
     "how many points it contributes on each day relative to the predicted date. " to "quanti punti aggiunge in ogni giorno rispetto alla data prevista. ",
     "hydration tracking" to "monitoraggio dell'idratazione",
     "in %1\$s attacks · %2\$s%%" to "in %1\$s attacchi · %2\$s%%",
@@ -4684,6 +4690,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "low" to "basso",
     "magnesium" to "magnesio",
     "manufacturer's." to "del produttore.",
+    "mcg" to "µg",
     "meal timing" to "orario dei pasti",
     "mean duration" to "durata media",
     "mean severity" to "intensità med",
@@ -4889,6 +4896,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "{Log} tab › {Daily Check-In}" to "Scheda {Log} › {Daily Check-In}",
     "{Log} tab › {Log Migraine}" to "Scheda {Log} › {Log Migraine}",
     "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}" to "Scheda {Monitor} › scheda {Diet}  ·  {Monitor} › {Menstruation}",
+    "{Monitor} tab › {Goals} card" to "Scheda {Monitor} › scheda {Goals}",
     "{Monitor} tab › {Sleep} card" to "Scheda {Monitor} › scheda {Sleep}",
     "~3 min" to "~3 min",
     "~5 min" to "~5 min",

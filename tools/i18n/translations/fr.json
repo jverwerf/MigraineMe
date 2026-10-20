@@ -4857,9 +4857,9 @@
  "Your exercises": "Tes exercices",
  "Your goal reminder": "Rappel de ton objectif",
  "Your goals": "Tes objectifs",
- "Your weekly goal review is ready": "Votre bilan hebdo des objectifs est prêt",
- "See how your goals went, plus {0} new goal ideas from your data.": "Voyez vos objectifs, plus {0} nouvelles idées tirées de vos données.",
- "See how your goals went this week.": "Voyez comment vos objectifs ont évolué cette semaine.",
+ "Your weekly goal review is ready": "Ton bilan hebdo des objectifs est prêt",
+ "See how your goals went, plus {0} new goal ideas from your data.": "Vois comment tes objectifs ont évolué, et {0} nouvelles idées tirées de tes données.",
+ "See how your goals went this week.": "Vois comment tes objectifs ont évolué cette semaine.",
  "About Goals": "Sur les objectifs",
  "Weekly review and goal ideas": "Bilan hebdo et idées d'objectifs",
  "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.": "Une fois par semaine, avec ton recalibrage, MigraineMe analyse tes données et propose des objectifs utiles, comme l'eau, le sommeil ou l'entraînement cardio. Ton praticien peut aussi fixer des objectifs. Désactive pour masquer les objectifs partout.",
@@ -4892,5 +4892,13 @@
  "New goals": "Objectifs",
  "Goal ideas from your own data. Keep checked to add them to your goals.": "Idées d'objectifs tirées de tes propres données. Laisse-les cochées pour les ajouter à tes objectifs.",
  "Your goals have been updated.": "Tes objectifs ont été mis à jour.",
- "Could not save your goals": "Objectifs non enregistrés"
+ "Could not save your goals": "Objectifs non enregistrés",
+ "hours": "heures",
+ "bpm": "bpm",
+ "mcg": "µg",
+ "count": "fois",
+ "Goals that *fit you.*": "Des objectifs *faits pour toi.*",
+ "from your own data, or your physio": "à partir de tes données, ou de ton kiné",
+ "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working.": "Chaque lundi, l'IA te propose des objectifs avec ton recalibrage, comme plus de sommeil ou moins d'écran. Ton bilan de la semaine montre s'ils marchent.",
+ "{Monitor} tab › {Goals} card": "Onglet {Monitor} › carte {Goals}"
 }

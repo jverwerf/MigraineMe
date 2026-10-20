@@ -4892,5 +4892,13 @@
  "New goals": "Neue Ziele",
  "Goal ideas from your own data. Keep checked to add them to your goals.": "Zielideen aus deinen eigenen Daten. Lass sie angehakt, um sie zu deinen Zielen hinzuzufügen.",
  "Your goals have been updated.": "Deine Ziele wurden aktualisiert.",
- "Could not save your goals": "Ziele nicht gespeichert"
+ "Could not save your goals": "Ziele nicht gespeichert",
+ "hours": "Stunden",
+ "bpm": "bpm",
+ "mcg": "µg",
+ "count": "Mal",
+ "Goals that *fit you.*": "Ziele, die *zu dir passen.*",
+ "from your own data, or your physio": "aus deinen Daten oder von deiner Fachperson",
+ "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working.": "Jeden Montag schlägt die KI mit deiner Neujustierung Ziele vor, etwa mehr Schlaf oder weniger Bildschirmzeit. Dein Wochenrückblick zeigt, ob sie wirken.",
+ "{Monitor} tab › {Goals} card": "Tab {Monitor} › Karte {Goals}"
 }

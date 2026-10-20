@@ -4892,5 +4892,13 @@
  "New goals": "Nieuwe doelen",
  "Goal ideas from your own data. Keep checked to add them to your goals.": "Doelideeën uit je eigen gegevens. Laat ze aangevinkt om ze aan je doelen toe te voegen.",
  "Your goals have been updated.": "Je doelen zijn bijgewerkt.",
- "Could not save your goals": "Doelen niet opgeslagen"
+ "Could not save your goals": "Doelen niet opgeslagen",
+ "hours": "uur",
+ "bpm": "bpm",
+ "mcg": "µg",
+ "count": "keer",
+ "Goals that *fit you.*": "Doelen die *bij je passen.*",
+ "from your own data, or your physio": "uit je eigen data, of van je fysio",
+ "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working.": "Elke maandag stelt de AI met je herijking doelen voor, zoals meer slaap of minder schermtijd. Je weekoverzicht laat zien of ze werken.",
+ "{Monitor} tab › {Goals} card": "Tabblad {Monitor} › kaart {Goals}"
 }

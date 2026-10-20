@@ -189,6 +189,13 @@ val tourSteps = listOf(
         headline = "Every Monday it *learns.*", sub = "accept or reject, one tap",
         body = "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with.",
         findIt = "{Home} › “{MigraineMe has suggestions for you}” banner", pop = R.drawable.tour_pop_09, brainy = R.drawable.brainy_gardener_small),
+    // Goals: ideas arrive with the Monday recalibration, the review sits on the
+    // Goals page (Jordy 10-20). Only in the tour while the goals feature is on.
+    *listOfNotNull(TourStep(Routes.MONITOR, Icons.Outlined.Flag, "Goals", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
+        headline = "Goals that *fit you.*", sub = "from your own data, or your physio",
+        body = "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working.",
+        findIt = "{Monitor} tab › {Goals} card", pop = R.drawable.tour_pop_11, brainy = R.drawable.brainy_goals_small)
+        .takeIf { MonitorCardConfig.GOALS_ENABLED }).toTypedArray(),
     TourStep(Routes.HOME, Icons.Outlined.Forum, "Community", highlight = "", navHint = NavHintLocation.TOP_COMMUNITY,
         headline = "You are *not alone.*", sub = "guidance, articles, forum",
         body = "Practitioners you can share your diary with, articles picked for you, and a forum of people like you.",

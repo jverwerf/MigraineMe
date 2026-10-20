@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4894 entries.
+ * 4902 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -1440,6 +1440,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Every 1-2 months" to "Cada 1-2 meses",
     "Every Monday\nit *learns* you." to "Cada lunes\nte *aprende.*",
     "Every Monday it *learns.*" to "Cada lunes *aprende.*",
+    "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Cada lunes la IA te sugiere metas con tu recalibrado, como dormir más o menos pantalla. Tu revisión semanal muestra si funcionan.",
     "Every attack in range, in the order things happened" to "Cada ataque del periodo, en el orden en que pasó",
     "Every attack in the period, in the order things happened" to "Cada ataque del periodo, en el orden en que ocurrió",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Cada ataque que has registrado se compara con este en todo lo que anotaste: desencadenantes, sueño, clima, síntomas, qué tomaste y cuándo. Cuanto más comparte un ataque pasado con este, más cuenta, y todo lo de arriba es el punto medio ponderado de esos ataques. Con muy pocos ataques similares no se muestra nada antes que una suposición.",
@@ -1516,10 +1517,10 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Falling barometric pressure / storm fronts" to "Presión que baja / frentes de tormenta",
     "False alarm" to "Falsa alarma",
     "False alarms" to "Falsas alarmas",
-    "False alarms — warnings with no migraine" to "Falsas alarmas: avisos sin migraña",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "False alarms — warnings with no migraine" to "Falsas alarmas: avisos sin migraña",
     "Family event" to "Evento familiar",
     "Fast breathing" to "Respirar rápido",
     "Fat" to "Grasa",
@@ -1708,6 +1709,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Goal reminders" to "Avisos de metas",
     "Goals" to "Metas",
     "Goals are switched off in Data settings." to "Las metas están desactivadas en Ajustes de datos.",
+    "Goals that *fit you.*" to "Metas *a tu medida.*",
     "Going to bed much later than usual" to "Acostarse mucho más tarde de lo normal",
     "Good" to "Bien",
     "Good build quality" to "Buena fabricación",
@@ -3018,11 +3020,11 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Registered with" to "Registrado en",
     "Regular 9-5" to "Horario fijo",
     "Regular Migraine" to "Migraña común",
-    "Reject" to "Rechazar",
-    "Reject all" to "Rechazar todo",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Reject" to "Rechazar",
+    "Reject all" to "Rechazar todo",
     "Relaxation" to "Relajación",
     "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Este tipo de entrenamiento de relajación se usa contra la migraña desde hace décadas. En ensayos reduce la frecuencia de los ataques más o menos lo mismo que algunos comprimidos preventivos, cuando se practica con regularidad.",
     "Reliable background sync" to "Sincronización fiable",
@@ -4521,11 +4523,11 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Zinc high" to "Zinc alto",
     "Zinc low" to "Zinc bajo",
     "Zolmitriptan" to "Zolmitriptán",
-    "Zone" to "Zona",
-    "Zone 0" to "Zona 0",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Zone" to "Zona",
+    "Zone 0" to "Zona 0",
     "Zone 1" to "Zona 1",
     "Zone 2" to "Zona 2",
     "Zone 3" to "Zona 3",
@@ -4574,6 +4576,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "bottom center" to "abajo centro",
     "bottom left" to "abajo izq.",
     "bottom right" to "abajo dcha.",
+    "bpm" to "lpm",
     "bright lights" to "luces intensas",
     "burnout" to "burnout",
     "by %1\$s, in %2\$s of %3\$s doses" to "en %1\$s, en %2\$s de %3\$s dosis",
@@ -4588,6 +4591,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "clinical trials" to "ensayos clínicos",
     "confidence" to "confianza",
     "contraceptives" to "anticonceptivos",
+    "count" to "veces",
     "crosses" to "cruza",
     "cycle tracking" to "seguimiento del ciclo",
     "data and evidence come first" to "los datos y la evidencia van primero",
@@ -4638,6 +4642,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "forecast" to "pronóstico",
     "free days so far this month" to "días libres este mes",
     "free days this month" to "días libres este mes",
+    "from your own data, or your physio" to "de tus propios datos o de tu fisio",
     "gammaCore" to "gammaCore",
     "generated {0}" to "generado el {0}",
     "gepants" to "gepantes",
@@ -4656,6 +4661,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "history average" to "media histórica",
     "homeopath" to "homeópata",
     "hormonal fluctuations" to "fluctuaciones hormonales",
+    "hours" to "horas",
     "how many points it contributes on each day relative to the predicted date. " to "cuántos puntos aporta cada día respecto a la fecha prevista. ",
     "hydration tracking" to "seguimiento de hidratación",
     "in %1\$s attacks · %2\$s%%" to "en %1\$s ataques · %2\$s%%",
@@ -4684,6 +4690,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "low" to "bajo",
     "magnesium" to "magnesio",
     "manufacturer's." to "del fabricante.",
+    "mcg" to "µg",
     "meal timing" to "horario de comidas",
     "mean duration" to "duración med",
     "mean severity" to "fuerza media",
@@ -4889,6 +4896,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "{Log} tab › {Daily Check-In}" to "Pestaña {Log} › {Daily Check-In}",
     "{Log} tab › {Log Migraine}" to "Pestaña {Log} › {Log Migraine}",
     "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}" to "Pestaña {Monitor} › tarjeta {Diet}  ·  {Monitor} › {Menstruation}",
+    "{Monitor} tab › {Goals} card" to "Pestaña {Monitor} › tarjeta {Goals}",
     "{Monitor} tab › {Sleep} card" to "Pestaña {Monitor} › tarjeta {Sleep}",
     "~3 min" to "~3 min",
     "~5 min" to "~5 min",

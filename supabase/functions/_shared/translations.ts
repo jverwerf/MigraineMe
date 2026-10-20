@@ -1196,9 +1196,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "C'est l'heure : {0}. Objectif du jour : {1} minutes.",
     "Time for {0}.": "C'est l'heure : {0}.",
     "Your goal reminder": "Rappel de ton objectif",
-    "Your weekly goal review is ready": "Votre bilan hebdo des objectifs est prêt",
-    "See how your goals went, plus {0} new goal ideas from your data.": "Voyez vos objectifs, plus {0} nouvelles idées tirées de vos données.",
-    "See how your goals went this week.": "Voyez comment vos objectifs ont évolué cette semaine.",
+    "Your weekly goal review is ready": "Ton bilan hebdo des objectifs est prêt",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Vois comment tes objectifs ont évolué, et {0} nouvelles idées tirées de tes données.",
+    "See how your goals went this week.": "Vois comment tes objectifs ont évolué cette semaine.",
   },
   it: {
     "%1$s and %2$s commented": "%1$s e %2$s hanno commentato",
