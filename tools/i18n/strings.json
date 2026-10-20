@@ -10786,11 +10786,11 @@
   },
   {
     "en": "Biotin",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -10827,6 +10827,15 @@
       "app/src/main/java/com/migraineme/BlogDetailScreen.kt:56"
     ],
     "max_len": 17,
+    "count": 1
+  },
+  {
+    "en": "Blood glucose",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -10917,6 +10926,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Body fat",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -11254,11 +11272,11 @@
   },
   {
     "en": "Calcium",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -11362,11 +11380,11 @@
   },
   {
     "en": "Calories",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -11407,11 +11425,11 @@
   },
   {
     "en": "Carbs",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -11631,12 +11649,39 @@
     "count": 1
   },
   {
-    "en": "Cholesterol",
-    "class": "hard",
+    "en": "Chin tuck",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Chin tucks",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Chloride",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Cholesterol",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -11844,6 +11889,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Chromium",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -12469,11 +12523,11 @@
   },
   {
     "en": "Copper",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15286,11 +15340,11 @@
   },
   {
     "en": "Fat",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15381,6 +15435,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Fibre",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15547,11 +15610,11 @@
   },
   {
     "en": "Folate",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -15570,6 +15633,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Folic acid",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -18039,12 +18111,21 @@
     "count": 1
   },
   {
-    "en": "Iron",
-    "class": "hard",
+    "en": "Iodine",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
+    "count": 1
+  },
+  {
+    "en": "Iron",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -18567,6 +18648,15 @@
       "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
     ],
     "max_len": 28,
+    "count": 1
+  },
+  {
+    "en": "Late screen time",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -19732,11 +19822,11 @@
   },
   {
     "en": "Manganese",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -20568,12 +20658,30 @@
     "count": 1
   },
   {
+    "en": "Molybdenum",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Mon",
     "class": "soft",
     "sites": [
       "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
     ],
     "max_len": 20,
+    "count": 1
+  },
+  {
+    "en": "Monounsaturated fat",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -21136,11 +21244,11 @@
   },
   {
     "en": "Niacin",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -23638,11 +23746,11 @@
   },
   {
     "en": "Phosphorus",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -24033,6 +24141,15 @@
     "count": 1
   },
   {
+    "en": "Polyunsaturated fat",
+    "class": "soft",
+    "sites": [
+      "goal_metric_catalog.label (DB, via t())"
+    ],
+    "max_len": 40,
+    "count": 1
+  },
+  {
     "en": "Pool",
     "class": "hard",
     "sites": [
@@ -24115,11 +24232,11 @@
   },
   {
     "en": "Potassium",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -24493,11 +24610,11 @@
   },
   {
     "en": "Protein",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -25474,11 +25591,11 @@
   },
   {
     "en": "Riboflavin",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -26347,11 +26464,11 @@
   },
   {
     "en": "Selenium",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -27526,11 +27643,11 @@
   },
   {
     "en": "Sodium",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -28291,11 +28408,11 @@
   },
   {
     "en": "Sugar",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -29569,11 +29686,11 @@
   },
   {
     "en": "Thiamin",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31639,11 +31756,11 @@
   },
   {
     "en": "Vitamin A",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31666,11 +31783,11 @@
   },
   {
     "en": "Vitamin B12",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31693,11 +31810,11 @@
   },
   {
     "en": "Vitamin B6",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31720,11 +31837,11 @@
   },
   {
     "en": "Vitamin C",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31774,11 +31891,11 @@
   },
   {
     "en": "Vitamin E",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -31801,11 +31918,11 @@
   },
   {
     "en": "Vitamin K",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {
@@ -34897,11 +35014,11 @@
   },
   {
     "en": "Zinc",
-    "class": "hard",
+    "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+      "goal_metric_catalog.label (DB, via t())"
     ],
-    "max_len": 14,
+    "max_len": 40,
     "count": 1
   },
   {

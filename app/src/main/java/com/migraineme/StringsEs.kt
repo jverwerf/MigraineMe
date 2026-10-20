@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4877 entries.
+ * 4890 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -805,6 +805,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Sin blog",
     "Blogs" to "Blogs",
+    "Blood glucose" to "Glucemia",
     "Blood glucose high" to "Glucosa alta",
     "Blood glucose low" to "Glucosa baja",
     "Blood oxygen (SpO2)" to "Oxígeno en sangre (SpO2)",
@@ -818,6 +819,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Body Fat" to "Grasa corp.",
     "Body aches lingering" to "Dolor corporal persistente",
     "Body and sleep" to "Cuerpo y sueño",
+    "Body fat" to "Grasa corporal",
     "Body fat high" to "Grasa corporal alta",
     "Body fat low" to "Grasa corporal baja",
     "Body signals" to "Señales cuerpo",
@@ -927,6 +929,9 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Checking trigger flags…" to "Revisando factores…",
     "Childcare" to "Cuidado de niños",
     "Chills or sweating" to "Escalofríos o sudores",
+    "Chin tuck" to "Retracción",
+    "Chin tucks" to "Retracciones",
+    "Chloride" to "Cloruro",
     "Chocolate" to "Chocolate",
     "Cholesterol" to "Colesterol",
     "Cholesterol high" to "Colesterol alto",
@@ -955,6 +960,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Choose which physical health metrics to display on the Monitor screen." to "Elige qué métricas del cuerpo aparecen en el Monitor.",
     "Choose which sleep metrics to display on the Monitor screen." to "Elige las métricas de sueño del Monitor.",
     "Chores" to "Tareas del hogar",
+    "Chromium" to "Cromo",
     "Chronic" to "Crónica",
     "Chronic migraine" to "Migraña crónica",
     "Church" to "Iglesia",
@@ -1511,15 +1517,15 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "False alarms" to "Falsas alarmas",
     "False alarms — warnings with no migraine" to "Falsas alarmas: avisos sin migraña",
     "Family event" to "Evento familiar",
+)
+
+private fun esStrings1(): Map<String, String> = mapOf(
     "Fast breathing" to "Respirar rápido",
     "Fat" to "Grasa",
     "Fat high" to "Grasas altas",
     "Fat low" to "Grasas bajas",
     "Fatigue" to "Fatiga",
     "Favourite" to "Favorito",
-)
-
-private fun esStrings1(): Map<String, String> = mapOf(
     "Favourites" to "Favoritos",
     "Feeling anxious or worried" to "Sentir ansiedad o agobio",
     "Feeling down or depressed" to "Sentirse bajo o deprimido",
@@ -1534,6 +1540,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Feverfew" to "Matricaria",
     "Few times/week" to "Varias/semana",
     "Fiber" to "Fibra",
+    "Fibre" to "Fibra",
     "Fibre high" to "Fibra alta",
     "Fibre low" to "Fibra baja",
     "Filled in from your own data." to "Se rellena con tus propios datos.",
@@ -1558,6 +1565,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Folate (B9)" to "Folato (B9)",
     "Folate high" to "Folato alto",
     "Folate low" to "Folato bajo",
+    "Folic acid" to "Ácido fólico",
     "Follow curators that flag relevant articles" to "Sigue a quien marca artículos útiles",
     "Food" to "Comida",
     "Food & diet — what do you avoid?" to "Comida: ¿qué evitas?",
@@ -1939,6 +1947,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Intro call" to "Primera cita",
     "Invalid date format" to "Fecha no válida",
     "Invalid login response." to "Respuesta de acceso no válida.",
+    "Iodine" to "Yodo",
     "Iron" to "Hierro",
     "Iron high" to "Hierro alto",
     "Iron low" to "Hierro bajo",
@@ -2016,6 +2025,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Late night screen time" to "Pantallas de noche",
     "Late night screens" to "Pantallas de noche",
     "Late screen" to "Pantalla tarde",
+    "Late screen time" to "Pantalla de noche",
     "Late screen time high" to "Mucha pantalla de noche",
     "Late screen time low" to "Poca pantalla de noche",
     "Late-night usage detection" to "Detecta uso nocturno",
@@ -2326,10 +2336,12 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Missing your usual caffeine intake" to "Saltarte tu cafeína de siempre",
     "Moderate" to "Moderado",
     "Moderate — slows me down" to "Media, me frena",
+    "Molybdenum" to "Molibdeno",
     "Mon" to "lun",
     "Monitor" to "Monitor",
     "Monitor Dashboard Trends" to "Tendencias del panel",
     "Monitor — Your Health Data" to "Monitor: tus datos de salud",
+    "Monounsaturated fat" to "Grasa monoinsaturada",
     "Month" to "Mes",
     "Monthly" to "Mensual",
     "Monthly Duration" to "Duración al mes",
@@ -2857,6 +2869,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "Niveles de polen y contaminación del aire.",
     "Pollen high" to "Polen alto",
     "Pollen or hay fever season" to "Polen o temporada de alergia",
+    "Polyunsaturated fat" to "Grasa poliinsaturada",
     "Pool" to "Lista",
     "Poor" to "Malo",
     "Poor deep sleep" to "Poco profundo",
@@ -3007,6 +3020,9 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Relaxation" to "Relajación",
     "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Este tipo de entrenamiento de relajación se usa contra la migraña desde hace décadas. En ensayos reduce la frecuencia de los ataques más o menos lo mismo que algunos comprimidos preventivos, cuando se practica con regularidad.",
     "Reliable background sync" to "Sincronización fiable",
+)
+
+private fun esStrings2(): Map<String, String> = mapOf(
     "Reliably triggers your migraines" to "Te dispara las migrañas de forma fiable",
     "Relief" to "Alivio",
     "Relief favorites" to "Alivios favoritos",
@@ -3020,9 +3036,6 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Remind me every %s while a migraine is still open" to "Avisarme cada %s mientras siga abierta",
     "Reminders for your goals" to "Avisos de tus metas",
     "Reminders to close a migraine you logged but never ended" to "Avisos para cerrar una migraña que registraste y no cerraste",
-)
-
-private fun esStrings2(): Map<String, String> = mapOf(
     "Remove" to "Quitar",
     "Remove \"%s\"?" to "¿Quitar «%s»?",
     "Remove \"%s\"? This can't be undone." to "¿Quitar «%s»? No se puede deshacer.",
@@ -4510,6 +4523,9 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Zone 2" to "Zona 2",
     "Zone 3" to "Zona 3",
     "Zone 4" to "Zona 4",
+)
+
+private fun esStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zona 5",
     "Zone 6" to "Zona 6",
     "Zone Thresholds" to "Umbrales",
@@ -4523,9 +4539,6 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "active" to "activo",
     "activities / locations were linked to each one\n" to "actividades / lugares iban ligados a cada una\n",
     "acupuncturist" to "acupuntor",
-)
-
-private fun esStrings3(): Map<String, String> = mapOf(
     "add triggers, medicines, reliefs; switch off the rest" to "añade desencadenantes, medicinas, alivios; apaga el resto",
     "after a few logged attacks" to "tras unos pocos ataques registrados",
     "alcohol" to "alcohol",

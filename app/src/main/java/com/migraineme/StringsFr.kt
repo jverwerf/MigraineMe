@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4877 entries.
+ * 4890 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -805,6 +805,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Introuvable",
     "Blogs" to "Blogs",
+    "Blood glucose" to "Glycémie",
     "Blood glucose high" to "Glycémie élevée",
     "Blood glucose low" to "Glycémie basse",
     "Blood oxygen (SpO2)" to "Oxygène sanguin (SpO2)",
@@ -818,6 +819,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Body Fat" to "Masse grasse",
     "Body aches lingering" to "Courbatures persistantes",
     "Body and sleep" to "Corps et sommeil",
+    "Body fat" to "Masse grasse",
     "Body fat high" to "Masse grasse élevée",
     "Body fat low" to "Masse grasse faible",
     "Body signals" to "Signaux du corps",
@@ -927,6 +929,9 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Checking trigger flags…" to "Vérification…",
     "Childcare" to "Garde d'enfants",
     "Chills or sweating" to "Frissons ou sueurs",
+    "Chin tuck" to "Rentrer menton",
+    "Chin tucks" to "Menton rentré",
+    "Chloride" to "Chlorure",
     "Chocolate" to "Chocolat",
     "Cholesterol" to "Cholestérol",
     "Cholesterol high" to "Cholestérol élevé",
@@ -955,6 +960,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Choose which physical health metrics to display on the Monitor screen." to "Choisis les mesures du corps affichées sur le Moniteur.",
     "Choose which sleep metrics to display on the Monitor screen." to "Choisis les mesures de sommeil du Moniteur.",
     "Chores" to "Tâches ménagères",
+    "Chromium" to "Chrome",
     "Chronic" to "Chronique",
     "Chronic migraine" to "Migraine chronique",
     "Church" to "Église",
@@ -1511,15 +1517,15 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "False alarms" to "Fausses alertes",
     "False alarms — warnings with no migraine" to "Fausses alertes : alerte sans migraine",
     "Family event" to "Fête de famille",
+)
+
+private fun frStrings1(): Map<String, String> = mapOf(
     "Fast breathing" to "Souffle rapide",
     "Fat" to "Lipides",
     "Fat high" to "Lipides élevés",
     "Fat low" to "Lipides faibles",
     "Fatigue" to "Fatigue",
     "Favourite" to "Favori",
-)
-
-private fun frStrings1(): Map<String, String> = mapOf(
     "Favourites" to "Favoris",
     "Feeling anxious or worried" to "Se sentir anxieux ou inquiet",
     "Feeling down or depressed" to "Se sentir triste ou déprimé",
@@ -1534,6 +1540,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Feverfew" to "Grande camomille",
     "Few times/week" to "Plusieurs/sem.",
     "Fiber" to "Fibres",
+    "Fibre" to "Fibres",
     "Fibre high" to "Fibres élevées",
     "Fibre low" to "Fibres faibles",
     "Filled in from your own data." to "Rempli à partir de tes données.",
@@ -1558,6 +1565,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Folate (B9)" to "Folates (B9)",
     "Folate high" to "Folates élevés",
     "Folate low" to "Folates bas",
+    "Folic acid" to "Acide folique",
     "Follow curators that flag relevant articles" to "Suis ceux qui repèrent les bons articles",
     "Food" to "Alimentation",
     "Food & diet — what do you avoid?" to "Alimentation : que fuis-tu ?",
@@ -1939,6 +1947,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Intro call" to "1er échange",
     "Invalid date format" to "Date invalide",
     "Invalid login response." to "Réponse de connexion invalide.",
+    "Iodine" to "Iode",
     "Iron" to "Fer",
     "Iron high" to "Fer élevé",
     "Iron low" to "Fer bas",
@@ -2016,6 +2025,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Late night screen time" to "Écrans tard le soir",
     "Late night screens" to "Écrans tard le soir",
     "Late screen" to "Écran tardif",
+    "Late screen time" to "Écran le soir",
     "Late screen time high" to "Beaucoup d'écran le soir",
     "Late screen time low" to "Peu d'écran le soir",
     "Late-night usage detection" to "Détection usage nocturne",
@@ -2326,10 +2336,12 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Missing your usual caffeine intake" to "Sauter ta caféine habituelle",
     "Moderate" to "Modéré",
     "Moderate — slows me down" to "Modérée, ça freine",
+    "Molybdenum" to "Molybdène",
     "Mon" to "lun",
     "Monitor" to "Moniteur",
     "Monitor Dashboard Trends" to "Tendances du tableau",
     "Monitor — Your Health Data" to "Moniteur — tes données",
+    "Monounsaturated fat" to "Graisses mono-insat.",
     "Month" to "Mois",
     "Monthly" to "Par mois",
     "Monthly Duration" to "Durée par mois",
@@ -2857,6 +2869,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "Taux de pollens et pollution de l'air.",
     "Pollen high" to "Pollen élevé",
     "Pollen or hay fever season" to "Pollen ou saison du rhume des foins",
+    "Polyunsaturated fat" to "Graisses poly-insat.",
     "Pool" to "Liste",
     "Poor" to "Mauvais",
     "Poor deep sleep" to "Peu de profond",
@@ -3007,6 +3020,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Relaxation" to "Relaxation",
     "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Ce type d'entraînement à la relaxation est utilisé contre la migraine depuis des décennies. Dans les essais, il réduit la fréquence des crises à peu près autant que certains comprimés de traitement de fond, quand il est pratiqué régulièrement.",
     "Reliable background sync" to "Sync en fond fiable",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Reliably triggers your migraines" to "Déclenche tes migraines de façon fiable",
     "Relief" to "Soulagement",
     "Relief favorites" to "Soulagements favoris",
@@ -3020,9 +3036,6 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Remind me every %s while a migraine is still open" to "Me rappeler toutes les %s tant qu'une migraine est ouverte",
     "Reminders for your goals" to "Rappels pour tes objectifs",
     "Reminders to close a migraine you logged but never ended" to "Rappels pour clore une migraine notée et jamais terminée",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Remove" to "Retirer",
     "Remove \"%s\"?" to "Retirer «%s» ?",
     "Remove \"%s\"? This can't be undone." to "Retirer « %s » ? C'est définitif.",
@@ -4510,6 +4523,9 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Zone 2" to "Zone 2",
     "Zone 3" to "Zone 3",
     "Zone 4" to "Zone 4",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zone 5",
     "Zone 6" to "Zone 6",
     "Zone Thresholds" to "Seuils",
@@ -4523,9 +4539,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "active" to "actif",
     "activities / locations were linked to each one\n" to "activités / lieux étaient liés à chacune\n",
     "acupuncturist" to "acupuncteur",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "add triggers, medicines, reliefs; switch off the rest" to "ajoute facteurs, médicaments, soulagements ; coupe le reste",
     "after a few logged attacks" to "après quelques crises notées",
     "alcohol" to "alcool",
