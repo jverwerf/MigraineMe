@@ -4859,5 +4859,21 @@
  "Your goals": "Tus metas",
  "Your weekly goal review is ready": "Tu revisión semanal de objetivos está lista",
  "See how your goals went, plus {0} new goal ideas from your data.": "Mira cómo fueron tus objetivos y {0} ideas nuevas según tus datos.",
- "See how your goals went this week.": "Mira cómo fueron tus objetivos esta semana."
+ "See how your goals went this week.": "Mira cómo fueron tus objetivos esta semana.",
+ "About Goals": "Sobre las metas",
+ "Weekly review and goal ideas": "Revisión semanal e ideas de metas",
+ "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.": "Una vez a la semana, junto con tu recalibración, MigraineMe revisa tus datos y sugiere metas que podrían ayudar, como agua, sueño o entreno por pulso. Tu profesional también puede fijar metas. Desactívalo para ocultar las metas en toda la app.",
+ "Unlock Goals": "Desbloquear",
+ "Weekly AI goal suggestions and reviews from your own data": "Metas sugeridas por IA y revisiones semanales con tus datos",
+ "Goals are switched off in Data settings.": "Las metas están desactivadas en Ajustes de datos.",
+ "This week's review": "Revisión semanal",
+ "Week of %s": "Semana del %s",
+ "On track": "Vas bien",
+ "Slipping": "Flojea",
+ "Not started": "Sin empezar",
+ "Suggested for you": "Sugeridas para ti",
+ "Weekly review notifications": "Avisos de la revisión semanal",
+ "A push every Monday when your review and new suggestions are ready": "Un aviso cada lunes cuando tu revisión y nuevas sugerencias estén listas",
+ "Weekly goal review": "Revisión de metas",
+ "Your weekly goal review and new goal ideas": "Tu revisión semanal de metas y nuevas ideas"
 }

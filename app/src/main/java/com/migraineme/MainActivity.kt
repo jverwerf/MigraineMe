@@ -552,6 +552,8 @@ class MainActivity : ComponentActivity() {
         "daily_gauge" -> Routes.HOME
         "ongoing_migraine", "trigger_alert" -> Routes.JOURNAL
         "practitioner_goal" -> Routes.MONITOR
+        // Weekly goal review + suggestions: the Goals page (Monitor > Goals).
+        "goal_suggestions" -> if (MonitorCardConfig.GOALS_ENABLED) Routes.MONITOR_GOALS else null
         else -> null
     }
 }
@@ -836,6 +838,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             // so back returns to Insights instead of Home.
             if (route == Routes.INSIGHTS_PATTERNS || route == Routes.INSIGHTS_RECOMMENDATIONS) {
                 nav.navigate(Routes.INSIGHTS) { launchSingleTop = true }
+            }
+            // Same for the Goals page: Monitor underneath.
+            if (route == Routes.MONITOR_GOALS) {
+                nav.navigate(Routes.MONITOR) { launchSingleTop = true }
             }
             nav.navigate(route) { launchSingleTop = true }
             pendingNavigationRoute.value = null

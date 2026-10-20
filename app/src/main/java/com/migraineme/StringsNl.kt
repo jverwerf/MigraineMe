@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4861 entries.
+ * 4877 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -350,6 +350,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "A more useful read on top of the patterns we've already found in your data. The AI takes what's showing up (the items that turn up around your attacks, the combinations that look risky together, the treatments that seem to be helping) and adds a personal next step for each one, across six categories.\n\nWhat it looks at per category:\n• Triggers: the ones that keep showing up before attacks, and the pairs that look especially risky together. Gives you a preventive action tied to your pattern.\n• Prodromes: your personal early warning signs, with interventions that may abort or shorten an attack when they appear.\n• Medicines: rebound and overuse flags (triptans, NSAIDs, paracetamol, opioids), alternatives when something isn't relieving well, side-effect mitigation, same-class swaps, doctor-discussion prompts. All tied to your own usage.\n• Reliefs: same angles for non-drug methods (alternatives, technique tweaks, timing).\n• Activities: links your timing (exercise, sleep, stress) to context like cortisol and dehydration.\n• Symptoms: the ones running high or severe in your attacks, with targeted prep (anti-emetic on hand, dim-room kit, postdrome plan).\n\nEach recommendation comes with a short evidence line so you can see why it's being suggested. Dismiss anything that doesn't match your reality and it won't come back. These are starting points to discuss with your neurologist, not diagnoses." to "Een nuttiger blik boven op de patronen die we al in je gegevens vonden. De AI neemt wat opvalt (wat rond je aanvallen opduikt, de combinaties die samen riskant lijken, de behandelingen die lijken te helpen) en zet er per stuk een persoonlijke volgende stap bij, in zes categorieën.\n\nWat er per categorie bekeken wordt:\n• Triggers: die steeds weer opduiken vóór aanvallen, en de paren die samen extra riskant lijken. Met een preventieve stap die bij jouw patroon past.\n• Prodromen: je eigen vroege signalen, met stappen die een aanval kunnen tegenhouden of korter maken zodra ze opkomen.\n• Medicijnen: signalen van rebound en overgebruik (triptanen, NSAID's, paracetamol, opioïden), alternatieven als iets slecht verlicht, omgaan met bijwerkingen, wisselen binnen dezelfde klasse en punten voor bij de arts. Steeds op basis van je eigen gebruik.\n• Verlichting: dezelfde invalshoeken voor methodes zonder medicijn (alternatieven, techniek, moment).\n• Activiteiten: verbindt je timing (sport, slaap, stress) met de context, zoals cortisol en te weinig drinken.\n• Klachten: die in je aanvallen zwaar of vaak zijn, met gerichte voorbereiding (middel tegen misselijkheid bij de hand, donkere kamer, plan voor de nawee).\n\nBij elke tip staat een korte reden, zodat je ziet waarom hij komt. Wat niet bij je past sluit je weg en komt niet terug. Het zijn startpunten voor het gesprek bij de neuroloog, geen diagnoses.",
     "A note on Link: linking treatments combines them into one shared % change. " to "Over Koppelen: gekoppelde behandelingen delen één gezamenlijk % verandering. ",
     "A phrase that names nothing specific is never guessed: it stays in your words unless you pick what it was." to "Een vage zin raden we nooit: die blijft in jouw woorden tot je kiest wat het was.",
+    "A push every Monday when your review and new suggestions are ready" to "Elke maandag een melding als je overzicht en nieuwe voorstellen klaarstaan",
     "A randomised trial in migraine backs the filter approach. Worth knowing they are much darker than normal tinted glasses." to "Een gerandomiseerde studie bij migraine steunt de filteraanpak. Let op: ze zijn veel donkerder dan een gewone getinte bril.",
     "A reality check on your risk gauge. We look back at every day you've used the app and ask two questions: when the gauge said HIGH or MILD, did an attack actually happen? And when an attack happened, was the gauge warning the day before?\n\nThat gives you two numbers:\n• Hit rate: of all your attack days, what share the gauge correctly flagged as high-risk beforehand.\n• False alarm rate: of all your non-attack days, what share the gauge flagged anyway.\n\nTap in for the full breakdown (true positives, missed attacks, etc.) and to review any pending recalibration proposals. To tune the LOW / MILD / HIGH thresholds and the day-by-day decay curve yourself, open the menu and tap Risk Model. Lowering the HIGH threshold catches more attacks (higher hit rate) but also more false alarms; raising it does the opposite.\n\nThe weekly recalibration uses these same numbers to nudge your thresholds in the right direction: too many false alarms means thresholds get raised; missed attacks means they get lowered. Changes are incremental (around 20-30% per pass) so the gauge gradually homes in on what works for you.\n\nNeeds at least 7 days of logged data to start showing." to "Een eerlijke check op je risicometer. We kijken terug naar elke dag dat je de app gebruikte en stellen twee vragen: als de meter HOOG of LICHT aangaf, kwam er dan echt een aanval? En als er een aanval kwam, waarschuwde de meter dan de dag ervoor?\n\nDat geeft twee getallen:\n• Rake voorspellingen: van al je aanvalsdagen het deel dat de meter vooraf goed als risicovol aangaf.\n• Vals alarm: van al je dagen zonder aanval het deel dat de meter toch aangaf.\n\nTik erop voor de volledige uitsplitsing (rake voorspellingen, gemiste aanvallen enzovoort) en om openstaande voorstellen voor bijstelling te bekijken. Wil je de drempels LAAG / LICHT / HOOG en de afbouwcurve zelf zetten, open dan het menu en tik Risicomodel. Een lagere HOOG-drempel vangt meer aanvallen (meer rake voorspellingen) maar geeft ook meer vals alarm; hoger zetten doet het omgekeerde.\n\nDe wekelijkse bijstelling gebruikt precies deze getallen en duwt je drempels de goede kant op: te veel vals alarm zet ze hoger, gemiste aanvallen zetten ze lager. De stappen zijn klein (zo'n 20-30 % per ronde), zodat de meter zich langzaam op jou instelt.\n\nHeeft minstens 7 dagen aan gegevens nodig om te verschijnen.",
     "A reminder from your practitioner" to "Een herinnering van je behandelaar",
@@ -386,6 +387,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "About Filter by" to "Over filteren",
     "About Full Report" to "Over het rapport",
     "About Gauge Thresholds" to "Over de drempels",
+    "About Goals" to "Over doelen",
     "About How Did It Impact You" to "Over de impact op jou",
     "About Log Migraine" to "Over migraine noteren",
     "About Manage Items" to "Over je lijsten",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Fat low" to "Weinig vet",
     "Fatigue" to "Vermoeidheid",
     "Favourite" to "Favoriet",
-    "Favourites" to "Favorieten",
-    "Feeling anxious or worried" to "Angstig of bezorgd voelen",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Favourites" to "Favorieten",
+    "Feeling anxious or worried" to "Angstig of bezorgd voelen",
     "Feeling down or depressed" to "Somber of down voelen",
     "Feeling low" to "Somber",
     "Feeling low or depressed" to "Somber of down",
@@ -1695,6 +1697,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Goal" to "Doel",
     "Goal reminders" to "Doelherinneringen",
     "Goals" to "Doelen",
+    "Goals are switched off in Data settings." to "Doelen staan uit in Data-instellingen.",
     "Going to bed much later than usual" to "Veel later naar bed dan normaal",
     "Good" to "Goed",
     "Good build quality" to "Goed gemaakt",
@@ -2583,6 +2586,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Not signed in" to "Niet ingelogd",
     "Not signed in." to "Niet ingelogd.",
     "Not sleeping long enough (< 6-7 hours)" to "Te kort slapen (< 6-7 uur)",
+    "Not started" to "Niet begonnen",
     "Not sure" to "Weet ik niet",
     "Not sure which" to "Weet niet welk",
     "Not sure yet" to "Nog niet zeker",
@@ -2638,9 +2642,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Op Android: open MigraineMe, ga naar het upgradescherm en voer de code %1\$s in.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Alleen op goede dagen. Je hebt een vrij stuk muur nodig, een bed of een mat, en een tennisbal voor het loslaten aan het eind.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "Op goede dagen, of als je nek strak aanvoelt na lang aan je bureau zitten. Niet tijdens een aanval als je hoofd bewegen de pijn erger maakt.",
+    "On track" to "Op schema",
     "Once a day" to "1 keer per dag",
     "Once a day, %s days a week" to "1 keer per dag, %s dagen per week",
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Eén keer per week stelt de AI wijzigingen voor, zoals je lijnen verplaatsen. Vink aan waar je het mee eens bent.",
+    "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere." to "Eén keer per week, samen met je bijstelling, bekijkt MigraineMe je data en stelt doelen voor die kunnen helpen, zoals water, slaap of hartslagtraining. Je behandelaar kan ook doelen instellen. Zet dit uit om doelen overal te verbergen.",
     "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth." to "Zodra een aanval begonnen is. Een schemerige, stille kamer, geluid zacht, en een koud kompres in een doek gewikkeld.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Heb je er een, dan is noteren het punt: MigraineMe vergelijkt hoe je aanvallen verlopen ",
     "Ondansetron" to "Ondansetron",
@@ -3014,15 +3020,15 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Remind me every %s while a migraine is still open" to "Herinner me elke %s zolang een migraine open is",
     "Reminders for your goals" to "Herinneringen voor je doelen",
     "Reminders to close a migraine you logged but never ended" to "Herinnering om een migraine af te sluiten die nog openstaat",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Remove" to "Weghalen",
     "Remove \"%s\"?" to "\"%s\" weghalen?",
     "Remove \"%s\"? This can't be undone." to "\"%s\" weghalen? Dit kan niet terug.",
     "Remove %s from this log" to "%s uit deze log halen",
     "Remove aura from this log" to "Aura weghalen",
     "Remove entry" to "Weghalen",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Remove from Frequent" to "Uit Vaak halen",
     "Remove from favorites" to "Uit favorieten",
     "Remove from frequent" to "Uit favorieten halen",
@@ -3385,6 +3391,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Slept 7-8h" to "7-8u geslapen",
     "Slept over 8h" to "> 8u geslapen",
     "Slept under 6h" to "< 6u geslapen",
+    "Slipping" to "Zakt weg",
     "Slow breathing" to "Rustig ademen",
     "Slowed thinking" to "Traag denken",
     "Slurred speech" to "Onduidelijk spreken",
@@ -3527,6 +3534,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Sugar high" to "Suiker hoog",
     "Sugar low" to "Suiker laag",
     "Suggested" to "Voorstel",
+    "Suggested for you" to "Voorgesteld voor jou",
     "Suggested · same name" to "Voorstel · zelfde naam",
     "Suggested: Low" to "Voorstel: laag",
     "Sumatriptan" to "Sumatriptan",
@@ -3725,6 +3733,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "This promo code is no longer active." to "Deze promocode is niet meer actief.",
     "This takes about 5 seconds" to "Dit duurt zo'n 5 seconden",
     "This week" to "Deze week",
+    "This week's review" to "Weekoverzicht",
     "This will not show up in your insights" to "Dit komt niet in je inzichten",
     "This will permanently delete your account and all your migraine data. This action cannot be undone." to "Dit verwijdert je account en al je gegevens definitief. Dit kan niet ongedaan.",
     "This will remove it from your pool. Past logged entries won't be affected." to "Het gaat uit je lijst. Eerdere notities blijven staan.",
@@ -3935,6 +3944,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Unlock Diet Trends" to "Eettrends vrijgeven",
     "Unlock Exercises" to "Oefeningen openen",
     "Unlock Food Risk Analysis" to "Ontgrendel risico van eten",
+    "Unlock Goals" to "Doelen vrij",
     "Unlock Impact Analysis" to "Impactanalyse vrijgeven",
     "Unlock Mental Health Trends" to "Mentale trends vrijspelen",
     "Unlock Pattern Analysis" to "Patroonanalyse vrijgeven",
@@ -4144,10 +4154,15 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Weed pollen high" to "Kruidpollen hoog",
     "Week" to "Week",
     "Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, " to "Week (laatste 7d) en Maand (laatste 30d) in de eenheden die je noteerde — bijv. 1200 mg, ",
+    "Week of %s" to "Week van %s",
     "Weekend/holiday let-down" to "Weekend-/vakantiedip",
     "Weekly" to "Wekelijks",
     "Weekly (last 12 weeks)" to "Wekelijks (12 weken)",
+    "Weekly AI goal suggestions and reviews from your own data" to "Wekelijkse AI-doelideeën en overzichten uit je eigen data",
     "Weekly Frequency" to "Keer per week",
+    "Weekly goal review" to "Weekoverzicht doelen",
+    "Weekly review and goal ideas" to "Weekoverzicht en doelideeën",
+    "Weekly review notifications" to "Meldingen weekoverzicht",
     "Weight" to "Gewicht",
     "Weight high" to "Gewicht hoog",
     "Weight low" to "Gewicht laag",
@@ -4479,6 +4494,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Je triggergebieden",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
     "Your triggers" to "Je triggers",
+    "Your weekly goal review and new goal ideas" to "Je wekelijkse doelenoverzicht en nieuwe doelideeën",
     "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
     "Your weekly overview will appear after your first week of tracking." to "Je weekoverzicht verschijnt na de eerste week.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Je hebt je daglimiet aan berichten bereikt. Om middernacht staat de teller weer op nul.",
@@ -4507,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "active" to "actief",
     "activities / locations were linked to each one\n" to "activiteiten / plekken hingen aan elk ervan\n",
     "acupuncturist" to "acupuncturist",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "add triggers, medicines, reliefs; switch off the rest" to "voeg triggers, medicijnen, verlichting toe; zet de rest uit",
     "after a few logged attacks" to "na een paar gelogde aanvallen",
     "alcohol" to "alcohol",
@@ -4523,9 +4542,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "attack" to "aanval",
     "attacks" to "aanvallen",
     "auto" to "auto",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "average (n = {0}) · shortest {1}m · longest {2}m" to "gemiddeld (n = {0}) · kortste {1}m · langste {2}m",
     "avg %shrs" to "gem %s u",
     "avg /10" to "gem /10",

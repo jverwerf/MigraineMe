@@ -300,8 +300,9 @@ fun DataSettingsScreen(
             )
 
             // ═══════════════════════════════════════════════════════════
-            // GOAL REMINDERS — own BaseCard (adds its own top spacer; absent
-            // while goals are off or there is nothing to remind about)
+            // GOALS — own BaseCard: the Goals switch with its (i), then the
+            // goal reminder rows while on (adds its own top spacer; absent
+            // only while the goals feature flag is off)
             // ═══════════════════════════════════════════════════════════
             GoalRemindersCard(
                 onRequestNotificationPermission = {

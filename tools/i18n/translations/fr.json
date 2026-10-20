@@ -4859,5 +4859,21 @@
  "Your goals": "Tes objectifs",
  "Your weekly goal review is ready": "Votre bilan hebdo des objectifs est prêt",
  "See how your goals went, plus {0} new goal ideas from your data.": "Voyez vos objectifs, plus {0} nouvelles idées tirées de vos données.",
- "See how your goals went this week.": "Voyez comment vos objectifs ont évolué cette semaine."
+ "See how your goals went this week.": "Voyez comment vos objectifs ont évolué cette semaine.",
+ "About Goals": "Sur les objectifs",
+ "Weekly review and goal ideas": "Bilan hebdo et idées d'objectifs",
+ "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.": "Une fois par semaine, avec ton recalibrage, MigraineMe analyse tes données et propose des objectifs utiles, comme l'eau, le sommeil ou l'entraînement cardio. Ton praticien peut aussi fixer des objectifs. Désactive pour masquer les objectifs partout.",
+ "Unlock Goals": "Débloquer",
+ "Weekly AI goal suggestions and reviews from your own data": "Idées d'objectifs IA et bilans hebdo depuis tes données",
+ "Goals are switched off in Data settings.": "Les objectifs sont désactivés dans Réglages des données.",
+ "This week's review": "Bilan de la semaine",
+ "Week of %s": "Semaine du %s",
+ "On track": "En bonne voie",
+ "Slipping": "En baisse",
+ "Not started": "Pas commencé",
+ "Suggested for you": "Suggérés pour toi",
+ "Weekly review notifications": "Notifications du bilan hebdo",
+ "A push every Monday when your review and new suggestions are ready": "Une notification chaque lundi quand ton bilan et de nouvelles idées sont prêts",
+ "Weekly goal review": "Bilan hebdo objectifs",
+ "Your weekly goal review and new goal ideas": "Ton bilan hebdo des objectifs et de nouvelles idées"
 }

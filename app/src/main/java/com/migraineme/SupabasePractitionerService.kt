@@ -382,6 +382,52 @@ object SupabasePractitionerService {
         val is_estimate: Boolean = false,
     )
 
+    /** One goal's line in the weekly review (goal_reports.adherence). */
+    @Serializable
+    data class GoalAdherence(
+        val goal_id: String? = null,
+        val title: String = "",
+        val kind: String = "",
+        val set_by: String? = null,
+        /** on_track | slipping | not_started */
+        val status: String = "",
+        val note: String? = null,
+    )
+
+    /** The latest weekly review; `report` is already in the user's language. */
+    @Serializable
+    data class GoalReportRow(
+        val week_start: String,
+        val lang: String = "en",
+        val report: String = "",
+        val adherence: List<GoalAdherence> = emptyList(),
+    )
+
+    /** A goal the weekly review proposes. Same shape as a goal, plus the reason. */
+    @Serializable
+    data class GoalSuggestionRow(
+        val id: String,
+        val kind: String,
+        val title: String = "",
+        val metric_key: String? = null,
+        val direction: String? = null,
+        val target_value: Double? = null,
+        val threshold_bpm: Int? = null,
+        val target_minutes: Double? = null,
+        val target_count: Int? = null,
+        val times_per_week: Int? = null,
+        val reason: String = "",
+        val week_start: String? = null,
+    ) {
+        /** As a goal row, so the goal wording helpers can describe the target. */
+        fun asGoal(): GoalRow = GoalRow(
+            id = id, user_id = "", kind = kind, title = title,
+            threshold_bpm = threshold_bpm, target_minutes = target_minutes,
+            target_count = target_count, times_per_week = times_per_week,
+            metric_key = metric_key, direction = direction, target_value = target_value,
+        )
+    }
+
     @Serializable
     data class HrThresholdDailyRow(
         val user_id: String,
@@ -570,6 +616,52 @@ object SupabasePractitionerService {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("goal_id", goalId); putJsonArray("times") { times.forEach { add(it) } } })
         }.requireOk("setGoalReminderTimes")
+    }
+
+    /** The newest weekly review, or null before the first one. */
+    suspend fun latestGoalReport(accessToken: String): GoalReportRow? {
+        // Own rows only: a practitioner using the app can also read her clients' reports.
+        val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return null
+        val url = "$baseUrl/rest/v1/goal_reports?user_id=eq.$uid" +
+            "&select=week_start,lang,report,adherence&order=week_start.desc&limit=1"
+        val rows: List<GoalReportRow> = client.get(url) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.requireOk("latestGoalReport").body()
+        return rows.firstOrNull()
+    }
+
+    /** Open suggestions, newest first. */
+    suspend fun goalSuggestions(accessToken: String): List<GoalSuggestionRow> {
+        val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
+        val url = "$baseUrl/rest/v1/goal_suggestions?user_id=eq.$uid&status=eq.proposed" +
+            "&select=id,kind,title,metric_key,direction,target_value,threshold_bpm,target_minutes," +
+            "target_count,times_per_week,reason,week_start&order=created_at.desc"
+        return client.get(url) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.requireOk("goalSuggestions").body()
+    }
+
+    /** Turn a suggestion into one of the client's own goals; returns the new goal id. */
+    suspend fun acceptGoalSuggestion(accessToken: String, suggestionId: String): String? {
+        val res = client.post("$baseUrl/rest/v1/rpc/accept_goal_suggestion") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("p_id", suggestionId) })
+        }.requireOk("acceptGoalSuggestion")
+        return runCatching { res.bodyAsText().trim().trim('"') }.getOrNull()?.takeIf { it.isNotBlank() && it != "null" }
+    }
+
+    /** "Not now": the suggestion is closed and not proposed again. */
+    suspend fun dismissGoalSuggestion(accessToken: String, suggestionId: String) {
+        client.post("$baseUrl/rest/v1/rpc/dismiss_goal_suggestion") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("p_id", suggestionId) })
+        }.requireOk("dismissGoalSuggestion")
     }
 
     private fun JsonObjectBuilder.putDraft(d: GoalDraft) {

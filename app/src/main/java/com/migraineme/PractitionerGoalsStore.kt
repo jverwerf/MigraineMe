@@ -21,6 +21,8 @@ import java.time.temporal.TemporalAdjusters
  */
 object PractitionerGoalsStore {
     private const val TAG = "PractitionerGoals"
+    /** metric_settings key of the Data settings "Goals" switch. */
+    const val GOALS_METRIC = "goals"
     /** Four Mon–Sun weeks is what the detail grid shows; the week strip reads from the same rows. */
     const val PROGRESS_DAYS = 28L
 
@@ -48,6 +50,92 @@ object PractitionerGoalsStore {
         _hrFeed.value = hrGoalFeed(context)
     }
 
+    /**
+     * The Data settings "Goals" switch (metric_settings row 'goals'; no row = on).
+     * Cached in prefs so a switched-off user does not see goals flash in on launch.
+     */
+    private val _goalsOn = MutableStateFlow(true)
+    val goalsOn: StateFlow<Boolean> = _goalsOn
+    private var goalsOnCacheRead = false
+    private const val PREFS = "goals_v2"
+    private const val KEY_GOALS_ON = "goals_on"
+
+    private fun readCachedGoalsOn(context: Context) {
+        if (goalsOnCacheRead) return
+        goalsOnCacheRead = true
+        _goalsOn.value = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_GOALS_ON, true)
+    }
+
+    private fun storeGoalsOn(context: Context, on: Boolean) {
+        _goalsOn.value = on
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_GOALS_ON, on).apply()
+    }
+
+    /** Read the switch from metric_settings. A failed read (empty list) keeps the cached value. */
+    suspend fun refreshGoalsOn(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        readCachedGoalsOn(context)
+        val rows = runCatching { EdgeFunctionsService().getMetricSettings(context) }.getOrDefault(emptyList())
+        if (rows.isEmpty()) return@withContext
+        storeGoalsOn(context, rows.firstOrNull { it.metric == GOALS_METRIC }?.enabled ?: true)
+    }
+
+    /** Flip the switch through the same upsert as every other Data settings toggle. */
+    suspend fun setGoalsOn(context: Context, on: Boolean): Boolean = withContext(Dispatchers.IO + NonCancellable) {
+        val before = _goalsOn.value
+        storeGoalsOn(context, on)
+        val result = DataSettingsToggleHandler.toggleMetric(
+            context = context, metric = GOALS_METRIC, enabled = on,
+            preferredSource = null, metricSettingsMap = emptyMap()
+        )
+        val ok = result is DataSettingsToggleHandler.ToggleResult.Success
+        if (!ok) storeGoalsOn(context, before)
+        ok
+    }
+
+    /** The latest weekly review; null until the first one exists. */
+    private val _report = MutableStateFlow<SupabasePractitionerService.GoalReportRow?>(null)
+    val report: StateFlow<SupabasePractitionerService.GoalReportRow?> = _report
+
+    /** Open goal suggestions, newest first. */
+    private val _suggestions = MutableStateFlow<List<SupabasePractitionerService.GoalSuggestionRow>>(emptyList())
+    val suggestions: StateFlow<List<SupabasePractitionerService.GoalSuggestionRow>> = _suggestions
+
+    /** Weekly review + open suggestions for the Goals page. */
+    suspend fun refreshReview(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
+        runCatching { svc.latestGoalReport(token) }
+            .onFailure { Log.w(TAG, "latestGoalReport failed: ${it.message}") }
+            .onSuccess { _report.value = it }
+        runCatching { svc.goalSuggestions(token) }
+            .onFailure { Log.w(TAG, "goalSuggestions failed: ${it.message}") }
+            .onSuccess { _suggestions.value = it }
+    }
+
+    /** "Add": the suggestion becomes one of the client's own goals, then reload. */
+    suspend fun acceptSuggestion(context: Context, id: String): Boolean = withContext(Dispatchers.IO + NonCancellable) {
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
+        val ok = runCatching { svc.acceptGoalSuggestion(token, id) }
+            .onFailure { Log.w(TAG, "acceptGoalSuggestion failed: ${it.message}") }
+            .isSuccess
+        if (ok) {
+            _suggestions.value = _suggestions.value.filterNot { it.id == id }
+            refresh(token)
+        }
+        ok
+    }
+
+    /** "Not now": close the suggestion and drop its card. */
+    suspend fun dismissSuggestion(context: Context, id: String): Boolean = withContext(Dispatchers.IO + NonCancellable) {
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
+        val ok = runCatching { svc.dismissGoalSuggestion(token, id) }
+            .onFailure { Log.w(TAG, "dismissGoalSuggestion failed: ${it.message}") }
+            .isSuccess
+        if (ok) _suggestions.value = _suggestions.value.filterNot { it.id == id }
+        ok
+    }
+
     fun metricFor(list: List<SupabasePractitionerService.GoalMetric>, key: String?) =
         key?.let { k -> list.firstOrNull { it.key == k } }
 
@@ -67,6 +155,7 @@ object PractitionerGoalsStore {
 
     suspend fun refresh(context: Context) {
         refreshHrFeed(context)
+        if (MonitorCardConfig.GOALS_ENABLED) refreshGoalsOn(context)
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return
         refresh(token)
     }

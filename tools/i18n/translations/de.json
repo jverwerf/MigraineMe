@@ -4859,5 +4859,21 @@
  "Your goals": "Deine Ziele",
  "Your weekly goal review is ready": "Deine wöchentliche Ziel-Auswertung ist da",
  "See how your goals went, plus {0} new goal ideas from your data.": "Sieh, wie deine Ziele liefen, plus {0} neue Zielideen aus deinen Daten.",
- "See how your goals went this week.": "Sieh, wie deine Ziele diese Woche liefen."
+ "See how your goals went this week.": "Sieh, wie deine Ziele diese Woche liefen.",
+ "About Goals": "Über Ziele",
+ "Weekly review and goal ideas": "Wochenauswertung und Zielideen",
+ "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.": "Einmal pro Woche, mit deinem Neuabgleich, prüft MigraineMe deine Daten und schlägt Ziele vor, die helfen könnten, etwa Wasser, Schlaf oder Pulstraining. Auch deine Fachperson kann Ziele setzen. Schalte das aus, um Ziele überall auszublenden.",
+ "Unlock Goals": "Ziele frei",
+ "Weekly AI goal suggestions and reviews from your own data": "Wöchentliche KI-Zielideen und Auswertungen aus deinen Daten",
+ "Goals are switched off in Data settings.": "Ziele sind in den Daten-Einstellungen aus.",
+ "This week's review": "Wochenauswertung",
+ "Week of %s": "Woche vom %s",
+ "On track": "Im Plan",
+ "Slipping": "Lässt nach",
+ "Not started": "Nicht begonnen",
+ "Suggested for you": "Vorschläge für dich",
+ "Weekly review notifications": "Mitteilungen zur Wochenauswertung",
+ "A push every Monday when your review and new suggestions are ready": "Jeden Montag eine Mitteilung, wenn Auswertung und neue Vorschläge bereit sind",
+ "Weekly goal review": "Ziel-Wochenauswertung",
+ "Your weekly goal review and new goal ideas": "Deine wöchentliche Ziel-Auswertung und neue Zielideen"
 }

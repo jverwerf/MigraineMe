@@ -137,6 +137,14 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     body = message.notification?.body ?: message.data["body"]
                 )
             }
+            "goal_suggestions" -> {
+                if (!MonitorCardConfig.GOALS_ENABLED) return   // goals hidden this release
+                Log.d(TAG, "Weekly goal review ready")
+                showGoalSuggestionsNotification(
+                    title = message.notification?.title ?: message.data["title"],
+                    body = message.notification?.body ?: message.data["body"]
+                )
+            }
             else -> {
                 Log.w(TAG, "Unknown FCM message type: $type")
             }
@@ -488,6 +496,44 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // One slot per goal so two goals due at the same time both show.
         nm.notify(8026 + (goalId.hashCode() and 0xFFFF), notification)
+    }
+
+    /**
+     * The weekly goal review is ready (Monday, with the recalibration). The
+     * server writes the copy in the user's language; this renders it in the
+     * foreground and points the tap at the Goals page.
+     */
+    private fun showGoalSuggestionsNotification(title: String?, body: String?) {
+        val channelId = "goal_suggestions"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, tSync("Weekly goal review"),
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = tSync("Your weekly goal review and new goal ideas") }
+        nm.createNotificationChannel(channel)
+
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.MONITOR_GOALS)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 5, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val text = body?.takeIf { it.isNotBlank() } ?: tSync("Your weekly goal review and new goal ideas")
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title?.takeIf { it.isNotBlank() } ?: tSync("Your weekly goal review is ready"))
+            .setContentText(text)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8019, notification)
     }
 
     private suspend fun saveFcmTokenToSupabase(fcmToken: String) {

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4861 entries.
+ * 4877 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -350,6 +350,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "A more useful read on top of the patterns we've already found in your data. The AI takes what's showing up (the items that turn up around your attacks, the combinations that look risky together, the treatments that seem to be helping) and adds a personal next step for each one, across six categories.\n\nWhat it looks at per category:\n• Triggers: the ones that keep showing up before attacks, and the pairs that look especially risky together. Gives you a preventive action tied to your pattern.\n• Prodromes: your personal early warning signs, with interventions that may abort or shorten an attack when they appear.\n• Medicines: rebound and overuse flags (triptans, NSAIDs, paracetamol, opioids), alternatives when something isn't relieving well, side-effect mitigation, same-class swaps, doctor-discussion prompts. All tied to your own usage.\n• Reliefs: same angles for non-drug methods (alternatives, technique tweaks, timing).\n• Activities: links your timing (exercise, sleep, stress) to context like cortisol and dehydration.\n• Symptoms: the ones running high or severe in your attacks, with targeted prep (anti-emetic on hand, dim-room kit, postdrome plan).\n\nEach recommendation comes with a short evidence line so you can see why it's being suggested. Dismiss anything that doesn't match your reality and it won't come back. These are starting points to discuss with your neurologist, not diagnoses." to "Ein nützlicherer Blick auf die Muster, die wir in deinen Daten schon gefunden haben. Die KI nimmt, was sich zeigt (die Einträge rund um deine Attacken, die Kombinationen, die zusammen riskant wirken, die Therapien, die zu helfen scheinen) und ergänzt für jedes einen persönlichen nächsten Schritt, über sechs Kategorien.\n\nWas sie je Kategorie ansieht:\n• Auslöser: die, die vor Attacken immer wieder auftauchen, und die Paare, die zusammen besonders riskant wirken. Dazu eine vorbeugende Maßnahme, die zu deinem Muster passt.\n• Prodrome: deine persönlichen Frühwarnzeichen, mit Maßnahmen, die eine Attacke abfangen oder verkürzen können, sobald sie auftreten.\n• Medikamente: Hinweise auf Rebound und Übergebrauch (Triptane, NSAR, Paracetamol, Opioide), Alternativen, wenn etwas schlecht wirkt, Umgang mit Nebenwirkungen, Wechsel innerhalb derselben Klasse, Fragen für die Praxis. Alles an deinem eigenen Gebrauch orientiert.\n• Linderung: dieselben Blickwinkel für Methoden ohne Medikament (Alternativen, Technik, Zeitpunkt).\n• Aktivitäten: verbindet deine Zeiten (Sport, Schlaf, Stress) mit dem Umfeld, etwa Cortisol und zu wenig Trinken.\n• Symptome: die, die in deinen Attacken stark oder häufig sind, mit gezielter Vorbereitung (Mittel gegen Übelkeit bereit, dunkles Zimmer, Plan fürs Postdrom).\n\nZu jeder Empfehlung steht eine kurze Begründung, damit du siehst, warum sie kommt. Was nicht zu dir passt, schließt du weg, dann kommt es nicht wieder. Das sind Ansatzpunkte für das Gespräch in der Neurologie, keine Diagnosen.",
     "A note on Link: linking treatments combines them into one shared % change. " to "Hinweis zu Verknüpfen: verknüpfte Therapien teilen sich eine gemeinsame %-Änderung. ",
     "A phrase that names nothing specific is never guessed: it stays in your words unless you pick what it was." to "Eine unklare Formulierung raten wir nie: Sie bleibt in deinen Worten, bis du auswählst, was gemeint war.",
+    "A push every Monday when your review and new suggestions are ready" to "Jeden Montag eine Mitteilung, wenn Auswertung und neue Vorschläge bereit sind",
     "A randomised trial in migraine backs the filter approach. Worth knowing they are much darker than normal tinted glasses." to "Eine randomisierte Migräne-Studie stützt den Filteransatz. Gut zu wissen: Sie sind deutlich dunkler als normale getönte Brillen.",
     "A reality check on your risk gauge. We look back at every day you've used the app and ask two questions: when the gauge said HIGH or MILD, did an attack actually happen? And when an attack happened, was the gauge warning the day before?\n\nThat gives you two numbers:\n• Hit rate: of all your attack days, what share the gauge correctly flagged as high-risk beforehand.\n• False alarm rate: of all your non-attack days, what share the gauge flagged anyway.\n\nTap in for the full breakdown (true positives, missed attacks, etc.) and to review any pending recalibration proposals. To tune the LOW / MILD / HIGH thresholds and the day-by-day decay curve yourself, open the menu and tap Risk Model. Lowering the HIGH threshold catches more attacks (higher hit rate) but also more false alarms; raising it does the opposite.\n\nThe weekly recalibration uses these same numbers to nudge your thresholds in the right direction: too many false alarms means thresholds get raised; missed attacks means they get lowered. Changes are incremental (around 20-30% per pass) so the gauge gradually homes in on what works for you.\n\nNeeds at least 7 days of logged data to start showing." to "Ein Realitätscheck für deine Risikoanzeige. Wir sehen uns jeden Tag an, an dem du die App genutzt hast, und stellen zwei Fragen: Wenn die Anzeige HOCH oder LEICHT sagte, kam wirklich eine Attacke? Und wenn eine Attacke kam, hat die Anzeige am Tag davor gewarnt?\n\nDaraus werden zwei Zahlen:\n• Trefferquote: von allen Attackentagen der Anteil, den die Anzeige vorher richtig als riskant markiert hat.\n• Fehlalarmquote: von allen Tagen ohne Attacke der Anteil, den sie trotzdem markiert hat.\n\nTippe hinein für die volle Aufschlüsselung (Treffer, verpasste Attacken usw.) und um offene Vorschläge zur Nachjustierung zu prüfen. Willst du die Schwellen TIEF / LEICHT / HOCH und die Abklingkurve selbst einstellen, öffne das Menü und tippe Risikomodell. Eine niedrigere HOCH-Schwelle fängt mehr Attacken ab (höhere Trefferquote), bringt aber mehr Fehlalarme; höher gesetzt ist es umgekehrt.\n\nDie wöchentliche Nachjustierung nutzt genau diese Zahlen und schiebt deine Schwellen in die richtige Richtung: zu viele Fehlalarme heben sie an, verpasste Attacken senken sie. Die Schritte sind klein (etwa 20-30 % pro Durchgang), damit sich die Anzeige nach und nach auf dich einstellt.\n\nBraucht mindestens 7 Tage erfasste Daten, um zu erscheinen.",
     "A reminder from your practitioner" to "Eine Erinnerung deiner Fachperson",
@@ -386,6 +387,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "About Filter by" to "Über Filtern nach",
     "About Full Report" to "Über den Bericht",
     "About Gauge Thresholds" to "Über Schwellenwerte",
+    "About Goals" to "Über Ziele",
     "About How Did It Impact You" to "Über deine Beeinträchtigung",
     "About Log Migraine" to "Über Migräne-Eintrag",
     "About Manage Items" to "Über Einträge",
@@ -1515,11 +1517,11 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Fat low" to "Wenig Fett",
     "Fatigue" to "Erschöpfung",
     "Favourite" to "Favorit",
-    "Favourites" to "Favoriten",
-    "Feeling anxious or worried" to "Ängstlich oder besorgt sein",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Favourites" to "Favoriten",
+    "Feeling anxious or worried" to "Ängstlich oder besorgt sein",
     "Feeling down or depressed" to "Niedergeschlagen oder depressiv",
     "Feeling low" to "Gedrückt",
     "Feeling low or depressed" to "Gedrückt oder depressiv",
@@ -1695,6 +1697,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Goal" to "Ziel",
     "Goal reminders" to "Ziel-Erinnerungen",
     "Goals" to "Ziele",
+    "Goals are switched off in Data settings." to "Ziele sind in den Daten-Einstellungen aus.",
     "Going to bed much later than usual" to "Viel später ins Bett als sonst",
     "Good" to "Gut",
     "Good build quality" to "Gute Verarbeitung",
@@ -2583,6 +2586,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Not signed in" to "Nicht angemeldet",
     "Not signed in." to "Nicht angemeldet.",
     "Not sleeping long enough (< 6-7 hours)" to "Zu wenig Schlaf (< 6-7 Stunden)",
+    "Not started" to "Nicht begonnen",
     "Not sure" to "Unklar",
     "Not sure which" to "Unklar welches",
     "Not sure yet" to "Noch unklar",
@@ -2638,9 +2642,11 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Auf Android: Öffne MigraineMe, geh zum Upgrade-Bildschirm und gib den Code %1\$s ein.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Nur an guten Tagen. Du brauchst ein freies Stück Wand, ein Bett oder eine Matte und einen Tennisball für das Lösen am Ende.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "An guten Tagen, oder wenn sich der Nacken nach langer Zeit am Schreibtisch verspannt anfühlt. Nicht während einer Attacke, wenn Kopfbewegungen den Schmerz verschlimmern.",
+    "On track" to "Im Plan",
     "Once a day" to "Einmal am Tag",
     "Once a day, %s days a week" to "Einmal am Tag, %s Tage pro Woche",
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Einmal pro Woche schlägt die KI Änderungen vor, etwa deine Linien zu verschieben. Hak ab, womit du einverstanden bist.",
+    "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere." to "Einmal pro Woche, mit deinem Neuabgleich, prüft MigraineMe deine Daten und schlägt Ziele vor, die helfen könnten, etwa Wasser, Schlaf oder Pulstraining. Auch deine Fachperson kann Ziele setzen. Schalte das aus, um Ziele überall auszublenden.",
     "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth." to "Sobald eine Attacke begonnen hat. Ein abgedunkelter, ruhiger Raum, Geräusche leise, und ein Kühlpack, in ein Tuch gewickelt.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Wenn du eins hast, ist genau das der Punkt: MigraineMe vergleicht, wie deine Attacken verlaufen ",
     "Ondansetron" to "Ondansetron",
@@ -3014,15 +3020,15 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Remind me every %s while a migraine is still open" to "Erinnere mich alle %s, solange eine Migräne offen ist",
     "Reminders for your goals" to "Erinnerungen an deine Ziele",
     "Reminders to close a migraine you logged but never ended" to "Erinnerung, eine erfasste, nie beendete Migräne zu schließen",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Remove" to "Entfernen",
     "Remove \"%s\"?" to "\"%s\" entfernen?",
     "Remove \"%s\"? This can't be undone." to "\"%s\" entfernen? Nicht umkehrbar.",
     "Remove %s from this log" to "%s aus diesem Eintrag entfernen",
     "Remove aura from this log" to "Aura aus dem Eintrag",
     "Remove entry" to "Eintrag weg",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Remove from Frequent" to "Aus Häufig entfernen",
     "Remove from favorites" to "Aus Favoriten",
     "Remove from frequent" to "Aus Häufig entfernen",
@@ -3385,6 +3391,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Slept 7-8h" to "Schlaf 7-8h",
     "Slept over 8h" to "Schlaf über 8h",
     "Slept under 6h" to "Schlaf unter 6h",
+    "Slipping" to "Lässt nach",
     "Slow breathing" to "Langsames Atmen",
     "Slowed thinking" to "Verlangsamtes Denken",
     "Slurred speech" to "Verwaschene Sprache",
@@ -3527,6 +3534,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Sugar high" to "Zucker hoch",
     "Sugar low" to "Zucker niedrig",
     "Suggested" to "Vorschlag",
+    "Suggested for you" to "Vorschläge für dich",
     "Suggested · same name" to "Vorschlag · gleicher Name",
     "Suggested: Low" to "Tipp: Niedrig",
     "Sumatriptan" to "Sumatriptan",
@@ -3725,6 +3733,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "This promo code is no longer active." to "Dieser Promo-Code ist nicht mehr aktiv.",
     "This takes about 5 seconds" to "Dauert etwa 5 Sekunden",
     "This week" to "Diese Woche",
+    "This week's review" to "Wochenauswertung",
     "This will not show up in your insights" to "Das erscheint nicht in deinen Insights",
     "This will permanently delete your account and all your migraine data. This action cannot be undone." to "Das löscht dein Konto und alle Migränedaten endgültig. Nicht rückgängig zu machen.",
     "This will remove it from your pool. Past logged entries won't be affected." to "Es verschwindet aus deiner Liste. Frühere Einträge bleiben erhalten.",
@@ -3935,6 +3944,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Unlock Diet Trends" to "Ess-Trends frei",
     "Unlock Exercises" to "Übungen frei",
     "Unlock Food Risk Analysis" to "Essrisiko freischalten",
+    "Unlock Goals" to "Ziele frei",
     "Unlock Impact Analysis" to "Folgen-Analyse frei",
     "Unlock Mental Health Trends" to "Mentale Trends öffnen",
     "Unlock Pattern Analysis" to "Muster-Analyse frei",
@@ -4144,10 +4154,15 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Weed pollen high" to "Kräuterpollen hoch",
     "Week" to "Woche",
     "Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, " to "Woche (letzte 7 T.) und Monat (letzte 30 T.) in deinen erfassten Einheiten — z. B. 1200 mg, ",
+    "Week of %s" to "Woche vom %s",
     "Weekend/holiday let-down" to "Wochenend-/Urlaubsabfall",
     "Weekly" to "Wöchentlich",
     "Weekly (last 12 weeks)" to "Wöchentlich (12 Wochen)",
+    "Weekly AI goal suggestions and reviews from your own data" to "Wöchentliche KI-Zielideen und Auswertungen aus deinen Daten",
     "Weekly Frequency" to "Pro Woche",
+    "Weekly goal review" to "Ziel-Wochenauswertung",
+    "Weekly review and goal ideas" to "Wochenauswertung und Zielideen",
+    "Weekly review notifications" to "Mitteilungen zur Wochenauswertung",
     "Weight" to "Gewicht",
     "Weight high" to "Gewicht hoch",
     "Weight low" to "Gewicht niedrig",
@@ -4479,6 +4494,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Deine Auslöser",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
     "Your triggers" to "Deine Auslöser",
+    "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",
     "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
     "Your weekly overview will appear after your first week of tracking." to "Deine Wochenübersicht erscheint nach der ersten Woche.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Du hast dein Tageslimit an Nachrichten erreicht. Es setzt um Mitternacht zurück — bis morgen!",
@@ -4507,6 +4523,9 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "active" to "aktiv",
     "activities / locations were linked to each one\n" to "Aktivitäten / Orte hingen jeweils daran\n",
     "acupuncturist" to "Akupunktur",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "add triggers, medicines, reliefs; switch off the rest" to "Auslöser, Medikamente, Hilfen hinzufügen; den Rest abschalten",
     "after a few logged attacks" to "nach ein paar eingetragenen Anfällen",
     "alcohol" to "Alkohol",
@@ -4523,9 +4542,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "attack" to "Attacke",
     "attacks" to "Attacken",
     "auto" to "auto",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "average (n = {0}) · shortest {1}m · longest {2}m" to "Ø (n = {0}) · kürzeste {1}m · längste {2}m",
     "avg %shrs" to "Ø %s Std.",
     "avg /10" to "Ø /10",

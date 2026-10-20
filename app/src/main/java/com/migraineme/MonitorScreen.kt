@@ -113,6 +113,7 @@ fun MonitorScreen(
     // Goals (practitioner-set and the client's own): one "Goals" card
     val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
     val practitionerProgress by PractitionerGoalsStore.progress.collectAsState()
+    val goalsOn by PractitionerGoalsStore.goalsOn.collectAsState()
     LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(ctx) }
 
     // Refresh config when returning to screen
@@ -396,11 +397,15 @@ fun MonitorScreen(
                             // Up to three picked goals as tiles; the whole card opens the
                             // Goals detail screen, where every goal and the + live.
                             // Shown with zero goals too, so the detail screen stays reachable.
-                            GoalsMonitorCard(
-                                goals = practitionerGoals,
-                                progress = practitionerProgress,
-                                onClick = { navController.navigate(Routes.MONITOR_GOALS) }
-                            )
+                            // Hidden while the Data settings "Goals" switch is off.
+                            if (goalsOn) {
+                                GoalsMonitorCardGated(
+                                    goals = practitionerGoals,
+                                    progress = practitionerProgress,
+                                    onClick = { navController.navigate(Routes.MONITOR_GOALS) },
+                                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                                )
+                            }
                         }
                         MonitorCardConfig.CARD_MIGRAINES -> {
                             MigrainesMonitorCard(

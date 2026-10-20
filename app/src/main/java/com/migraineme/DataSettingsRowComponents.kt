@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -1179,12 +1180,14 @@ fun NotificationsCard(
 
 
 /**
- * Goal reminders: one card of its own under Notifications (Jordy 10-20: "not well
- * placed" inside the Notifications card). One row per active goal that can be
- * logged, own and practitioner-set alike; metric goals fill in from the client's
- * data and get no reminder. The times are set here and nowhere else
- * (practitioner_goals.reminders_enabled + reminder_times, server-scheduled).
- * Hidden while goals are off, or when there is no goal to remind about.
+ * Goals: one card of its own under Notifications (Jordy 10-20). Row 1 is the
+ * master switch (metric_settings 'goals', no row = on) with an (i); off hides
+ * goals everywhere and the server mutes goal pushes. Below it, only while on,
+ * one reminder row per active goal that can be logged, own and practitioner-set
+ * alike; metric goals fill in from the client's data and get no reminder. The
+ * times are set here and nowhere else (practitioner_goals.reminders_enabled +
+ * reminder_times, server-scheduled). Shown whenever the goals flag is on, even
+ * with zero goals, so the switch can be found.
  */
 @Composable
 fun GoalRemindersCard(
@@ -1205,15 +1208,20 @@ fun GoalRemindersCard(
     val toggleColWidth = 56.dp
 
     val q = searchQuery.trim()
-    val titleHit = q.isBlank() || "Goal reminders".contains(q, ignoreCase = true)
+    val titleHit = q.isBlank() || "Goals".contains(q, ignoreCase = true) ||
+        "Goal reminders".contains(q, ignoreCase = true)
     fun hit(vararg text: String) = titleHit || text.any { it.contains(q, ignoreCase = true) }
 
+    val goalsOn by PractitionerGoalsStore.goalsOn.collectAsState()
+    var savingSwitch by remember { mutableStateOf(false) }
+    var showInfo by remember { mutableStateOf(false) }
     val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
-    LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appContext) }
-    val goalRows = practitionerGoals
+    LaunchedEffect(refreshTick) { PractitionerGoalsStore.refresh(appContext) }
+    val goalRows = if (!goalsOn) emptyList() else practitionerGoals
         .filter { it.isActive && (it.isExercise || it.isMindfulness || it.isHr || it.isDaily) }
         .filter { hit(it.title) }
-    if (goalRows.isEmpty()) return
+    val showSwitch = hit("Weekly review and goal ideas")
+    if (!showSwitch && goalRows.isEmpty()) return
 
     Spacer(Modifier.height(16.dp))
     BaseCard {
@@ -1224,13 +1232,71 @@ fun GoalRemindersCard(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                t("Goal reminders"),
+                t("Goals"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
         }
 
         HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+        if (showSwitch) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Goals"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = t("About Goals"),
+                            tint = AppTheme.SubtleTextColor,
+                            modifier = Modifier.size(16.dp).clickable { showInfo = true }
+                        )
+                    }
+                    Text(
+                        t("Weekly review and goal ideas"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Column(modifier = Modifier.width(toggleColWidth), horizontalAlignment = Alignment.End) {
+                    Switch(
+                        checked = goalsOn,
+                        enabled = !savingSwitch,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            savingSwitch = true
+                            scope.launch {
+                                PractitionerGoalsStore.setGoalsOn(appContext, newValue)
+                                savingSwitch = false
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+            }
+            if (goalRows.isNotEmpty()) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+            }
+        }
+
+        if (showInfo) {
+            AlertDialog(
+                onDismissRequest = { showInfo = false },
+                confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } },
+                title = {
+                    Text(t("Goals"), color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                },
+                text = {
+                    Text(
+                        t("Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere."),
+                        color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                containerColor = Color(0xFF1E0A2E)
+            )
+        }
 
         var editingGoalId by remember { mutableStateOf<String?>(null) }
         for (goal in goalRows) {

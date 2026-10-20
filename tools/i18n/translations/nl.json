@@ -4859,5 +4859,21 @@
  "Your goals": "Je doelen",
  "Your weekly goal review is ready": "Je wekelijkse doelenoverzicht staat klaar",
  "See how your goals went, plus {0} new goal ideas from your data.": "Bekijk hoe je doelen gingen, plus {0} nieuwe doel-ideeën uit je data.",
- "See how your goals went this week.": "Bekijk hoe je doelen deze week gingen."
+ "See how your goals went this week.": "Bekijk hoe je doelen deze week gingen.",
+ "About Goals": "Over doelen",
+ "Weekly review and goal ideas": "Weekoverzicht en doelideeën",
+ "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.": "Eén keer per week, samen met je bijstelling, bekijkt MigraineMe je data en stelt doelen voor die kunnen helpen, zoals water, slaap of hartslagtraining. Je behandelaar kan ook doelen instellen. Zet dit uit om doelen overal te verbergen.",
+ "Unlock Goals": "Doelen vrij",
+ "Weekly AI goal suggestions and reviews from your own data": "Wekelijkse AI-doelideeën en overzichten uit je eigen data",
+ "Goals are switched off in Data settings.": "Doelen staan uit in Data-instellingen.",
+ "This week's review": "Weekoverzicht",
+ "Week of %s": "Week van %s",
+ "On track": "Op schema",
+ "Slipping": "Zakt weg",
+ "Not started": "Niet begonnen",
+ "Suggested for you": "Voorgesteld voor jou",
+ "Weekly review notifications": "Meldingen weekoverzicht",
+ "A push every Monday when your review and new suggestions are ready": "Elke maandag een melding als je overzicht en nieuwe voorstellen klaarstaan",
+ "Weekly goal review": "Weekoverzicht doelen",
+ "Your weekly goal review and new goal ideas": "Je wekelijkse doelenoverzicht en nieuwe doelideeën"
 }

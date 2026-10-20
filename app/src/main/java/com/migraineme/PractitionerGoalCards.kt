@@ -332,3 +332,28 @@ fun GoalsMonitorCard(
         }
     }
 }
+
+/** Goals v2 premium rule for the Monitor card. Paying: the card as is. Free with
+ *  practitioner-set goals: those goals, unblurred (the practitioner relationship
+ *  is not a premium feature). Free with none: the whole card blurred, tap = paywall. */
+@Composable
+fun GoalsMonitorCardGated(
+    goals: List<GoalRow>,
+    progress: Map<String, List<GoalProgressRow>>,
+    onClick: () -> Unit,
+    onUpgrade: () -> Unit
+) {
+    val premium by PremiumManager.state.collectAsState()
+    val practitionerSet = goals.filter { !it.isOwn }
+    if (premium.access == PremiumAccess.NOT_ENTITLED && practitionerSet.isNotEmpty()) {
+        GoalsMonitorCard(goals = practitionerSet, progress = progress, onClick = onClick)
+        return
+    }
+    PremiumGate(
+        message = t("Unlock Goals"),
+        subtitle = t("Weekly AI goal suggestions and reviews from your own data"),
+        onUpgrade = onUpgrade
+    ) {
+        GoalsMonitorCard(goals = goals, progress = progress, onClick = onClick)
+    }
+}
