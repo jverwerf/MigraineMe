@@ -268,8 +268,12 @@ serve(async (req: Request) => {
     }));
 
     const catByKey = new Map(catalogue.map((c) => [c.key, c]));
+    // New goal ideas are reviewed inside the weekly recalibration (Jordy
+    // 10-20), so they are only kept when recalibrate called us (quiet). The
+    // standalone run (people with goals but no recalibration) writes the
+    // review only.
     const suggestions: any[] = [];
-    for (const s of Array.isArray(out.suggestions) ? out.suggestions : []) {
+    for (const s of body.quiet && Array.isArray(out.suggestions) ? out.suggestions : []) {
       if (suggestions.length >= MAX_SUGGESTIONS) break;
       const kind = String(s?.kind ?? "");
       if (!ALLOWED_KINDS.has(kind)) continue;             // exercise_count and anything odd dies here
@@ -332,7 +336,8 @@ serve(async (req: Request) => {
 
     // ── Push (cron runs only; a person tapping "review now" is already looking) ──
     let pushed = false;
-    if (automated) {
+    // quiet: called from recalibrate, whose push covers both.
+    if (automated && !body.quiet) {
       const { data: optOut } = await supabase
         .from("notification_settings").select("enabled").eq("user_id", userId).eq("type", "goal_suggestions").maybeSingle();
       if (!optOut || optOut.enabled !== false) {

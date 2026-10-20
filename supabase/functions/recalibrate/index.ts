@@ -246,6 +246,18 @@ serve(async (req: Request) => {
       return json({ status: "insufficient_data", migraine_count: migraines.length });
     }
 
+    // ── Goal ideas ride along with the weekly recalibration (Jordy 10-20) ──
+    // Started now so it runs in parallel with the AI calls below and adds no
+    // time. goal-suggestions itself skips anyone who is not premium or has
+    // Goals switched off in Data settings, and never proposes exercise films.
+    // quiet = no push of its own: the recalibration push covers both. A person
+    // tapping "re-assess" gets fresh ideas (force); the Monday run does not
+    // redo a week that is already done.
+    const goalRun: Promise<number> = supabase.functions
+      .invoke("goal-suggestions", { body: { user_id: userId, quiet: true, force: !automated } })
+      .then((r: any) => Number(r?.data?.suggestions ?? 0))
+      .catch(() => 0);
+
     const migraineIds = new Set(migraines.map((m: any) => m.id));
 
     const notDemo = <T extends Record<string, any>>(rows: T[] | null | undefined): T[] =>
@@ -1252,7 +1264,9 @@ serve(async (req: Request) => {
     // User-initiated runs skip the gate: the person is waiting on a reply, and
     // the clients have no branch for an empty one.
     const material = actionable.filter((p) => p.type !== "data_warning");
-    if (automated && material.length === 0) {
+    // New goal ideas count as material: they are reviewed in this same batch.
+    const goalIdeas = await goalRun;
+    if (automated && material.length === 0 && goalIdeas === 0) {
       return json({ status: "no_material_changes", proposals: 0 });
     }
 
@@ -1315,6 +1329,7 @@ serve(async (req: Request) => {
     return json({
       status: "ok",
       proposals: actionable.length - 1, // exclude summary row
+      goal_ideas: goalIdeas,
     });
 
   } catch (err) {
