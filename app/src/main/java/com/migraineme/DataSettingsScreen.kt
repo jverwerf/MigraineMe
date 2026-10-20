@@ -299,6 +299,21 @@ fun DataSettingsScreen(
                 }
             )
 
+            // ═══════════════════════════════════════════════════════════
+            // GOAL REMINDERS — own BaseCard (adds its own top spacer; absent
+            // while goals are off or there is nothing to remind about)
+            // ═══════════════════════════════════════════════════════════
+            GoalRemindersCard(
+                onRequestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        markAskedNotificationPermission(appContext)
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                },
+                refreshTick = refreshTick,
+                searchQuery = q
+            )
+
             Spacer(Modifier.height(16.dp))
 
             // ═══════════════════════════════════════════════════════════

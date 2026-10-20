@@ -36,10 +36,11 @@ data class MonitorCardConfig(
          */
         const val GOALS_ENABLED = false
 
-        // Goals is the LAST card by default (Jordy 2026-10-03).
+        // Goals sits right after Migraines by default (Jordy 2026-10-20; it was last before).
         val DEFAULT_ORDER = listOfNotNull(
             CARD_RISK,
             CARD_MIGRAINES,
+            CARD_PRACTITIONER_GOALS.takeIf { GOALS_ENABLED },
             CARD_MEDICINES,
             CARD_TREATMENTS,
             CARD_NUTRITION,
@@ -47,8 +48,7 @@ data class MonitorCardConfig(
             CARD_PHYSICAL,
             CARD_SLEEP,
             CARD_MENTAL,
-            CARD_MENSTRUATION,
-            CARD_PRACTITIONER_GOALS.takeIf { GOALS_ENABLED }
+            CARD_MENSTRUATION
         )
 
         val CARD_LABELS = mapOf(
@@ -283,7 +283,7 @@ data class MonitorCardConfig(
 object MonitorCardConfigStore {
     private const val PREFS_NAME = "monitor_card_config"
     private const val KEY_CONFIG = "config_json"
-    private const val KEY_GOALS_LAST_DONE = "goals_moved_last_v1"
+    private const val KEY_GOALS_AFTER_MIGRAINES_DONE = "goals_moved_after_migraines_v1"
     
     private val json = Json { 
         ignoreUnknownKeys = true 
@@ -304,26 +304,35 @@ object MonitorCardConfigStore {
             MonitorCardConfig()
         }
         // Migration: ensure new card types are in the order
-        // New cards go to the front, except Goals, which joins at the END.
+        // New cards go to the front, except Goals, which slots in right after Migraines.
         val goals = MonitorCardConfig.CARD_PRACTITIONER_GOALS
         val missing = MonitorCardConfig.DEFAULT_ORDER.filter { it !in config.cardOrder }
         var withNew = if (missing.isNotEmpty()) {
-            config.copy(cardOrder = (missing - goals) + config.cardOrder + missing.filter { it == goals })
+            val base = (missing - goals) + config.cardOrder
+            config.copy(cardOrder = if (goals in missing) goalsAfterMigraines(base) else base)
         } else config
-        // One-time: test builds before 2026-10-03 put Goals first. Move it to the
-        // end once; after that the user's own order stands.
-        if (!prefs.getBoolean(KEY_GOALS_LAST_DONE, false)) {
+        // One-time: test builds before 2026-10-20 put Goals last. Move it to just
+        // after Migraines once; after that the user's own order stands.
+        if (!prefs.getBoolean(KEY_GOALS_AFTER_MIGRAINES_DONE, false)) {
             if (goals in withNew.cardOrder) {
-                withNew = withNew.copy(cardOrder = (withNew.cardOrder - goals) + goals)
-                prefs.edit().putString(KEY_CONFIG, json.encodeToString(withNew)).putBoolean(KEY_GOALS_LAST_DONE, true).apply()
+                withNew = withNew.copy(cardOrder = goalsAfterMigraines(withNew.cardOrder))
+                prefs.edit().putString(KEY_CONFIG, json.encodeToString(withNew)).putBoolean(KEY_GOALS_AFTER_MIGRAINES_DONE, true).apply()
             } else if (MonitorCardConfig.GOALS_ENABLED) {
-                prefs.edit().putBoolean(KEY_GOALS_LAST_DONE, true).apply()
+                prefs.edit().putBoolean(KEY_GOALS_AFTER_MIGRAINES_DONE, true).apply()
             }
         }
         // A saved order from a build that had Goals on must not bring the card back.
         return if (!MonitorCardConfig.GOALS_ENABLED && MonitorCardConfig.CARD_PRACTITIONER_GOALS in withNew.cardOrder) {
             withNew.copy(cardOrder = withNew.cardOrder - MonitorCardConfig.CARD_PRACTITIONER_GOALS)
         } else withNew
+    }
+
+    /** Goals directly after Migraines (or first if Migraines is somehow absent). */
+    private fun goalsAfterMigraines(order: List<String>): List<String> {
+        val goals = MonitorCardConfig.CARD_PRACTITIONER_GOALS
+        val rest = order - goals
+        val at = rest.indexOf(MonitorCardConfig.CARD_MIGRAINES) + 1
+        return rest.take(at) + goals + rest.drop(at)
     }
     
     fun save(context: Context, config: MonitorCardConfig) {

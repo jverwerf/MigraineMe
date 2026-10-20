@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -652,13 +653,8 @@ fun NotificationsCard(
     val showDeviceOutcome = hit("Device check-ins", "Ask how a neuromodulation device session went, 2 hours after you log it")
     val showCompanion = hit("AI companion", "Get notified when an AI companion adds to your community feed")
     val showPermission = hit("Notification permission")
-    // Goal reminders (practitioner-set and own): one row per active goal that can be logged.
-    // Metric goals are filled in by the server from the client's data, so they get no reminder.
-    val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
-    LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appContext) }
-    val goalRows = practitionerGoals.filter { it.isActive && (it.isExercise || it.isMindfulness || it.isHr || it.isDaily) }
-    val showGoals = MonitorCardConfig.GOALS_ENABLED && goalRows.isNotEmpty() && (hit("Goal reminders") || goalRows.any { hit(it.title) })
-    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission && !showGoals) return
+    // Goal reminders moved to their own card (GoalRemindersCard, Jordy 10-20).
+    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission) return
 
     // Dividers only make sense on the full card — a filtered result list would
     // otherwise start or end with a stray rule.
@@ -875,81 +871,6 @@ fun NotificationsCard(
                         }
                     }
                 )
-            }
-        }
-
-        // Goal reminders: server-scheduled (practitioner_goals.reminders_enabled + reminder_times).
-        // This is the one place the times are set, for own and practitioner-set goals alike.
-        if (showGoals) {
-            var editingGoalId by remember { mutableStateOf<String?>(null) }
-            for (goal in goalRows) {
-                var saving by remember(goal.id) { mutableStateOf(false) }
-                // A goal switched on with no times left would send nothing, so it reads as off.
-                val on = notificationPermissionGranted && goal.reminders_enabled && goal.reminder_times.isNotEmpty()
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 10.dp)
-                    ) {
-                        Text(
-                            t(goal.title),
-                            color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            if (on) goal.reminderLabels.joinToString(", ") else t("Goal reminders"),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    if (on) {
-                        TextButton(
-                            onClick = { editingGoalId = goal.id },
-                            enabled = !saving,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Text(t("Edit"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-
-                    Column(
-                        modifier = Modifier.width(toggleColWidth),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Switch(
-                            checked = on,
-                            enabled = !saving,
-                            modifier = Modifier.scale(0.8f),
-                            onCheckedChange = { newValue ->
-                                if (newValue && !notificationPermissionGranted) {
-                                    onRequestNotificationPermission()
-                                } else {
-                                    saving = true
-                                    scope.launch {
-                                        // No times yet: start with one at 09:00, then switch on.
-                                        val timesOk = !newValue || goal.reminder_times.isNotEmpty() ||
-                                            PractitionerGoalsStore.setReminderTimes(appContext, goal.id, listOf("09:00:00"))
-                                        if (timesOk) PractitionerGoalsStore.setReminders(appContext, goal.id, newValue)
-                                        saving = false
-                                    }
-                                }
-                            },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
-                        )
-                    }
-                }
-            }
-            if (showDividers) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
-            }
-
-            goalRows.firstOrNull { it.id == editingGoalId }?.let { goal ->
-                GoalReminderTimesDialog(goal = goal, onDismiss = { editingGoalId = null })
             }
         }
 
@@ -1252,6 +1173,130 @@ fun NotificationsCard(
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(top = 4.dp)
             )
+        }
+    }
+}
+
+
+/**
+ * Goal reminders: one card of its own under Notifications (Jordy 10-20: "not well
+ * placed" inside the Notifications card). One row per active goal that can be
+ * logged, own and practitioner-set alike; metric goals fill in from the client's
+ * data and get no reminder. The times are set here and nowhere else
+ * (practitioner_goals.reminders_enabled + reminder_times, server-scheduled).
+ * Hidden while goals are off, or when there is no goal to remind about.
+ */
+@Composable
+fun GoalRemindersCard(
+    onRequestNotificationPermission: () -> Unit,
+    refreshTick: Int,
+    searchQuery: String = ""
+) {
+    if (!MonitorCardConfig.GOALS_ENABLED) return
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val scope = rememberCoroutineScope()
+    val notificationPermissionGranted = remember(refreshTick) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else true
+    }
+    val toggleColWidth = 56.dp
+
+    val q = searchQuery.trim()
+    val titleHit = q.isBlank() || "Goal reminders".contains(q, ignoreCase = true)
+    fun hit(vararg text: String) = titleHit || text.any { it.contains(q, ignoreCase = true) }
+
+    val practitionerGoals by PractitionerGoalsStore.goals.collectAsState()
+    LaunchedEffect(Unit) { PractitionerGoalsStore.refresh(appContext) }
+    val goalRows = practitionerGoals
+        .filter { it.isActive && (it.isExercise || it.isMindfulness || it.isHr || it.isDaily) }
+        .filter { hit(it.title) }
+    if (goalRows.isEmpty()) return
+
+    Spacer(Modifier.height(16.dp))
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(
+                Icons.Outlined.Flag, null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                t("Goal reminders"),
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+            )
+        }
+
+        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+        var editingGoalId by remember { mutableStateOf<String?>(null) }
+        for (goal in goalRows) {
+            var saving by remember(goal.id) { mutableStateOf(false) }
+            // A goal switched on with no times left would send nothing, so it reads as off.
+            val on = notificationPermissionGranted && goal.reminders_enabled && goal.reminder_times.isNotEmpty()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        t(goal.title),
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        if (on) goal.reminderLabels.joinToString(", ") else t("Goal reminders"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                if (on) {
+                    TextButton(
+                        onClick = { editingGoalId = goal.id },
+                        enabled = !saving,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Text(t("Edit"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.width(toggleColWidth),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Switch(
+                        checked = on,
+                        enabled = !saving,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            if (newValue && !notificationPermissionGranted) {
+                                onRequestNotificationPermission()
+                            } else {
+                                saving = true
+                                scope.launch {
+                                    // No times yet: start with one at 09:00, then switch on.
+                                    val timesOk = !newValue || goal.reminder_times.isNotEmpty() ||
+                                        PractitionerGoalsStore.setReminderTimes(appContext, goal.id, listOf("09:00:00"))
+                                    if (timesOk) PractitionerGoalsStore.setReminders(appContext, goal.id, newValue)
+                                    saving = false
+                                }
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+            }
+        }
+        goalRows.firstOrNull { it.id == editingGoalId }?.let { goal ->
+            GoalReminderTimesDialog(goal = goal, onDismiss = { editingGoalId = null })
         }
     }
 }
