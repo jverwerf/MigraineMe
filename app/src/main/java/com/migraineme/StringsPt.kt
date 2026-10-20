@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -3182,6 +3182,8 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Vê ao certo o que puxa o teu risco",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Vê quanto cada fármaco, aparelho ou mudança reduz os teus dias de enxaqueca",
     "See how well your risk score lined up with your logged attacks" to "Vê como o risco acompanhou as tuas crises",
+    "See how your goals went this week." to "Vê como correram os teus objetivos esta semana.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Vê como correram os teus objetivos, mais {0} novas ideias dos teus dados.",
     "See our Privacy Policy for details." to "Mais em Privacidade.",
     "See plans" to "Ver planos",
     "See severity, pain locations & missed activities" to "Força, zonas de dor e o que perdeste",
@@ -4477,6 +4479,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Áreas de risco",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Os teus fatores, limiares e favoritos foram atualizados.",
     "Your triggers" to "Os teus fatores",
+    "Your weekly goal review is ready" to "A tua revisão semanal de objetivos está pronta",
     "Your weekly overview will appear after your first week of tracking." to "O teu resumo semanal chega depois da primeira semana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Chegaste ao limite de mensagens de hoje. Reinicia à meia-noite, até amanhã!",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "attack" to "ataque",
     "attacks" to "crises",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "média (n = {0}) · mín {1}m · máx {2}m",
-    "avg %shrs" to "méd %s h",
-    "avg /10" to "méd /10",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "média (n = {0}) · mín {1}m · máx {2}m",
+    "avg %shrs" to "méd %s h",
+    "avg /10" to "méd /10",
     "avg duration ~%sh" to "duração méd ~%sh",
     "avg peak" to "pico méd",
     "avg sev this week" to "força méd. semana",

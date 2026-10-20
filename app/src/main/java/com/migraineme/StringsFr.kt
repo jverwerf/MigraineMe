@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -3182,6 +3182,8 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Vois exactement ce qui pousse ton risque",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Vois combien chaque traitement, appareil ou changement réduit tes jours de migraine",
     "See how well your risk score lined up with your logged attacks" to "Vois comme ton risque collait à tes crises notées",
+    "See how your goals went this week." to "Voyez comment vos objectifs ont évolué cette semaine.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Voyez vos objectifs, plus {0} nouvelles idées tirées de vos données.",
     "See our Privacy Policy for details." to "Détails dans Confidentialité.",
     "See plans" to "Voir les plans",
     "See severity, pain locations & missed activities" to "Intensité, zones et activités manquées",
@@ -4477,6 +4479,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Tes zones à risque",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Tes facteurs, seuils et favoris ont été mis à jour.",
     "Your triggers" to "Tes facteurs",
+    "Your weekly goal review is ready" to "Votre bilan hebdo des objectifs est prêt",
     "Your weekly overview will appear after your first week of tracking." to "Ton bilan de la semaine arrivera après une semaine de suivi.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Tu as atteint ta limite de messages du jour. Ça repart à minuit — à demain !",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "attack" to "crise",
     "attacks" to "crises",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "moyenne (n = {0}) · min {1}m · max {2}m",
-    "avg %shrs" to "moy %s h",
-    "avg /10" to "moy /10",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "moyenne (n = {0}) · min {1}m · max {2}m",
+    "avg %shrs" to "moy %s h",
+    "avg /10" to "moy /10",
     "avg duration ~%sh" to "durée moy ~%sh",
     "avg peak" to "pic moy",
     "avg sev this week" to "intensité moy sem.",

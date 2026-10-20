@@ -311,6 +311,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "Zeit für {0}. Heutiges Ziel: {1} Minuten.",
     "Time for {0}.": "Zeit für {0}.",
     "Your goal reminder": "Deine Ziel-Erinnerung",
+    "Your weekly goal review is ready": "Deine wöchentliche Ziel-Auswertung ist da",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Sieh, wie deine Ziele liefen, plus {0} neue Zielideen aus deinen Daten.",
+    "See how your goals went this week.": "Sieh, wie deine Ziele diese Woche liefen.",
   },
   es: {
     "%1$s and %2$s commented": "%1$s y %2$s han comentado",
@@ -603,6 +606,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "Es hora de {0}. Meta de hoy: {1} minutos.",
     "Time for {0}.": "Es hora de {0}.",
     "Your goal reminder": "Aviso de tu meta",
+    "Your weekly goal review is ready": "Tu revisión semanal de objetivos está lista",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Mira cómo fueron tus objetivos y {0} ideas nuevas según tus datos.",
+    "See how your goals went this week.": "Mira cómo fueron tus objetivos esta semana.",
   },
   nl: {
     "%1$s and %2$s commented": "%1$s en %2$s reageerden",
@@ -895,6 +901,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "Tijd voor {0}. Doel vandaag: {1} minuten.",
     "Time for {0}.": "Tijd voor {0}.",
     "Your goal reminder": "Je doelherinnering",
+    "Your weekly goal review is ready": "Je wekelijkse doelenoverzicht staat klaar",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Bekijk hoe je doelen gingen, plus {0} nieuwe doel-ideeën uit je data.",
+    "See how your goals went this week.": "Bekijk hoe je doelen deze week gingen.",
   },
   fr: {
     "%1$s and %2$s commented": "%1$s et %2$s ont commenté",
@@ -1187,6 +1196,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "C'est l'heure : {0}. Objectif du jour : {1} minutes.",
     "Time for {0}.": "C'est l'heure : {0}.",
     "Your goal reminder": "Rappel de ton objectif",
+    "Your weekly goal review is ready": "Votre bilan hebdo des objectifs est prêt",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Voyez vos objectifs, plus {0} nouvelles idées tirées de vos données.",
+    "See how your goals went this week.": "Voyez comment vos objectifs ont évolué cette semaine.",
   },
   it: {
     "%1$s and %2$s commented": "%1$s e %2$s hanno commentato",
@@ -1479,6 +1491,9 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "È il momento: {0}. Obiettivo di oggi: {1} minuti.",
     "Time for {0}.": "È il momento: {0}.",
     "Your goal reminder": "Promemoria del tuo obiettivo",
+    "Your weekly goal review is ready": "Revisione settimanale degli obiettivi pronta",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Guarda come sono andati i tuoi obiettivi, più {0} nuove idee dai tuoi dati.",
+    "See how your goals went this week.": "Guarda come sono andati i tuoi obiettivi questa settimana.",
   },
   pt: {
     "%1$s and %2$s commented": "%1$s e %2$s comentaram",
@@ -1771,5 +1786,8 @@ export const TABLES: Record<string, Record<string, string>> = {
     "Time for {0}. Today's goal: {1} minutes.": "Hora de {0}. Meta de hoje: {1} minutos.",
     "Time for {0}.": "Hora de {0}.",
     "Your goal reminder": "Lembrete da tua meta",
+    "Your weekly goal review is ready": "A tua revisão semanal de objetivos está pronta",
+    "See how your goals went, plus {0} new goal ideas from your data.": "Vê como correram os teus objetivos, mais {0} novas ideias dos teus dados.",
+    "See how your goals went this week.": "Vê como correram os teus objetivos esta semana.",
   },
 };

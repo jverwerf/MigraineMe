@@ -33,9 +33,9 @@
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:87",
       "app/src/main/java/com/migraineme/DayMixMonthlyChart.kt:116",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:482",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:810",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1069",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:486",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:814",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1073",
       "... 33 more"
     ],
     "max_len": 14,
@@ -228,9 +228,9 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/DataSettingsComponents.kt:107",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:497",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:530",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:916",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:498",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:531",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1267",
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:676",
       "... 10 more"
     ],
@@ -395,7 +395,7 @@
     "en": "Configure",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:584",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:588",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:747",
       "app/src/main/java/com/migraineme/InsightsSectionConfigScreen.kt:76",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:142",
@@ -578,7 +578,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:403",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:764",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:768",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:121",
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1322",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:185",
@@ -592,7 +592,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:383",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:751",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:755",
       "app/src/main/java/com/migraineme/MentalDataHistoryScreen.kt:102",
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:1314",
       "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:155",
@@ -633,7 +633,7 @@
     "en": "Not set",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:491",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:492",
       "app/src/main/java/com/migraineme/JournalEditScreen.kt:721",
       "app/src/main/java/com/migraineme/JournalEditScreen.kt:734",
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:397",
@@ -1324,7 +1324,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:455",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:518",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:519",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:608",
       "app/src/main/java/com/migraineme/WeatherGraph.kt:169"
     ],
@@ -1467,7 +1467,7 @@
     "en": "Customize",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:591",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:595",
       "app/src/main/java/com/migraineme/InsightsSectionConfigScreen.kt:83",
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:620",
       "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:73"
@@ -1563,7 +1563,7 @@
     "en": "History →",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:704",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:708",
       "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:689",
       "app/src/main/java/com/migraineme/PremiumGate.kt:362",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:131"
@@ -2267,6 +2267,17 @@
     "count": 3
   },
   {
+    "en": "Goal reminders",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1227",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1255",
+      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:465"
+    ],
+    "max_len": 17,
+    "count": 3
+  },
+  {
     "en": "Habits that show up on your migraine-free days",
     "class": "soft",
     "sites": [
@@ -2336,7 +2347,7 @@
     "en": "Last Period",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:486",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:487",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:405",
       "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:207"
     ],
@@ -2645,7 +2656,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/MonitorScreen.kt:1733",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:690",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:694",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:117"
     ],
     "max_len": 14,
@@ -2721,7 +2732,7 @@
     "en": "Show, hide, and reorder cards",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:596",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:600",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:759",
       "app/src/main/java/com/migraineme/MonitorScreen.kt:368"
     ],
@@ -3130,7 +3141,7 @@
     "en": "%1$s%% of risk · %2$s pts · %3$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1040",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1044",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:422"
     ],
     "max_len": 46,
@@ -3280,8 +3291,8 @@
     "en": "About Active triggers",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1073",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1057"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1077",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1061"
     ],
     "max_len": 24,
     "count": 2
@@ -3290,8 +3301,8 @@
     "en": "About Ask MigraineMe",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:486",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:470"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:490",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:474"
     ],
     "max_len": 23,
     "count": 2
@@ -3440,8 +3451,8 @@
     "en": "About Risk today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:814",
-      "app/src/main/java/com/migraineme/HomeScreen.kt:797"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:818",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:801"
     ],
     "max_len": 19,
     "count": 2
@@ -3750,7 +3761,7 @@
     "en": "Auto-update average",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:546",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:547",
       "app/src/main/java/com/migraineme/MenstruationSetupDialog.kt:206"
     ],
     "max_len": 22,
@@ -3780,7 +3791,7 @@
     "en": "Average Cycle",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:513",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:514",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:411"
     ],
     "max_len": 16,
@@ -3870,7 +3881,7 @@
     "en": "Calendar",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1294",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1339",
       "app/src/main/java/com/migraineme/JournalScreen.kt:988"
     ],
     "max_len": 14,
@@ -4030,7 +4041,7 @@
     "en": "Device check-ins",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1102",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1023",
       "app/src/main/java/com/migraineme/DeviceReliefOutcome.kt:96"
     ],
     "max_len": 19,
@@ -4244,16 +4255,6 @@
       "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:256"
     ],
     "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "Goal reminders",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:904",
-      "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:465"
-    ],
-    "max_len": 17,
     "count": 2
   },
   {
@@ -4560,7 +4561,7 @@
     "en": "MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:825",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:829",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:3585"
     ],
     "max_len": 255,
@@ -4740,7 +4741,7 @@
     "en": "Notifications",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:676",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:672",
       "app/src/main/java/com/migraineme/DataSettingsScreen.kt:238"
     ],
     "max_len": 16,
@@ -5040,7 +5041,7 @@
     "en": "Risk today",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:687",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:691",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:114"
     ],
     "max_len": 14,
@@ -5050,7 +5051,7 @@
     "en": "Risk · %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:689",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:693",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt:116"
     ],
     "max_len": 14,
@@ -5080,7 +5081,7 @@
     "en": "See what’s driving your risk score",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:555",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:559",
       "app/src/main/java/com/migraineme/MonitorRiskScreen.kt:225"
     ],
     "max_len": 37,
@@ -5480,7 +5481,7 @@
     "en": "Trigger alerts",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:980",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:901",
       "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:417"
     ],
     "max_len": 17,
@@ -5510,7 +5511,7 @@
     "en": "Unlock What Strengthens You",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:509",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:513",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1098"
     ],
     "max_len": 39,
@@ -5520,7 +5521,7 @@
     "en": "Unlock trigger breakdown",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:554",
+      "app/src/main/java/com/migraineme/HomeScreen.kt:558",
       "app/src/main/java/com/migraineme/MonitorRiskScreen.kt:224"
     ],
     "max_len": 34,
@@ -5550,7 +5551,7 @@
     "en": "Weighted average of last 6 cycles",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:523",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:524",
       "app/src/main/java/com/migraineme/MenstruationEditDialog.kt:60"
     ],
     "max_len": 47,
@@ -7807,7 +7808,7 @@
     "en": "7-day outlook",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:896"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:900"
     ],
     "max_len": 16,
     "count": 1
@@ -8122,7 +8123,7 @@
     "en": "AI companion",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1213"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1134"
     ],
     "max_len": 15,
     "count": 1
@@ -9130,7 +9131,7 @@
     "en": "Allow",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:394"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:395"
     ],
     "max_len": 14,
     "count": 1
@@ -9832,7 +9833,7 @@
     "en": "Ask MigraineMe",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:446"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:450"
     ],
     "max_len": 17,
     "count": 1
@@ -9859,7 +9860,7 @@
     "en": "Ask how a neuromodulation device session went, 2 hours after you log it",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1107"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1028"
     ],
     "max_len": 102,
     "count": 1
@@ -9877,7 +9878,7 @@
     "en": "Ask questions about your health data",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:406"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:410"
     ],
     "max_len": 39,
     "count": 1
@@ -10498,7 +10499,7 @@
     "en": "Battery optimization exemption",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:428"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:429"
     ],
     "max_len": 33,
     "count": 1
@@ -11227,7 +11228,7 @@
     "en": "Calendar events",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1306"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1351"
     ],
     "max_len": 18,
     "count": 1
@@ -11245,7 +11246,7 @@
     "en": "Calendar permission",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1328"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1373"
     ],
     "max_len": 22,
     "count": 1
@@ -11470,7 +11471,7 @@
     "en": "Chat with your health data",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:451"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:455"
     ],
     "max_len": 37,
     "count": 1
@@ -12919,7 +12920,7 @@
     "en": "Daily reminder at 8pm to log your day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:720"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:716"
     ],
     "max_len": 53,
     "count": 1
@@ -12928,7 +12929,7 @@
     "en": "Daily risk alerts",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:785"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:781"
     ],
     "max_len": 20,
     "count": 1
@@ -14440,7 +14441,7 @@
     "en": "Enabled metrics feed into your daily risk score and AI insights. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:346"
+      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:361"
     ],
     "max_len": 94,
     "count": 1
@@ -14683,7 +14684,7 @@
     "en": "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1250"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1171"
     ],
     "max_len": 139,
     "count": 1
@@ -14701,7 +14702,7 @@
     "en": "Evening check-in",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:715"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:711"
     ],
     "max_len": 19,
     "count": 1
@@ -14962,7 +14963,7 @@
     "en": "Exercises",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:643"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:647"
     ],
     "max_len": 14,
     "count": 1
@@ -16303,7 +16304,7 @@
     "en": "Get notified each morning when your new recommendations are ready",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1046"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:967"
     ],
     "max_len": 94,
     "count": 1
@@ -16312,7 +16313,7 @@
     "en": "Get notified when an AI companion adds to your community feed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1218"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1139"
     ],
     "max_len": 88,
     "count": 1
@@ -16573,7 +16574,7 @@
     "en": "Guided routines for your neck, and for during an attack",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:648"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:652"
     ],
     "max_len": 79,
     "count": 1
@@ -19696,7 +19697,7 @@
     "en": "Map your events to activities, reliefs, and triggers",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1308"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1353"
     ],
     "max_len": 75,
     "count": 1
@@ -20038,7 +20039,7 @@
     "en": "Microphone permission",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:419"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:420"
     ],
     "max_len": 24,
     "count": 1
@@ -20146,7 +20147,7 @@
     "en": "MigraineMe Recommendation",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1163"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1167"
     ],
     "max_len": 36,
     "count": 1
@@ -21028,7 +21029,7 @@
     "en": "Next expected: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:571"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:572"
     ],
     "max_len": 20,
     "count": 1
@@ -21730,7 +21731,7 @@
     "en": "No reminders about migraines you haven't closed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:168"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:169"
     ],
     "max_len": 68,
     "count": 1
@@ -22234,7 +22235,7 @@
     "en": "Notification permission",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:691"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:687"
     ],
     "max_len": 26,
     "count": 1
@@ -22495,7 +22496,7 @@
     "en": "Ongoing migraine reminder",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:848"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:844"
     ],
     "max_len": 36,
     "count": 1
@@ -23440,7 +23441,7 @@
     "en": "Personalised advice based on your data",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:535"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:539"
     ],
     "max_len": 41,
     "count": 1
@@ -24745,7 +24746,7 @@
     "en": "Recalculate when new periods logged",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:551"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:552"
     ],
     "max_len": 50,
     "count": 1
@@ -24772,7 +24773,7 @@
     "en": "Recommendation alerts",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1041"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:962"
     ],
     "max_len": 31,
     "count": 1
@@ -24997,7 +24998,7 @@
     "en": "Remind me every %s while a migraine is still open",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:169"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:170"
     ],
     "max_len": 71,
     "count": 1
@@ -26017,6 +26018,24 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:932"
     ],
     "max_len": 68,
+    "count": 1
+  },
+  {
+    "en": "See how your goals went this week.",
+    "class": "hard",
+    "sites": [
+      "supabase/functions/goal-suggestions/index.ts (push body, review only)"
+    ],
+    "max_len": 60,
+    "count": 1
+  },
+  {
+    "en": "See how your goals went, plus {0} new goal ideas from your data.",
+    "class": "hard",
+    "sites": [
+      "supabase/functions/goal-suggestions/index.ts (push body, with suggestions)"
+    ],
+    "max_len": 96,
     "count": 1
   },
   {
@@ -27463,7 +27482,7 @@
     "en": "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:347"
+      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:362"
     ],
     "max_len": 136,
     "count": 1
@@ -29290,7 +29309,7 @@
     "en": "The three things pushing hardest on your bucket today, ordered by how much each is contributing to your risk score. Could be triggers you've logged (caffeine, poor sleep, stress) or prodromes you're currently in (yawning, mood shifts, neck stiffness).\n\nEach row shows the item's name, its severity tag (HIGH / MILD / LOW), and a bar showing how much it's adding compared to a fully-overflowing bucket. The more recent and the more severe, the bigger the contribution.\n\nTap the card to open the Risk detail screen and see every contributor in order, not just the top 3.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1086"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1090"
     ],
     "max_len": 823,
     "count": 1
@@ -29974,7 +29993,7 @@
     "en": "Toggle the metrics MigraineMe collects each day. ",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:345"
+      "app/src/main/java/com/migraineme/DataSettingsScreen.kt:360"
     ],
     "max_len": 71,
     "count": 1
@@ -30010,7 +30029,7 @@
     "en": "Top contributors",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:948"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:952"
     ],
     "max_len": 19,
     "count": 1
@@ -30838,7 +30857,7 @@
     "en": "Unlock AI Chat",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:405"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:409"
     ],
     "max_len": 17,
     "count": 1
@@ -30874,7 +30893,7 @@
     "en": "Unlock Daily Insights",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:534"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:538"
     ],
     "max_len": 31,
     "count": 1
@@ -31144,7 +31163,7 @@
     "en": "Updating for your new language…",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1168"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1172"
     ],
     "max_len": 44,
     "count": 1
@@ -31243,7 +31262,7 @@
     "en": "Usage access permission",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:450"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:451"
     ],
     "max_len": 26,
     "count": 1
@@ -32458,7 +32477,7 @@
     "en": "Well done",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:1110"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:1114"
     ],
     "max_len": 14,
     "count": 1
@@ -33160,7 +33179,7 @@
     "en": "When an item you follow becomes a trigger for the day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:985"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:906"
     ],
     "max_len": 76,
     "count": 1
@@ -34429,7 +34448,7 @@
     "en": "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:828"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:832"
     ],
     "max_len": 2620,
     "count": 1
@@ -34528,7 +34547,7 @@
     "en": "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/HomeScreen.kt:832"
+      "app/src/main/java/com/migraineme/HomeScreen.kt:836"
     ],
     "max_len": 1218,
     "count": 1
@@ -34675,6 +34694,15 @@
       "AiSetupScreen.kt:AiSetupEntry.title"
     ],
     "max_len": 16,
+    "count": 1
+  },
+  {
+    "en": "Your weekly goal review is ready",
+    "class": "hard",
+    "sites": [
+      "supabase/functions/goal-suggestions/index.ts (push title)"
+    ],
+    "max_len": 48,
     "count": 1
   },
   {
@@ -37696,7 +37724,7 @@
     "en": "✓ Granted",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:388"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:389"
     ],
     "max_len": 14,
     "count": 1

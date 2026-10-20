@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -3182,6 +3182,8 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Mira exactamente qué mueve tu riesgo",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Mira cuánto reduce tus días de migraña cada fármaco, dispositivo o cambio",
     "See how well your risk score lined up with your logged attacks" to "Mira cómo encajó tu riesgo con tus ataques",
+    "See how your goals went this week." to "Mira cómo fueron tus objetivos esta semana.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Mira cómo fueron tus objetivos y {0} ideas nuevas según tus datos.",
     "See our Privacy Policy for details." to "Más detalles en Privacidad.",
     "See plans" to "Ver planes",
     "See severity, pain locations & missed activities" to "Fuerza, zonas de dolor y lo que perdiste",
@@ -4477,6 +4479,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Tus áreas de riesgo",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Tus factores, umbrales y favoritos se han actualizado.",
     "Your triggers" to "Tus factores",
+    "Your weekly goal review is ready" to "Tu revisión semanal de objetivos está lista",
     "Your weekly overview will appear after your first week of tracking." to "Tu resumen semanal saldrá tras la primera semana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Has llegado al límite diario de mensajes. Se reinicia a medianoche, ¡vuelve mañana!",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "attack" to "ataque",
     "attacks" to "ataques",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · mín {1}m · máx {2}m",
-    "avg %shrs" to "med %s h",
-    "avg /10" to "med /10",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · mín {1}m · máx {2}m",
+    "avg %shrs" to "med %s h",
+    "avg /10" to "med /10",
     "avg duration ~%sh" to "duración med ~%sh",
     "avg peak" to "pico med",
     "avg sev this week" to "fuerza media",

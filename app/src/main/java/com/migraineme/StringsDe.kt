@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -3182,6 +3182,8 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Sieh genau, was deinen Risikowert treibt",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Sieh, wie gut jedes Medikament, Gerät oder jede Änderung deine Migränetage senkt",
     "See how well your risk score lined up with your logged attacks" to "Sieh, wie gut dein Risikowert zu deinen Attacken passte",
+    "See how your goals went this week." to "Sieh, wie deine Ziele diese Woche liefen.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Sieh, wie deine Ziele liefen, plus {0} neue Zielideen aus deinen Daten.",
     "See our Privacy Policy for details." to "Details im Datenschutz.",
     "See plans" to "Tarife ansehen",
     "See severity, pain locations & missed activities" to "Stärke, Schmerzorte und Verpasstes ansehen",
@@ -4477,6 +4479,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Deine Auslöser",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
     "Your triggers" to "Deine Auslöser",
+    "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
     "Your weekly overview will appear after your first week of tracking." to "Deine Wochenübersicht erscheint nach der ersten Woche.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Du hast dein Tageslimit an Nachrichten erreicht. Es setzt um Mitternacht zurück — bis morgen!",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "attack" to "Attacke",
     "attacks" to "Attacken",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "Ø (n = {0}) · kürzeste {1}m · längste {2}m",
-    "avg %shrs" to "Ø %s Std.",
-    "avg /10" to "Ø /10",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "Ø (n = {0}) · kürzeste {1}m · längste {2}m",
+    "avg %shrs" to "Ø %s Std.",
+    "avg /10" to "Ø /10",
     "avg duration ~%sh" to "Ø Dauer ~%sh",
     "avg peak" to "Ø Spitze",
     "avg sev this week" to "Ø Stärke Woche",

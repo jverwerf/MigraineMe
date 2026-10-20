@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -3182,6 +3182,8 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Zie precies wat je risico stuurt",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Zie hoe goed elk medicijn, apparaat of leefstijl je migrainedagen vermindert",
     "See how well your risk score lined up with your logged attacks" to "Zie hoe goed je risico bij je aanvallen paste",
+    "See how your goals went this week." to "Bekijk hoe je doelen deze week gingen.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Bekijk hoe je doelen gingen, plus {0} nieuwe doel-ideeën uit je data.",
     "See our Privacy Policy for details." to "Meer bij Privacy.",
     "See plans" to "Bekijk plannen",
     "See severity, pain locations & missed activities" to "Zwaarte, pijnplekken en wat je miste",
@@ -4477,6 +4479,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Je triggergebieden",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
     "Your triggers" to "Je triggers",
+    "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
     "Your weekly overview will appear after your first week of tracking." to "Je weekoverzicht verschijnt na de eerste week.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Je hebt je daglimiet aan berichten bereikt. Om middernacht staat de teller weer op nul.",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "attack" to "aanval",
     "attacks" to "aanvallen",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "gemiddeld (n = {0}) · kortste {1}m · langste {2}m",
-    "avg %shrs" to "gem %s u",
-    "avg /10" to "gem /10",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "gemiddeld (n = {0}) · kortste {1}m · langste {2}m",
+    "avg %shrs" to "gem %s u",
+    "avg /10" to "gem /10",
     "avg duration ~%sh" to "gem. duur ~%su",
     "avg peak" to "gem piek",
     "avg sev this week" to "gem zwaarte week",

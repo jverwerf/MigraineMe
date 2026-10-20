@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4858 entries.
+ * 4861 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -3182,6 +3182,8 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "See exactly what's driving your risk score" to "Guarda cosa spinge il tuo punteggio di rischio",
     "See how well each drug, device, or lifestyle change reduces your migraine days" to "Guarda quanto ogni farmaco, dispositivo o cambiamento riduce i giorni di emicrania",
     "See how well your risk score lined up with your logged attacks" to "Guarda quanto il rischio ha seguito i tuoi attacchi",
+    "See how your goals went this week." to "Guarda come sono andati i tuoi obiettivi questa settimana.",
+    "See how your goals went, plus {0} new goal ideas from your data." to "Guarda come sono andati i tuoi obiettivi, più {0} nuove idee dai tuoi dati.",
     "See our Privacy Policy for details." to "Dettagli nella Privacy.",
     "See plans" to "Vedi i piani",
     "See severity, pain locations & missed activities" to "Intensità, zone e attività perse",
@@ -4477,6 +4479,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your trigger areas" to "Le tue aree a rischio",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Fattori, soglie e preferiti sono stati aggiornati.",
     "Your triggers" to "I tuoi fattori",
+    "Your weekly goal review is ready" to "Revisione settimanale degli obiettivi pronta",
     "Your weekly overview will appear after your first week of tracking." to "Il quadro settimanale arriva dopo la prima settimana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Hai raggiunto il limite di messaggi di oggi. Si azzera a mezzanotte, a domani!",
     "Zavzpret" to "Zavzpret",
@@ -4520,12 +4523,12 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "attack" to "attacco",
     "attacks" to "attacchi",
     "auto" to "auto",
-    "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · min {1}m · max {2}m",
-    "avg %shrs" to "media %s h",
-    "avg /10" to "media /10",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · min {1}m · max {2}m",
+    "avg %shrs" to "media %s h",
+    "avg /10" to "media /10",
     "avg duration ~%sh" to "durata media ~%sh",
     "avg peak" to "picco medio",
     "avg sev this week" to "int. media sett.",

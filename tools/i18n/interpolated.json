@@ -56,15 +56,15 @@
     "line": "                t(\"Please enable these metrics first, then you can enable Stress Index.\")"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:345",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:360",
     "line": "                            t(\"Toggle the metrics MigraineMe collects each day. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:346",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:361",
     "line": "                            t(\"Enabled metrics feed into your daily risk score and AI insights. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:347",
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:362",
     "line": "                            t(\"Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.\"),"
   },
   {

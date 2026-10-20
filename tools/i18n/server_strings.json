@@ -2324,6 +2324,30 @@
    "sites": [
     "supabase/functions/goal-reminders/index.ts (push title, self-set goal)"
    ]
+  },
+  {
+   "en": "Your weekly goal review is ready",
+   "class": "hard",
+   "max_len": 48,
+   "sites": [
+    "supabase/functions/goal-suggestions/index.ts (push title)"
+   ]
+  },
+  {
+   "en": "See how your goals went, plus {0} new goal ideas from your data.",
+   "class": "hard",
+   "max_len": 96,
+   "sites": [
+    "supabase/functions/goal-suggestions/index.ts (push body, with suggestions)"
+   ]
+  },
+  {
+   "en": "See how your goals went this week.",
+   "class": "hard",
+   "max_len": 60,
+   "sites": [
+    "supabase/functions/goal-suggestions/index.ts (push body, review only)"
+   ]
   }
  ]
 }
