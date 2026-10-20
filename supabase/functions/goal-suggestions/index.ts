@@ -383,8 +383,11 @@ Write three things.
    Where a suggestion comes from: a protective factor becomes a goal to keep it up; a trigger or a risky metric level becomes a limit goal; a metric that is below its usual target and matters to their attacks becomes a target goal. The reason is one or two sentences in the person's language, naming the number in their data that motivates it. Targets must be realistic for THIS person: start from their 28-day level and move it, not from a textbook. Never propose anything in do_not_propose. Never propose exercise routines, stretches, neck or posture exercises or any physical exercise programme: that needs a physiotherapist who has seen the person. Prefer an empty array over a weak suggestion.
 
 Return ONLY a JSON object: {"report": string, "goal_notes": [...], "suggestions": [...]}.
-${languageDirective(lang)}`;
+${languageDirective(lang)}${INFORMAL[lang] ? ` Address the person as "${INFORMAL[lang]}", never formally.` : ""}`;
 }
+
+// The apps speak informally in every language; the model drifted to "votre".
+const INFORMAL: Partial<Record<Lang, string>> = { de: "du", es: "tú", nl: "je/jij", fr: "tu", it: "tu", pt: "tu" };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function describeTarget(g: Goal): string {
