@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,13 +47,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Monitor > Goals: this week's review, the suggested goals and their push
- * switch, the card picker, the + to add a goal, and every goal (active and
- * paused) as a row that opens its own detail screen.
+ * Monitor > Goals: this week's review and its push switch, the card picker,
+ * the + to add a goal, and every goal (active and paused) as a row that opens
+ * its own detail screen. Goal ideas live in the recalibration review.
  *
  * Premium (Goals v2): paying users see everything. Free users with
- * practitioner-set goals see and log those goals; the review and suggestions
- * are blurred. Free users with none get the whole page blurred.
+ * practitioner-set goals see and log those goals; the review is
+ * blurred. Free users with none get the whole page blurred.
  * Reads the shared PractitionerGoalsStore. Static, no motion.
  */
 @Composable
@@ -189,14 +188,13 @@ private fun ColumnScope.GoalsListRegion(
 }
 
 /**
- * "This week's review", "Suggested for you" and the weekly push switch.
+ * "This week's review" and the weekly push switch.
  * [teaser] = drawn under the premium blur: with nothing real to show, one
  * placeholder review card keeps the blur from covering an empty space.
  */
 @Composable
 private fun GoalsReviewRegion(teaser: Boolean) {
     val report by PractitionerGoalsStore.report.collectAsState()
-    val suggestions by PractitionerGoalsStore.suggestions.collectAsState()
 
     val r = report
     if (r != null) GoalReviewCard(r)
@@ -207,11 +205,6 @@ private fun GoalsReviewRegion(teaser: Boolean) {
             Text(t("Weekly AI goal suggestions and reviews from your own data"),
                 color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         }
-    }
-
-    if (suggestions.isNotEmpty()) {
-        ExerciseGroupHeading(t("Suggested for you"))
-        for (s in suggestions) GoalSuggestionCard(s, enabled = !teaser)
     }
 
     if (!teaser) GoalReviewPushSwitch()
@@ -261,43 +254,6 @@ private fun GoalStatusChip(status: String) {
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(label, color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-    }
-}
-
-@Composable
-private fun GoalSuggestionCard(s: SupabasePractitionerService.GoalSuggestionRow, enabled: Boolean) {
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var busy by remember(s.id) { mutableStateOf(false) }
-    BaseCard {
-        Text(t(s.title), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Text(goalAskText(s.asGoal()), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        if (s.reason.isNotBlank()) {
-            Text(s.reason.trim(), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            GoalPillButton(label = t("Add"), enabled = enabled && !busy) {
-                busy = true
-                scope.launch {
-                    PractitionerGoalsStore.acceptSuggestion(ctx, s.id)
-                    busy = false
-                }
-            }
-            TextButton(
-                onClick = {
-                    busy = true
-                    scope.launch {
-                        PractitionerGoalsStore.dismissSuggestion(ctx, s.id)
-                        busy = false
-                    }
-                },
-                enabled = enabled && !busy
-            ) {
-                Text(t("Not now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-            }
-        }
     }
 }
 

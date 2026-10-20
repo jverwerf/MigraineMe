@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4890 entries.
+ * 4894 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -1090,6 +1090,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Could not draw one right now. Pick one from the list." to "Ahora mismo no se puede. Elige uno de la lista.",
     "Could not load the metrics. Check your connection and open this page again." to "No se cargaron las medidas. Revisa la conexión y vuelve a abrir esta página.",
     "Could not open the camera" to "No se pudo abrir la cámara",
+    "Could not save your goals" to "No se pudieron guardar tus metas",
     "Could not save. Try again." to "No se guardó. Inténtalo.",
     "Couldn't build the report — check your connection" to "No se pudo crear el informe: revisa tu conexión",
     "Couldn't reach the food database — tap to retry" to "Sin conexión con la base — toca para reintentar",
@@ -1516,10 +1517,10 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "False alarm" to "Falsa alarma",
     "False alarms" to "Falsas alarmas",
     "False alarms — warnings with no migraine" to "Falsas alarmas: avisos sin migraña",
-    "Family event" to "Evento familiar",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "Family event" to "Evento familiar",
     "Fast breathing" to "Respirar rápido",
     "Fat" to "Grasa",
     "Fat high" to "Grasas altas",
@@ -1703,6 +1704,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Ir a entrar",
     "Go to the app" to "Ir a la app",
     "Goal" to "Meta",
+    "Goal ideas from your own data. Keep checked to add them to your goals." to "Ideas de metas a partir de tus propios datos. Déjalas marcadas para añadirlas a tus metas.",
     "Goal reminders" to "Avisos de metas",
     "Goals" to "Metas",
     "Goals are switched off in Data settings." to "Las metas están desactivadas en Ajustes de datos.",
@@ -2422,6 +2424,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "New Insights" to "Hallazgos",
     "New articles matching your triggers" to "Artículos nuevos según tus factores",
     "New discussion" to "Nuevo debate",
+    "New goals" to "Nuevas metas",
     "New medicine label" to "Nueva medicina",
     "New migraine label" to "Nueva migraña",
     "New pain entry" to "Nueva entrada",
@@ -3017,12 +3020,12 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Regular Migraine" to "Migraña común",
     "Reject" to "Rechazar",
     "Reject all" to "Rechazar todo",
-    "Relaxation" to "Relajación",
-    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Este tipo de entrenamiento de relajación se usa contra la migraña desde hace décadas. En ensayos reduce la frecuencia de los ataques más o menos lo mismo que algunos comprimidos preventivos, cuando se practica con regularidad.",
-    "Reliable background sync" to "Sincronización fiable",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Relaxation" to "Relajación",
+    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Este tipo de entrenamiento de relajación se usa contra la migraña desde hace décadas. En ensayos reduce la frecuencia de los ataques más o menos lo mismo que algunos comprimidos preventivos, cuando se practica con regularidad.",
+    "Reliable background sync" to "Sincronización fiable",
     "Reliably triggers your migraines" to "Te dispara las migrañas de forma fiable",
     "Relief" to "Alivio",
     "Relief favorites" to "Alivios favoritos",
@@ -4460,6 +4463,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Tu lista completa de alivios: todo lo que no es medicina y te ayuda con un ataque. Tumbarte, frío, cuarto a oscuras, ducha caliente, beber agua, estiramientos concretos, respiración, incluso salir de un sitio que te dispara. Los aparatos de neuromodulación (CEFALY, Nerivio, gammaCore y similares) también van aquí: anota una sesión cada vez que los uses y Hallazgos puntuará cómo te funciona cada uno.\n\nPara cada alivio:\n• Toca la estrella para fijarlo como favorito. Los favoritos salen primero en el registro ágil, así tus recursos de siempre están a un toque.\n• Toca la papelera para quitarlo del todo. Las entradas ya anotadas con él se quedan como están.\n\nUsa el + para añadir lo tuyo (p. ej. «pasear fuera», «chorro de la ducha en el cuello», «aceite de lavanda»). Cuanto más concreto, más útiles los hallazgos.\n\nLos alivios no tienen peso de gravedad porque no alimentan el indicador. Hallazgos puntúa cómo funcionó cada uno mirando la fuerza y la duración de los ataques en que lo usaste (tarjeta «Qué funcionó»). Cuanto más los ates a migrañas, más afinada sale esa nota.",
     "Your goal reminder" to "Aviso de tu meta",
     "Your goals" to "Tus metas",
+    "Your goals have been updated." to "Tus metas se han actualizado.",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Tu historial va a tu diario. Solo cuenta en los análisis con una suscripción de pago, no con la prueba gratuita.",
     "Your history is still imported into the journal today." to "Tu historial se importa igualmente al diario hoy.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Tus medicinas y alivios importados ya son favoritos en el asistente de registro.",
@@ -4519,13 +4523,13 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Zolmitriptan" to "Zolmitriptán",
     "Zone" to "Zona",
     "Zone 0" to "Zona 0",
+)
+
+private fun esStrings3(): Map<String, String> = mapOf(
     "Zone 1" to "Zona 1",
     "Zone 2" to "Zona 2",
     "Zone 3" to "Zona 3",
     "Zone 4" to "Zona 4",
-)
-
-private fun esStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zona 5",
     "Zone 6" to "Zona 6",
     "Zone Thresholds" to "Umbrales",

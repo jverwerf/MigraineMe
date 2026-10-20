@@ -86,7 +86,8 @@ fun RecalibrationReviewScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(t("Recalibration applied!"), color = Color.White, fontWeight = FontWeight.SemiBold)
                     Text(
-                        t("Your trigger settings, gauge thresholds, and favorites have been updated."),
+                        if (state.proposals.isEmpty()) t("Your goals have been updated.")
+                        else t("Your trigger settings, gauge thresholds, and favorites have been updated."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -102,8 +103,8 @@ fun RecalibrationReviewScreen(
                 return@ScrollableScreenContent
             }
 
-            // ── No proposals ──
-            if (state.proposals.isEmpty()) {
+            // ── No proposals (and no goal ideas) ──
+            if (state.proposals.isEmpty() && state.goalIdeas.isEmpty()) {
                 BaseCard {
                     Text(t("No learning this week"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
@@ -269,9 +270,36 @@ fun RecalibrationReviewScreen(
                 }
             }
 
+            // ── New goals (goal ideas from this run; empty unless Goals is on) ──
+            if (state.goalIdeas.isNotEmpty()) {
+                BaseCard {
+                    Text(
+                        t("New goals"),
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        t("Goal ideas from your own data. Keep checked to add them to your goals."),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    for ((i, idea) in state.goalIdeas.withIndex()) {
+                        GoalIdeaRow(idea = idea, onToggle = { vm.toggleGoalIdea(idea.row.id) })
+                        if (i < state.goalIdeas.lastIndex) {
+                            Divider(
+                                color = AppTheme.SubtleTextColor.copy(alpha = 0.2f),
+                                modifier = Modifier.padding(vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
             // ── Apply Button ──
-            val acceptedCount = state.proposals.count { it.accepted }
-            val rejectedCount = state.proposals.count { !it.accepted }
+            val acceptedCount = state.proposals.count { it.accepted } + state.goalIdeas.count { it.accepted }
+            val rejectedCount = state.proposals.count { !it.accepted } + state.goalIdeas.count { !it.accepted }
 
             Spacer(Modifier.height(8.dp))
 
@@ -299,6 +327,56 @@ fun RecalibrationReviewScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/** One goal idea: same look and checkbox as a proposal row; title, target, reason. Static. */
+@Composable
+private fun GoalIdeaRow(
+    idea: RecalibrationViewModel.GoalIdea,
+    onToggle: () -> Unit,
+) {
+    val s = idea.row
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (idea.accepted) Color(0xFF2D2D3D) else Color(0xFF1A1A24))
+            .clickable { onToggle() }
+            .padding(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Checkbox(
+            checked = idea.accepted,
+            onCheckedChange = { onToggle() },
+            colors = CheckboxDefaults.colors(
+                checkedColor = AppTheme.AccentPurple,
+                uncheckedColor = AppTheme.SubtleTextColor,
+            ),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                t(s.title),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                goalAskText(s.asGoal()),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (s.reason.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    s.reason.trim(),
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }

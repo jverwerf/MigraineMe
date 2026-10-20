@@ -55,9 +55,19 @@ class RecalibrationViewModel : ViewModel() {
         val effectiveValue: String? get() = chosenValue ?: toValue
     }
 
+    /** An open goal idea (goal_suggestions, status 'proposed'); checked = add it to my goals. */
+    data class GoalIdea(
+        val row: SupabasePractitionerService.GoalSuggestionRow,
+        val accepted: Boolean = true,   // default: accept, like the proposals
+    )
+
     data class RecalibrationState(
         val loading: Boolean = true,
         val proposals: List<Proposal> = emptyList(),
+        /** "New goals" rows; only filled with the goals flag on and Goals on in Data settings. */
+        val goalIdeas: List<GoalIdea> = emptyList(),
+        /** The batch's summary row; sent on apply when the batch holds only goal ideas, so it closes. */
+        val summaryId: String? = null,
         val clinicalAssessment: String = "",
         val calibrationNotes: String = "",
         val call1Summary: String = "",
@@ -84,7 +94,8 @@ class RecalibrationViewModel : ViewModel() {
             _state.value = RecalibrationState(loading = true)
             try {
                 val result = withContext(Dispatchers.IO) { fetchProposals(context) }
-                _state.value = result
+                val ideas = if (result.error == null) fetchGoalIdeas(context) else emptyList()
+                _state.value = result.copy(goalIdeas = ideas.map { GoalIdea(it) })
             } catch (e: Exception) {
                 Log.e(TAG, "loadProposals error", e)
                 _state.value = RecalibrationState(loading = false, error = e.message)
@@ -115,6 +126,7 @@ class RecalibrationViewModel : ViewModel() {
             var calibrationNotes = ""
             var call1Summary = ""
             var call2Summary = ""
+            var summaryId: String? = null
             val proposals = mutableListOf<Proposal>()
 
             for (i in 0 until arr.length()) {
@@ -124,6 +136,7 @@ class RecalibrationViewModel : ViewModel() {
 
                 // Extract summary metadata
                 if (type == "summary" && label == "_meta") {
+                    if (summaryId == null) summaryId = obj.getString("id")
                     clinicalAssessment = obj.optString("reasoning", "")
                     val meta = try {
                         // PostgREST returns JSONB as a JSON object, not a string
@@ -170,8 +183,20 @@ class RecalibrationViewModel : ViewModel() {
                 calibrationNotes = calibrationNotes,
                 call1Summary = call1Summary,
                 call2Summary = call2Summary,
+                summaryId = summaryId,
             )
         }
+    }
+
+    /**
+     * Open goal ideas: only with the goals flag on and the Data settings "Goals"
+     * switch on (no metric_settings row = on). A failed read shows none.
+     */
+    private suspend fun fetchGoalIdeas(context: Context): List<SupabasePractitionerService.GoalSuggestionRow> {
+        if (!MonitorCardConfig.GOALS_ENABLED) return emptyList()
+        PractitionerGoalsStore.refreshGoalsOn(context)
+        if (!PractitionerGoalsStore.goalsOn.value) return emptyList()
+        return PractitionerGoalsStore.openSuggestions(context)
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -197,14 +222,27 @@ class RecalibrationViewModel : ViewModel() {
         )
     }
 
+    fun toggleGoalIdea(id: String) {
+        val current = _state.value
+        _state.value = current.copy(
+            goalIdeas = current.goalIdeas.map { if (it.row.id == id) it.copy(accepted = !it.accepted) else it }
+        )
+    }
+
     fun acceptAll() {
         val current = _state.value
-        _state.value = current.copy(proposals = current.proposals.map { it.copy(accepted = true) })
+        _state.value = current.copy(
+            proposals = current.proposals.map { it.copy(accepted = true) },
+            goalIdeas = current.goalIdeas.map { it.copy(accepted = true) },
+        )
     }
 
     fun rejectAll() {
         val current = _state.value
-        _state.value = current.copy(proposals = current.proposals.map { it.copy(accepted = false) })
+        _state.value = current.copy(
+            proposals = current.proposals.map { it.copy(accepted = false) },
+            goalIdeas = current.goalIdeas.map { it.copy(accepted = false) },
+        )
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -216,7 +254,21 @@ class RecalibrationViewModel : ViewModel() {
             val current = _state.value
             _state.value = current.copy(applying = true)
             try {
-                withContext(Dispatchers.IO) { callApply(context, current.proposals) }
+                withContext(Dispatchers.IO) {
+                    // Recalibration first, exactly as before. A batch that holds only
+                    // goal ideas sends its summary row so the batch still closes.
+                    if (current.proposals.isNotEmpty()) callApply(context, current.proposals)
+                    else if (current.summaryId != null) callApplyIds(context, listOf(current.summaryId), emptyList())
+                    // Then the goal ideas: add the checked ones, dismiss the rest.
+                    if (current.goalIdeas.isNotEmpty()) {
+                        val ok = PractitionerGoalsStore.decideSuggestions(
+                            context,
+                            accept = current.goalIdeas.filter { it.accepted }.map { it.row.id },
+                            dismiss = current.goalIdeas.filter { !it.accepted }.map { it.row.id },
+                        )
+                        if (!ok) throw Exception(tSync("Could not save your goals"))
+                    }
+                }
                 _state.value = current.copy(applying = false, applied = true)
             } catch (e: Exception) {
                 Log.e(TAG, "apply error", e)
@@ -241,6 +293,19 @@ class RecalibrationViewModel : ViewModel() {
             put("rejected", JSONArray(proposals.filter { !it.accepted }.map { it.id }))
         }
 
+        postApply(accessToken, body)
+    }
+
+    /** Plain id lists, for closing a batch that has no proposals of its own. */
+    private suspend fun callApplyIds(context: Context, accepted: List<String>, rejected: List<String>) {
+        val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
+            ?: throw Exception("Not authenticated")
+        postApply(accessToken, JSONObject()
+            .put("accepted", JSONArray(accepted))
+            .put("rejected", JSONArray(rejected)))
+    }
+
+    private fun postApply(accessToken: String, body: JSONObject) {
         val request = Request.Builder()
             .url("${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/apply-recalibration")
             .post(body.toString().toRequestBody("application/json".toMediaType()))

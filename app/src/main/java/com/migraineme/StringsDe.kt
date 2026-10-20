@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4890 entries.
+ * 4894 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1090,6 +1090,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Could not draw one right now. Pick one from the list." to "Gerade nicht möglich. Wähle einen aus der Liste.",
     "Could not load the metrics. Check your connection and open this page again." to "Messwerte nicht geladen. Prüfe deine Verbindung und öffne die Seite erneut.",
     "Could not open the camera" to "Kamera konnte nicht geöffnet werden",
+    "Could not save your goals" to "Ziele nicht gespeichert",
     "Could not save. Try again." to "Speichern fehlgeschlagen.",
     "Couldn't build the report — check your connection" to "Bericht konnte nicht erstellt werden — prüfe deine Verbindung",
     "Couldn't reach the food database — tap to retry" to "Datenbank nicht erreichbar — tippen zum Wiederholen",
@@ -1516,10 +1517,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "False alarm" to "Fehlalarm",
     "False alarms" to "Fehlalarme",
     "False alarms — warnings with no migraine" to "Fehlalarme — Warnungen ohne Migräne",
-    "Family event" to "Familienfeier",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Family event" to "Familienfeier",
     "Fast breathing" to "Schnelles Atmen",
     "Fat" to "Fett",
     "Fat high" to "Viel Fett",
@@ -1703,6 +1704,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Zur Anmeldung",
     "Go to the app" to "Zur App",
     "Goal" to "Ziel",
+    "Goal ideas from your own data. Keep checked to add them to your goals." to "Zielideen aus deinen eigenen Daten. Lass sie angehakt, um sie zu deinen Zielen hinzuzufügen.",
     "Goal reminders" to "Ziel-Erinnerungen",
     "Goals" to "Ziele",
     "Goals are switched off in Data settings." to "Ziele sind in den Daten-Einstellungen aus.",
@@ -2422,6 +2424,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "New Insights" to "Neue Erkenntnis",
     "New articles matching your triggers" to "Neue Artikel zu deinen Auslösern",
     "New discussion" to "Neue Diskussion",
+    "New goals" to "Neue Ziele",
     "New medicine label" to "Neues Medikament",
     "New migraine label" to "Neue Migräne",
     "New pain entry" to "Neuer Eintrag",
@@ -3017,12 +3020,12 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Regular Migraine" to "Normale Migräne",
     "Reject" to "Ablehnen",
     "Reject all" to "Alle ablehnen",
-    "Relaxation" to "Entspannung",
-    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Entspannungstraining dieser Art wird seit Jahrzehnten gegen Migräne eingesetzt. In Studien senkt es die Häufigkeit der Attacken ungefähr so stark wie manche vorbeugenden Tabletten, wenn es regelmäßig geübt wird.",
-    "Reliable background sync" to "Zuverlässige Synchronisierung",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Relaxation" to "Entspannung",
+    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Entspannungstraining dieser Art wird seit Jahrzehnten gegen Migräne eingesetzt. In Studien senkt es die Häufigkeit der Attacken ungefähr so stark wie manche vorbeugenden Tabletten, wenn es regelmäßig geübt wird.",
+    "Reliable background sync" to "Zuverlässige Synchronisierung",
     "Reliably triggers your migraines" to "Löst deine Migräne zuverlässig aus",
     "Relief" to "Linderung",
     "Relief favorites" to "Linderungs-Favoriten",
@@ -4460,6 +4463,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Dein voller Linderungs-Pool: alles ohne Medikament, was dir bei einer Attacke hilft. Hinlegen, Kühlpacks, dunkle Räume, heiße Duschen, Trinken, bestimmte Dehnungen, Atemübungen, sogar das Verlassen einer Auslöser-Umgebung. Neuromodulationsgeräte (CEFALY, Nerivio, gammaCore und ähnliche) gehören auch hierher: Erfasse jede Sitzung, dann bewertet Insights, wie gut jedes Gerät bei dir wirkt.\n\nFür jede Linderung:\n• Tippe den Stern, um sie als Favorit zu setzen. Favoriten stehen im Schnell-Log oben, deine üblichen sind also ein Tippen entfernt.\n• Tippe den Papierkorb, um sie ganz zu entfernen. Frühere Einträge damit bleiben unberührt.\n\nMit + fügst du hinzu, was zu dir passt (z. B. „draußen gehen“, „Duschstrahl im Nacken“, „Lavendelöl“). Je genauer, desto brauchbarer die Analysen.\n\nLinderungen haben kein Schweregewicht, weil sie die Anzeige nicht speisen. Insights bewertet, wie gut jede wirklich half, über Stärke und Dauer der Attacken, bei denen du sie genutzt hast (Karte „Was hat gewirkt“). Je öfter du sie an Migränen hängst, desto schärfer der Wert.",
     "Your goal reminder" to "Deine Ziel-Erinnerung",
     "Your goals" to "Deine Ziele",
+    "Your goals have been updated." to "Deine Ziele wurden aktualisiert.",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test.",
     "Your history is still imported into the journal today." to "Dein Verlauf landet trotzdem heute im Tagebuch.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Deine importierten Medikamente und Linderungen sind jetzt Favoriten im Eintrags-Assistenten.",
@@ -4519,13 +4523,13 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zone",
     "Zone 0" to "Zone 0",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Zone 1" to "Zone 1",
     "Zone 2" to "Zone 2",
     "Zone 3" to "Zone 3",
     "Zone 4" to "Zone 4",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zone 5",
     "Zone 6" to "Zone 6",
     "Zone Thresholds" to "Schwellenwerte",

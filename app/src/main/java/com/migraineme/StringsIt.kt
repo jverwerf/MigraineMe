@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4890 entries.
+ * 4894 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -1090,6 +1090,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Could not draw one right now. Pick one from the list." to "Al momento non riesco. Scegline uno dalla lista.",
     "Could not load the metrics. Check your connection and open this page again." to "Misure non caricate. Controlla la connessione e riapri questa pagina.",
     "Could not open the camera" to "Impossibile aprire la fotocamera",
+    "Could not save your goals" to "Impossibile salvare i tuoi obiettivi",
     "Could not save. Try again." to "Salvataggio non riuscito.",
     "Couldn't build the report — check your connection" to "Impossibile creare il report — controlla la connessione",
     "Couldn't reach the food database — tap to retry" to "Database non raggiungibile — tocca per riprovare",
@@ -1516,10 +1517,10 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "False alarm" to "Falso allarme",
     "False alarms" to "Falsi allarmi",
     "False alarms — warnings with no migraine" to "Falsi allarmi: avvisi senza emicrania",
-    "Family event" to "Evento in famiglia",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Family event" to "Evento in famiglia",
     "Fast breathing" to "Respiro veloce",
     "Fat" to "Grassi",
     "Fat high" to "Grassi alti",
@@ -1703,6 +1704,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Vai all'accesso",
     "Go to the app" to "Vai all'app",
     "Goal" to "Obiettivo",
+    "Goal ideas from your own data. Keep checked to add them to your goals." to "Idee di obiettivi dai tuoi dati. Lasciale selezionate per aggiungerle ai tuoi obiettivi.",
     "Goal reminders" to "Promemoria",
     "Goals" to "Obiettivi",
     "Goals are switched off in Data settings." to "Gli obiettivi sono disattivati nelle Impostazioni dati.",
@@ -2422,6 +2424,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "New Insights" to "Nuove analisi",
     "New articles matching your triggers" to "Nuovi articoli sui tuoi fattori",
     "New discussion" to "Nuova discussione",
+    "New goals" to "Obiettivi",
     "New medicine label" to "Nuovo farmaco",
     "New migraine label" to "Nuova emicrania",
     "New pain entry" to "Nuova nota dolore",
@@ -3017,12 +3020,12 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Regular Migraine" to "Emicrania comune",
     "Reject" to "Rifiuta",
     "Reject all" to "Rifiuta tutto",
-    "Relaxation" to "Rilassamento",
-    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Questo tipo di allenamento al rilassamento si usa contro l'emicrania da decenni. Negli studi riduce la frequenza degli attacchi più o meno quanto alcune compresse preventive, se praticato con regolarità.",
-    "Reliable background sync" to "Sync in background stabile",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Relaxation" to "Rilassamento",
+    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Questo tipo di allenamento al rilassamento si usa contro l'emicrania da decenni. Negli studi riduce la frequenza degli attacchi più o meno quanto alcune compresse preventive, se praticato con regolarità.",
+    "Reliable background sync" to "Sync in background stabile",
     "Reliably triggers your migraines" to "Scatena le tue emicranie in modo costante",
     "Relief" to "Sollievo",
     "Relief favorites" to "Sollievi preferiti",
@@ -4460,6 +4463,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Il tuo elenco completo di sollievi: tutto ciò che non è farmaco e ti aiuta durante un attacco. Sdraiarti, impacchi freddi, stanze buie, docce calde, bere, allungamenti precisi, respirazione, perfino allontanarti da un ambiente che scatena. Anche i dispositivi di neuromodulazione (CEFALY, Nerivio, gammaCore e simili) stanno qui: inserisci una sessione ogni volta che li usi e Analisi valuterà quanto funziona ciascuno per te.\n\nPer ogni sollievo:\n• Tocca la stella per metterlo tra i preferiti. I preferiti compaiono per primi nell'inserimento rapido, così i tuoi soliti sono a un tocco.\n• Tocca il cestino per toglierlo del tutto. Le voci già inserite restano intatte.\n\nUsa il + per aggiungere ciò che vale per te (es. «camminare fuori», «getto della doccia sul collo», «olio di lavanda»). Più sei preciso, più le analisi sono utili.\n\nI sollievi non hanno peso di gravità perché non alimentano l'indicatore. Le Analisi valutano quanto ha funzionato ognuno seguendo intensità e durata degli attacchi in cui l'hai usato (scheda «Cosa ha funzionato»). Più li leghi alle emicranie, più quel punteggio si affina.",
     "Your goal reminder" to "Promemoria del tuo obiettivo",
     "Your goals" to "Obiettivi",
+    "Your goals have been updated." to "I tuoi obiettivi sono stati aggiornati.",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Il tuo storico va nel diario. Conta nelle analisi solo con un abbonamento a pagamento, non con la prova gratuita.",
     "Your history is still imported into the journal today." to "Il tuo storico viene comunque importato nel diario oggi.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "I farmaci e i sollievi importati ora sono preferiti nella procedura di registrazione.",
@@ -4519,13 +4523,13 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zona",
     "Zone 0" to "Zona 0",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "Zone 1" to "Zona 1",
     "Zone 2" to "Zona 2",
     "Zone 3" to "Zona 3",
     "Zone 4" to "Zona 4",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zona 5",
     "Zone 6" to "Zona 6",
     "Zone Thresholds" to "Soglie",

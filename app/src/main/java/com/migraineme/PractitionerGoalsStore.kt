@@ -98,43 +98,42 @@ object PractitionerGoalsStore {
     private val _report = MutableStateFlow<SupabasePractitionerService.GoalReportRow?>(null)
     val report: StateFlow<SupabasePractitionerService.GoalReportRow?> = _report
 
-    /** Open goal suggestions, newest first. */
-    private val _suggestions = MutableStateFlow<List<SupabasePractitionerService.GoalSuggestionRow>>(emptyList())
-    val suggestions: StateFlow<List<SupabasePractitionerService.GoalSuggestionRow>> = _suggestions
-
-    /** Weekly review + open suggestions for the Goals page. */
+    /** The weekly review for the Goals page. Goal ideas live in the recalibration review. */
     suspend fun refreshReview(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
         runCatching { svc.latestGoalReport(token) }
             .onFailure { Log.w(TAG, "latestGoalReport failed: ${it.message}") }
             .onSuccess { _report.value = it }
-        runCatching { svc.goalSuggestions(token) }
-            .onFailure { Log.w(TAG, "goalSuggestions failed: ${it.message}") }
-            .onSuccess { _suggestions.value = it }
     }
 
-    /** "Add": the suggestion becomes one of the client's own goals, then reload. */
-    suspend fun acceptSuggestion(context: Context, id: String): Boolean = withContext(Dispatchers.IO + NonCancellable) {
-        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
-        val ok = runCatching { svc.acceptGoalSuggestion(token, id) }
-            .onFailure { Log.w(TAG, "acceptGoalSuggestion failed: ${it.message}") }
-            .isSuccess
-        if (ok) {
-            _suggestions.value = _suggestions.value.filterNot { it.id == id }
-            refresh(token)
+    /** Open goal ideas (status 'proposed'), newest first; empty on a failed read. */
+    suspend fun openSuggestions(context: Context): List<SupabasePractitionerService.GoalSuggestionRow> =
+        withContext(Dispatchers.IO) {
+            val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext emptyList()
+            runCatching { svc.goalSuggestions(token) }
+                .onFailure { Log.w(TAG, "goalSuggestions failed: ${it.message}") }
+                .getOrDefault(emptyList())
         }
-        ok
-    }
 
-    /** "Not now": close the suggestion and drop its card. */
-    suspend fun dismissSuggestion(context: Context, id: String): Boolean = withContext(Dispatchers.IO + NonCancellable) {
-        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
-        val ok = runCatching { svc.dismissGoalSuggestion(token, id) }
-            .onFailure { Log.w(TAG, "dismissGoalSuggestion failed: ${it.message}") }
-            .isSuccess
-        if (ok) _suggestions.value = _suggestions.value.filterNot { it.id == id }
-        ok
-    }
+    /**
+     * Recalibration review "New goals": [accept] become the client's own goals,
+     * [dismiss] are closed. Every id is tried; then one reload. False if any failed.
+     */
+    suspend fun decideSuggestions(context: Context, accept: List<String>, dismiss: List<String>): Boolean =
+        withContext(Dispatchers.IO + NonCancellable) {
+            val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
+            var allOk = true
+            for (id in accept) {
+                runCatching { svc.acceptGoalSuggestion(token, id) }
+                    .onFailure { allOk = false; Log.w(TAG, "acceptGoalSuggestion failed: ${it.message}") }
+            }
+            for (id in dismiss) {
+                runCatching { svc.dismissGoalSuggestion(token, id) }
+                    .onFailure { allOk = false; Log.w(TAG, "dismissGoalSuggestion failed: ${it.message}") }
+            }
+            if (accept.isNotEmpty()) refresh(token)
+            allOk
+        }
 
     fun metricFor(list: List<SupabasePractitionerService.GoalMetric>, key: String?) =
         key?.let { k -> list.firstOrNull { it.key == k } }

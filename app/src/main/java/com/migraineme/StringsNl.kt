@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4890 entries.
+ * 4894 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1090,6 +1090,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Could not draw one right now. Pick one from the list." to "Lukt nu niet. Kies er een uit de lijst.",
     "Could not load the metrics. Check your connection and open this page again." to "Waarden niet geladen. Controleer je verbinding en open deze pagina opnieuw.",
     "Could not open the camera" to "Kan de camera niet openen",
+    "Could not save your goals" to "Doelen niet opgeslagen",
     "Could not save. Try again." to "Opslaan mislukt. Nog eens?",
     "Couldn't build the report — check your connection" to "Rapport maken mislukt — controleer je verbinding",
     "Couldn't reach the food database — tap to retry" to "Database niet bereikbaar — tik om opnieuw",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "False alarm" to "Vals alarm",
     "False alarms" to "Vals alarm",
     "False alarms — warnings with no migraine" to "Vals alarm: waarschuwing zonder migraine",
-    "Family event" to "Familiefeest",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Family event" to "Familiefeest",
     "Fast breathing" to "Snelle ademhaling",
     "Fat" to "Vet",
     "Fat high" to "Veel vet",
@@ -1703,6 +1704,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Naar inloggen",
     "Go to the app" to "Naar de app",
     "Goal" to "Doel",
+    "Goal ideas from your own data. Keep checked to add them to your goals." to "Doelideeën uit je eigen gegevens. Laat ze aangevinkt om ze aan je doelen toe te voegen.",
     "Goal reminders" to "Doelherinneringen",
     "Goals" to "Doelen",
     "Goals are switched off in Data settings." to "Doelen staan uit in Data-instellingen.",
@@ -2422,6 +2424,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "New Insights" to "Inzichten",
     "New articles matching your triggers" to "Nieuwe artikelen bij je triggers",
     "New discussion" to "Nieuw gesprek",
+    "New goals" to "Nieuwe doelen",
     "New medicine label" to "Nieuw medicijn",
     "New migraine label" to "Nieuwe migraine",
     "New pain entry" to "Nieuw pijnpunt",
@@ -3017,12 +3020,12 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Regular Migraine" to "Gewone migraine",
     "Reject" to "Afwijzen",
     "Reject all" to "Alles afwijzen",
-    "Relaxation" to "Ontspanning",
-    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Dit soort ontspanningstraining wordt al tientallen jaren tegen migraine gebruikt. In onderzoek vermindert het hoe vaak aanvallen komen met ongeveer evenveel als sommige preventieve tabletten, als je het regelmatig oefent.",
-    "Reliable background sync" to "Betrouwbare sync",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Relaxation" to "Ontspanning",
+    "Relaxation training of this kind has been used against migraine for decades. In trials it reduces how often attacks come by roughly the same amount as some preventive tablets, when it is practised regularly." to "Dit soort ontspanningstraining wordt al tientallen jaren tegen migraine gebruikt. In onderzoek vermindert het hoe vaak aanvallen komen met ongeveer evenveel als sommige preventieve tabletten, als je het regelmatig oefent.",
+    "Reliable background sync" to "Betrouwbare sync",
     "Reliably triggers your migraines" to "Zet je migraines betrouwbaar aan",
     "Relief" to "Verlichting",
     "Relief favorites" to "Favoriete verlichting",
@@ -4460,6 +4463,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Je volledige verlichtingspool: alles zonder medicijn dat je helpt bij een aanval. Gaan liggen, koude packs, donkere kamers, hete douches, drinken, bepaalde rekoefeningen, ademhaling, zelfs weglopen uit een triggeromgeving. Neuromodulatie-apparaten (CEFALY, Nerivio, gammaCore en dergelijke) horen hier ook: noteer elke sessie, dan scoort Inzichten hoe goed elk apparaat bij jou werkt.\n\nPer verlichting:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan in Snel noteren, dus je vaste hulp is één tik weg.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jou past (bijv. \"buiten lopen\", \"douchestraal op de nek\", \"lavendelolie\"). Hoe specifieker, hoe bruikbaarder de inzichten.\n\nVerlichting heeft geen zwaartegewicht, want ze voedt de meter niet. Inzichten scoort hoe goed elk werkte door de zwaarte en duur te volgen van de aanvallen waarbij je het gebruikte (kaart \"Wat werkte\"). Hoe vaker je ze aan migraines koppelt, hoe scherper die score.",
     "Your goal reminder" to "Je doelherinnering",
     "Your goals" to "Je doelen",
+    "Your goals have been updated." to "Je doelen zijn bijgewerkt.",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode.",
     "Your history is still imported into the journal today." to "Je geschiedenis komt vandaag toch in je dagboek.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Je geïmporteerde medicijnen en verlichting zijn nu favorieten in de logwizard.",
@@ -4519,13 +4523,13 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zone",
     "Zone 0" to "Zone 0",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Zone 1" to "Zone 1",
     "Zone 2" to "Zone 2",
     "Zone 3" to "Zone 3",
     "Zone 4" to "Zone 4",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Zone 5" to "Zone 5",
     "Zone 6" to "Zone 6",
     "Zone Thresholds" to "Drempels",
