@@ -1,5 +1,5 @@
 """Upload an AAB to a Play production release with localized release notes.
-usage: play_release.py <aab> <notes.json> --name <versionName> [--pkg <package>] [--vc <versionCode>] [--dry]
+usage: play_release.py <aab> <notes.json> --name <versionName> [--pkg <package>] [--vc <versionCode>] [--status draft] [--dry]
 Pass --vc to set notes on an already-uploaded versionCode instead of uploading <aab>."""
 import json, sys, socket, urllib.request
 sys.path.insert(0, "/Users/jordyverwerft/dev/MigraineMe/tools/release")
@@ -37,7 +37,11 @@ if data is not None:
   with urllib.request.urlopen(r, timeout=900) as x: up = json.loads(x.read())
   print("uploaded versionCode", up.get("versionCode"), up)
 vc = up["versionCode"]
-body = {"releases": [{"name": name, "versionCodes": [str(vc)], "status": "completed",
+# --status draft commits the release as a draft: a bundle that adds a NEW Health
+# Connect permission is refused at commit otherwise (Play health declaration);
+# the draft is then finished in the console (see pending-deploy-batch memory).
+status = arg("--status", "completed")
+body = {"releases": [{"name": name, "versionCodes": [str(vc)], "status": status,
                       "releaseNotes": [{"language": l, "text": t} for l, t in notes.items() if l in langs or l == "en-US"]}]}
 print("track update:", json.dumps(req("PUT", f"/edits/{eid}/tracks/production", body))[:300])
 print("commit:", req("POST", f"/edits/{eid}:commit", {}))
