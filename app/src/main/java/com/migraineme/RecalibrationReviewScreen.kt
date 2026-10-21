@@ -145,9 +145,15 @@ fun RecalibrationReviewScreen(
                     }
                 }
                 Spacer(Modifier.height(4.dp))
+                // Everything starts ticked, so "Accept all" has nothing to change at
+                // first: the buttons show the state instead (Jordy 10-21: "I press
+                // accept all and nothing happens").
+                val decisions = state.proposals.map { it.accepted } + state.goalIdeas.map { it.accepted }
+                val allOn = decisions.isNotEmpty() && decisions.all { it }
+                val allOff = decisions.isNotEmpty() && decisions.none { it }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    GoalPillButton(label = t("Accept all"), enabled = true) { vm.acceptAll() }
-                    GoalPillButton(label = t("Reject all"), enabled = true) { vm.rejectAll() }
+                    StatePill(label = t("Accept all"), selected = allOn) { vm.acceptAll() }
+                    StatePill(label = t("Reject all"), selected = allOff) { vm.rejectAll() }
                 }
             }
 
@@ -883,23 +889,7 @@ private fun ExplanationCard(tabs: List<ExplanationTab>) {
         Spacer(Modifier.height(4.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             tabs.forEachIndexed { i, tab ->
-                val on = i == selected
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (on) AppTheme.AccentPurple.copy(alpha = 0.45f) else AppTheme.AccentPurple.copy(alpha = 0.16f),
-                            RoundedCornerShape(12.dp),
-                        )
-                        .border(1.dp, AppTheme.AccentPurple.copy(alpha = if (on) 0.9f else 0.40f), RoundedCornerShape(12.dp))
-                        .clickable { selected = i }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        t(tab.label),
-                        color = if (on) Color.White else AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                }
+                StatePill(label = t(tab.label), selected = i == selected) { selected = i }
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -922,5 +912,26 @@ private fun SectionDividerLabel(label: String) {
             modifier = Modifier.padding(horizontal = 10.dp),
         )
         HorizontalDivider(modifier = Modifier.weight(1f), color = AppTheme.AccentPurple.copy(alpha = 0.45f))
+    }
+}
+
+/** A pill that can show it is the current choice: the chip style of the explanation card. Static. */
+@Composable
+private fun StatePill(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(
+                if (selected) AppTheme.AccentPurple.copy(alpha = 0.45f) else AppTheme.AccentPurple.copy(alpha = 0.16f),
+                RoundedCornerShape(12.dp),
+            )
+            .border(1.dp, AppTheme.AccentPurple.copy(alpha = if (selected) 0.9f else 0.40f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(
+            label,
+            color = if (selected) Color.White else AppTheme.AccentPurple,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+        )
     }
 }
