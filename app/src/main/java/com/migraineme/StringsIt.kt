@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4910 entries.
+ * 4911 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -1169,6 +1169,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Darkness" to "Buio",
     "Data" to "Dati",
     "Data Collection" to "Raccolta dati",
+    "Data and Notifications" to "Dati e avvisi",
     "Data flows in from your wearable, Health Connect and phone" to "I dati arrivano da wearable, Health Connect e telefono",
     "Data it can see" to "Dati che vede",
     "Data warnings" to "Avvisi sui dati",
@@ -1516,10 +1517,10 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Fallback: low trigger count (%1\$s active)" to "Predefinito: pochi fattori (%1\$s attivi)",
     "Fallback: moderate trigger count (%1\$s active)" to "Predefinito: fattori moderati (%1\$s attivi)",
     "Falling" to "In calo",
-    "Falling barometric pressure / storm fronts" to "Pressione in calo / fronti temporaleschi",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Falling barometric pressure / storm fronts" to "Pressione in calo / fronti temporaleschi",
     "False alarm" to "Falso allarme",
     "False alarms" to "Falsi allarmi",
     "False alarms — warnings with no migraine" to "Falsi allarmi: avvisi senza emicrania",
@@ -3019,10 +3020,10 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Recovery score" to "Punteggio di recupero",
     "Recovery symptoms" to "Dopo l'attacco",
     "Recovery symptoms that lingered after the attack ended" to "Sintomi rimasti dopo la fine dell'attacco",
-    "Red bands = migraine days" to "Rosso = giorni con emicrania",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Red bands = migraine days" to "Rosso = giorni con emicrania",
     "Red wine" to "Vino rosso",
     "Redo Onboarding" to "Rifai la config.",
     "Regenerate" to "Rifai",
@@ -4522,10 +4523,10 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Fattori, soglie e preferiti sono stati aggiornati.",
     "Your triggers" to "I tuoi fattori",
     "Your weekly goal review and new goal ideas" to "La revisione settimanale e nuove idee di obiettivi",
-    "Your weekly goal review is ready" to "Revisione settimanale degli obiettivi pronta",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Your weekly goal review is ready" to "Revisione settimanale degli obiettivi pronta",
     "Your weekly overview will appear after your first week of tracking." to "Il quadro settimanale arriva dopo la prima settimana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Hai raggiunto il limite di messaggi di oggi. Si azzera a mezzanotte, a domani!",
     "Zavzpret" to "Zavzpret",

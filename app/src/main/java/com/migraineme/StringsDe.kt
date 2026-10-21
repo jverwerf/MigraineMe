@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4910 entries.
+ * 4911 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1169,6 +1169,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Darkness" to "Dunkelheit",
     "Data" to "Daten",
     "Data Collection" to "Datenerfassung",
+    "Data and Notifications" to "Daten und Hinweise",
     "Data flows in from your wearable, Health Connect and phone" to "Daten fließen von Wearable, Health Connect und Handy herein",
     "Data it can see" to "Sichtbare Daten",
     "Data warnings" to "Datenhinweise",
@@ -1516,10 +1517,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Fallback: low trigger count (%1\$s active)" to "Standard: wenige Auslöser (%1\$s aktiv)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
     "Falling" to "Fallend",
-    "Falling barometric pressure / storm fronts" to "Fallender Luftdruck / Gewitterfronten",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Falling barometric pressure / storm fronts" to "Fallender Luftdruck / Gewitterfronten",
     "False alarm" to "Fehlalarm",
     "False alarms" to "Fehlalarme",
     "False alarms — warnings with no migraine" to "Fehlalarme — Warnungen ohne Migräne",
@@ -3019,10 +3020,10 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recovery score" to "Erholungsscore",
     "Recovery symptoms" to "Erholungssympt.",
     "Recovery symptoms that lingered after the attack ended" to "Symptome, die nach dem Ende der Attacke blieben",
-    "Red bands = migraine days" to "Rot = Migränetage",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Red bands = migraine days" to "Rot = Migränetage",
     "Red wine" to "Rotwein",
     "Redo Onboarding" to "Neu einrichten",
     "Regenerate" to "Neu erzeugen",
@@ -4522,10 +4523,10 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
     "Your triggers" to "Deine Auslöser",
     "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",
-    "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
     "Your weekly overview will appear after your first week of tracking." to "Deine Wochenübersicht erscheint nach der ersten Woche.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Du hast dein Tageslimit an Nachrichten erreicht. Es setzt um Mitternacht zurück — bis morgen!",
     "Zavzpret" to "Zavzpret",

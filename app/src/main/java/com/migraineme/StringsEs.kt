@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4910 entries.
+ * 4911 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -1169,6 +1169,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Darkness" to "Oscuridad",
     "Data" to "Datos",
     "Data Collection" to "Recogida de datos",
+    "Data and Notifications" to "Datos y avisos",
     "Data flows in from your wearable, Health Connect and phone" to "Los datos llegan de tu wearable, Health Connect y el móvil",
     "Data it can see" to "Datos que ve",
     "Data warnings" to "Avisos de datos",
@@ -1516,10 +1517,10 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Fallback: low trigger count (%1\$s active)" to "Por defecto: pocos factores (%1\$s activos)",
     "Fallback: moderate trigger count (%1\$s active)" to "Por defecto: factores moderados (%1\$s activos)",
     "Falling" to "En descenso",
-    "Falling barometric pressure / storm fronts" to "Presión que baja / frentes de tormenta",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "Falling barometric pressure / storm fronts" to "Presión que baja / frentes de tormenta",
     "False alarm" to "Falsa alarma",
     "False alarms" to "Falsas alarmas",
     "False alarms — warnings with no migraine" to "Falsas alarmas: avisos sin migraña",
@@ -3019,10 +3020,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Recovery score" to "Puntuación de recuperación",
     "Recovery symptoms" to "Tras el ataque",
     "Recovery symptoms that lingered after the attack ended" to "Síntomas que siguieron tras acabar el ataque",
-    "Red bands = migraine days" to "Rojo = días con migraña",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Red bands = migraine days" to "Rojo = días con migraña",
     "Red wine" to "Vino tinto",
     "Redo Onboarding" to "Repetir inicio",
     "Regenerate" to "Rehacer",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Tus factores, umbrales y favoritos se han actualizado.",
     "Your triggers" to "Tus factores",
     "Your weekly goal review and new goal ideas" to "Tu revisión semanal de metas y nuevas ideas",
-    "Your weekly goal review is ready" to "Tu revisión semanal de objetivos está lista",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Your weekly goal review is ready" to "Tu revisión semanal de objetivos está lista",
     "Your weekly overview will appear after your first week of tracking." to "Tu resumen semanal saldrá tras la primera semana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Has llegado al límite diario de mensajes. Se reinicia a medianoche, ¡vuelve mañana!",
     "Zavzpret" to "Zavzpret",

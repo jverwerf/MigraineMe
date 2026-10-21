@@ -13170,6 +13170,15 @@
     "count": 1
   },
   {
+    "en": "Data and Notifications",
+    "class": "hard",
+    "sites": [
+      "SideDrawer / Data screen title (via t())"
+    ],
+    "max_len": 28,
+    "count": 1
+  },
+  {
     "en": "Data it can see",
     "class": "hard",
     "sites": [

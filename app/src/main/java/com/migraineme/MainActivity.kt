@@ -853,7 +853,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
-        DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
+        DrawerItem("Data and Notifications", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Shop", Routes.SHOP, Icons.Outlined.ShoppingBag),
@@ -1212,7 +1212,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.SIGNUP -> "Create account"
                                     Routes.PROFILE -> "Profile"
                                     Routes.HELP -> "Help"
-                                    Routes.DATA -> "Data"
+                                    Routes.DATA -> "Data and Notifications"
                                     Routes.IMPORT_HISTORY -> "Import history"
                                     Routes.PRACTITIONERS -> "Practitioners"
                                     Routes.LANGUAGE -> "Language"

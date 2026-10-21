@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4910 entries.
+ * 4911 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -1169,6 +1169,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Darkness" to "Escuridão",
     "Data" to "Dados",
     "Data Collection" to "Recolha de dados",
+    "Data and Notifications" to "Dados e avisos",
     "Data flows in from your wearable, Health Connect and phone" to "Os dados chegam do teu wearable, Health Connect e telemóvel",
     "Data it can see" to "Dados que vê",
     "Data warnings" to "Avisos de dados",
@@ -1516,10 +1517,10 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Fallback: low trigger count (%1\$s active)" to "Padrão: poucos fatores (%1\$s ativos)",
     "Fallback: moderate trigger count (%1\$s active)" to "Padrão: fatores moderados (%1\$s ativos)",
     "Falling" to "A descer",
-    "Falling barometric pressure / storm fronts" to "Pressão a descer / frentes de tempestade",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Falling barometric pressure / storm fronts" to "Pressão a descer / frentes de tempestade",
     "False alarm" to "Falso alarme",
     "False alarms" to "Falsos alarmes",
     "False alarms — warnings with no migraine" to "Falsos alarmes: avisos sem crise",
@@ -3019,10 +3020,10 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recovery score" to "Pontuação de recuperação",
     "Recovery symptoms" to "Depois da crise",
     "Recovery symptoms that lingered after the attack ended" to "Sintomas que ficaram depois de a crise acabar",
-    "Red bands = migraine days" to "Vermelho = dias com crise",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Red bands = migraine days" to "Vermelho = dias com crise",
     "Red wine" to "Vinho tinto",
     "Redo Onboarding" to "Repetir a config.",
     "Regenerate" to "Refazer",
@@ -4522,10 +4523,10 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Os teus fatores, limiares e favoritos foram atualizados.",
     "Your triggers" to "Os teus fatores",
     "Your weekly goal review and new goal ideas" to "A tua revisão semanal de metas e novas ideias",
-    "Your weekly goal review is ready" to "A tua revisão semanal de objetivos está pronta",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your weekly goal review is ready" to "A tua revisão semanal de objetivos está pronta",
     "Your weekly overview will appear after your first week of tracking." to "O teu resumo semanal chega depois da primeira semana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Chegaste ao limite de mensagens de hoje. Reinicia à meia-noite, até amanhã!",
     "Zavzpret" to "Zavzpret",

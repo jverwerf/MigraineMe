@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4910 entries.
+ * 4911 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1169,6 +1169,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Darkness" to "Donker",
     "Data" to "Gegevens",
     "Data Collection" to "Gegevens",
+    "Data and Notifications" to "Gegevens en meldingen",
     "Data flows in from your wearable, Health Connect and phone" to "Data komt binnen via je wearable, Health Connect en telefoon",
     "Data it can see" to "Data die het ziet",
     "Data warnings" to "Datawaarschuwingen",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Fallback: low trigger count (%1\$s active)" to "Standaard: weinig triggers (%1\$s actief)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standaard: gemiddeld aantal triggers (%1\$s actief)",
     "Falling" to "Dalend",
-    "Falling barometric pressure / storm fronts" to "Dalende luchtdruk / stormfronten",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Falling barometric pressure / storm fronts" to "Dalende luchtdruk / stormfronten",
     "False alarm" to "Vals alarm",
     "False alarms" to "Vals alarm",
     "False alarms — warnings with no migraine" to "Vals alarm: waarschuwing zonder migraine",
@@ -3019,10 +3020,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recovery score" to "Herstelscore",
     "Recovery symptoms" to "Naweeën",
     "Recovery symptoms that lingered after the attack ended" to "Klachten die bleven na het einde van de aanval",
-    "Red bands = migraine days" to "Rood = migrainedagen",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Red bands = migraine days" to "Rood = migrainedagen",
     "Red wine" to "Rode wijn",
     "Redo Onboarding" to "Setup opnieuw",
     "Regenerate" to "Opnieuw",
@@ -4522,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
     "Your triggers" to "Je triggers",
     "Your weekly goal review and new goal ideas" to "Je wekelijkse doelenoverzicht en nieuwe doelideeën",
-    "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
     "Your weekly overview will appear after your first week of tracking." to "Je weekoverzicht verschijnt na de eerste week.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Je hebt je daglimiet aan berichten bereikt. Om middernacht staat de teller weer op nul.",
     "Zavzpret" to "Zavzpret",
