@@ -34,7 +34,7 @@ data class MonitorCardConfig(
          * Off = no Goals card on Monitor or in Customize, no goal reminder rows in Data settings,
          * goal pushes dropped. Screens and data stay; flip to true to bring it all back.
          */
-        const val GOALS_ENABLED = false
+        const val GOALS_ENABLED = true
 
         // Goals sits right after Migraines by default (Jordy 2026-10-20; it was last before).
         val DEFAULT_ORDER = listOfNotNull(
