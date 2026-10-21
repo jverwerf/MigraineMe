@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4905 entries.
+ * 4910 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -853,6 +853,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Built from your Insights patterns" to "Uit je gevonden patronen",
     "Built from your Insights patterns, with a next step for each" to "Uit je patronen, met bij elk een volgende stap",
     "Bulky to wear" to "Log om te dragen",
+    "Burden" to "Belasting",
     "Burden Profile" to "Belastingsprofiel",
     "Burning" to "Branderig",
     "Bus" to "Bus",
@@ -1077,6 +1078,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Contraceptive" to "Anticonceptie",
     "Contributes but not always the cause" to "Draagt bij, maar niet altijd de oorzaak",
     "Cooking" to "Koken",
+    "Coping" to "Omgaan",
     "Coping Profile" to "Omgangsprofiel",
     "Copper" to "Koper",
     "Copper high" to "Koper hoog",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Fallback: moderate trigger count (%1\$s active)" to "Standaard: gemiddeld aantal triggers (%1\$s actief)",
     "Falling" to "Dalend",
     "Falling barometric pressure / storm fronts" to "Dalende luchtdruk / stormfronten",
-    "False alarm" to "Vals alarm",
-    "False alarms" to "Vals alarm",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "False alarm" to "Vals alarm",
+    "False alarms" to "Vals alarm",
     "False alarms — warnings with no migraine" to "Vals alarm: waarschuwing zonder migraine",
     "Family event" to "Familiefeest",
     "Fast breathing" to "Snelle ademhaling",
@@ -1657,6 +1659,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Garmin sleep skin temperature variation. Requires devices with skin temp sensor (e.g., Venu 3, Fenix 8)." to "Garmin-variatie in huidtemperatuur tijdens de slaap. Vereist toestellen met huidtemperatuursensor (bv. Venu 3, Fenix 8).",
     "Garmin's Body Battery overnight recharge is used as recovery (0–100). Requires a compatible device." to "Garmin's Body Battery-oplading in de nacht wordt gebruikt als herstel (0–100). Vereist een geschikt toestel.",
     "Garmin, Apple Watch, Polar, Oura, WHOOP and more" to "Garmin, Apple Watch, Polar, Oura, WHOOP en meer",
+    "Gauge" to "Meter",
     "Gauge\nwarned" to "Meter\nsloeg aan",
     "Gauge Accuracy" to "Juistheid",
     "Gauge Thresholds" to "Drempels",
@@ -1705,6 +1708,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Naar inloggen",
     "Go to the app" to "Naar de app",
     "Goal" to "Doel",
+    "Goal ideas from your own data." to "Doelideeën uit je eigen gegevens.",
     "Goal ideas from your own data. Keep checked to add them to your goals." to "Doelideeën uit je eigen gegevens. Laat ze aangevinkt om ze aan je doelen toe te voegen.",
     "Goal reminders" to "Doelherinneringen",
     "Goals" to "Doelen",
@@ -3016,13 +3020,13 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recovery symptoms" to "Naweeën",
     "Recovery symptoms that lingered after the attack ended" to "Klachten die bleven na het einde van de aanval",
     "Red bands = migraine days" to "Rood = migrainedagen",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Red wine" to "Rode wijn",
     "Redo Onboarding" to "Setup opnieuw",
     "Regenerate" to "Opnieuw",
     "Registered with" to "Geregistreerd bij",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Regular 9-5" to "Vast 9-5",
     "Regular Migraine" to "Gewone migraine",
     "Reject" to "Afwijzen",
@@ -3768,6 +3772,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Onweer met hagel",
     "Thunderstorms" to "Onweer",
     "Thunderstorms / electrical storms" to "Onweer / elektrische storm",
+    "Tick what to keep" to "Vink aan wat blijft",
     "Tick what you want to keep, then apply." to "Vink aan wat je wilt houden en pas toe.",
     "Tight at the sides at first" to "Eerst strak aan de zijkanten",
     "Time" to "Tijd",
@@ -4518,14 +4523,14 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your triggers" to "Je triggers",
     "Your weekly goal review and new goal ideas" to "Je wekelijkse doelenoverzicht en nieuwe doelideeën",
     "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your weekly overview will appear after your first week of tracking." to "Je weekoverzicht verschijnt na de eerste week.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Je hebt je daglimiet aan berichten bereikt. Om middernacht staat de teller weer op nul.",
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Zigzaglijnen of flitsen",
     "Zinc" to "Zink",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Zinc high" to "Zink hoog",
     "Zinc low" to "Zink laag",
     "Zolmitriptan" to "Zolmitriptan",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4905 entries.
+ * 4910 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -853,6 +853,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Built from your Insights patterns" to "Aus deinen erkannten Mustern",
     "Built from your Insights patterns, with a next step for each" to "Aus deinen Mustern, jeweils mit einem nächsten Schritt",
     "Bulky to wear" to "Klobig zu tragen",
+    "Burden" to "Belastung",
     "Burden Profile" to "Belastungsprofil",
     "Burning" to "Brennen",
     "Bus" to "Bus",
@@ -1077,6 +1078,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Contraceptive" to "Verhütungsmittel",
     "Contributes but not always the cause" to "Trägt bei, ist aber nicht immer die Ursache",
     "Cooking" to "Kochen",
+    "Coping" to "Umgang",
     "Coping Profile" to "Bewältigungsprofil",
     "Copper" to "Kupfer",
     "Copper high" to "Kupfer hoch",
@@ -1515,11 +1517,11 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
     "Falling" to "Fallend",
     "Falling barometric pressure / storm fronts" to "Fallender Luftdruck / Gewitterfronten",
-    "False alarm" to "Fehlalarm",
-    "False alarms" to "Fehlalarme",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "False alarm" to "Fehlalarm",
+    "False alarms" to "Fehlalarme",
     "False alarms — warnings with no migraine" to "Fehlalarme — Warnungen ohne Migräne",
     "Family event" to "Familienfeier",
     "Fast breathing" to "Schnelles Atmen",
@@ -1657,6 +1659,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Garmin sleep skin temperature variation. Requires devices with skin temp sensor (e.g., Venu 3, Fenix 8)." to "Garmins Abweichung der Hauttemperatur im Schlaf. Braucht Geräte mit Hauttemperatursensor (z. B. Venu 3, Fenix 8).",
     "Garmin's Body Battery overnight recharge is used as recovery (0–100). Requires a compatible device." to "Garmins nächtliche Body-Battery-Aufladung dient als Erholung (0–100). Braucht ein passendes Gerät.",
     "Garmin, Apple Watch, Polar, Oura, WHOOP and more" to "Garmin, Apple Watch, Polar, Oura, WHOOP und mehr",
+    "Gauge" to "Anzeige",
     "Gauge\nwarned" to "Anzeige\nwarnte",
     "Gauge Accuracy" to "Genauigkeit",
     "Gauge Thresholds" to "Schwellenwerte",
@@ -1705,6 +1708,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Zur Anmeldung",
     "Go to the app" to "Zur App",
     "Goal" to "Ziel",
+    "Goal ideas from your own data." to "Zielideen aus deinen eigenen Daten.",
     "Goal ideas from your own data. Keep checked to add them to your goals." to "Zielideen aus deinen eigenen Daten. Lass sie angehakt, um sie zu deinen Zielen hinzuzufügen.",
     "Goal reminders" to "Ziel-Erinnerungen",
     "Goals" to "Ziele",
@@ -3016,13 +3020,13 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recovery symptoms" to "Erholungssympt.",
     "Recovery symptoms that lingered after the attack ended" to "Symptome, die nach dem Ende der Attacke blieben",
     "Red bands = migraine days" to "Rot = Migränetage",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Red wine" to "Rotwein",
     "Redo Onboarding" to "Neu einrichten",
     "Regenerate" to "Neu erzeugen",
     "Registered with" to "Mitglied bei",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Regular 9-5" to "Klassisch 9-5",
     "Regular Migraine" to "Normale Migräne",
     "Reject" to "Ablehnen",
@@ -3768,6 +3772,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Gewitter mit Hagel",
     "Thunderstorms" to "Gewitter",
     "Thunderstorms / electrical storms" to "Gewitter / Blitzgewitter",
+    "Tick what to keep" to "Hak an, was bleibt",
     "Tick what you want to keep, then apply." to "Hak an, was du behalten willst, und übernimm es.",
     "Tight at the sides at first" to "Zuerst eng an den Seiten",
     "Time" to "Zeit",
@@ -4518,14 +4523,14 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your triggers" to "Deine Auslöser",
     "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",
     "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Your weekly overview will appear after your first week of tracking." to "Deine Wochenübersicht erscheint nach der ersten Woche.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Du hast dein Tageslimit an Nachrichten erreicht. Es setzt um Mitternacht zurück — bis morgen!",
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Zickzacklinien oder Blitze",
     "Zinc" to "Zink",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Zinc high" to "Zink hoch",
     "Zinc low" to "Zink niedrig",
     "Zolmitriptan" to "Zolmitriptan",

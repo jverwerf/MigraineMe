@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4905 entries.
+ * 4910 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -853,6 +853,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Built from your Insights patterns" to "Dos teus padrões achados",
     "Built from your Insights patterns, with a next step for each" to "Dos teus padrões, com um passo seguinte para cada",
     "Bulky to wear" to "Volumoso de usar",
+    "Burden" to "Carga",
     "Burden Profile" to "Perfil de carga",
     "Burning" to "Ardência",
     "Bus" to "Autocarro",
@@ -1077,6 +1078,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Contraceptive" to "Contracetivo",
     "Contributes but not always the cause" to "Contribui, mas nem sempre é a causa",
     "Cooking" to "Cozinhar",
+    "Coping" to "Gestão",
     "Coping Profile" to "Perfil de gestão",
     "Copper" to "Cobre",
     "Copper high" to "Cobre alto",
@@ -1515,11 +1517,11 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Fallback: moderate trigger count (%1\$s active)" to "Padrão: fatores moderados (%1\$s ativos)",
     "Falling" to "A descer",
     "Falling barometric pressure / storm fronts" to "Pressão a descer / frentes de tempestade",
-    "False alarm" to "Falso alarme",
-    "False alarms" to "Falsos alarmes",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "False alarm" to "Falso alarme",
+    "False alarms" to "Falsos alarmes",
     "False alarms — warnings with no migraine" to "Falsos alarmes: avisos sem crise",
     "Family event" to "Evento familiar",
     "Fast breathing" to "Respiração rápida",
@@ -1657,6 +1659,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Garmin sleep skin temperature variation. Requires devices with skin temp sensor (e.g., Venu 3, Fenix 8)." to "Variação da temperatura da pele durante o sono do Garmin. Requer dispositivos com sensor de temperatura (ex. Venu 3, Fenix 8).",
     "Garmin's Body Battery overnight recharge is used as recovery (0–100). Requires a compatible device." to "A recarga noturna do Body Battery do Garmin é usada como recuperação (0–100). Requer um dispositivo compatível.",
     "Garmin, Apple Watch, Polar, Oura, WHOOP and more" to "Garmin, Apple Watch, Polar, Oura, WHOOP e mais",
+    "Gauge" to "Medidor",
     "Gauge\nwarned" to "Medidor\navisou",
     "Gauge Accuracy" to "Acerto",
     "Gauge Thresholds" to "Limiares",
@@ -1705,6 +1708,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Go to sign in" to "Ir para entrar",
     "Go to the app" to "Ir para a app",
     "Goal" to "Meta",
+    "Goal ideas from your own data." to "Ideias de metas a partir dos teus dados.",
     "Goal ideas from your own data. Keep checked to add them to your goals." to "Ideias de metas a partir dos teus dados. Mantém-nas marcadas para as adicionar às tuas metas.",
     "Goal reminders" to "Avisos de metas",
     "Goals" to "Metas",
@@ -3016,13 +3020,13 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recovery symptoms" to "Depois da crise",
     "Recovery symptoms that lingered after the attack ended" to "Sintomas que ficaram depois de a crise acabar",
     "Red bands = migraine days" to "Vermelho = dias com crise",
+)
+
+private fun ptStrings2(): Map<String, String> = mapOf(
     "Red wine" to "Vinho tinto",
     "Redo Onboarding" to "Repetir a config.",
     "Regenerate" to "Refazer",
     "Registered with" to "Registado em",
-)
-
-private fun ptStrings2(): Map<String, String> = mapOf(
     "Regular 9-5" to "Horário fixo",
     "Regular Migraine" to "Enxaqueca comum",
     "Reject" to "Recusar",
@@ -3768,6 +3772,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Trovoada com granizo",
     "Thunderstorms" to "Trovoadas",
     "Thunderstorms / electrical storms" to "Trovoadas / aparelho elétrico",
+    "Tick what to keep" to "Marca o que manténs",
     "Tick what you want to keep, then apply." to "Marca o que queres manter e aplica.",
     "Tight at the sides at first" to "No início aperta dos lados",
     "Time" to "Hora",
@@ -4518,14 +4523,14 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your triggers" to "Os teus fatores",
     "Your weekly goal review and new goal ideas" to "A tua revisão semanal de metas e novas ideias",
     "Your weekly goal review is ready" to "A tua revisão semanal de objetivos está pronta",
+)
+
+private fun ptStrings3(): Map<String, String> = mapOf(
     "Your weekly overview will appear after your first week of tracking." to "O teu resumo semanal chega depois da primeira semana.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Chegaste ao limite de mensagens de hoje. Reinicia à meia-noite, até amanhã!",
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Ziguezagues ou clarões",
     "Zinc" to "Zinco",
-)
-
-private fun ptStrings3(): Map<String, String> = mapOf(
     "Zinc high" to "Zinco alto",
     "Zinc low" to "Zinco baixo",
     "Zolmitriptan" to "Zolmitriptano",
