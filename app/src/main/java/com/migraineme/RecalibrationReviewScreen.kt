@@ -1,6 +1,5 @@
 package com.migraineme
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -125,47 +124,36 @@ fun RecalibrationReviewScreen(
                 return@ScrollableScreenContent
             }
 
-            // ── Intro card — pinned to top ──
+            // ── Header: same build as the Home nav cards and the Goals review
+            // (blob icon, title, one line), with the two bulk actions as the
+            // app's pill buttons. Static, no motion. ──
             BaseCard {
-                Text(
-                    t("Your recalibration"),
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyBlobIcon(resId = R.drawable.brainy_gardener_small)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            t("Your recalibration"),
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        )
+                        Text(
+                            t("Tick what you want to keep, then apply."),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    t("We've reviewed your recent migraines and logs and prepared the suggestions below. Use the buttons to accept or reject everything in one tap, or scroll down and pick the ones you want yourself."),
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-
-            // ── Accept All / Reject All — pinned to top ──
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedButton(
-                    onClick = { vm.acceptAll() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid),
-                ) {
-                    Text(t("Accept all"), color = Color.White)
-                }
-                OutlinedButton(
-                    onClick = { vm.rejectAll() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid),
-                ) {
-                    Text(t("Reject all"), color = Color.White)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GoalPillButton(label = t("Accept all"), enabled = true) { vm.acceptAll() }
+                    GoalPillButton(label = t("Reject all"), enabled = true) { vm.rejectAll() }
                 }
             }
 
-            // ── Clinical Assessment ──
+            // ── Clinical Assessment: the "=== Section ===" markers the server
+            // writes become headings, and only the first section shows until
+            // "Read more" (the full text is a screen long). ──
             if (state.clinicalAssessment.isNotBlank()) {
                 BaseCard {
                     Text(
@@ -173,12 +161,7 @@ fun RecalibrationReviewScreen(
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        state.clinicalAssessment,
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    NarrativeText(state.clinicalAssessment, collapsible = true)
                 }
             }
 
@@ -190,12 +173,7 @@ fun RecalibrationReviewScreen(
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        state.calibrationNotes,
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    NarrativeText(state.calibrationNotes, collapsible = true)
                 }
             }
 
@@ -386,16 +364,11 @@ private fun ProposalRow(
     proposal: RecalibrationViewModel.Proposal,
     onToggle: () -> Unit,
 ) {
-    val bgColor by animateColorAsState(
-        if (proposal.accepted) Color(0xFF2D2D3D) else Color(0xFF1A1A24),
-        label = "proposalBg",
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor)
+            .clip(RoundedCornerShape(12.dp))
+            .background(proposalRowColor(proposal.accepted))
             .clickable { onToggle() }
             .padding(12.dp),
         verticalAlignment = Alignment.Top,
@@ -481,21 +454,8 @@ private fun ProposalRow(
 
             // Clinical assessment — expandable full text
             if (proposal.type == "clinical_assessment" && !proposal.toValue.isNullOrBlank()) {
-                var expanded by remember { mutableStateOf(false) }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    if (expanded) proposal.toValue else proposal.toValue.take(200) + "…",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Text(
-                    if (expanded) t("Show less") else t("Read full assessment"),
-                    color = AppTheme.AccentPurple,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier
-                        .clickable { expanded = !expanded }
-                        .padding(top = 4.dp),
-                )
+                Spacer(Modifier.height(4.dp))
+                NarrativeText(proposal.toValue, collapsible = true, small = true)
             }
         }
     }
@@ -514,10 +474,7 @@ private fun AnswerProposalRow(
     onToggle: () -> Unit,
     onChoose: (String) -> Unit,
 ) {
-    val bgColor by animateColorAsState(
-        if (proposal.accepted) Color(0xFF2D2D3D) else Color(0xFF1A1A24),
-        label = "answerBg",
-    )
+    val bgColor = proposalRowColor(proposal.accepted)
     val isCertainty = proposal.kind == "certainty"
     fun show(v: String?): String = when {
         v == null -> Strings.tSync("Not answered")
@@ -831,4 +788,75 @@ private fun prettyValue(v: String): String = when (v.uppercase()) {
     "LOW" -> t("LOW")
     "NONE" -> t("NONE")
     else -> v
+}
+
+/** Row surface: a wash of the accent when ticked, nearly nothing when not. Static. */
+private fun proposalRowColor(accepted: Boolean): Color =
+    if (accepted) AppTheme.AccentPurple.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f)
+
+/**
+ * The AI narratives arrive with "=== Migraine Profile ===" markers between
+ * sections (the server parses them too, so they stay in the text). Shown as
+ * headings over their paragraphs, the marker itself never on screen. With
+ * [collapsible], only the first section shows until "Read more".
+ */
+@Composable
+private fun NarrativeText(text: String, collapsible: Boolean = false, small: Boolean = false) {
+    val sections = remember(text) { narrativeSections(text) }
+    var expanded by remember(text) { mutableStateOf(!collapsible) }
+    // A single long block (no markers) folds at its second sentence instead.
+    val foldable = collapsible && (sections.size > 1 || (sections.firstOrNull()?.second?.length ?: 0) > 320)
+    val shown = when {
+        expanded || !foldable -> sections
+        sections.size > 1 -> sections.take(1)
+        else -> listOf(sections[0].first to firstSentences(sections[0].second, 2))
+    }
+    val bodyStyle = if (small) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        shown.forEachIndexed { i, (title, body) ->
+            if (title != null) {
+                if (i > 0) Spacer(Modifier.height(6.dp))
+                Text(
+                    t(title),
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                )
+            }
+            Text(body, color = AppTheme.BodyTextColor, style = bodyStyle)
+        }
+        if (foldable) {
+            Text(
+                if (expanded) t("Show less") else t("Read more"),
+                color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.clickable { expanded = !expanded }.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+private val NARRATIVE_HEADER = Regex("""^\s*=+\s*(.+?)\s*=+\s*$""")
+
+/** Split "=== Title ===\nbody…" text into (title, body) pairs; text before the first marker has a null title. */
+internal fun narrativeSections(text: String): List<Pair<String?, String>> {
+    val out = mutableListOf<Pair<String?, String>>()
+    var title: String? = null
+    val body = StringBuilder()
+    fun flush() {
+        val b = body.toString().trim()
+        if (b.isNotEmpty() || title != null) out += title to b
+        body.clear()
+    }
+    for (line in text.lines()) {
+        val m = NARRATIVE_HEADER.matchEntire(line)
+        if (m != null) { flush(); title = m.groupValues[1].trim() } else body.appendLine(line)
+    }
+    flush()
+    return out.filter { it.second.isNotEmpty() }
+}
+
+/** The first [n] sentences of a paragraph, for a folded preview. */
+private fun firstSentences(text: String, n: Int): String {
+    val m = Regex("""(.+?[.!?])(\s|$)""").findAll(text).take(n).toList()
+    return if (m.isEmpty()) text else m.joinToString(" ") { it.groupValues[1] }
 }

@@ -203,7 +203,7 @@
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:648",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1445",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1252",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2126",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2124",
       "... 12 more"
     ],
     "max_len": 14,
@@ -606,7 +606,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/Healthconnectrationaleactivity.kt:159",
-      "app/src/main/java/com/migraineme/MainActivity.kt:3206",
+      "app/src/main/java/com/migraineme/MainActivity.kt:3204",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:439",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:526",
       "app/src/main/java/com/migraineme/OnboardingPages.kt:610",
@@ -846,7 +846,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:293",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:484",
       "app/src/main/java/com/migraineme/InsightsScreen.kt:2950",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2604",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2602",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:169",
       "... 1 more"
     ],
@@ -901,7 +901,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1466",
       "app/src/main/java/com/migraineme/JournalScreen.kt:1255",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2415",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2413",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:142",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:236",
       "... 1 more"
@@ -971,7 +971,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2499",
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2214",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2654",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2652",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178",
       "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:718",
       "... 1 more"
@@ -1601,7 +1601,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/JournalScreen.kt:1257",
       "app/src/main/java/com/migraineme/LocationsScreen.kt:126",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2505",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2503",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:151"
     ],
     "max_len": 14,
@@ -1671,9 +1671,9 @@
     "en": "New",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:651",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:703",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:774",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:608",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:660",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:731",
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:831"
     ],
     "max_len": 14,
@@ -2119,8 +2119,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CommunityEngagement.kt:76",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1353",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1356"
+      "app/src/main/java/com/migraineme/MainActivity.kt:1351",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1354"
     ],
     "max_len": 14,
     "count": 3
@@ -2152,8 +2152,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:134",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:678",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:762"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:635",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:719"
     ],
     "max_len": 14,
     "count": 3
@@ -2954,9 +2954,9 @@
     "en": "Was",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:640",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:688",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:768"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:597",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:645",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:725"
     ],
     "max_len": 14,
     "count": 3
@@ -2965,7 +2965,7 @@
     "en": "What did you miss?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2605",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2603",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:170",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:191"
     ],
@@ -2977,7 +2977,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:212",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2555",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2553",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:161"
     ],
     "max_len": 23,
@@ -2988,7 +2988,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/LocationsScreen.kt:97",
-      "app/src/main/java/com/migraineme/MainActivity.kt:2506",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2504",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:152"
     ],
     "max_len": 18,
@@ -3706,7 +3706,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/RecalibrationProfileButton.kt:100",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:67"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:66"
     ],
     "max_len": 32,
     "count": 2
@@ -5165,8 +5165,8 @@
     "en": "Settings",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:893",
-      "app/src/main/java/com/migraineme/MainActivity.kt:1314"
+      "app/src/main/java/com/migraineme/MainActivity.kt:891",
+      "app/src/main/java/com/migraineme/MainActivity.kt:1312"
     ],
     "max_len": 14,
     "count": 2
@@ -5226,7 +5226,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:3362",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:492"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:829"
     ],
     "max_len": 14,
     "count": 2
@@ -5276,7 +5276,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:1085",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:76"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:75"
     ],
     "max_len": 23,
     "count": 2
@@ -5325,7 +5325,7 @@
     "en": "Symptoms you flag as caused by your treatments, medicines or reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2655",
+      "app/src/main/java/com/migraineme/MainActivity.kt:2653",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:179"
     ],
     "max_len": 74,
@@ -6071,7 +6071,7 @@
     "en": " (%s rejected)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:325"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:303"
     ],
     "max_len": 17,
     "count": 1
@@ -7439,7 +7439,7 @@
     "en": "(your pick)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:555"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:512"
     ],
     "max_len": 14,
     "count": 1
@@ -8366,7 +8366,7 @@
     "en": "Accept all",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:156"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:149"
     ],
     "max_len": 14,
     "count": 1
@@ -8843,7 +8843,7 @@
     "en": "Add, star, or remove medicines",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2225"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2223"
     ],
     "max_len": 33,
     "count": 1
@@ -8852,7 +8852,7 @@
     "en": "Add, star, or remove reliefs",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2318"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2316"
     ],
     "max_len": 31,
     "count": 1
@@ -8861,7 +8861,7 @@
     "en": "Add, star, or remove triggers",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2127"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2125"
     ],
     "max_len": 32,
     "count": 1
@@ -9734,7 +9734,7 @@
     "en": "Apply %s changes",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:324"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:302"
     ],
     "max_len": 19,
     "count": 1
@@ -9743,7 +9743,7 @@
     "en": "Apply 1 change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:324"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:302"
     ],
     "max_len": 17,
     "count": 1
@@ -9770,7 +9770,7 @@
     "en": "Applying...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:322"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:300"
     ],
     "max_len": 14,
     "count": 1
@@ -10409,7 +10409,7 @@
     "en": "Back to Home",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:100"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:99"
     ],
     "max_len": 15,
     "count": 1
@@ -14216,7 +14216,7 @@
     "en": "Early warning signs before a migraine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:2416"
+      "app/src/main/java/com/migraineme/MainActivity.kt:2414"
     ],
     "max_len": 40,
     "count": 1
@@ -15386,7 +15386,7 @@
     "en": "Favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:827"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:784"
     ],
     "max_len": 14,
     "count": 1
@@ -16061,7 +16061,7 @@
     "en": "From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:234"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:212"
     ],
     "max_len": 224,
     "count": 1
@@ -16205,7 +16205,7 @@
     "en": "Garmin auth error: %1$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:470"
+      "app/src/main/java/com/migraineme/MainActivity.kt:468"
     ],
     "max_len": 33,
     "count": 1
@@ -16223,7 +16223,7 @@
     "en": "Garmin callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:478"
+      "app/src/main/java/com/migraineme/MainActivity.kt:476"
     ],
     "max_len": 33,
     "count": 1
@@ -16322,7 +16322,7 @@
     "en": "Gauge performance",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:189"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:172"
     ],
     "max_len": 20,
     "count": 1
@@ -16664,7 +16664,7 @@
     "en": "Goal ideas from your own data. Keep checked to add them to your goals.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:283"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:261"
     ],
     "max_len": 101,
     "count": 1
@@ -16754,7 +16754,7 @@
     "en": "HIGH",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:829"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:786"
     ],
     "max_len": 14,
     "count": 1
@@ -18374,7 +18374,7 @@
     "en": "Keep checked to accept, untap to reject.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:241"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:219"
     ],
     "max_len": 58,
     "count": 1
@@ -18419,7 +18419,7 @@
     "en": "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3243"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3241"
     ],
     "max_len": 137,
     "count": 1
@@ -18446,7 +18446,7 @@
     "en": "LOW",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:831"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:788"
     ],
     "max_len": 14,
     "count": 1
@@ -19715,7 +19715,7 @@
     "en": "MILD",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:830"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:787"
     ],
     "max_len": 14,
     "count": 1
@@ -20249,6 +20249,15 @@
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:496"
     ],
     "max_len": 66,
+    "count": 1
+  },
+  {
+    "en": "Migraine Profile",
+    "class": "soft",
+    "sites": [
+      "RecalibrationReviewScreen.kt:NarrativeText (server === headers via t())"
+    ],
+    "max_len": 30,
     "count": 1
   },
   {
@@ -20858,7 +20867,7 @@
     "en": "NONE",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:832"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:789"
     ],
     "max_len": 14,
     "count": 1
@@ -21137,7 +21146,7 @@
     "en": "New goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:277"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:255"
     ],
     "max_len": 14,
     "count": 1
@@ -21695,7 +21704,7 @@
     "en": "No learning this week",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:109"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:108"
     ],
     "max_len": 31,
     "count": 1
@@ -22172,7 +22181,7 @@
     "en": "Not a favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:828"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:785"
     ],
     "max_len": 18,
     "count": 1
@@ -22901,7 +22910,7 @@
     "en": "Oura auth error: %1$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:402"
+      "app/src/main/java/com/migraineme/MainActivity.kt:400"
     ],
     "max_len": 31,
     "count": 1
@@ -22919,7 +22928,7 @@
     "en": "Oura callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:410"
+      "app/src/main/java/com/migraineme/MainActivity.kt:408"
     ],
     "max_len": 31,
     "count": 1
@@ -24071,7 +24080,7 @@
     "en": "Polar auth error: %1$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:436"
+      "app/src/main/java/com/migraineme/MainActivity.kt:434"
     ],
     "max_len": 32,
     "count": 1
@@ -24089,7 +24098,7 @@
     "en": "Polar callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:444"
+      "app/src/main/java/com/migraineme/MainActivity.kt:442"
     ],
     "max_len": 32,
     "count": 1
@@ -24932,12 +24941,12 @@
     "count": 1
   },
   {
-    "en": "Read full assessment",
+    "en": "Read more",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:492"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:829"
     ],
-    "max_len": 23,
+    "max_len": 14,
     "count": 1
   },
   {
@@ -24998,7 +25007,7 @@
     "en": "Recalibration applied!",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:87"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:86"
     ],
     "max_len": 32,
     "count": 1
@@ -25142,7 +25151,7 @@
     "en": "Reject all",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:164"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:150"
     ],
     "max_len": 14,
     "count": 1
@@ -25295,7 +25304,7 @@
     "en": "Remove from favorites",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:466"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:439"
     ],
     "max_len": 31,
     "count": 1
@@ -25538,7 +25547,7 @@
     "en": "Returning from Garmin...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:474"
+      "app/src/main/java/com/migraineme/MainActivity.kt:472"
     ],
     "max_len": 34,
     "count": 1
@@ -25547,7 +25556,7 @@
     "en": "Returning from Oura...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:406"
+      "app/src/main/java/com/migraineme/MainActivity.kt:404"
     ],
     "max_len": 32,
     "count": 1
@@ -25556,7 +25565,7 @@
     "en": "Returning from Polar...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:440"
+      "app/src/main/java/com/migraineme/MainActivity.kt:438"
     ],
     "max_len": 33,
     "count": 1
@@ -25565,7 +25574,7 @@
     "en": "Returning from WHOOP...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:371"
+      "app/src/main/java/com/migraineme/MainActivity.kt:369"
     ],
     "max_len": 33,
     "count": 1
@@ -25574,7 +25583,7 @@
     "en": "Returning from sign-in...",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:495"
+      "app/src/main/java/com/migraineme/MainActivity.kt:493"
     ],
     "max_len": 36,
     "count": 1
@@ -26726,7 +26735,7 @@
     "en": "Setting up your personalised migraine predictions",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3188"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3186"
     ],
     "max_len": 71,
     "count": 1
@@ -29981,6 +29990,15 @@
     "count": 1
   },
   {
+    "en": "Tick what you want to keep, then apply.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:141"
+    ],
+    "max_len": 56,
+    "count": 1
+  },
+  {
     "en": "Time",
     "class": "hard",
     "sites": [
@@ -32045,7 +32063,7 @@
     "en": "WHOOP auth error: %1$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:367"
+      "app/src/main/java/com/migraineme/MainActivity.kt:365"
     ],
     "max_len": 32,
     "count": 1
@@ -32063,7 +32081,7 @@
     "en": "WHOOP callback opened.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:375"
+      "app/src/main/java/com/migraineme/MainActivity.kt:373"
     ],
     "max_len": 32,
     "count": 1
@@ -32216,7 +32234,7 @@
     "en": "Was ",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:430"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:403"
     ],
     "max_len": 14,
     "count": 1
@@ -32342,7 +32360,7 @@
     "en": "We don't have enough data yet to suggest changes. Keep logging your migraines, triggers, and symptoms — once we spot patterns, we'll have personalised suggestions for you here.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:112"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:111"
     ],
     "max_len": 255,
     "count": 1
@@ -32453,15 +32471,6 @@
       "app/src/main/java/com/migraineme/MenstruationSetupDialog.kt:115"
     ],
     "max_len": 92,
-    "count": 1
-  },
-  {
-    "en": "We've reviewed your recent migraines and logs and prepared the suggestions below. Use the buttons to accept or reject everything in one tap, or scroll down and pick the ones you want yourself.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:137"
-    ],
-    "max_len": 278,
     "count": 1
   },
   {
@@ -33197,7 +33206,7 @@
     "en": "What we found",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:172"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:160"
     ],
     "max_len": 16,
     "count": 1
@@ -34349,7 +34358,7 @@
     "en": "You said",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:547"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:504"
     ],
     "max_len": 14,
     "count": 1
@@ -34475,7 +34484,7 @@
     "en": "Your account and app preferences",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:899"
+      "app/src/main/java/com/migraineme/MainActivity.kt:897"
     ],
     "max_len": 46,
     "count": 1
@@ -34484,7 +34493,7 @@
     "en": "Your answers are saved and the AI has re-checked your profile.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3027"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3025"
     ],
     "max_len": 89,
     "count": 1
@@ -34556,7 +34565,7 @@
     "en": "Your data is still being processed.\nThis will complete in the background.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3187"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3185"
     ],
     "max_len": 105,
     "count": 1
@@ -34619,7 +34628,7 @@
     "en": "Your free trial just ended",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MainActivity.kt:3242"
+      "app/src/main/java/com/migraineme/MainActivity.kt:3240"
     ],
     "max_len": 37,
     "count": 1
@@ -34655,7 +34664,7 @@
     "en": "Your goals have been updated.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:89"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:88"
     ],
     "max_len": 42,
     "count": 1
@@ -34889,7 +34898,7 @@
     "en": "Your recalibration",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:131"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:136"
     ],
     "max_len": 21,
     "count": 1
@@ -34979,7 +34988,7 @@
     "en": "Your trigger settings, gauge thresholds, and favorites have been updated.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:90"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:89"
     ],
     "max_len": 105,
     "count": 1
@@ -38021,7 +38030,7 @@
     "en": "★ Add to favorites",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:460"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:433"
     ],
     "max_len": 21,
     "count": 1

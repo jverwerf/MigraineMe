@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4902 entries.
+ * 4905 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -2271,6 +2271,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Migraine\nhappened" to "Houve\nenxaqueca",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Registos › exportar › Todo o período.",
     "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registos › exportar › Todo o período. Apple Health: Perfil › Exportar todos os dados, depois escolha export.xml.",
+    "Migraine Profile" to "Perfil de enxaqueca",
     "Migraine Timeline" to "Cronologia",
     "Migraine after stress ends (weekends, holidays)" to "Enxaqueca ao acabar o stress (fins de semana, férias)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Os aparelhos para enxaqueca são difíceis de julgar por um site, porque a publicidade soa ",
@@ -2989,6 +2990,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Lido como provável, com o motivo",
     "Read full article" to "Ler tudo",
     "Read full assessment" to "Ler o olhar clínico",
+    "Read more" to "Ler mais",
     "Read-only, never written back" to "Só leitura, nunca escrevemos",
     "Reading" to "Ler",
     "Reading data from Health Connect..." to "A ler dados do Health Connect...",
@@ -3018,11 +3020,11 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Redo Onboarding" to "Repetir a config.",
     "Regenerate" to "Refazer",
     "Registered with" to "Registado em",
-    "Regular 9-5" to "Horário fixo",
-    "Regular Migraine" to "Enxaqueca comum",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Regular 9-5" to "Horário fixo",
+    "Regular Migraine" to "Enxaqueca comum",
     "Reject" to "Recusar",
     "Reject all" to "Recusar tudo",
     "Relaxation" to "Relaxamento",
@@ -3766,6 +3768,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Trovoada com granizo",
     "Thunderstorms" to "Trovoadas",
     "Thunderstorms / electrical storms" to "Trovoadas / aparelho elétrico",
+    "Tick what you want to keep, then apply." to "Marca o que queres manter e aplica.",
     "Tight at the sides at first" to "No início aperta dos lados",
     "Time" to "Hora",
     "Time Range" to "Período",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Ziguezagues ou clarões",
     "Zinc" to "Zinco",
-    "Zinc high" to "Zinco alto",
-    "Zinc low" to "Zinco baixo",
-    "Zolmitriptan" to "Zolmitriptano",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Zinc high" to "Zinco alto",
+    "Zinc low" to "Zinco baixo",
+    "Zolmitriptan" to "Zolmitriptano",
     "Zone" to "Zona",
     "Zone 0" to "Zona 0",
     "Zone 1" to "Zona 1",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4902 entries.
+ * 4905 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2271,6 +2271,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Migraine\nhappened" to "Migraine\ngehad",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Records › exporteren › Hele periode.",
     "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Records › exporteren › Hele periode. Apple Health: Profiel › Alle gezondheidsgegevens exporteren, kies dan export.xml.",
+    "Migraine Profile" to "Migraineprofiel",
     "Migraine Timeline" to "Tijdlijn",
     "Migraine after stress ends (weekends, holidays)" to "Migraine als de stress stopt (weekend, vakantie)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Migraineapparaten zijn lastig te beoordelen via een website, omdat de reclame overal ",
@@ -2989,6 +2990,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Gelezen als waarschijnlijk, met reden",
     "Read full article" to "Lees verder",
     "Read full assessment" to "Lees het oordeel",
+    "Read more" to "Lees meer",
     "Read-only, never written back" to "Alleen lezen, nooit terugschrijven",
     "Reading" to "Lezen",
     "Reading data from Health Connect..." to "Data lezen uit Health Connect...",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Redo Onboarding" to "Setup opnieuw",
     "Regenerate" to "Opnieuw",
     "Registered with" to "Geregistreerd bij",
-    "Regular 9-5" to "Vast 9-5",
-    "Regular Migraine" to "Gewone migraine",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Regular 9-5" to "Vast 9-5",
+    "Regular Migraine" to "Gewone migraine",
     "Reject" to "Afwijzen",
     "Reject all" to "Alles afwijzen",
     "Relaxation" to "Ontspanning",
@@ -3766,6 +3768,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Onweer met hagel",
     "Thunderstorms" to "Onweer",
     "Thunderstorms / electrical storms" to "Onweer / elektrische storm",
+    "Tick what you want to keep, then apply." to "Vink aan wat je wilt houden en pas toe.",
     "Tight at the sides at first" to "Eerst strak aan de zijkanten",
     "Time" to "Tijd",
     "Time Range" to "Periode",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Zigzaglijnen of flitsen",
     "Zinc" to "Zink",
-    "Zinc high" to "Zink hoog",
-    "Zinc low" to "Zink laag",
-    "Zolmitriptan" to "Zolmitriptan",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Zinc high" to "Zink hoog",
+    "Zinc low" to "Zink laag",
+    "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zone",
     "Zone 0" to "Zone 0",
     "Zone 1" to "Zone 1",

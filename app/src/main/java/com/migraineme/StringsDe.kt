@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4902 entries.
+ * 4905 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -2271,6 +2271,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Migraine\nhappened" to "Migräne\npassiert",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Einträge › Export › Gesamter Zeitraum.",
     "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Einträge › Export › Gesamter Zeitraum. Apple Health: Profil › Alle Gesundheitsdaten exportieren, dann export.xml wählen.",
+    "Migraine Profile" to "Migräneprofil",
     "Migraine Timeline" to "Zeitverlauf",
     "Migraine after stress ends (weekends, holidays)" to "Migräne nach dem Stress (Wochenende, Urlaub)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Migränegeräte sind von einer Website schwer zu beurteilen, weil die Werbung überall ",
@@ -2989,6 +2990,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Als wahrscheinlich gelesen, mit Grund",
     "Read full article" to "Ganzer Artikel",
     "Read full assessment" to "Ganze Bewertung",
+    "Read more" to "Mehr lesen",
     "Read-only, never written back" to "Nur lesen, nie zurückschreiben",
     "Reading" to "Lesen",
     "Reading data from Health Connect..." to "Lese Daten aus Health Connect...",
@@ -3018,11 +3020,11 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Redo Onboarding" to "Neu einrichten",
     "Regenerate" to "Neu erzeugen",
     "Registered with" to "Mitglied bei",
-    "Regular 9-5" to "Klassisch 9-5",
-    "Regular Migraine" to "Normale Migräne",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Regular 9-5" to "Klassisch 9-5",
+    "Regular Migraine" to "Normale Migräne",
     "Reject" to "Ablehnen",
     "Reject all" to "Alle ablehnen",
     "Relaxation" to "Entspannung",
@@ -3766,6 +3768,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Gewitter mit Hagel",
     "Thunderstorms" to "Gewitter",
     "Thunderstorms / electrical storms" to "Gewitter / Blitzgewitter",
+    "Tick what you want to keep, then apply." to "Hak an, was du behalten willst, und übernimm es.",
     "Tight at the sides at first" to "Zuerst eng an den Seiten",
     "Time" to "Zeit",
     "Time Range" to "Zeitraum",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Zickzacklinien oder Blitze",
     "Zinc" to "Zink",
-    "Zinc high" to "Zink hoch",
-    "Zinc low" to "Zink niedrig",
-    "Zolmitriptan" to "Zolmitriptan",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Zinc high" to "Zink hoch",
+    "Zinc low" to "Zink niedrig",
+    "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zone",
     "Zone 0" to "Zone 0",
     "Zone 1" to "Zone 1",

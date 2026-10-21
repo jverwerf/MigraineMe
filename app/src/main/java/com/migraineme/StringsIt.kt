@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4902 entries.
+ * 4905 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -2271,6 +2271,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Migraine\nhappened" to "Emicrania\navvenuta",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Registri › esporta › Tutto il periodo.",
     "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Registri › esporta › Tutto il periodo. Apple Health: Profilo › Esporta tutti i dati, poi scegli export.xml.",
+    "Migraine Profile" to "Profilo emicranico",
     "Migraine Timeline" to "Cronologia",
     "Migraine after stress ends (weekends, holidays)" to "Emicrania quando lo stress finisce (weekend, ferie)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "I dispositivi per l'emicrania sono difficili da giudicare da un sito, perché la pubblicità suona ",
@@ -2989,6 +2990,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Letto come probabile, con il motivo",
     "Read full article" to "Leggi tutto",
     "Read full assessment" to "Leggi tutto",
+    "Read more" to "Leggi di più",
     "Read-only, never written back" to "Solo lettura, mai riscritti",
     "Reading" to "Leggere",
     "Reading data from Health Connect..." to "Leggo i dati da Health Connect...",
@@ -3018,11 +3020,11 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Redo Onboarding" to "Rifai la config.",
     "Regenerate" to "Rifai",
     "Registered with" to "Iscritto a",
-    "Regular 9-5" to "Orario fisso",
-    "Regular Migraine" to "Emicrania comune",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Regular 9-5" to "Orario fisso",
+    "Regular Migraine" to "Emicrania comune",
     "Reject" to "Rifiuta",
     "Reject all" to "Rifiuta tutto",
     "Relaxation" to "Rilassamento",
@@ -3766,6 +3768,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Thunderstorm with hail" to "Temporale con grandine",
     "Thunderstorms" to "Temporali",
     "Thunderstorms / electrical storms" to "Temporali / scariche elettriche",
+    "Tick what you want to keep, then apply." to "Spunta ciò che vuoi tenere, poi applica.",
     "Tight at the sides at first" to "All'inizio stringe ai lati",
     "Time" to "Orario",
     "Time Range" to "Periodo",
@@ -4520,12 +4523,12 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Zavzpret" to "Zavzpret",
     "Zigzag lines or flashing lights" to "Zigzag o lampi di luce",
     "Zinc" to "Zinco",
-    "Zinc high" to "Zinco alto",
-    "Zinc low" to "Zinco basso",
-    "Zolmitriptan" to "Zolmitriptan",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Zinc high" to "Zinco alto",
+    "Zinc low" to "Zinco basso",
+    "Zolmitriptan" to "Zolmitriptan",
     "Zone" to "Zona",
     "Zone 0" to "Zona 0",
     "Zone 1" to "Zona 1",
