@@ -1671,9 +1671,9 @@
     "en": "New",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:608",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:660",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:731",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:599",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:651",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:722",
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:831"
     ],
     "max_len": 14,
@@ -2152,8 +2152,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:134",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:635",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:719"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:626",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:710"
     ],
     "max_len": 14,
     "count": 3
@@ -2954,9 +2954,9 @@
     "en": "Was",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:597",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:645",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:725"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:588",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:636",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:716"
     ],
     "max_len": 14,
     "count": 3
@@ -5226,7 +5226,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:3362",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:829"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:820"
     ],
     "max_len": 14,
     "count": 2
@@ -6071,7 +6071,7 @@
     "en": " (%s rejected)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:303"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294"
     ],
     "max_len": 17,
     "count": 1
@@ -7439,7 +7439,7 @@
     "en": "(your pick)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:512"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:503"
     ],
     "max_len": 14,
     "count": 1
@@ -9734,7 +9734,7 @@
     "en": "Apply %s changes",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:302"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293"
     ],
     "max_len": 19,
     "count": 1
@@ -9743,7 +9743,7 @@
     "en": "Apply 1 change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:302"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293"
     ],
     "max_len": 17,
     "count": 1
@@ -9770,7 +9770,7 @@
     "en": "Applying...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:300"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:291"
     ],
     "max_len": 14,
     "count": 1
@@ -11105,6 +11105,15 @@
       "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:557"
     ],
     "max_len": 87,
+    "count": 1
+  },
+  {
+    "en": "Burden",
+    "class": "hard",
+    "sites": [
+      "RecalibrationReviewScreen.kt:ExplanationCard chips (via t())"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -12512,6 +12521,15 @@
     "count": 1
   },
   {
+    "en": "Coping",
+    "class": "hard",
+    "sites": [
+      "RecalibrationReviewScreen.kt:ExplanationCard chips (via t())"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Coping Profile",
     "class": "soft",
     "sites": [
@@ -12623,7 +12641,7 @@
     "en": "Could not save your goals",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:269"
+      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:274"
     ],
     "max_len": 36,
     "count": 1
@@ -15251,7 +15269,7 @@
     "en": "Failed to load proposals",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:121"
+      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:123"
     ],
     "max_len": 34,
     "count": 1
@@ -15386,7 +15404,7 @@
     "en": "Favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:784"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:775"
     ],
     "max_len": 14,
     "count": 1
@@ -16061,7 +16079,7 @@
     "en": "From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:212"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:210"
     ],
     "max_len": 224,
     "count": 1
@@ -16292,6 +16310,15 @@
     "count": 1
   },
   {
+    "en": "Gauge",
+    "class": "hard",
+    "sites": [
+      "RecalibrationReviewScreen.kt:ExplanationCard chips (via t())"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Gauge\nwarned",
     "class": "hard",
     "sites": [
@@ -16316,15 +16343,6 @@
       "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:156"
     ],
     "max_len": 19,
-    "count": 1
-  },
-  {
-    "en": "Gauge performance",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:172"
-    ],
-    "max_len": 20,
     "count": 1
   },
   {
@@ -16661,12 +16679,12 @@
     "count": 1
   },
   {
-    "en": "Goal ideas from your own data. Keep checked to add them to your goals.",
+    "en": "Goal ideas from your own data.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:261"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:252"
     ],
-    "max_len": 101,
+    "max_len": 43,
     "count": 1
   },
   {
@@ -16754,7 +16772,7 @@
     "en": "HIGH",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:786"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:777"
     ],
     "max_len": 14,
     "count": 1
@@ -18371,15 +18389,6 @@
     "count": 1
   },
   {
-    "en": "Keep checked to accept, untap to reject.",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:219"
-    ],
-    "max_len": 58,
-    "count": 1
-  },
-  {
     "en": "Keep loading",
     "class": "hard",
     "sites": [
@@ -18446,7 +18455,7 @@
     "en": "LOW",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:788"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:779"
     ],
     "max_len": 14,
     "count": 1
@@ -19715,7 +19724,7 @@
     "en": "MILD",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:787"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:778"
     ],
     "max_len": 14,
     "count": 1
@@ -20867,7 +20876,7 @@
     "en": "NONE",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:789"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:780"
     ],
     "max_len": 14,
     "count": 1
@@ -21146,7 +21155,7 @@
     "en": "New goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:255"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:246"
     ],
     "max_len": 14,
     "count": 1
@@ -22181,7 +22190,7 @@
     "en": "Not a favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:785"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:776"
     ],
     "max_len": 18,
     "count": 1
@@ -22190,7 +22199,7 @@
     "en": "Not authenticated",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:108"
+      "app/src/main/java/com/migraineme/RecalibrationViewModel.kt:110"
     ],
     "max_len": 20,
     "count": 1
@@ -24944,7 +24953,7 @@
     "en": "Read more",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:829"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:820"
     ],
     "max_len": 14,
     "count": 1
@@ -25304,7 +25313,7 @@
     "en": "Remove from favorites",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:439"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:430"
     ],
     "max_len": 31,
     "count": 1
@@ -29990,6 +29999,15 @@
     "count": 1
   },
   {
+    "en": "Tick what to keep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:176"
+    ],
+    "max_len": 20,
+    "count": 1
+  },
+  {
     "en": "Tick what you want to keep, then apply.",
     "class": "soft",
     "sites": [
@@ -32234,7 +32252,7 @@
     "en": "Was ",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:403"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:394"
     ],
     "max_len": 14,
     "count": 1
@@ -33206,7 +33224,7 @@
     "en": "What we found",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:160"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:879"
     ],
     "max_len": 16,
     "count": 1
@@ -34358,7 +34376,7 @@
     "en": "You said",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:504"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:495"
     ],
     "max_len": 14,
     "count": 1
@@ -38030,7 +38048,7 @@
     "en": "★ Add to favorites",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:433"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:424"
     ],
     "max_len": 21,
     "count": 1

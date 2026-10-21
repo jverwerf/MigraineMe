@@ -72,6 +72,8 @@ class RecalibrationViewModel : ViewModel() {
         val calibrationNotes: String = "",
         val call1Summary: String = "",
         val call2Summary: String = "",
+        /** Call 3 (menstrual cycle) narrative, when that call ran. */
+        val menstrualNotes: String = "",
         val applying: Boolean = false,
         val applied: Boolean = false,
         val error: String? = null,
@@ -126,6 +128,7 @@ class RecalibrationViewModel : ViewModel() {
             var calibrationNotes = ""
             var call1Summary = ""
             var call2Summary = ""
+            var menstrualNotes = ""
             var summaryId: String? = null
             val proposals = mutableListOf<Proposal>()
 
@@ -154,6 +157,7 @@ class RecalibrationViewModel : ViewModel() {
                     call1Summary = metaText("call1_summary")
                     call2Summary = metaText("call2_summary")
                     calibrationNotes = metaText("calibration_notes")
+                    menstrualNotes = metaText("menstrual_notes")
                     continue
                 }
 
@@ -183,6 +187,7 @@ class RecalibrationViewModel : ViewModel() {
                 calibrationNotes = calibrationNotes,
                 call1Summary = call1Summary,
                 call2Summary = call2Summary,
+                menstrualNotes = menstrualNotes,
                 summaryId = summaryId,
             )
         }

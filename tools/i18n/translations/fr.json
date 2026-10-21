@@ -4903,5 +4903,10 @@
  "{Monitor} tab › {Goals} card": "Onglet {Monitor} › carte {Goals}",
  "Read more": "Lire la suite",
  "Tick what you want to keep, then apply.": "Coche ce que tu veux garder, puis applique.",
- "Migraine Profile": "Profil migraineux"
+ "Migraine Profile": "Profil migraineux",
+ "Burden": "Charge",
+ "Coping": "Gestion",
+ "Gauge": "Jauge",
+ "Goal ideas from your own data.": "Des idées d'objectifs tirées de tes propres données.",
+ "Tick what to keep": "Coche ce que tu gardes"
 }

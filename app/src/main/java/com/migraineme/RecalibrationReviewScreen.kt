@@ -151,31 +151,29 @@ fun RecalibrationReviewScreen(
                 }
             }
 
-            // ── Clinical Assessment: the "=== Section ===" markers the server
-            // writes become headings, and only the first section shows until
-            // "Read more" (the full text is a screen long). ──
-            if (state.clinicalAssessment.isNotBlank()) {
-                BaseCard {
-                    Text(
-                        t("What we found"),
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                    NarrativeText(state.clinicalAssessment, collapsible = true)
+            // ── What we found: ONE card, the explanations behind buttons (Jordy
+            // 10-21: "all in one card with clickable buttons"). The buttons are the
+            // AI narrative's own sections, plus the gauge notes, the cycle notes and
+            // this week's goal review when there is one. ──
+            val goalReport by PractitionerGoalsStore.report.collectAsState()
+            LaunchedEffect(state.goalIdeas.isNotEmpty()) {
+                if (MonitorCardConfig.GOALS_ENABLED && state.goalIdeas.isNotEmpty()) PractitionerGoalsStore.refreshReview(ctx)
+            }
+            val tabs = remember(state.clinicalAssessment, state.calibrationNotes, state.menstrualNotes, goalReport, state.goalIdeas.size) {
+                buildList {
+                    for ((title, body) in narrativeSections(state.clinicalAssessment)) {
+                        add(ExplanationTab(chipLabelFor(title), body))
+                    }
+                    if (state.calibrationNotes.isNotBlank()) add(ExplanationTab("Gauge", state.calibrationNotes))
+                    if (state.menstrualNotes.isNotBlank()) add(ExplanationTab("Cycle", state.menstrualNotes))
+                    val review = goalReport?.report?.trim().orEmpty()
+                    if (state.goalIdeas.isNotEmpty() && review.isNotBlank()) add(ExplanationTab("Goals", review))
                 }
             }
+            if (tabs.isNotEmpty()) ExplanationCard(tabs)
 
-            // ── Calibration Notes ──
-            if (state.calibrationNotes.isNotBlank()) {
-                BaseCard {
-                    Text(
-                        t("Gauge performance"),
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                    NarrativeText(state.calibrationNotes, collapsible = true)
-                }
-            }
+            // ── The line between reading and deciding ──
+            SectionDividerLabel(t("Tick what to keep"))
 
             // ── Proposals grouped by type, fixed display order ──
             val grouped = state.proposals.groupBy { it.type }
@@ -210,13 +208,6 @@ fun RecalibrationReviewScreen(
                         Spacer(Modifier.height(2.dp))
                         Text(
                             t("From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is."),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    } else if (type != "data_warning") {
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            t("Keep checked to accept, untap to reject."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall,
                         )
@@ -258,7 +249,7 @@ fun RecalibrationReviewScreen(
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        t("Goal ideas from your own data. Keep checked to add them to your goals."),
+                        t("Goal ideas from your own data."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                     )
@@ -319,8 +310,8 @@ private fun GoalIdeaRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (idea.accepted) Color(0xFF2D2D3D) else Color(0xFF1A1A24))
+            .clip(RoundedCornerShape(12.dp))
+            .background(proposalRowColor(idea.accepted))
             .clickable { onToggle() }
             .padding(12.dp),
         verticalAlignment = Alignment.Top,
@@ -749,8 +740,8 @@ private fun WarningRow(proposal: RecalibrationViewModel.Proposal) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF1A1A24))
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.04f))
             .padding(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
@@ -859,4 +850,77 @@ internal fun narrativeSections(text: String): List<Pair<String?, String>> {
 private fun firstSentences(text: String, n: Int): String {
     val m = Regex("""(.+?[.!?])(\s|$)""").findAll(text).take(n).toList()
     return if (m.isEmpty()) text else m.joinToString(" ") { it.groupValues[1] }
+}
+
+/** One button on the explanation card and the text it opens. [label] is an English key. */
+private data class ExplanationTab(val label: String, val text: String)
+
+/** The server's narrative headers as short button labels (English keys, translated at render). */
+private fun chipLabelFor(header: String?): String = when (header?.trim()?.lowercase()) {
+    null, "" -> "Profile"
+    "migraine profile" -> "Profile"
+    "trigger profile" -> "Triggers"
+    "burden profile" -> "Burden"
+    "coping profile" -> "Coping"
+    else -> header.trim()
+}
+
+/**
+ * "What we found" as one card: a row of buttons, one per explanation, and the
+ * chosen explanation under them (folded, Read more). Static, no motion.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ExplanationCard(tabs: List<ExplanationTab>) {
+    var selected by remember(tabs.size) { mutableStateOf(0) }
+    val sel = tabs.getOrNull(selected) ?: tabs.first()
+    BaseCard {
+        Text(
+            t("What we found"),
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        )
+        Spacer(Modifier.height(4.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            tabs.forEachIndexed { i, tab ->
+                val on = i == selected
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if (on) AppTheme.AccentPurple.copy(alpha = 0.45f) else AppTheme.AccentPurple.copy(alpha = 0.16f),
+                            RoundedCornerShape(12.dp),
+                        )
+                        .border(1.dp, AppTheme.AccentPurple.copy(alpha = if (on) 0.9f else 0.40f), RoundedCornerShape(12.dp))
+                        .clickable { selected = i }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        t(tab.label),
+                        color = if (on) Color.White else AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        key(sel.label) { NarrativeText(sel.text, collapsible = true) }
+    }
+}
+
+/** A rule with a label in it, between the explanations and the sections you tick. */
+@Composable
+private fun SectionDividerLabel(label: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), color = AppTheme.AccentPurple.copy(alpha = 0.45f))
+        Text(
+            label,
+            color = AppTheme.AccentPurple,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.padding(horizontal = 10.dp),
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f), color = AppTheme.AccentPurple.copy(alpha = 0.45f))
+    }
 }
