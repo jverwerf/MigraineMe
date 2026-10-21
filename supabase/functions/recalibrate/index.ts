@@ -134,8 +134,13 @@ serve(async (req: Request) => {
     // "full" = the weekly recalibration (both calls), "profile_only" = just Call 1
     const mode: string = body.mode ?? "full";
 
-    // ── Cooldown check ──
-    if (!force) {
+    // ── Cooldown check (manual runs only) ──
+    // The Monday cron picks its own users: anyone not recalibrated in the last
+    // 4 days. Checking the 5-day cooldown here as well skipped everyone who had
+    // applied after Wednesday morning (Jordy, 2026-10-14 14:10 apply -> skipped
+    // 10-19 08:00, plus three others), so they waited almost two weeks. A person
+    // tapping "re-assess" still gets the cooldown.
+    if (!force && !automated) {
       if (mode === "full") {
         const { data: lastRecalib } = await supabase
           .from("recalibration_history")
