@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -207,7 +209,6 @@ private fun GoalsReviewRegion(teaser: Boolean) {
         }
     }
 
-    if (!teaser) GoalReviewPushSwitch()
 }
 
 private fun weekOfLabel(iso: String): String = runCatching {
@@ -216,11 +217,29 @@ private fun weekOfLabel(iso: String): String = runCatching {
 
 @Composable
 private fun GoalReviewCard(report: SupabasePractitionerService.GoalReportRow) {
+    // Can be clicked away; the next week's review (a new week_start) shows again.
+    val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("goals_review", android.content.Context.MODE_PRIVATE) }
+    var dismissedWeek by remember { mutableStateOf(prefs.getString("dismissed_week", null)) }
+    if (dismissedWeek == report.week_start) return
     BaseCard {
-        Text(t("This week's review"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-        Text(t("Week of %s", weekOfLabel(report.week_start)),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f)) {
+                Text(t("This week's review"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Week of %s", weekOfLabel(report.week_start)),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(
+                onClick = {
+                    prefs.edit().putString("dismissed_week", report.week_start).apply()
+                    dismissedWeek = report.week_start
+                },
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(Icons.Outlined.Close, contentDescription = t("Dismiss"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+            }
+        }
         if (report.report.isNotBlank()) {
             Text(report.report.trim(), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
         }
@@ -257,42 +276,3 @@ private fun GoalStatusChip(status: String) {
     }
 }
 
-/** notification_settings type 'goal_suggestions'; no row = on. */
-@Composable
-private fun GoalReviewPushSwitch() {
-    val ctx = LocalContext.current
-    val appContext = ctx.applicationContext
-    val scope = rememberCoroutineScope()
-    val edge = remember { EdgeFunctionsService() }
-    var on by remember { mutableStateOf(true) }
-    var loaded by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        on = withContext(Dispatchers.IO) { edge.getNotificationEnabled(appContext, "goal_suggestions", default = true) }
-        loaded = true
-    }
-    BaseCard {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).padding(end = 10.dp)) {
-                Text(t("Weekly review notifications"), color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium)
-                Text(t("A push every Monday when your review and new suggestions are ready"),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
-            Switch(
-                checked = on,
-                enabled = loaded,
-                modifier = Modifier.scale(0.8f),
-                onCheckedChange = { newValue ->
-                    on = newValue
-                    scope.launch {
-                        val ok = withContext(Dispatchers.IO) {
-                            edge.upsertNotificationSetting(appContext, "goal_suggestions", newValue)
-                        }
-                        if (!ok) on = !newValue // revert on failure
-                    }
-                },
-                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
-            )
-        }
-    }
-}

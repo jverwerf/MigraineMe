@@ -32,7 +32,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:87",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1286",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1297",
       "app/src/main/java/com/migraineme/DayMixMonthlyChart.kt:116",
       "app/src/main/java/com/migraineme/HomeScreen.kt:486",
       "app/src/main/java/com/migraineme/HomeScreen.kt:814",
@@ -230,7 +230,7 @@
       "app/src/main/java/com/migraineme/DataSettingsComponents.kt:107",
       "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:499",
       "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:532",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1333",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1344",
       "app/src/main/java/com/migraineme/EditMigraineScreen.kt:676",
       "... 10 more"
     ],
@@ -399,7 +399,7 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:747",
       "app/src/main/java/com/migraineme/InsightsSectionConfigScreen.kt:76",
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:142",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:125",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:127",
       "... 6 more"
     ],
     "max_len": 19,
@@ -760,7 +760,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/MonitorEnvironmentScreen.kt:149",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:128",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:130",
       "app/src/main/java/com/migraineme/MonitorMentalScreen.kt:131",
       "app/src/main/java/com/migraineme/MonitorPhysicalScreen.kt:140",
       "app/src/main/java/com/migraineme/MonitorRiskScreen.kt:148",
@@ -1488,6 +1488,18 @@
     "count": 4
   },
   {
+    "en": "Dismiss",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:708",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:240",
+      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:763",
+      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:95"
+    ],
+    "max_len": 14,
+    "count": 4
+  },
+  {
     "en": "Display Metrics (%s/3)",
     "class": "soft",
     "sites": [
@@ -1563,9 +1575,9 @@
     "en": "Goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1235",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1247",
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1288",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1240",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1252",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1299",
       "app/src/main/java/com/migraineme/PractitionerGoalCards.kt:302"
     ],
     "max_len": 14,
@@ -1671,9 +1683,9 @@
     "en": "New",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:599",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:651",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:722",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:605",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:657",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:728",
       "app/src/main/java/com/migraineme/ImportHistoryScreen.kt:831"
     ],
     "max_len": 14,
@@ -1839,9 +1851,9 @@
     "en": "Weekly AI goal suggestions and reviews from your own data",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:205",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:83",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:94",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:207",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:85",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:96",
       "app/src/main/java/com/migraineme/PractitionerGoalCards.kt:354"
     ],
     "max_len": 62,
@@ -2152,8 +2164,8 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:134",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:626",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:710"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:632",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:716"
     ],
     "max_len": 14,
     "count": 3
@@ -2178,17 +2190,6 @@
       "app/src/main/java/com/migraineme/SleepDataHistoryScreen.kt:273"
     ],
     "max_len": 20,
-    "count": 3
-  },
-  {
-    "en": "Dismiss",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:708",
-      "app/src/main/java/com/migraineme/MonitorNutritionScreen.kt:763",
-      "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:95"
-    ],
-    "max_len": 14,
     "count": 3
   },
   {
@@ -2877,8 +2878,8 @@
     "en": "Unlock Goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:82",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:93",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:84",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:95",
       "app/src/main/java/com/migraineme/PractitionerGoalCards.kt:353"
     ],
     "max_len": 15,
@@ -2954,9 +2955,9 @@
     "en": "Was",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:588",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:636",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:716"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:594",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:642",
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:722"
     ],
     "max_len": 14,
     "count": 3
@@ -3905,7 +3906,7 @@
     "en": "Calendar",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1405",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1416",
       "app/src/main/java/com/migraineme/JournalScreen.kt:988"
     ],
     "max_len": 14,
@@ -4065,7 +4066,7 @@
     "en": "Device check-ins",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1024",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1029",
       "app/src/main/java/com/migraineme/DeviceReliefOutcome.kt:96"
     ],
     "max_len": 19,
@@ -4285,7 +4286,7 @@
     "en": "Goal reminders",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1321",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1332",
       "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:473"
     ],
     "max_len": 17,
@@ -5226,7 +5227,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:3362",
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:820"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:826"
     ],
     "max_len": 14,
     "count": 2
@@ -5425,8 +5426,8 @@
     "en": "This week's review",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:203",
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:220"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:205",
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:228"
     ],
     "max_len": 21,
     "count": 2
@@ -5525,7 +5526,7 @@
     "en": "Trigger alerts",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:902",
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:907",
       "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:425"
     ],
     "max_len": 17,
@@ -6071,7 +6072,7 @@
     "en": " (%s rejected)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:300"
     ],
     "max_len": 17,
     "count": 1
@@ -7439,7 +7440,7 @@
     "en": "(your pick)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:503"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:509"
     ],
     "max_len": 14,
     "count": 1
@@ -8087,7 +8088,7 @@
     "en": "A push every Monday when your review and new suggestions are ready",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:278"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1493"
     ],
     "max_len": 95,
     "count": 1
@@ -8186,7 +8187,7 @@
     "en": "AI companion",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1135"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1140"
     ],
     "max_len": 15,
     "count": 1
@@ -8258,7 +8259,7 @@
     "en": "About Goals",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1251"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1256"
     ],
     "max_len": 21,
     "count": 1
@@ -8366,7 +8367,7 @@
     "en": "Accept all",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:149"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:155"
     ],
     "max_len": 14,
     "count": 1
@@ -9734,7 +9735,7 @@
     "en": "Apply %s changes",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:299"
     ],
     "max_len": 19,
     "count": 1
@@ -9743,7 +9744,7 @@
     "en": "Apply 1 change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:299"
     ],
     "max_len": 17,
     "count": 1
@@ -9770,7 +9771,7 @@
     "en": "Applying...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:291"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:297"
     ],
     "max_len": 14,
     "count": 1
@@ -9932,7 +9933,7 @@
     "en": "Ask how a neuromodulation device session went, 2 hours after you log it",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1029"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1034"
     ],
     "max_len": 102,
     "count": 1
@@ -11327,7 +11328,7 @@
     "en": "Calendar events",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1417"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1428"
     ],
     "max_len": 18,
     "count": 1
@@ -11345,7 +11346,7 @@
     "en": "Calendar permission",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1439"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1450"
     ],
     "max_len": 22,
     "count": 1
@@ -11795,7 +11796,7 @@
     "en": "Choose the goals for the Goals card on Monitor",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:129"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:131"
     ],
     "max_len": 66,
     "count": 1
@@ -14837,7 +14838,7 @@
     "en": "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1172"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1177"
     ],
     "max_len": 139,
     "count": 1
@@ -15404,7 +15405,7 @@
     "en": "Favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:775"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:781"
     ],
     "max_len": 14,
     "count": 1
@@ -16079,7 +16080,7 @@
     "en": "From what you have logged, some of your setup answers look different now. Keep the suggestion, pick another value, or untick to leave your answer as it is.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:210"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:216"
     ],
     "max_len": 224,
     "count": 1
@@ -16475,7 +16476,7 @@
     "en": "Get notified each morning when your new recommendations are ready",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:968"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:973"
     ],
     "max_len": 94,
     "count": 1
@@ -16484,7 +16485,7 @@
     "en": "Get notified when an AI companion adds to your community feed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1140"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1145"
     ],
     "max_len": 88,
     "count": 1
@@ -16682,7 +16683,7 @@
     "en": "Goal ideas from your own data.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:252"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:258"
     ],
     "max_len": 43,
     "count": 1
@@ -16691,7 +16692,7 @@
     "en": "Goals are switched off in Data settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:78"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:80"
     ],
     "max_len": 58,
     "count": 1
@@ -16772,7 +16773,7 @@
     "en": "HIGH",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:777"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:783"
     ],
     "max_len": 14,
     "count": 1
@@ -18455,7 +18456,7 @@
     "en": "LOW",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:779"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:785"
     ],
     "max_len": 14,
     "count": 1
@@ -19724,7 +19725,7 @@
     "en": "MILD",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:778"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:784"
     ],
     "max_len": 14,
     "count": 1
@@ -19886,7 +19887,7 @@
     "en": "Map your events to activities, reliefs, and triggers",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1419"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1430"
     ],
     "max_len": 75,
     "count": 1
@@ -20876,7 +20877,7 @@
     "en": "NONE",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:780"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:786"
     ],
     "max_len": 14,
     "count": 1
@@ -21155,7 +21156,7 @@
     "en": "New goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:246"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:252"
     ],
     "max_len": 14,
     "count": 1
@@ -21659,7 +21660,7 @@
     "en": "No goals yet. Tap + to set one, or ask your practitioner.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:139"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:141"
     ],
     "max_len": 82,
     "count": 1
@@ -22190,7 +22191,7 @@
     "en": "Not a favourite",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:776"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:782"
     ],
     "max_len": 18,
     "count": 1
@@ -22262,7 +22263,7 @@
     "en": "Not filling in automatically",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:158"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:160"
     ],
     "max_len": 40,
     "count": 1
@@ -22298,7 +22299,7 @@
     "en": "Not started",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:248"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:267"
     ],
     "max_len": 14,
     "count": 1
@@ -22649,7 +22650,7 @@
     "en": "On track",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:246"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:265"
     ],
     "max_len": 14,
     "count": 1
@@ -22685,7 +22686,7 @@
     "en": "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1293"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1304"
     ],
     "max_len": 332,
     "count": 1
@@ -24953,7 +24954,7 @@
     "en": "Read more",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:820"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:826"
     ],
     "max_len": 14,
     "count": 1
@@ -25034,7 +25035,7 @@
     "en": "Recommendation alerts",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:963"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:968"
     ],
     "max_len": 31,
     "count": 1
@@ -25160,7 +25161,7 @@
     "en": "Reject all",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:150"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:156"
     ],
     "max_len": 14,
     "count": 1
@@ -25313,7 +25314,7 @@
     "en": "Remove from favorites",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:430"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:436"
     ],
     "max_len": 31,
     "count": 1
@@ -27572,7 +27573,7 @@
     "en": "Slipping",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:247"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:266"
     ],
     "max_len": 14,
     "count": 1
@@ -30002,7 +30003,7 @@
     "en": "Tick what to keep",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:176"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:182"
     ],
     "max_len": 20,
     "count": 1
@@ -32252,7 +32253,7 @@
     "en": "Was ",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:394"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:400"
     ],
     "max_len": 14,
     "count": 1
@@ -32657,7 +32658,7 @@
     "en": "Week of %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:222"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:230"
     ],
     "max_len": 14,
     "count": 1
@@ -32693,7 +32694,7 @@
     "en": "Weekly review and goal ideas",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1257"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1262"
     ],
     "max_len": 40,
     "count": 1
@@ -32702,7 +32703,7 @@
     "en": "Weekly review notifications",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:276"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:1491"
     ],
     "max_len": 39,
     "count": 1
@@ -33224,7 +33225,7 @@
     "en": "What we found",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:879"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:885"
     ],
     "max_len": 16,
     "count": 1
@@ -33494,7 +33495,7 @@
     "en": "When an item you follow becomes a trigger for the day",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:907"
+      "app/src/main/java/com/migraineme/DataSettingsRowComponents.kt:912"
     ],
     "max_len": 76,
     "count": 1
@@ -34376,7 +34377,7 @@
     "en": "You said",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:495"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:501"
     ],
     "max_len": 14,
     "count": 1
@@ -34673,7 +34674,7 @@
     "en": "Your goals",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:135"
+      "app/src/main/java/com/migraineme/MonitorGoalsScreen.kt:137"
     ],
     "max_len": 14,
     "count": 1
@@ -38048,7 +38049,7 @@
     "en": "★ Add to favorites",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:424"
+      "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:430"
     ],
     "max_len": 21,
     "count": 1

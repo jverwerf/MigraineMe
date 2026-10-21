@@ -875,6 +875,11 @@ fun NotificationsCard(
             }
         }
 
+        // A rule under the ongoing reminder: it and Trigger alerts are two different things.
+        if (showOngoing && showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
         // Trigger alerts row — DB-backed preference (notification_settings.trigger_alert).
         // Master toggle for the per-item bells on the trigger/prodrome pools.
         // Default ON; toggling writes to Supabase so the backend skips the push when off.
@@ -1275,6 +1280,12 @@ fun GoalRemindersCard(
                     )
                 }
             }
+            // The Monday push for the review and the goal ideas lives here with the
+            // other notification settings (Jordy 10-21), not on the Goals page.
+            if (goalsOn) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+                GoalReviewPushRow(toggleColWidth = toggleColWidth)
+            }
             if (goalRows.isNotEmpty()) {
                 HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
             }
@@ -1462,3 +1473,42 @@ private fun openNotificationSettings(context: android.content.Context) {
     context.startActivity(intent)
 }
 
+
+/** "Weekly review notifications": the Monday push (notification_settings type goal_suggestions, missing row = on). */
+@Composable
+private fun GoalReviewPushRow(toggleColWidth: androidx.compose.ui.unit.Dp) {
+    val appContext = LocalContext.current.applicationContext
+    val scope = rememberCoroutineScope()
+    val edge = remember { EdgeFunctionsService() }
+    var on by remember { mutableStateOf(true) }
+    var loaded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        on = withContext(Dispatchers.IO) { edge.getNotificationEnabled(appContext, "goal_suggestions", default = true) }
+        loaded = true
+    }
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+            Text(t("Weekly review notifications"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                t("A push every Monday when your review and new suggestions are ready"),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        Column(modifier = Modifier.width(toggleColWidth), horizontalAlignment = Alignment.End) {
+            Switch(
+                checked = on,
+                enabled = loaded,
+                modifier = Modifier.scale(0.8f),
+                onCheckedChange = { newValue ->
+                    on = newValue
+                    scope.launch {
+                        val ok = withContext(Dispatchers.IO) { edge.upsertNotificationSetting(appContext, "goal_suggestions", newValue) }
+                        if (!ok) on = !newValue
+                    }
+                },
+                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+            )
+        }
+    }
+}

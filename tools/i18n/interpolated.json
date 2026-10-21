@@ -312,11 +312,11 @@
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:293",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:299",
     "line": "                    Text((if (acceptedCount == 1) t(\"Apply 1 change\") else t(\"Apply %s changes\", acceptedCount)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:294",
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:300",
     "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
   },
   {
