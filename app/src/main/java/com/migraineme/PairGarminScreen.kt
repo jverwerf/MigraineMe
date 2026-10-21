@@ -70,14 +70,14 @@ fun GarminConnectionCard(
             modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo, vertically centered.
+            // Garmin Connect badge, vertically centered in the 100dp logo slot.
             Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
                 if (logoResId != 0) {
                     Image(
                         painter = painterResource(id = logoResId),
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(72.dp)
                     )
                 } else {
                     Text("G", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 40.sp)

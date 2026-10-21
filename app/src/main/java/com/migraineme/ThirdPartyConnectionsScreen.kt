@@ -334,8 +334,10 @@ fun ThirdPartyConnectionsScreen(
         context.resources.getIdentifier("polar_logo", "drawable", context.packageName)
     }
 
+    // Garmin's brand review requires the Garmin Connect badge on the
+    // connect entry, not the plain GARMIN wordmark (same as VertigoMe).
     val garminLogoResId = remember {
-        context.resources.getIdentifier("garmin_logo", "drawable", context.packageName)
+        context.resources.getIdentifier("garmin_connect", "drawable", context.packageName)
     }
 
     suspend fun tryCompleteWhoopIfCallbackPresent() {
