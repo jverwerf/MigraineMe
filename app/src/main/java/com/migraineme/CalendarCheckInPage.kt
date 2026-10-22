@@ -60,11 +60,8 @@ fun CalendarCheckInPage(
         else loadingState.value = false
     }
 
-    Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 16.dp, horizontalAlignment = Alignment.CenterHorizontally) {
         Header()
 
         if (!hasPermission) {
@@ -75,13 +72,13 @@ fun CalendarCheckInPage(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth(),
             ) }
-            return@Column
+            return@WizardSheet
         }
 
         if (loadingState.value) {
             CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp,
                 modifier = Modifier.padding(vertical = 24.dp).size(28.dp))
-            return@Column
+            return@WizardSheet
         }
 
         val mappings = mappingsState.value
@@ -184,6 +181,7 @@ fun CalendarCheckInPage(
                     },
                 )
             }
+        }
         }
     }
 }

@@ -169,11 +169,11 @@ fun MissedActivitiesScreen(
     val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Wizard breadcrumb: only when this really is the wizard step.
             if (!quickLogMode) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
@@ -183,95 +183,97 @@ fun MissedActivitiesScreen(
                     IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
                 }
             }
+            WizardSheet {
 
-            HeroCard(watermarkRes = R.drawable.brainy_briefcase) {
-                Box(Modifier.size(40.dp).drawBehind {
-                    HubIcons.run { drawMissedActivity(Color(0xFFFF7043)) }
-                })
-                Text(t("What did you miss?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    if (draft.missedActivities.isEmpty()) t("Activities you couldn't do") else if (draft.missedActivities.size == 1) t("1 missed activity") else t("%s missed activities", draft.missedActivities.size),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
-                )
-                if (draft.missedActivities.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    draft.missedActivities.forEachIndexed { index, ma ->
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(prettyLabel(ma.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
-                            Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
-                                modifier = Modifier.size(18.dp).clickable {
-                                    rebuildDraftWithMissed(draft.missedActivities.toMutableList().apply { removeAt(index) })
-                                })
+                HeroCard(watermarkRes = R.drawable.brainy_briefcase) {
+                    Box(Modifier.size(40.dp).drawBehind {
+                        HubIcons.run { drawMissedActivity(Color(0xFFFF7043)) }
+                    })
+                    Text(t("What did you miss?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        if (draft.missedActivities.isEmpty()) t("Activities you couldn't do") else if (draft.missedActivities.size == 1) t("1 missed activity") else t("%s missed activities", draft.missedActivities.size),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
+                    )
+                    if (draft.missedActivities.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        draft.missedActivities.forEachIndexed { index, ma ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(prettyLabel(ma.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+                                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(18.dp).clickable {
+                                        rebuildDraftWithMissed(draft.missedActivities.toMutableList().apply { removeAt(index) })
+                                    })
+                            }
                         }
                     }
                 }
-            }
 
-            if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES)) })
-            }
-
-            BaseCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Missed Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) })
+                if (!quickLogMode) {
+                    WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES)) })
                 }
-            }
 
-            WizardFavouritesTip()
-
-            if (quickLogMode && onMigraineSelect != null) {
-                val firstIso = draft.missedActivities.firstOrNull()?.startAtIso
-                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
-            }
-
-            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFEF9A9A))
-
-            BaseCard {
-                if (frequentLabels.isNotEmpty()) {
-                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        searchPool.filter { it.label in frequentLabels }.forEach { ma ->
-                            MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) }
-                        }
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Missed Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) })
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
-                val entries = grouped.entries.toList()
-                entries.forEachIndexed { ci, (cat, items) ->
-                    val nonFreq = items.filter { it.label !in frequentLabels }
-                    if (nonFreq.isNotEmpty()) {
-                        Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+
+                WizardFavouritesTip()
+
+                if (quickLogMode && onMigraineSelect != null) {
+                    val firstIso = draft.missedActivities.firstOrNull()?.startAtIso
+                    MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+                }
+
+                WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFEF9A9A))
+
+                BaseCard {
+                    if (frequentLabels.isNotEmpty()) {
+                        Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreq.forEach { ma -> MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) } }
+                            searchPool.filter { it.label in frequentLabels }.forEach { ma ->
+                                MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) }
+                            }
                         }
-                        if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
+                    val entries = grouped.entries.toList()
+                    entries.forEachIndexed { ci, (cat, items) ->
+                        val nonFreq = items.filter { it.label !in frequentLabels }
+                        if (nonFreq.isNotEmpty()) {
+                            Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                nonFreq.forEach { ma -> MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) } }
+                            }
+                            if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        }
+                    }
+                    if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
-                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
 
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                OutlinedButton(onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
-                Button(
-                    onClick = {
-                        if (quickLogMode) onSave?.invoke(reasonsByLabel.toMap(), notesByLabel.toMap(), !hadMigraineToday)
-                        else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES))
-                    },
-                    enabled = !quickLogMode || draft.missedActivities.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    OutlinedButton(onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                    Button(
+                        onClick = {
+                            if (quickLogMode) onSave?.invoke(reasonsByLabel.toMap(), notesByLabel.toMap(), !hadMigraineToday)
+                            else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.MISSED_ACTIVITIES))
+                        },
+                        enabled = !quickLogMode || draft.missedActivities.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                }
+                Spacer(Modifier.height(32.dp))
             }
-            Spacer(Modifier.height(32.dp))
         }
     }
 

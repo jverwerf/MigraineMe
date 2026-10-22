@@ -83,10 +83,10 @@ fun TimingScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -97,153 +97,155 @@ fun TimingScreen(
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
+            WizardSheet {
 
-            // Mid-attack escape hatch — one tap saves an attack starting now and exits.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    // Opaque base under the 35% gradient so the lattice does not show through.
-                    .background(AppTheme.FadeColor)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                AppTheme.AccentPink.copy(alpha = 0.35f),
-                                AppTheme.AccentPurple.copy(alpha = 0.35f)
+                // Mid-attack escape hatch — one tap saves an attack starting now and exits.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        // Opaque base under the 35% gradient so the lattice does not show through.
+                        .background(AppTheme.FadeColor)
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppTheme.AccentPink.copy(alpha = 0.35f),
+                                    AppTheme.AccentPurple.copy(alpha = 0.35f)
+                                )
                             )
                         )
-                    )
-                    .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                    .clickable(enabled = authState.accessToken != null) {
-                        val token = authState.accessToken ?: return@clickable
-                        vm.clearDraft()
-                        val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                        vm.addFull(
-                            accessToken = token,
-                            type = "Migraine",
-                            severity = null,
-                            beganAtIso = nowIso,
-                            endedAtIso = null,
-                            note = null,
-                            meds = emptyList(),
-                            rels = emptyList()
+                        .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        .clickable(enabled = authState.accessToken != null) {
+                            val token = authState.accessToken ?: return@clickable
+                            vm.clearDraft()
+                            val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                            vm.addFull(
+                                accessToken = token,
+                                type = "Migraine",
+                                severity = null,
+                                beganAtIso = nowIso,
+                                endedAtIso = null,
+                                note = null,
+                                meds = emptyList(),
+                                rels = emptyList()
+                            )
+                            vm.clearDraft()
+                            WizardStepConfig.startRun()
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.HOME) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                        .padding(14.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(AppTheme.AccentPink)
+                                .drawBehind { drawMigraineIcon(Color.White) }
                         )
-                        vm.clearDraft()
-                        WizardStepConfig.startRun()
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) { inclusive = false }
-                            launchSingleTop = true
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                t("It's happening right now"),
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                t("Tap to log an attack starting now. Add details later."),
+                                color = Color.White.copy(alpha = 0.75f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Outlined.ArrowForward,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Hero
+                HeroCard(watermarkRes = R.drawable.brainy_migraines) {
+                    Icon(
+                        imageVector = Icons.Outlined.AccessTime,
+                        contentDescription = t("Timing"),
+                        tint = AppTheme.AccentPink,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Text(
+                        t("When did it happen?"),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        t("Set when the migraine started and ended"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) })
+
+                // Start time
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(t("Started"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    }
+                    AppDateTimePicker(
+                        label = beganAt?.let { "Started: ${formatIsoDdMmYyHm(it)}" } ?: t("Set start time"),
+                        allowFuture = false
+                    ) { beganAt = it; syncDraft() }
+                }
+
+                // End time
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(t("Ended"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    }
+                    AppDateTimePicker(
+                        label = endedAt?.let { "Ended: ${formatIsoDdMmYyHm(it)}" } ?: t("Set end time (optional)"),
+                        allowFuture = false
+                    ) { endedAt = it; syncDraft() }
+                }
+
+                // Duration hint
+                if (beganAt != null && endedAt != null) {
+                    val duration = computeDurationText(beganAt!!, endedAt!!)
+                    if (duration != null) {
+                        BaseCard {
+                            Text(t("Duration: %s", duration), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
                     }
-                    .padding(14.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(AppTheme.AccentPink)
-                            .drawBehind { drawMigraineIcon(Color.White) }
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            t("It's happening right now"),
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Text(
-                            t("Tap to log an attack starting now. Add details later."),
-                            color = Color.White.copy(alpha = 0.75f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Icon(
-                        Icons.AutoMirrored.Outlined.ArrowForward,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.85f),
-                        modifier = Modifier.size(18.dp)
-                    )
                 }
-            }
 
-            // Hero
-            HeroCard(watermarkRes = R.drawable.brainy_migraines) {
-                Icon(
-                    imageVector = Icons.Outlined.AccessTime,
-                    contentDescription = t("Timing"),
-                    tint = AppTheme.AccentPink,
-                    modifier = Modifier.size(40.dp)
-                )
-                Text(
-                    t("When did it happen?"),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    t("Set when the migraine started and ended"),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) })
-
-            // Start time
-            BaseCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("Started"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                // Navigation
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(t("Back")) }
+                    Button(
+                        onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(t("Next")) }
                 }
-                AppDateTimePicker(
-                    label = beganAt?.let { "Started: ${formatIsoDdMmYyHm(it)}" } ?: t("Set start time"),
-                    allowFuture = false
-                ) { beganAt = it; syncDraft() }
-            }
 
-            // End time
-            BaseCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("Ended"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                }
-                AppDateTimePicker(
-                    label = endedAt?.let { "Ended: ${formatIsoDdMmYyHm(it)}" } ?: t("Set end time (optional)"),
-                    allowFuture = false
-                ) { endedAt = it; syncDraft() }
+                Spacer(Modifier.height(32.dp))
             }
-
-            // Duration hint
-            if (beganAt != null && endedAt != null) {
-                val duration = computeDurationText(beganAt!!, endedAt!!)
-                if (duration != null) {
-                    BaseCard {
-                        Text(t("Duration: %s", duration), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-            }
-
-            // Navigation
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-                Button(
-                    onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.TIMING)) },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(t("Next")) }
-            }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

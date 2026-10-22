@@ -78,9 +78,9 @@ fun LocationsScreen(
     val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -89,91 +89,93 @@ fun LocationsScreen(
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode)                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
+            WizardSheet {
 
-            HeroCard(watermarkRes = R.drawable.brainy_guide) {
-                Box(Modifier.size(40.dp).drawBehind {
-                    HubIcons.run { drawLocationPin(Color(0xFF78909C)) }
-                })
-                Text(t("Where were you?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    if (draft.locations.isEmpty()) t("Log your location") else (if (draft.locations.size == 1) t("1 location added") else t("%s locations added", draft.locations.size)),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
-                )
-                if (draft.locations.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    draft.locations.forEachIndexed { index, loc ->
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(prettyLabel(loc.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
-                            Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
-                                modifier = Modifier.size(18.dp).clickable {
-                                    rebuildDraftWithLocations(draft.locations.toMutableList().apply { removeAt(index) })
-                                })
+                HeroCard(watermarkRes = R.drawable.brainy_guide) {
+                    Box(Modifier.size(40.dp).drawBehind {
+                        HubIcons.run { drawLocationPin(Color(0xFF78909C)) }
+                    })
+                    Text(t("Where were you?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        if (draft.locations.isEmpty()) t("Log your location") else (if (draft.locations.size == 1) t("1 location added") else t("%s locations added", draft.locations.size)),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
+                    )
+                    if (draft.locations.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        draft.locations.forEachIndexed { index, loc ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(prettyLabel(loc.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+                                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(18.dp).clickable {
+                                        rebuildDraftWithLocations(draft.locations.toMutableList().apply { removeAt(index) })
+                                    })
+                            }
                         }
                     }
                 }
-            }
 
-            if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.LOCATIONS)) })
-            }
-
-            BaseCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Locations"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_LOCATIONS) })
+                if (!quickLogMode) {
+                    WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.LOCATIONS)) })
                 }
-            }
 
-            WizardFavouritesTip()
-
-            if (quickLogMode && onMigraineSelect != null) {
-                val firstIso = draft.locations.firstOrNull()?.startAtIso
-                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
-            }
-
-            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF78909C))
-
-            BaseCard {
-                if (frequentLabels.isNotEmpty()) {
-                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        searchPool.filter { it.label in frequentLabels }.forEach { loc ->
-                            CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) }
-                        }
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Locations"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_LOCATIONS) })
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
-                val entries = grouped.entries.toList()
-                entries.forEachIndexed { ci, (cat, items) ->
-                    val nonFreq = items.filter { it.label !in frequentLabels }
-                    if (nonFreq.isNotEmpty()) {
-                        Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+
+                WizardFavouritesTip()
+
+                if (quickLogMode && onMigraineSelect != null) {
+                    val firstIso = draft.locations.firstOrNull()?.startAtIso
+                    MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+                }
+
+                WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF78909C))
+
+                BaseCard {
+                    if (frequentLabels.isNotEmpty()) {
+                        Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreq.forEach { loc -> CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) } }
+                            searchPool.filter { it.label in frequentLabels }.forEach { loc ->
+                                CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) }
+                            }
                         }
-                        if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
+                    val entries = grouped.entries.toList()
+                    entries.forEachIndexed { ci, (cat, items) ->
+                        val nonFreq = items.filter { it.label !in frequentLabels }
+                        if (nonFreq.isNotEmpty()) {
+                            Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                nonFreq.forEach { loc -> CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) } }
+                            }
+                            if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        }
+                    }
+                    if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
-                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
 
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                OutlinedButton(onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
-                Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.LOCATIONS)) },
-                    enabled = !quickLogMode || draft.locations.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    OutlinedButton(onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                    Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.LOCATIONS)) },
+                        enabled = !quickLogMode || draft.locations.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                }
+                Spacer(Modifier.height(32.dp))
             }
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

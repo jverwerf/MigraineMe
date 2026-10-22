@@ -1,6 +1,7 @@
 package com.migraineme
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -98,10 +99,10 @@ fun NotesScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { syncDraft(); navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -112,80 +113,82 @@ fun NotesScreen(
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
+            WizardSheet {
 
-            // Hero
-            HeroCard(watermarkRes = R.drawable.brainy_gardener) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPink) } }
-                )
-                Text(t("Notes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    t("Add any additional notes about this migraine"),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) })
-
-            // Notes input
-            BaseCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Hero
+                HeroCard(watermarkRes = R.drawable.brainy_gardener) {
                     Box(
                         modifier = Modifier
-                            .size(20.dp)
-                            .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPurple) } }
+                            .size(40.dp)
+                            .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPink) } }
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("Your notes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Notes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        t("Add any additional notes about this migraine"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { v -> notes = v; syncDraft() },
-                    placeholder = { Text(t("What were you doing? How did it feel? Any patterns you noticed…"), color = AppTheme.SubtleTextColor) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
-                        cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
-                    ),
-                    minLines = 5
-                )
-                Spacer(Modifier.height(10.dp))
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { launchVoice() },
-                        modifier = Modifier.height(40.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
-                    ) {
-                        Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) })
+
+                // Notes input
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPurple) } }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(t("Your notes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { v -> notes = v; syncDraft() },
+                        placeholder = { Text(t("What were you doing? How did it feel? Any patterns you noticed…"), color = AppTheme.SubtleTextColor) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                            cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
+                        ),
+                        minLines = 5
+                    )
+                    Spacer(Modifier.height(10.dp))
+
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { launchVoice() },
+                            modifier = Modifier.height(40.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+                            border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
-            }
 
-            // Navigation
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                OutlinedButton(
-                    onClick = { syncDraft(); navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-                Button(
-                    onClick = { syncDraft(); navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(t("Next")) }
-            }
+                // Navigation
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    OutlinedButton(
+                        onClick = { syncDraft(); navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(t("Back")) }
+                    Button(
+                        onClick = { syncDraft(); navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.NOTES)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(t("Next")) }
+                }
 
-            Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 }

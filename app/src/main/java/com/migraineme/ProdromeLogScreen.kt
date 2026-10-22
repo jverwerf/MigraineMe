@@ -198,12 +198,12 @@ fun ProdromeLogScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar
             // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
             if (!quickLogMode) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
@@ -224,168 +224,170 @@ fun ProdromeLogScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
-            }
+            WizardSheet {
+                }
 
-            // ── Selected prodromes card (hero area) ──
-            HeroCard(watermarkRes = R.drawable.brainy_risk, flipWatermark = true) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .drawBehind { HubIcons.run { drawProdromeEye(Color(0xFFCE93D8)) } }
-                )
-                Text(t("Prodromes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    if (draft.prodromes.isEmpty()) t("Select early warning signs")
-                    else (if (draft.prodromes.size == 1) t("1 prodrome selected") else t("%s prodromes selected", draft.prodromes.size)),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-                if (draft.prodromes.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    draft.prodromes.forEachIndexed { index, p ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.06f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            // Icon in the selected row
-                            val rowIconKey = pool.find { it.label == p.type }?.iconKey
-                            val rowIcon = rowIconKey?.let { ProdromeIcons.forKey(it) }
-                            val rowBrainyId = ProdromeIcons.drawableForKey(rowIconKey)
-                            if (rowBrainyId != null || rowIcon != null) {
-                                LogIconImage(
-                                    drawableId = rowBrainyId,
-                                    fallback = rowIcon,
-                                    size = 20.dp,
-                                    tint = Color(0xFFCE93D8)
+                // ── Selected prodromes card (hero area) ──
+                HeroCard(watermarkRes = R.drawable.brainy_risk, flipWatermark = true) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .drawBehind { HubIcons.run { drawProdromeEye(Color(0xFFCE93D8)) } }
+                    )
+                    Text(t("Prodromes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        if (draft.prodromes.isEmpty()) t("Select early warning signs")
+                        else (if (draft.prodromes.size == 1) t("1 prodrome selected") else t("%s prodromes selected", draft.prodromes.size)),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    if (draft.prodromes.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        draft.prodromes.forEachIndexed { index, p ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.06f))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Icon in the selected row
+                                val rowIconKey = pool.find { it.label == p.type }?.iconKey
+                                val rowIcon = rowIconKey?.let { ProdromeIcons.forKey(it) }
+                                val rowBrainyId = ProdromeIcons.drawableForKey(rowIconKey)
+                                if (rowBrainyId != null || rowIcon != null) {
+                                    LogIconImage(
+                                        drawableId = rowBrainyId,
+                                        fallback = rowIcon,
+                                        size = 20.dp,
+                                        tint = Color(0xFFCE93D8)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        p.type,
+                                        color = AppTheme.BodyTextColor,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                    Text(
+                                        if (p.startAtIso == null) t("Same as migraine start")
+                                        else formatProdromeTime(p.startAtIso),
+                                        color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                                Icon(
+                                    Icons.Outlined.Edit,
+                                    contentDescription = t("Edit time"),
+                                    tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            editIndex = index
+                                            showEditTimeDialog = true
+                                        }
                                 )
                                 Spacer(Modifier.width(8.dp))
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    p.type,
-                                    color = AppTheme.BodyTextColor,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                                )
-                                Text(
-                                    if (p.startAtIso == null) t("Same as migraine start")
-                                    else formatProdromeTime(p.startAtIso),
-                                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
-                                    style = MaterialTheme.typography.labelSmall
+                                Icon(
+                                    Icons.Outlined.Close,
+                                    contentDescription = t("Remove"),
+                                    tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            val updated = draft.prodromes.toMutableList().apply { removeAt(index) }
+                                            rebuildDraftWithProdromes(updated)
+                                        }
                                 )
                             }
-                            Icon(
-                                Icons.Outlined.Edit,
-                                contentDescription = t("Edit time"),
-                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable {
-                                        editIndex = index
-                                        showEditTimeDialog = true
-                                    }
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                Icons.Outlined.Close,
-                                contentDescription = t("Remove"),
-                                tint = AppTheme.AccentPink.copy(alpha = 0.6f),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable {
-                                        val updated = draft.prodromes.toMutableList().apply { removeAt(index) }
-                                        rebuildDraftWithProdromes(updated)
-                                    }
-                            )
                         }
                     }
                 }
-            }
 
-            if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) })
-            }
-
-            // Manage card
-            BaseCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Prodromes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_PRODROMES) })
+                if (!quickLogMode) {
+                    WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) })
                 }
-            }
 
-            WizardFavouritesTip()
-
-            if (quickLogMode && onMigraineSelect != null) {
-                val firstIso = draft.prodromes.firstOrNull()?.startAtIso
-                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
-            }
-
-            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFCE93D8))
-
-            // ── Prodromes card: Frequent, then categories ──
-            BaseCard {
-                if (frequentLabels.isNotEmpty()) {
-                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        searchPool.filter { it.label in frequentLabels }.forEach { prod ->
-                            ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
-                                onProdromeTap(prod.label)
-                            }
-                        }
+                // Manage card
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Prodromes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_PRODROMES) })
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
 
-                val categoryEntries = grouped.entries.toList()
-                categoryEntries.forEachIndexed { catIndex, (category, items) ->
-                    val nonFreqItems = items.filter { it.label !in frequentLabels }
-                    if (nonFreqItems.isNotEmpty()) {
-                        Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                WizardFavouritesTip()
+
+                if (quickLogMode && onMigraineSelect != null) {
+                    val firstIso = draft.prodromes.firstOrNull()?.startAtIso
+                    MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+                }
+
+                WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFCE93D8))
+
+                // ── Prodromes card: Frequent, then categories ──
+                BaseCard {
+                    if (frequentLabels.isNotEmpty()) {
+                        Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreqItems.forEach { prod ->
+                            searchPool.filter { it.label in frequentLabels }.forEach { prod ->
                                 ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
                                     onProdromeTap(prod.label)
                                 }
                             }
                         }
-                        val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
-                        if (hasMore) {
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    }
+
+                    val categoryEntries = grouped.entries.toList()
+                    categoryEntries.forEachIndexed { catIndex, (category, items) ->
+                        val nonFreqItems = items.filter { it.label !in frequentLabels }
+                        if (nonFreqItems.isNotEmpty()) {
+                            Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                nonFreqItems.forEach { prod ->
+                                    ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
+                                        onProdromeTap(prod.label)
+                                    }
+                                }
+                            }
+                            val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
+                            if (hasMore) {
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                            }
                         }
+                    }
+
+                    if (pool.isEmpty()) {
+                        Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
 
-                if (pool.isEmpty()) {
-                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                // Nav buttons
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                    Button(
+                        onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) },
+                        enabled = !quickLogMode || draft.prodromes.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Save") else t("Next")) }
                 }
-            }
 
-            // Nav buttons
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
-                Button(
-                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PRODROMES_LOG)) },
-                    enabled = !quickLogMode || draft.prodromes.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                Spacer(Modifier.height(32.dp))
             }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

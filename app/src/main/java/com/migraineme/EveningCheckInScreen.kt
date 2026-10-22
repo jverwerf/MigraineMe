@@ -609,7 +609,9 @@ fun EveningCheckInScreen(
     fun nowIso(): String = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
     // No own background: MainActivity draws the lattice behind this route.
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    // Navigation-bar inset is taken by the nav Row below, inside its sheet colour,
+    // so no lattice strip shows under Cancel / Next.
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
         LinearProgressIndicator(
             progress = { (pageIndex + 1).toFloat() / pages.size },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)),
@@ -913,7 +915,8 @@ fun EveningCheckInScreen(
         }
 
         if (!saved) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            // Continues the page's WizardSheet under the nav row, so the sheet runs to the bottom edge.
+            Row(Modifier.fillMaxWidth().background(AppTheme.FadeColor).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (currentPage == CheckInPage.Note) {
                     LabelPlate { TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
                 } else {
@@ -973,10 +976,8 @@ private fun SideEffectsPage(
     onFreeTextChange: (String) -> Unit,
     activeRegimens: List<SupabaseDbService.TreatmentRegimenRow>
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 14.dp) {
         Column(
             modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
@@ -1036,6 +1037,7 @@ private fun SideEffectsPage(
         }
 
         Spacer(Modifier.height(16.dp))
+        }
     }
 }
 
@@ -1061,94 +1063,96 @@ private fun FavouritesPage(
     val favourites = remember(items) { items.filter { it.isFavourite } }
     val others = remember(items) { items.filter { !it.isFavourite } }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        } }
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(4.dp))
+            Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            } }
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-        // One card for the whole picker (summary + pools); skipped when there is nothing to show.
-        if (selected.isNotEmpty() || items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
-        // Selected items summary at top
-        if (selected.isNotEmpty()) {
-            Column(
-                Modifier.fillMaxWidth()
-                    .background(accentColor.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                    .border(1.dp, accentColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                selected.forEach { label ->
-                    val isAi = label in aiMatched
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (isAi) {
-                            Text("✦ ", color = Color(0xFFFFD54F), style = MaterialTheme.typography.bodySmall)
+            // One card for the whole picker (summary + pools); skipped when there is nothing to show.
+            if (selected.isNotEmpty() || items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
+            // Selected items summary at top
+            if (selected.isNotEmpty()) {
+                Column(
+                    Modifier.fillMaxWidth()
+                        .background(accentColor.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                        .border(1.dp, accentColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    selected.forEach { label ->
+                        val isAi = label in aiMatched
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isAi) {
+                                Text("✦ ", color = Color(0xFFFFD54F), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text(t(label),
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                Icons.Outlined.Close,
+                                contentDescription = t("Remove"),
+                                tint = accentColor.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp).clickable { onToggle(label) }
+                            )
                         }
-                        Text(t(label),
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = t("Remove"),
-                            tint = accentColor.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp).clickable { onToggle(label) }
-                        )
                     }
                 }
+                if (items.isNotEmpty()) Spacer(Modifier.height(16.dp))
             }
-            if (items.isNotEmpty()) Spacer(Modifier.height(16.dp))
-        }
 
-        if (favourites.isNotEmpty()) {
-            Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(12.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                favourites.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
-                }
-            }
-            if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
-        }
-
-        if (others.isNotEmpty()) {
-            // No divider as the first thing inside the card.
-            if (favourites.isNotEmpty() || selected.isNotEmpty()) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+            if (favourites.isNotEmpty()) {
+                Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(12.dp))
-            }
-            // Group unfavved items by category so each bucket gets its own
-            // sub-header. Falls back to "Other" for items with no category.
-            val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
-            val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
-            orderedCats.forEachIndexed { idx, cat ->
-                if (idx > 0) Spacer(Modifier.height(12.dp))
-                Text(cat, color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                Spacer(Modifier.height(12.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    grouped.getValue(cat).forEach { item ->
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    favourites.forEach { item ->
                         CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                     }
                 }
+                if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
             }
-        }
-        }
 
-        footer()
+            if (others.isNotEmpty()) {
+                // No divider as the first thing inside the card.
+                if (favourites.isNotEmpty() || selected.isNotEmpty()) {
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    Spacer(Modifier.height(12.dp))
+                }
+                // Group unfavved items by category so each bucket gets its own
+                // sub-header. Falls back to "Other" for items with no category.
+                val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+                val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+                orderedCats.forEachIndexed { idx, cat ->
+                    if (idx > 0) Spacer(Modifier.height(12.dp))
+                    Text(cat, color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(12.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        grouped.getValue(cat).forEach { item ->
+                            CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
+                        }
+                    }
+                }
+            }
+            }
 
-        Spacer(Modifier.height(80.dp))
+            footer()
+
+            Spacer(Modifier.height(80.dp))
+        }
     }
 }
 
@@ -1193,107 +1197,109 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
         }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(t("Tell us about your day"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Type or speak freely — keep each thing separate so we can match it accurately"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        } }
-        Spacer(Modifier.height(20.dp))
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(t("Tell us about your day"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Type or speak freely — keep each thing separate so we can match it accurately"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            } }
+            Spacer(Modifier.height(20.dp))
 
-        // One card: the note field, its buttons and whatever was matched from it.
-        BaseCard(innerSpacing = 0.dp) {
-        OutlinedTextField(
-            value = noteText, onValueChange = onNoteChange,
-            placeholder = { Text(t("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = Color.White.copy(alpha = 0.15f)),
-            minLines = 3, maxLines = 6
-        )
-        Spacer(Modifier.height(10.dp))
+            // One card: the note field, its buttons and whatever was matched from it.
+            BaseCard(innerSpacing = 0.dp) {
+            OutlinedTextField(
+                value = noteText, onValueChange = onNoteChange,
+                placeholder = { Text(t("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = Color.White.copy(alpha = 0.15f)),
+                minLines = 3, maxLines = 6
+            )
+            Spacer(Modifier.height(10.dp))
 
-        // Voice + Find matches row
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
-                onClick = { launchVoice() },
-                modifier = Modifier.height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
-            ) {
-                Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
-            }
-
-            if (noteText.isNotBlank() && !aiParsed) {
-                Button(
-                    onClick = onParse, enabled = !aiLoading,
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
-                    shape = RoundedCornerShape(10.dp)
+            // Voice + Find matches row
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { launchVoice() },
+                    modifier = Modifier.height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
                 ) {
-                    if (aiLoading) { CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)); Text(t("Finding…"), style = MaterialTheme.typography.bodySmall) }
-                    else Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
+                }
+
+                if (noteText.isNotBlank() && !aiParsed) {
+                    Button(
+                        onClick = onParse, enabled = !aiLoading,
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (aiLoading) { CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)); Text(t("Finding…"), style = MaterialTheme.typography.bodySmall) }
+                        else Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
-        }
 
-        if (aiParsed && aiResult != null) {
-            val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size +
-                aiResult.symptomsNow.size + (if (aiResult.painNow != null) 1 else 0) +
-                (if (aiResult.auraZones.isNotEmpty()) 1 else 0) + (if (aiResult.migraineEndedAtIso != null) 1 else 0)
-            if (total > 0) {
-                Spacer(Modifier.height(16.dp))
-                Text(if (total == 1) t("Found 1 match — added to review:") else t("Found %s matches — added to review:", total), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Spacer(Modifier.height(8.dp))
+            if (aiParsed && aiResult != null) {
+                val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size +
+                    aiResult.symptomsNow.size + (if (aiResult.painNow != null) 1 else 0) +
+                    (if (aiResult.auraZones.isNotEmpty()) 1 else 0) + (if (aiResult.migraineEndedAtIso != null) 1 else 0)
+                if (total > 0) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(if (total == 1) t("Found 1 match — added to review:") else t("Found %s matches — added to review:", total), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(8.dp))
 
-                aiResult.triggers.forEach { t ->
-                    NoteMatchPill(t.label, "trigger", Color(0xFFFFB74D), t.inferred, t.startAtIso, onRemove = { onRemoveMatch(t.label, "trigger") })
-                }
-                aiResult.prodromes.forEach { p ->
-                    NoteMatchPill(p.label, "prodrome", Color(0xFF9575CD), p.inferred, p.startAtIso, onRemove = { onRemoveMatch(p.label, "prodrome") })
-                }
-                aiResult.medicines.forEach { m ->
-                    val detail = buildString {
-                        m.amount?.let { append("${it} · ") }
-                        if (m.reliefScale != null && m.reliefScale != "NONE") append("relief: ${m.reliefScale.lowercase()}")
-                    }.trimEnd(' ', '·')
-                    NoteMatchPill(m.label, "medicine", Color(0xFF4FC3F7), m.inferred, m.startAtIso, detail.ifBlank { null }, onRemove = { onRemoveMatch(m.label, "medicine") })
-                }
-                aiResult.reliefs.forEach { r ->
-                    val detail = if (r.reliefScale != null && r.reliefScale != "NONE") "relief: ${r.reliefScale.lowercase()}" else null
-                    NoteMatchPill(r.label, "relief", Color(0xFF81C784), r.inferred, r.startAtIso, detail, onRemove = { onRemoveMatch(r.label, "relief") })
-                }
-                // Open-migraine updates matched from the note
-                aiResult.symptomsNow.forEach { s ->
-                    NoteMatchPill(s.label, "symptom", Color(0xFF4DB6AC), s.inferred, null, onRemove = { onRemoveMatch(s.label, "symptom") })
-                }
-                aiResult.painNow?.let { p ->
-                    NoteMatchPill("Pain update · ${p.severity}/10", "pain", AppTheme.AccentPink, false, p.startAtIso,
-                        p.locations.joinToString(", "), onRemove = { onRemoveMatch("", "pain") })
-                }
-                if (aiResult.auraZones.isNotEmpty()) {
-                    NoteMatchPill("Aura moment", "aura", Color(0xFF9575CD), false, null,
-                        "${aiResult.auraZones.size} zone${if (aiResult.auraZones.size > 1) "s" else ""}" +
-                            (aiResult.auraDurationMinutes?.let { " · ${formatAuraDuration(it)}" } ?: ""),
-                        onRemove = { onRemoveMatch("", "aura") })
-                }
-                aiResult.migraineEndedAtIso?.let { endIso ->
-                    NoteMatchPill("Migraine ended", "ended", Color(0xFF81C784), false, endIso, onRemove = { onRemoveMatch("", "ended") })
+                    aiResult.triggers.forEach { t ->
+                        NoteMatchPill(t.label, "trigger", Color(0xFFFFB74D), t.inferred, t.startAtIso, onRemove = { onRemoveMatch(t.label, "trigger") })
+                    }
+                    aiResult.prodromes.forEach { p ->
+                        NoteMatchPill(p.label, "prodrome", Color(0xFF9575CD), p.inferred, p.startAtIso, onRemove = { onRemoveMatch(p.label, "prodrome") })
+                    }
+                    aiResult.medicines.forEach { m ->
+                        val detail = buildString {
+                            m.amount?.let { append("${it} · ") }
+                            if (m.reliefScale != null && m.reliefScale != "NONE") append("relief: ${m.reliefScale.lowercase()}")
+                        }.trimEnd(' ', '·')
+                        NoteMatchPill(m.label, "medicine", Color(0xFF4FC3F7), m.inferred, m.startAtIso, detail.ifBlank { null }, onRemove = { onRemoveMatch(m.label, "medicine") })
+                    }
+                    aiResult.reliefs.forEach { r ->
+                        val detail = if (r.reliefScale != null && r.reliefScale != "NONE") "relief: ${r.reliefScale.lowercase()}" else null
+                        NoteMatchPill(r.label, "relief", Color(0xFF81C784), r.inferred, r.startAtIso, detail, onRemove = { onRemoveMatch(r.label, "relief") })
+                    }
+                    // Open-migraine updates matched from the note
+                    aiResult.symptomsNow.forEach { s ->
+                        NoteMatchPill(s.label, "symptom", Color(0xFF4DB6AC), s.inferred, null, onRemove = { onRemoveMatch(s.label, "symptom") })
+                    }
+                    aiResult.painNow?.let { p ->
+                        NoteMatchPill("Pain update · ${p.severity}/10", "pain", AppTheme.AccentPink, false, p.startAtIso,
+                            p.locations.joinToString(", "), onRemove = { onRemoveMatch("", "pain") })
+                    }
+                    if (aiResult.auraZones.isNotEmpty()) {
+                        NoteMatchPill("Aura moment", "aura", Color(0xFF9575CD), false, null,
+                            "${aiResult.auraZones.size} zone${if (aiResult.auraZones.size > 1) "s" else ""}" +
+                                (aiResult.auraDurationMinutes?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                            onRemove = { onRemoveMatch("", "aura") })
+                    }
+                    aiResult.migraineEndedAtIso?.let { endIso ->
+                        NoteMatchPill("Migraine ended", "ended", Color(0xFF81C784), false, endIso, onRemove = { onRemoveMatch("", "ended") })
+                    }
                 }
             }
-        }
-        if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty() && aiResult.symptomsNow.isEmpty() && aiResult.painNow == null && aiResult.auraZones.isEmpty() && aiResult.migraineEndedAtIso == null)) && noteText.isNotBlank()) {
+            if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty() && aiResult.symptomsNow.isEmpty() && aiResult.painNow == null && aiResult.auraZones.isEmpty() && aiResult.migraineEndedAtIso == null)) && noteText.isNotBlank()) {
+                Spacer(Modifier.height(12.dp))
+                Text(t("No matches found"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+            }
             Spacer(Modifier.height(12.dp))
-            Text(t("No matches found"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            if (noteText.isBlank()) {
+                Spacer(Modifier.height(12.dp))
+            }
+            Spacer(Modifier.height(80.dp))
         }
-        }
-        Spacer(Modifier.height(12.dp))
-        if (noteText.isBlank()) {
-            Spacer(Modifier.height(12.dp))
-        }
-        Spacer(Modifier.height(80.dp))
     }
 }
 
@@ -1391,209 +1397,211 @@ private fun ReviewPage(
 
     var expandedKey by remember { mutableStateOf<String?>(null) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        } }
-        Spacer(Modifier.height(20.dp))
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(4.dp))
+            Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            } }
+            Spacer(Modifier.height(20.dp))
 
-        AnimatedVisibility(visible = saved) {
-            Row(Modifier.fillMaxWidth().background(Color(0xFF2E7D32).copy(alpha = 0.85f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text(t("Check-in saved!"), color = Color.White, fontWeight = FontWeight.SemiBold)
+            AnimatedVisibility(visible = saved) {
+                Row(Modifier.fillMaxWidth().background(Color(0xFF2E7D32).copy(alpha = 0.85f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text(t("Check-in saved!"), color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
             }
-        }
 
-        if (total == 0 && !saved) {
-            Spacer(Modifier.height(40.dp))
-            BaseCard { Text(t("Nothing selected — go back to tap items, or save an empty check-in"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
-        }
+            if (total == 0 && !saved) {
+                Spacer(Modifier.height(40.dp))
+                BaseCard { Text(t("Nothing selected — go back to tap items, or save an empty check-in"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+            }
 
-        if (migraineNowCount > 0) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Migraine update"), Color(0xFF4DB6AC), migraineNowCount)
-            if (endedAtIso != null) {
-                ReviewItemRow("Migraine ended", Color(0xFF81C784), false, false,
-                    subtitle = formatTimeSubtitle(endedAtIso),
-                    onRemove = { rmEnded() }, onClick = {})
-            }
-            nowSymptoms.forEach { s ->
-                ReviewItemRow(s, Color(0xFF4DB6AC), false, false,
-                    subtitle = t("new symptom"),
-                    onRemove = { rmNowSymptom(s) }, onClick = {})
-            }
-            if (painNowLocations.isNotEmpty()) {
-                ReviewItemRow(
-                    "Pain update · $painNowSeverity/10", AppTheme.AccentPink, false, false,
-                    subtitle = painNowLocations.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: it },
-                    onRemove = { rmPainNow() }, onClick = {})
-            }
-            if (auraNowZones.isNotEmpty()) {
-                ReviewItemRow(
-                    "Aura moment", Color(0xFF9575CD), false, false,
-                    subtitle = (if (auraNowZones.size == 1) t("1 zone") else t("%s zones", auraNowZones.size)) +
-                        (auraNowDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
-                    onRemove = { rmAuraNow() }, onClick = {})
-            }
-            }
-        }
-        if (triggers.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Triggers"), Color(0xFFFFB74D), triggers.size)
-            triggers.forEach { t ->
-                val key = "trigger_${t.label}"
-                if (expandedKey == key) {
-                    TriggerEditorPill(t, Color(0xFFFFB74D),
-                        onDone = { expandedKey = null },
-                        onRemove = { rmTrigger(t.label); expandedKey = null }
-                    )
-                } else {
-                    ReviewItemRow(t.label, Color(0xFFFFB74D), t.label in aiLabels, t.inferred,
-                        subtitle = formatTimeSubtitle(t.startAtIso),
-                        onRemove = { rmTrigger(t.label) },
-                        onClick = { expandedKey = key }
-                    )
+            if (migraineNowCount > 0) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Migraine update"), Color(0xFF4DB6AC), migraineNowCount)
+                if (endedAtIso != null) {
+                    ReviewItemRow("Migraine ended", Color(0xFF81C784), false, false,
+                        subtitle = formatTimeSubtitle(endedAtIso),
+                        onRemove = { rmEnded() }, onClick = {})
+                }
+                nowSymptoms.forEach { s ->
+                    ReviewItemRow(s, Color(0xFF4DB6AC), false, false,
+                        subtitle = t("new symptom"),
+                        onRemove = { rmNowSymptom(s) }, onClick = {})
+                }
+                if (painNowLocations.isNotEmpty()) {
+                    ReviewItemRow(
+                        "Pain update · $painNowSeverity/10", AppTheme.AccentPink, false, false,
+                        subtitle = painNowLocations.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: it },
+                        onRemove = { rmPainNow() }, onClick = {})
+                }
+                if (auraNowZones.isNotEmpty()) {
+                    ReviewItemRow(
+                        "Aura moment", Color(0xFF9575CD), false, false,
+                        subtitle = (if (auraNowZones.size == 1) t("1 zone") else t("%s zones", auraNowZones.size)) +
+                            (auraNowDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                        onRemove = { rmAuraNow() }, onClick = {})
+                }
                 }
             }
-            }
-        }
-        if (prodromes.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Prodromes"), Color(0xFF9575CD), prodromes.size)
-            prodromes.forEach { p ->
-                val key = "prodrome_${p.label}"
-                if (expandedKey == key) {
-                    ProdromeEditorPill(p, Color(0xFF9575CD),
-                        onDone = { expandedKey = null },
-                        onRemove = { rmProdrome(p.label); expandedKey = null }
-                    )
-                } else {
-                    ReviewItemRow(p.label, Color(0xFF9575CD), p.label in aiLabels, p.inferred,
-                        subtitle = formatTimeSubtitle(p.startAtIso),
-                        onRemove = { rmProdrome(p.label) },
-                        onClick = { expandedKey = key }
-                    )
+            if (triggers.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Triggers"), Color(0xFFFFB74D), triggers.size)
+                triggers.forEach { t ->
+                    val key = "trigger_${t.label}"
+                    if (expandedKey == key) {
+                        TriggerEditorPill(t, Color(0xFFFFB74D),
+                            onDone = { expandedKey = null },
+                            onRemove = { rmTrigger(t.label); expandedKey = null }
+                        )
+                    } else {
+                        ReviewItemRow(t.label, Color(0xFFFFB74D), t.label in aiLabels, t.inferred,
+                            subtitle = formatTimeSubtitle(t.startAtIso),
+                            onRemove = { rmTrigger(t.label) },
+                            onClick = { expandedKey = key }
+                        )
+                    }
+                }
                 }
             }
-            }
-        }
-        if (medicines.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Medicines"), Color(0xFF4FC3F7), medicines.size)
-            medicines.forEach { m ->
-                val key = "medicine_${m.label}"
-                if (expandedKey == key) {
-                    MedicineEditorPill(m, Color(0xFF4FC3F7),
-                        // Log's implied unit wins over the pool's (history keeps its unit)
-                        doseUnit = DoseUnits.unitForEdit(null, m.amount, medicineUnits[m.label]),
-                        onUpdate = onUpdateMedicine,
-                        onDone = { expandedKey = null },
-                        onRemove = { rmMedicine(m.label); expandedKey = null }
-                    )
-                } else {
-                    val sub = buildString {
-                        m.amount?.let { append("Amount: $it") }
-                        formatTimeSubtitle(m.startAtIso)?.let { if (isNotEmpty()) append(" · "); append(it) }
-                        if (m.reliefScale != null && m.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${m.reliefScale.lowercase()}") }
-                        sideEffectsLine(m.sideEffects, m.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
-                        m.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
-                    }.ifBlank { null }
-                    ReviewItemRow(m.label, Color(0xFF4FC3F7), m.label in aiLabels, m.inferred,
-                        subtitle = sub, onRemove = { rmMedicine(m.label) },
-                        onClick = { expandedKey = key }
-                    )
+            if (prodromes.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Prodromes"), Color(0xFF9575CD), prodromes.size)
+                prodromes.forEach { p ->
+                    val key = "prodrome_${p.label}"
+                    if (expandedKey == key) {
+                        ProdromeEditorPill(p, Color(0xFF9575CD),
+                            onDone = { expandedKey = null },
+                            onRemove = { rmProdrome(p.label); expandedKey = null }
+                        )
+                    } else {
+                        ReviewItemRow(p.label, Color(0xFF9575CD), p.label in aiLabels, p.inferred,
+                            subtitle = formatTimeSubtitle(p.startAtIso),
+                            onRemove = { rmProdrome(p.label) },
+                            onClick = { expandedKey = key }
+                        )
+                    }
+                }
                 }
             }
-            }
-        }
-        if (reliefs.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Reliefs"), Color(0xFF81C784), reliefs.size)
-            reliefs.forEach { r ->
-                val key = "relief_${r.label}"
-                if (expandedKey == key) {
-                    ReliefEditorPill(r, Color(0xFF81C784),
-                        onUpdate = onUpdateRelief,
-                        onDone = { expandedKey = null },
-                        onRemove = { rmRelief(r.label); expandedKey = null }
-                    )
-                } else {
-                    val sub = buildString {
-                        formatTimeSubtitle(r.startAtIso)?.let { append(it) }
-                        if (r.reliefScale != null && r.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${r.reliefScale.lowercase()}") }
-                        sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
-                        r.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
-                    }.ifBlank { null }
-                    ReviewItemRow(r.label, Color(0xFF81C784), r.label in aiLabels, r.inferred,
-                        subtitle = sub, onRemove = { rmRelief(r.label) },
-                        onClick = { expandedKey = key }
-                    )
+            if (medicines.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Medicines"), Color(0xFF4FC3F7), medicines.size)
+                medicines.forEach { m ->
+                    val key = "medicine_${m.label}"
+                    if (expandedKey == key) {
+                        MedicineEditorPill(m, Color(0xFF4FC3F7),
+                            // Log's implied unit wins over the pool's (history keeps its unit)
+                            doseUnit = DoseUnits.unitForEdit(null, m.amount, medicineUnits[m.label]),
+                            onUpdate = onUpdateMedicine,
+                            onDone = { expandedKey = null },
+                            onRemove = { rmMedicine(m.label); expandedKey = null }
+                        )
+                    } else {
+                        val sub = buildString {
+                            m.amount?.let { append("Amount: $it") }
+                            formatTimeSubtitle(m.startAtIso)?.let { if (isNotEmpty()) append(" · "); append(it) }
+                            if (m.reliefScale != null && m.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${m.reliefScale.lowercase()}") }
+                            sideEffectsLine(m.sideEffects, m.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
+                            m.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
+                        }.ifBlank { null }
+                        ReviewItemRow(m.label, Color(0xFF4FC3F7), m.label in aiLabels, m.inferred,
+                            subtitle = sub, onRemove = { rmMedicine(m.label) },
+                            onClick = { expandedKey = key }
+                        )
+                    }
+                }
                 }
             }
-            }
-        }
-        if (activities.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Activities"), Color(0xFFFF8A65), activities.size)
-            activities.forEach { a ->
-                ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
-                    subtitle = formatTimeSubtitle(a.startAtIso),
-                    onRemove = { rmActivity(a.label) },
-                    onClick = {}
-                )
-            }
-            }
-        }
-        if (missed.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("Didn't do"), Color(0xFFE8A0A0), missed.size)
-            missed.forEach { m ->
-                val reasons = (m.reasons + sharedReasons).distinct()
-                ReviewItemRow(m.label, Color(0xFFE8A0A0), m.label in aiLabels, m.inferred,
-                    subtitle = if (reasons.isEmpty()) formatTimeSubtitle(m.startAtIso)
-                        else reasons.joinToString(", ") { tSync(it) },
-                    onRemove = { rmMissed(m.label) },
-                    onClick = {}
-                )
-            }
-            }
-        }
-        if (todayCalendar.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            BaseCard(innerSpacing = 0.dp) {
-            ReviewSectionHeader(t("From calendar"), Color(0xFF64B5F6), todayCalendar.size)
-            todayCalendar.forEach { m ->
-                val type = m.targetType ?: "activity"
-                val color = when (type) {
-                    "activity" -> Color(0xFFFF8A65)
-                    "relief" -> Color(0xFF81C784)
-                    "trigger" -> Color(0xFFFFB74D)
-                    else -> Color(0xFF64B5F6)
+            if (reliefs.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Reliefs"), Color(0xFF81C784), reliefs.size)
+                reliefs.forEach { r ->
+                    val key = "relief_${r.label}"
+                    if (expandedKey == key) {
+                        ReliefEditorPill(r, Color(0xFF81C784),
+                            onUpdate = onUpdateRelief,
+                            onDone = { expandedKey = null },
+                            onRemove = { rmRelief(r.label); expandedKey = null }
+                        )
+                    } else {
+                        val sub = buildString {
+                            formatTimeSubtitle(r.startAtIso)?.let { append(it) }
+                            if (r.reliefScale != null && r.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${r.reliefScale.lowercase()}") }
+                            sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { if (isNotEmpty()) append(" · "); append(it) }
+                            r.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
+                        }.ifBlank { null }
+                        ReviewItemRow(r.label, Color(0xFF81C784), r.label in aiLabels, r.inferred,
+                            subtitle = sub, onRemove = { rmRelief(r.label) },
+                            onClick = { expandedKey = key }
+                        )
+                    }
                 }
-                ReviewItemRow(
-                    "${m.targetLabel ?: "(unknown)"} · ${type}",
-                    color, false, false,
-                    subtitle = m.title?.let { "from \"$it\"" },
-                    onRemove = { rmCalendar(m) },
-                    onClick = {}
-                )
+                }
             }
+            if (activities.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Activities"), Color(0xFFFF8A65), activities.size)
+                activities.forEach { a ->
+                    ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
+                        subtitle = formatTimeSubtitle(a.startAtIso),
+                        onRemove = { rmActivity(a.label) },
+                        onClick = {}
+                    )
+                }
+                }
             }
-        }
+            if (missed.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("Didn't do"), Color(0xFFE8A0A0), missed.size)
+                missed.forEach { m ->
+                    val reasons = (m.reasons + sharedReasons).distinct()
+                    ReviewItemRow(m.label, Color(0xFFE8A0A0), m.label in aiLabels, m.inferred,
+                        subtitle = if (reasons.isEmpty()) formatTimeSubtitle(m.startAtIso)
+                            else reasons.joinToString(", ") { tSync(it) },
+                        onRemove = { rmMissed(m.label) },
+                        onClick = {}
+                    )
+                }
+                }
+            }
+            if (todayCalendar.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                BaseCard(innerSpacing = 0.dp) {
+                ReviewSectionHeader(t("From calendar"), Color(0xFF64B5F6), todayCalendar.size)
+                todayCalendar.forEach { m ->
+                    val type = m.targetType ?: "activity"
+                    val color = when (type) {
+                        "activity" -> Color(0xFFFF8A65)
+                        "relief" -> Color(0xFF81C784)
+                        "trigger" -> Color(0xFFFFB74D)
+                        else -> Color(0xFF64B5F6)
+                    }
+                    ReviewItemRow(
+                        "${m.targetLabel ?: "(unknown)"} · ${type}",
+                        color, false, false,
+                        subtitle = m.title?.let { "from \"$it\"" },
+                        onRemove = { rmCalendar(m) },
+                        onClick = {}
+                    )
+                }
+                }
+            }
 
-        if (total > 0 && !saved) {
-            Spacer(Modifier.height(12.dp))
-            LabelPlate(Modifier.align(Alignment.CenterHorizontally)) { Text((if (total == 1) t("Logging 1 item") else t("Logging %s items", total)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
+            if (total > 0 && !saved) {
+                Spacer(Modifier.height(12.dp))
+                LabelPlate(Modifier.align(Alignment.CenterHorizontally)) { Text((if (total == 1) t("Logging 1 item") else t("Logging %s items", total)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
+            }
+            Spacer(Modifier.height(80.dp))
         }
-        Spacer(Modifier.height(80.dp))
     }
 }
 
@@ -2112,85 +2120,87 @@ private fun PostdromeStep(
         } catch (_: Exception) { "your open migraine" }
     } ?: "your open migraine"
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(t("Postdrome"), color = Color.White,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Any lingering symptoms from %s?", migraineLabel),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        } }
-        Spacer(Modifier.height(12.dp))
-
-        if (isStale) {
-            Row(
-                Modifier.fillMaxWidth()
-                    .background(Color(0xFFFFB74D).copy(alpha = 0.18f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Filled.Warning, null, tint = Color(0xFFFFB74D),
-                    modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    t("This migraine has been open for %s days. End it from the journal when it's truly over.", ageDays ?: 0),
-                    color = Color.White, style = MaterialTheme.typography.bodySmall,
-                )
-            }
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(t("Postdrome"), color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Any lingering symptoms from %s?", migraineLabel),
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            } }
             Spacer(Modifier.height(12.dp))
-        }
 
-        BaseCard(innerSpacing = 0.dp) {
-        if (pool.isEmpty()) {
-            Text(t("No postdrome symptoms in your pool. Manage your symptoms list to add some."),
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth())
-        } else {
-            val accent = Color(0xFFCE93D8)
-            val favs = pool.filter { it.id in favouriteIds }
-            val rest = pool.filter { it.id !in favouriteIds }
-            if (favs.isNotEmpty()) {
-                Text(t("Favourites"), color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            if (isStale) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xFFFFB74D).copy(alpha = 0.18f).compositeOver(AppTheme.FadeColor), RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Warning, null, tint = Color(0xFFFFB74D),
+                        modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        t("This migraine has been open for %s days. End it from the journal when it's truly over.", ageDays ?: 0),
+                        color = Color.White, style = MaterialTheme.typography.bodySmall,
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth()) {
-                    favs.forEach { item ->
-                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
-                            item.label in selected, accent, false) { onToggle(item.label) }
-                    }
-                }
-                if (rest.isNotEmpty()) Spacer(Modifier.height(16.dp))
             }
-            if (rest.isNotEmpty()) {
+
+            BaseCard(innerSpacing = 0.dp) {
+            if (pool.isEmpty()) {
+                Text(t("No postdrome symptoms in your pool. Manage your symptoms list to add some."),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth())
+            } else {
+                val accent = Color(0xFFCE93D8)
+                val favs = pool.filter { it.id in favouriteIds }
+                val rest = pool.filter { it.id !in favouriteIds }
                 if (favs.isNotEmpty()) {
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(12.dp))
-                }
-                val grouped = rest.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
-                val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
-                orderedCats.forEachIndexed { idx, cat ->
-                    if (idx > 0) Spacer(Modifier.height(12.dp))
-                    Text(cat, color = AppTheme.TitleColor,
+                    Text(t("Favourites"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(12.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        grouped.getValue(cat).forEach { item ->
+                        modifier = Modifier.fillMaxWidth()) {
+                        favs.forEach { item ->
                             CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
                                 item.label in selected, accent, false) { onToggle(item.label) }
                         }
                     }
+                    if (rest.isNotEmpty()) Spacer(Modifier.height(16.dp))
+                }
+                if (rest.isNotEmpty()) {
+                    if (favs.isNotEmpty()) {
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        Spacer(Modifier.height(12.dp))
+                    }
+                    val grouped = rest.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+                    val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+                    orderedCats.forEachIndexed { idx, cat ->
+                        if (idx > 0) Spacer(Modifier.height(12.dp))
+                        Text(cat, color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(12.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            grouped.getValue(cat).forEach { item ->
+                                CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                                    item.label in selected, accent, false) { onToggle(item.label) }
+                            }
+                        }
+                    }
                 }
             }
-        }
-        }
+            }
 
-        Spacer(Modifier.height(80.dp))
+            Spacer(Modifier.height(80.dp))
+        }
     }
 }
 
@@ -2238,238 +2248,240 @@ private fun MigraineNowStep(
     var showBack by rememberSaveable { mutableStateOf(false) }
     var showAuraSheet by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(t("How's the migraine now?"), color = Color.White,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Update %s — everything here is added to it", migraineLabel),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        } }
-        Spacer(Modifier.height(16.dp))
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(t("How's the migraine now?"), color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Update %s — everything here is added to it", migraineLabel),
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            } }
+            Spacer(Modifier.height(16.dp))
 
-        // ── Has it ended? ──
-        BaseCard(innerSpacing = 0.dp) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val ongoing = endedAtIso == null
-            Surface(
-                shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
-                color = if (ongoing) accent.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (ongoing) accent else Color.White.copy(alpha = 0.12f)),
-                onClick = { onEndedChange(null) }
-            ) {
-                Text(t("Still ongoing"), color = if (ongoing) Color.White else AppTheme.SubtleTextColor,
-                    fontWeight = if (ongoing) FontWeight.SemiBold else FontWeight.Normal,
-                    textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
-            }
-            Surface(
-                shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
-                color = if (!ongoing) Color(0xFF81C784).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (!ongoing) Color(0xFF81C784) else Color.White.copy(alpha = 0.12f)),
-                onClick = {
-                    if (ongoing) onEndedChange(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+            // ── Has it ended? ──
+            BaseCard(innerSpacing = 0.dp) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val ongoing = endedAtIso == null
+                Surface(
+                    shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
+                    color = if (ongoing) accent.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (ongoing) accent else Color.White.copy(alpha = 0.12f)),
+                    onClick = { onEndedChange(null) }
+                ) {
+                    Text(t("Still ongoing"), color = if (ongoing) Color.White else AppTheme.SubtleTextColor,
+                        fontWeight = if (ongoing) FontWeight.SemiBold else FontWeight.Normal,
+                        textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
                 }
-            ) {
-                Text(t("It ended"), color = if (!ongoing) Color.White else AppTheme.SubtleTextColor,
-                    fontWeight = if (!ongoing) FontWeight.SemiBold else FontWeight.Normal,
-                    textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
+                Surface(
+                    shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
+                    color = if (!ongoing) Color(0xFF81C784).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (!ongoing) Color(0xFF81C784) else Color.White.copy(alpha = 0.12f)),
+                    onClick = {
+                        if (ongoing) onEndedChange(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                    }
+                ) {
+                    Text(t("It ended"), color = if (!ongoing) Color.White else AppTheme.SubtleTextColor,
+                        fontWeight = if (!ongoing) FontWeight.SemiBold else FontWeight.Normal,
+                        textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
+                }
             }
-        }
-        if (endedAtIso != null) {
-            Spacer(Modifier.height(10.dp))
-            Column(
-                Modifier.fillMaxWidth()
-                    .background(Color(0xFF81C784).copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                    .border(1.dp, Color(0xFF81C784).copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                    .padding(12.dp)
-            ) {
-                TimeEditor(endedAtIso, Color(0xFF81C784)) { onEndedChange(it) }
+            if (endedAtIso != null) {
+                Spacer(Modifier.height(10.dp))
+                Column(
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xFF81C784).copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color(0xFF81C784).copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    TimeEditor(endedAtIso, Color(0xFF81C784)) { onEndedChange(it) }
+                }
             }
-        }
-        }
-        Spacer(Modifier.height(20.dp))
+            }
+            Spacer(Modifier.height(20.dp))
 
-        // ── New symptoms ──
-        BaseCard(innerSpacing = 0.dp) {
-        Text(t("Any new symptoms?"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Tap what's appeared since you logged it"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(12.dp))
-        if (addablePool.isEmpty()) {
-            Text(t("All your symptoms are already on this migraine."),
+            // ── New symptoms ──
+            BaseCard(innerSpacing = 0.dp) {
+            Text(t("Any new symptoms?"), color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Tap what's appeared since you logged it"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(12.dp))
+            if (addablePool.isEmpty()) {
+                Text(t("All your symptoms are already on this migraine."),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            } else {
+                val favs = addablePool.filter { it.id in favouriteIds }
+                val rest = addablePool.filter { it.id !in favouriteIds }
+                if (favs.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                        favs.forEach { item ->
+                            CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                                item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
+                        }
+                    }
+                    if (rest.isNotEmpty()) Spacer(Modifier.height(12.dp))
+                }
+                if (rest.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                        rest.forEach { item ->
+                            CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                                item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
+                        }
+                    }
+                }
+            }
+            }
+            Spacer(Modifier.height(20.dp))
+
+            // ── Pain update ──
+            BaseCard(innerSpacing = 0.dp) {
+            Text(t("Pain update"), color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Mark where it hurts right now — moved, spread or peaked"),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        } else {
-            val favs = addablePool.filter { it.id in favouriteIds }
-            val rest = addablePool.filter { it.id !in favouriteIds }
-            if (favs.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                    favs.forEach { item ->
-                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
-                            item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
+            Spacer(Modifier.height(10.dp))
+            if (!painExpanded && painLocations.isEmpty()) {
+                OutlinedButton(
+                    onClick = { painExpanded = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink)
+                ) { Text(t("+ Add pain update"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+            } else {
+                Column(
+                    Modifier.fillMaxWidth()
+                        .background(AppTheme.AccentPink.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                        .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Severity"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.weight(1f))
+                        Text("$painSeverity", color = AppTheme.AccentPink, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Spacer(Modifier.width(8.dp))
+                        Icon(Icons.Outlined.Close, t("Remove pain update"),
+                            tint = AppTheme.AccentPink.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp).clickable {
+                                painExpanded = false
+                                painLocations.toList().forEach { onTogglePainLocation(it) }
+                            })
                     }
-                }
-                if (rest.isNotEmpty()) Spacer(Modifier.height(12.dp))
-            }
-            if (rest.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                    rest.forEach { item ->
-                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
-                            item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
-                    }
-                }
-            }
-        }
-        }
-        Spacer(Modifier.height(20.dp))
-
-        // ── Pain update ──
-        BaseCard(innerSpacing = 0.dp) {
-        Text(t("Pain update"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Mark where it hurts right now — moved, spread or peaked"),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(10.dp))
-        if (!painExpanded && painLocations.isEmpty()) {
-            OutlinedButton(
-                onClick = { painExpanded = true },
-                modifier = Modifier.fillMaxWidth(),
-                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.4f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink)
-            ) { Text(t("+ Add pain update"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
-        } else {
-            Column(
-                Modifier.fillMaxWidth()
-                    .background(AppTheme.AccentPink.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-                    .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-                    .padding(12.dp)
-            ) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Severity"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.weight(1f))
-                    Text("$painSeverity", color = AppTheme.AccentPink, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Outlined.Close, t("Remove pain update"),
-                        tint = AppTheme.AccentPink.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp).clickable {
-                            painExpanded = false
-                            painLocations.toList().forEach { onTogglePainLocation(it) }
-                        })
-                }
-                Slider(
-                    value = painSeverity.toFloat(),
-                    onValueChange = { onPainSeverityChange(it.toInt()) },
-                    valueRange = 1f..10f, steps = 8,
-                    colors = SliderDefaults.colors(thumbColor = AppTheme.AccentPink, activeTrackColor = AppTheme.AccentPink, inactiveTrackColor = AppTheme.TrackColor)
-                )
-                if (painLocations.isNotEmpty()) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        painLocations.forEach { id ->
-                            val label = ALL_PAIN_POINTS_MAP[id] ?: id
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = AppTheme.AccentPink.copy(alpha = 0.15f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.3f)),
-                                onClick = { onTogglePainLocation(id) }
-                            ) {
-                                Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(t(label), color = Color.White, style = MaterialTheme.typography.labelSmall)
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("✕", color = AppTheme.AccentPink, style = MaterialTheme.typography.labelSmall)
+                    Slider(
+                        value = painSeverity.toFloat(),
+                        onValueChange = { onPainSeverityChange(it.toInt()) },
+                        valueRange = 1f..10f, steps = 8,
+                        colors = SliderDefaults.colors(thumbColor = AppTheme.AccentPink, activeTrackColor = AppTheme.AccentPink, inactiveTrackColor = AppTheme.TrackColor)
+                    )
+                    if (painLocations.isNotEmpty()) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            painLocations.forEach { id ->
+                                val label = ALL_PAIN_POINTS_MAP[id] ?: id
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = AppTheme.AccentPink.copy(alpha = 0.15f),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.3f)),
+                                    onClick = { onTogglePainLocation(id) }
+                                ) {
+                                    Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(t(label), color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("✕", color = AppTheme.AccentPink, style = MaterialTheme.typography.labelSmall)
+                                    }
                                 }
                             }
                         }
+                        Spacer(Modifier.height(8.dp))
                     }
-                    Spacer(Modifier.height(8.dp))
-                }
-                // Front / Back toggle
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.08f)).padding(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    listOf("Front##bodymap" to false, "Back##bodymap" to true).forEach { (label, isBack) ->
-                        val sel = showBack == isBack
-                        Surface(
-                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)),
-                            color = if (sel) AppTheme.AccentPurple else Color.Transparent,
-                            shape = RoundedCornerShape(8.dp),
-                            onClick = { showBack = isBack }
-                        ) {
-                            Text(t(label), textAlign = TextAlign.Center,
-                                color = if (sel) Color.White else AppTheme.SubtleTextColor,
-                                fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
+                    // Front / Back toggle
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.08f)).padding(3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf("Front##bodymap" to false, "Back##bodymap" to true).forEach { (label, isBack) ->
+                            val sel = showBack == isBack
+                            Surface(
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)),
+                                color = if (sel) AppTheme.AccentPurple else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp),
+                                onClick = { showBack = isBack }
+                            ) {
+                                Text(t(label), textAlign = TextAlign.Center,
+                                    color = if (sel) Color.White else AppTheme.SubtleTextColor,
+                                    fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
+                            }
                         }
                     }
+                    Spacer(Modifier.height(10.dp))
+                    PainPointOverlay(
+                        imageRes = if (showBack) R.drawable.painpointsback else R.drawable.painpoints,
+                        points = if (showBack) BACK_PAIN_POINTS else FRONT_PAIN_POINTS,
+                        selected = painLocations,
+                        onToggle = onTogglePainLocation
+                    )
                 }
-                Spacer(Modifier.height(10.dp))
-                PainPointOverlay(
-                    imageRes = if (showBack) R.drawable.painpointsback else R.drawable.painpoints,
-                    points = if (showBack) BACK_PAIN_POINTS else FRONT_PAIN_POINTS,
-                    selected = painLocations,
-                    onToggle = onTogglePainLocation
+            }
+            }
+            Spacer(Modifier.height(20.dp))
+
+            // ── Aura ──
+            BaseCard(innerSpacing = 0.dp) {
+            Text(t("Aura"), color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(4.dp))
+            Text(t("Did aura appear or come back?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(10.dp))
+            if (auraZones.isEmpty()) {
+                OutlinedButton(
+                    onClick = { showAuraSheet = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9575CD).copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF9575CD))
+                ) { Text(t("+ Add aura moment"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+            } else {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xFF9575CD).copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0xFF9575CD).copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                        .clickable { showAuraSheet = true }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            (if (auraZones.size == 1) t("1 zone") else t("%s zones", auraZones.size)) +
+                                (auraDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                            color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                        )
+                        Text(t("Tap to edit"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
+                    IconButton(onClick = onAuraClear, modifier = Modifier.size(28.dp)) {
+                        Icon(Icons.Outlined.Close, t("Remove"), tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+            }
+            if (showAuraSheet) {
+                AuraDetailSheet(
+                    initialZones = auraZones,
+                    initialDurationMinutes = auraDurationMin,
+                    onSave = { zones, dur, _ -> onAuraSave(zones, dur); showAuraSheet = false },
+                    onRemove = { onAuraClear(); showAuraSheet = false },
+                    onDismiss = { showAuraSheet = false }
                 )
             }
-        }
-        }
-        Spacer(Modifier.height(20.dp))
 
-        // ── Aura ──
-        BaseCard(innerSpacing = 0.dp) {
-        Text(t("Aura"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("Did aura appear or come back?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(10.dp))
-        if (auraZones.isEmpty()) {
-            OutlinedButton(
-                onClick = { showAuraSheet = true },
-                modifier = Modifier.fillMaxWidth(),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9575CD).copy(alpha = 0.4f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF9575CD))
-            ) { Text(t("+ Add aura moment"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
-        } else {
-            Row(
-                Modifier.fillMaxWidth()
-                    .background(Color(0xFF9575CD).copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                    .border(1.dp, Color(0xFF9575CD).copy(alpha = 0.25f), RoundedCornerShape(10.dp))
-                    .clickable { showAuraSheet = true }
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        (if (auraZones.size == 1) t("1 zone") else t("%s zones", auraZones.size)) +
-                            (auraDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
-                        color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                    )
-                    Text(t("Tap to edit"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                }
-                IconButton(onClick = onAuraClear, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Outlined.Close, t("Remove"), tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
-                }
-            }
+            Spacer(Modifier.height(80.dp))
         }
-        }
-        if (showAuraSheet) {
-            AuraDetailSheet(
-                initialZones = auraZones,
-                initialDurationMinutes = auraDurationMin,
-                onSave = { zones, dur, _ -> onAuraSave(zones, dur); showAuraSheet = false },
-                onRemove = { onAuraClear(); showAuraSheet = false },
-                onDismiss = { showAuraSheet = false }
-            )
-        }
-
-        Spacer(Modifier.height(80.dp))
     }
 }
 
@@ -2493,115 +2505,117 @@ private fun SideEffectsPageV2(
     val others = remember(items) { items.filter { !it.isFavourite } }
     val accentColor = Color(0xFFB97BFF)
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        // Title "Side effects" + regimen name underneath + amount/frequency meta.
-        HeroCard { Column(Modifier.fillMaxWidth()) {
-        Text(t("Side effects"), color = Color.White,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Text(regimen.name, color = Color.White,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-        val parts = listOfNotNull(regimen.amount, regimen.frequency).joinToString(" · ")
-        if (parts.isNotEmpty()) {
-            Spacer(Modifier.height(2.dp))
-            Text(parts, color = accentColor, style = MaterialTheme.typography.labelSmall)
-        }
-        } }
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
+            // Title "Side effects" + regimen name underneath + amount/frequency meta.
+            HeroCard { Column(Modifier.fillMaxWidth()) {
+            Text(t("Side effects"), color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Text(regimen.name, color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            val parts = listOfNotNull(regimen.amount, regimen.frequency).joinToString(" · ")
+            if (parts.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(parts, color = accentColor, style = MaterialTheme.typography.labelSmall)
+            }
+            } }
 
-        Spacer(Modifier.height(12.dp))
-
-        if (items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
-        if (favourites.isNotEmpty()) {
-            Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(12.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                favourites.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
-                }
-            }
-            if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
-        }
 
-        if (others.isNotEmpty()) {
+            if (items.isNotEmpty()) BaseCard(innerSpacing = 0.dp) {
             if (favourites.isNotEmpty()) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(12.dp))
-            }
-            // Group unfavved items by category (Cognitive / Body / Sleep / Mood / ...).
-            val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
-            val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
-            orderedCats.forEachIndexed { idx, cat ->
-                if (idx > 0) Spacer(Modifier.height(12.dp))
-                Text(cat, color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                Spacer(Modifier.height(12.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    grouped.getValue(cat).forEach { item ->
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    favourites.forEach { item ->
                         CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
                     }
                 }
+                if (others.isNotEmpty()) Spacer(Modifier.height(16.dp))
             }
-        }
-        }
 
-        Spacer(Modifier.height(16.dp))
-
-        // Voice → free-text — uses Android's RecognizerIntent (same as Note page).
-        val sideEffectsCtx = androidx.compose.ui.platform.LocalContext.current
-        val voiceLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-            contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
-        ) { res ->
-            if (res.resultCode == android.app.Activity.RESULT_OK) {
-                val matches = res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-                val spoken = matches?.firstOrNull().orEmpty()
-                if (spoken.isNotBlank()) {
-                    val joined = if (freeText.isBlank()) spoken else "$freeText, $spoken"
-                    onFreeTextChange(joined)
+            if (others.isNotEmpty()) {
+                if (favourites.isNotEmpty()) {
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    Spacer(Modifier.height(12.dp))
+                }
+                // Group unfavved items by category (Cognitive / Body / Sleep / Mood / ...).
+                val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+                val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+                orderedCats.forEachIndexed { idx, cat ->
+                    if (idx > 0) Spacer(Modifier.height(12.dp))
+                    Text(cat, color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(12.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        grouped.getValue(cat).forEach { item ->
+                            CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
+                        }
+                    }
                 }
             }
-        }
-        fun launchVoice() {
-            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
-                putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Any extra notes on side effects?"))
             }
-            try { voiceLauncher.launch(intent) } catch (_: Exception) {
-                android.widget.Toast.makeText(sideEffectsCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        // The dictated text was previously invisible: launchVoice() appended
-        // into freeText but no field rendered it. This field shows and edits
-        // it, with the mic as the trailing icon (house pattern).
-        BaseCard(innerSpacing = 0.dp) {
-        OutlinedTextField(
-            value = freeText,
-            onValueChange = onFreeTextChange,
-            label = { Text(t("Extra notes (optional)"), color = AppTheme.SubtleTextColor) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = accentColor,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                cursorColor = accentColor,
-                focusedLabelColor = accentColor,
-                unfocusedLabelColor = AppTheme.SubtleTextColor,
-            ),
-            trailingIcon = {
-                IconButton(onClick = { launchVoice() }) {
-                    Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = accentColor, modifier = Modifier.size(20.dp))
-                }
-            },
-            minLines = 2,
-            maxLines = 4,
-        )
-        }
 
-        Spacer(Modifier.height(80.dp))
+            Spacer(Modifier.height(16.dp))
+
+            // Voice → free-text — uses Android's RecognizerIntent (same as Note page).
+            val sideEffectsCtx = androidx.compose.ui.platform.LocalContext.current
+            val voiceLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+            ) { res ->
+                if (res.resultCode == android.app.Activity.RESULT_OK) {
+                    val matches = res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                    val spoken = matches?.firstOrNull().orEmpty()
+                    if (spoken.isNotBlank()) {
+                        val joined = if (freeText.isBlank()) spoken else "$freeText, $spoken"
+                        onFreeTextChange(joined)
+                    }
+                }
+            }
+            fun launchVoice() {
+                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, appLocale().toLanguageTag())
+                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, tSync("Any extra notes on side effects?"))
+                }
+                try { voiceLauncher.launch(intent) } catch (_: Exception) {
+                    android.widget.Toast.makeText(sideEffectsCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            // The dictated text was previously invisible: launchVoice() appended
+            // into freeText but no field rendered it. This field shows and edits
+            // it, with the mic as the trailing icon (house pattern).
+            BaseCard(innerSpacing = 0.dp) {
+            OutlinedTextField(
+                value = freeText,
+                onValueChange = onFreeTextChange,
+                label = { Text(t("Extra notes (optional)"), color = AppTheme.SubtleTextColor) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = accentColor,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                    cursorColor = accentColor,
+                    focusedLabelColor = accentColor,
+                    unfocusedLabelColor = AppTheme.SubtleTextColor,
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { launchVoice() }) {
+                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = accentColor, modifier = Modifier.size(20.dp))
+                    }
+                },
+                minLines = 2,
+                maxLines = 4,
+            )
+            }
+
+            Spacer(Modifier.height(80.dp))
+        }
     }
 }

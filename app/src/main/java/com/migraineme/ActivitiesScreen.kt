@@ -180,11 +180,11 @@ fun ActivitiesScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
             if (!quickLogMode) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
@@ -203,116 +203,118 @@ fun ActivitiesScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
-            }
+            WizardSheet {
+                }
 
-            HeroCard(watermarkRes = R.drawable.brainy_runner, flipWatermark = true) {
-                Box(Modifier.size(40.dp).drawBehind {
-                    HubIcons.run { drawActivityPulse(Color(0xFFFF8A65)) }
-                })
-                Text(t("What were you doing?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    if (draft.activities.isEmpty()) t("Log your activity") else if (draft.activities.size == 1) t("1 activity added") else t("%s activities added", draft.activities.size),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
-                )
-                if (draft.activities.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    draft.activities.forEachIndexed { index, act ->
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(prettyLabel(act.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                                Text(
-                                    if (act.startAtIso == null) t("Same as migraine start") else formatActTime(act.startAtIso),
-                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
-                                )
-                                if (act.endAtIso != null) {
+                HeroCard(watermarkRes = R.drawable.brainy_runner, flipWatermark = true) {
+                    Box(Modifier.size(40.dp).drawBehind {
+                        HubIcons.run { drawActivityPulse(Color(0xFFFF8A65)) }
+                    })
+                    Text(t("What were you doing?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        if (draft.activities.isEmpty()) t("Log your activity") else if (draft.activities.size == 1) t("1 activity added") else t("%s activities added", draft.activities.size),
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
+                    )
+                    if (draft.activities.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        draft.activities.forEachIndexed { index, act ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(prettyLabel(act.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
                                     Text(
-                                        "→ ${formatActTime(act.endAtIso)}",
+                                        if (act.startAtIso == null) t("Same as migraine start") else formatActTime(act.startAtIso),
                                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
                                     )
-                                }
-                                if (act.startAtIso != null && act.endAtIso != null) {
-                                    deriveDurationMinutes(act.startAtIso, act.endAtIso)?.let { mins ->
+                                    if (act.endAtIso != null) {
                                         Text(
-                                            if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m",
-                                            color = AppTheme.AccentPurple.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall
+                                            "→ ${formatActTime(act.endAtIso)}",
+                                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
                                         )
                                     }
+                                    if (act.startAtIso != null && act.endAtIso != null) {
+                                        deriveDurationMinutes(act.startAtIso, act.endAtIso)?.let { mins ->
+                                            Text(
+                                                if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m",
+                                                color = AppTheme.AccentPurple.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                }
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Icon(Icons.Outlined.Edit, t("Edit time"), tint = AppTheme.AccentPurple.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp).clickable { editIndex = index; showEditTimeDialog = true })
+                                    Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp).clickable {
+                                            rebuildDraftWithActivities(draft.activities.toMutableList().apply { removeAt(index) })
+                                        })
                                 }
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Icon(Icons.Outlined.Edit, t("Edit time"), tint = AppTheme.AccentPurple.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(18.dp).clickable { editIndex = index; showEditTimeDialog = true })
-                                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(18.dp).clickable {
-                                        rebuildDraftWithActivities(draft.activities.toMutableList().apply { removeAt(index) })
-                                    })
+                        }
+                    }
+                }
+
+                if (!quickLogMode) {
+                    WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.ACTIVITIES)) })
+                }
+
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_ACTIVITIES) })
+                    }
+                }
+
+                WizardFavouritesTip()
+
+                if (quickLogMode && onMigraineSelect != null) {
+                    val firstIso = draft.activities.firstOrNull()?.startAtIso
+                    MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+                }
+
+                WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFFF8A65))
+
+                BaseCard {
+                    if (frequentLabels.isNotEmpty()) {
+                        Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            searchPool.filter { it.label in frequentLabels }.forEach { act ->
+                                ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) }
                             }
                         }
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
-                }
-            }
-
-            if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.ACTIVITIES)) })
-            }
-
-            BaseCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_ACTIVITIES) })
-                }
-            }
-
-            WizardFavouritesTip()
-
-            if (quickLogMode && onMigraineSelect != null) {
-                val firstIso = draft.activities.firstOrNull()?.startAtIso
-                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
-            }
-
-            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFFF8A65))
-
-            BaseCard {
-                if (frequentLabels.isNotEmpty()) {
-                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        searchPool.filter { it.label in frequentLabels }.forEach { act ->
-                            ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) }
+                    val entries = grouped.entries.toList()
+                    entries.forEachIndexed { ci, (cat, items) ->
+                        val nonFreq = items.filter { it.label !in frequentLabels }
+                        if (nonFreq.isNotEmpty()) {
+                            Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                nonFreq.forEach { act -> ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) } }
+                            }
+                            if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                         }
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
-                val entries = grouped.entries.toList()
-                entries.forEachIndexed { ci, (cat, items) ->
-                    val nonFreq = items.filter { it.label !in frequentLabels }
-                    if (nonFreq.isNotEmpty()) {
-                        Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreq.forEach { act -> ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) } }
-                        }
-                        if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
-                    }
-                }
-                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
 
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                OutlinedButton(onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
-                Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.ACTIVITIES)) },
-                    enabled = !quickLogMode || draft.activities.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    OutlinedButton(onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                    Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.ACTIVITIES)) },
+                        enabled = !quickLogMode || draft.activities.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                }
+                Spacer(Modifier.height(32.dp))
             }
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

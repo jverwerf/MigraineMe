@@ -365,10 +365,10 @@ fun PaintThePictureScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -379,312 +379,314 @@ fun PaintThePictureScreen(
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
+            WizardSheet {
 
-            // Hero
-            HeroCard(watermarkRes = R.drawable.brainy_cognitive) {
-                Icon(
-                    imageVector = Icons.Outlined.Notes,
-                    contentDescription = t("Paint the picture"),
-                    tint = AppTheme.AccentPink,
-                    modifier = Modifier.size(40.dp)
-                )
-                Text(
-                    t("Paint the picture"),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    t("Type or speak freely — we'll pre-fill your entire log"),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = {
-                WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
-                navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
-            })
-
-            // Input card
-            BaseCard {
-                OutlinedTextField(
-                    value = dayNote,
-                    onValueChange = {
-                        dayNote = it
-                        syncNote()
-                        if (aiParsed) {
-                            aiParsed = false; aiResult = null
-                            editPainLocations.clear(); editSymptoms.clear(); editMatches.clear()
-                            editSeverity = null
-                        }
-                    },
-                    placeholder = { Text(t("e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
-                        cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
-                    ),
-                    minLines = 4, maxLines = 8
-                )
-                Spacer(Modifier.height(10.dp))
-
-                // Voice + Find matches row
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { launchVoice() },
-                        modifier = Modifier.height(40.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
-                    ) {
-                        Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    if (dayNote.isNotBlank() && !aiParsed) {
-                        if (premiumState.isPremium) {
-                            Button(
-                                onClick = { runAiParse() },
-                                enabled = !aiLoading,
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                if (aiLoading) {
-                                    CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
-                                } else {
-                                    Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                        } else {
-                            // Free users still get deterministic matching
-                            Button(
-                                onClick = { runAiParse() },
-                                enabled = !aiLoading,
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                if (aiLoading) {
-                                    CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
-                                } else {
-                                    Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ── Show editable parse results ──
-                if (aiParsed) {
-                    val totalFound = editMatches.size + editPainLocations.size + editSymptoms.size +
-                            (if (editSeverity != null) 1 else 0)
-
-                    if (totalFound > 0) {
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            if (totalFound == 1) t("Found 1 match — added to your log:") else t("Found %s matches — added to your log:", totalFound),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Spacer(Modifier.height(6.dp))
-
-                        // Severity — editable slider
-                        editSeverity?.let { sev ->
-                            if (showSeverityEditor) {
-                                SeverityEditorPill(
-                                    value = sev.value,
-                                    inferred = sev.inferred,
-                                    onValueChange = { newVal ->
-                                        editSeverity = AiParsedField(newVal, inferred = false)
-                                        vm.setMigraineDraft(severity = newVal)
-                                    },
-                                    onDone = { showSeverityEditor = false },
-                                    onRemove = {
-                                        editSeverity = null
-                                        showSeverityEditor = false
-                                    }
-                                )
-                            } else {
-                                EditableMatchPill(
-                                    label = t("Severity: %s/10", sev.value),
-                                    category = "severity",
-                                    color = Color(0xFFEF5350),
-                                    inferred = sev.inferred,
-                                    onClick = { showSeverityEditor = true },
-                                    onRemove = { editSeverity = null }
-                                )
-                            }
-                        }
-
-                        // Pain locations — remove only
-                        editPainLocations.toList().forEach { loc ->
-                            EditableMatchPill(
-                                label = loc.value,
-                                category = "pain location",
-                                color = Color(0xFFEF5350),
-                                inferred = loc.inferred,
-                                onRemove = {
-                                    editPainLocations.removeAll { it.value == loc.value }
-                                    val labelToId = ALL_PAIN_POINTS_MAP.entries.associate { it.value to it.key }
-                                    vm.setPainLocationsDraft(editPainLocations.mapNotNull { labelToId[it.value] })
-                                }
-                            )
-                        }
-
-                        // Symptoms — remove only
-                        editSymptoms.toList().forEach { sym ->
-                            EditableMatchPill(
-                                label = sym.value,
-                                category = "symptom",
-                                color = AppTheme.AccentPink,
-                                inferred = sym.inferred,
-                                onRemove = {
-                                    editSymptoms.removeAll { it.value == sym.value }
-                                    vm.setSymptomsDraft(editSymptoms.map { it.value })
-                                }
-                            )
-                        }
-
-                        // Item matches — all expandable for time, medicine/relief also have extra fields
-                        editMatches.toList().forEach { m ->
-                            val catColor = when (m.category) {
-                                "trigger" -> Color(0xFFFFB74D)
-                                "prodrome" -> Color(0xFF9575CD)
-                                "medicine" -> Color(0xFF4FC3F7)
-                                "relief" -> Color(0xFF81C784)
-                                "activity" -> Color(0xFFFF8A65)
-                                "location" -> Color(0xFF78909C)
-                                "missed_activity" -> Color(0xFFFF7043)
-                                else -> AppTheme.SubtleTextColor
-                            }
-                            val key = "${m.label}|${m.category}"
-                            val isExpanded = expandedItemKey == key
-
-                            if (isExpanded) {
-                                ItemEditorPill(
-                                    match = m,
-                                    color = catColor,
-                                    // Log's implied unit wins over the pool's (history keeps its unit)
-                                    doseUnit = if (m.category == "medicine")
-                                        DoseUnits.unitForEdit(null, m.amount, medicinePool.find { p -> p.label == m.label }?.doseUnit)
-                                    else DoseUnits.MG,
-                                    onUpdate = { updated ->
-                                        val idx = editMatches.indexOfFirst { it.label == m.label && it.category == m.category }
-                                        if (idx >= 0) editMatches[idx] = updated
-                                    },
-                                    onDone = { expandedItemKey = null; syncDraftItems() },
-                                    onRemove = {
-                                        editMatches.removeAll { it.label == m.label && it.category == m.category }
-                                        expandedItemKey = null
-                                        syncDraftItems()
-                                    }
-                                )
-                            } else {
-                                val timeSub = m.startAtIso?.let { iso ->
-                                    try {
-                                        val odt = OffsetDateTime.parse(iso)
-                                        val isToday = odt.toLocalDate() == java.time.LocalDate.now()
-                                        if (isToday) odt.format(DateTimeFormatter.ofPattern("HH:mm"))
-                                        else odt.format(DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", appLocale()))
-                                    } catch (_: Exception) { null }
-                                }
-                                val detailParts = mutableListOf<String>()
-                                timeSub?.let { detailParts.add(it) }
-                                m.amount?.let { detailParts.add(it) }
-                                if (m.reliefScale != null && m.reliefScale != "NONE") detailParts.add("relief: ${m.reliefScale!!.lowercase()}")
-                                val sub = detailParts.joinToString(" · ").ifBlank { null }
-
-                                EditableMatchPill(
-                                    label = m.label,
-                                    category = m.category.replace("_", " "),
-                                    color = catColor,
-                                    inferred = m.inferred,
-                                    subtitle = sub,
-                                    onClick = { expandedItemKey = key },
-                                    onRemove = {
-                                        editMatches.removeAll { it.label == m.label && it.category == m.category }
-                                        syncDraftItems()
-                                    }
-                                )
-                            }
-                        }
-
-                        // Legend for inferred items
-                        val hasInferred = (editSeverity?.inferred == true) ||
-                                editPainLocations.any { it.inferred } ||
-                                editSymptoms.any { it.inferred } ||
-                                editMatches.any { it.inferred }
-                        if (hasInferred) {
-                            Spacer(Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    t("Italic items are suggestions — remove any that don't apply"),
-                                    color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-
-                    } else if (dayNote.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(t("No matches found — you can add items manually in the next steps"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-
-            // Hint — skip is fine
-            if (!aiParsed && dayNote.isBlank()) {
-                BaseCard {
+                // Hero
+                HeroCard(watermarkRes = R.drawable.brainy_cognitive) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notes,
+                        contentDescription = t("Paint the picture"),
+                        tint = AppTheme.AccentPink,
+                        modifier = Modifier.size(40.dp)
+                    )
                     Text(
-                        t("This is optional — you can skip straight to logging manually"),
+                        t("Paint the picture"),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        t("Type or speak freely — we'll pre-fill your entire log"),
                         color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
 
-            // Navigation
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-                Button(
-                    onClick = {
-                        // Auto-parse if text entered but not yet parsed
-                        if (dayNote.isNotBlank() && !aiParsed) runAiParse()
-                        // Re-inject edited state before navigating
-                        if (aiParsed) injectIntoDraft()
-                        WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
-                        navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(t("Next")) }
-            }
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = {
+                    WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
+                    navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
+                })
 
-            Spacer(Modifier.height(32.dp))
+                // Input card
+                BaseCard {
+                    OutlinedTextField(
+                        value = dayNote,
+                        onValueChange = {
+                            dayNote = it
+                            syncNote()
+                            if (aiParsed) {
+                                aiParsed = false; aiResult = null
+                                editPainLocations.clear(); editSymptoms.clear(); editMatches.clear()
+                                editSeverity = null
+                            }
+                        },
+                        placeholder = { Text(t("e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                            cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
+                        ),
+                        minLines = 4, maxLines = 8
+                    )
+                    Spacer(Modifier.height(10.dp))
+
+                    // Voice + Find matches row
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { launchVoice() },
+                            modifier = Modifier.height(40.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+                            border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
+                        }
+
+                        if (dayNote.isNotBlank() && !aiParsed) {
+                            if (premiumState.isPremium) {
+                                Button(
+                                    onClick = { runAiParse() },
+                                    enabled = !aiLoading,
+                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    if (aiLoading) {
+                                        CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
+                                    } else {
+                                        Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            } else {
+                                // Free users still get deterministic matching
+                                Button(
+                                    onClick = { runAiParse() },
+                                    enabled = !aiLoading,
+                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    if (aiLoading) {
+                                        CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
+                                    } else {
+                                        Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Show editable parse results ──
+                    if (aiParsed) {
+                        val totalFound = editMatches.size + editPainLocations.size + editSymptoms.size +
+                                (if (editSeverity != null) 1 else 0)
+
+                        if (totalFound > 0) {
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                if (totalFound == 1) t("Found 1 match — added to your log:") else t("Found %s matches — added to your log:", totalFound),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Spacer(Modifier.height(6.dp))
+
+                            // Severity — editable slider
+                            editSeverity?.let { sev ->
+                                if (showSeverityEditor) {
+                                    SeverityEditorPill(
+                                        value = sev.value,
+                                        inferred = sev.inferred,
+                                        onValueChange = { newVal ->
+                                            editSeverity = AiParsedField(newVal, inferred = false)
+                                            vm.setMigraineDraft(severity = newVal)
+                                        },
+                                        onDone = { showSeverityEditor = false },
+                                        onRemove = {
+                                            editSeverity = null
+                                            showSeverityEditor = false
+                                        }
+                                    )
+                                } else {
+                                    EditableMatchPill(
+                                        label = t("Severity: %s/10", sev.value),
+                                        category = "severity",
+                                        color = Color(0xFFEF5350),
+                                        inferred = sev.inferred,
+                                        onClick = { showSeverityEditor = true },
+                                        onRemove = { editSeverity = null }
+                                    )
+                                }
+                            }
+
+                            // Pain locations — remove only
+                            editPainLocations.toList().forEach { loc ->
+                                EditableMatchPill(
+                                    label = loc.value,
+                                    category = "pain location",
+                                    color = Color(0xFFEF5350),
+                                    inferred = loc.inferred,
+                                    onRemove = {
+                                        editPainLocations.removeAll { it.value == loc.value }
+                                        val labelToId = ALL_PAIN_POINTS_MAP.entries.associate { it.value to it.key }
+                                        vm.setPainLocationsDraft(editPainLocations.mapNotNull { labelToId[it.value] })
+                                    }
+                                )
+                            }
+
+                            // Symptoms — remove only
+                            editSymptoms.toList().forEach { sym ->
+                                EditableMatchPill(
+                                    label = sym.value,
+                                    category = "symptom",
+                                    color = AppTheme.AccentPink,
+                                    inferred = sym.inferred,
+                                    onRemove = {
+                                        editSymptoms.removeAll { it.value == sym.value }
+                                        vm.setSymptomsDraft(editSymptoms.map { it.value })
+                                    }
+                                )
+                            }
+
+                            // Item matches — all expandable for time, medicine/relief also have extra fields
+                            editMatches.toList().forEach { m ->
+                                val catColor = when (m.category) {
+                                    "trigger" -> Color(0xFFFFB74D)
+                                    "prodrome" -> Color(0xFF9575CD)
+                                    "medicine" -> Color(0xFF4FC3F7)
+                                    "relief" -> Color(0xFF81C784)
+                                    "activity" -> Color(0xFFFF8A65)
+                                    "location" -> Color(0xFF78909C)
+                                    "missed_activity" -> Color(0xFFFF7043)
+                                    else -> AppTheme.SubtleTextColor
+                                }
+                                val key = "${m.label}|${m.category}"
+                                val isExpanded = expandedItemKey == key
+
+                                if (isExpanded) {
+                                    ItemEditorPill(
+                                        match = m,
+                                        color = catColor,
+                                        // Log's implied unit wins over the pool's (history keeps its unit)
+                                        doseUnit = if (m.category == "medicine")
+                                            DoseUnits.unitForEdit(null, m.amount, medicinePool.find { p -> p.label == m.label }?.doseUnit)
+                                        else DoseUnits.MG,
+                                        onUpdate = { updated ->
+                                            val idx = editMatches.indexOfFirst { it.label == m.label && it.category == m.category }
+                                            if (idx >= 0) editMatches[idx] = updated
+                                        },
+                                        onDone = { expandedItemKey = null; syncDraftItems() },
+                                        onRemove = {
+                                            editMatches.removeAll { it.label == m.label && it.category == m.category }
+                                            expandedItemKey = null
+                                            syncDraftItems()
+                                        }
+                                    )
+                                } else {
+                                    val timeSub = m.startAtIso?.let { iso ->
+                                        try {
+                                            val odt = OffsetDateTime.parse(iso)
+                                            val isToday = odt.toLocalDate() == java.time.LocalDate.now()
+                                            if (isToday) odt.format(DateTimeFormatter.ofPattern("HH:mm"))
+                                            else odt.format(DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", appLocale()))
+                                        } catch (_: Exception) { null }
+                                    }
+                                    val detailParts = mutableListOf<String>()
+                                    timeSub?.let { detailParts.add(it) }
+                                    m.amount?.let { detailParts.add(it) }
+                                    if (m.reliefScale != null && m.reliefScale != "NONE") detailParts.add("relief: ${m.reliefScale!!.lowercase()}")
+                                    val sub = detailParts.joinToString(" · ").ifBlank { null }
+
+                                    EditableMatchPill(
+                                        label = m.label,
+                                        category = m.category.replace("_", " "),
+                                        color = catColor,
+                                        inferred = m.inferred,
+                                        subtitle = sub,
+                                        onClick = { expandedItemKey = key },
+                                        onRemove = {
+                                            editMatches.removeAll { it.label == m.label && it.category == m.category }
+                                            syncDraftItems()
+                                        }
+                                    )
+                                }
+                            }
+
+                            // Legend for inferred items
+                            val hasInferred = (editSeverity?.inferred == true) ||
+                                    editPainLocations.any { it.inferred } ||
+                                    editSymptoms.any { it.inferred } ||
+                                    editMatches.any { it.inferred }
+                            if (hasInferred) {
+                                Spacer(Modifier.height(8.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        t("Italic items are suggestions — remove any that don't apply"),
+                                        color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+
+                        } else if (dayNote.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(t("No matches found — you can add items manually in the next steps"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+
+                // Hint — skip is fine
+                if (!aiParsed && dayNote.isBlank()) {
+                    BaseCard {
+                        Text(
+                            t("This is optional — you can skip straight to logging manually"),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                // Navigation
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(t("Back")) }
+                    Button(
+                        onClick = {
+                            // Auto-parse if text entered but not yet parsed
+                            if (dayNote.isNotBlank() && !aiParsed) runAiParse()
+                            // Re-inject edited state before navigating
+                            if (aiParsed) injectIntoDraft()
+                            WizardStepConfig.onPaintLeaveForward(vm.draft.value, postdromeLabels())
+                            navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAINT_PICTURE))
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(t("Next")) }
+                }
+
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 }

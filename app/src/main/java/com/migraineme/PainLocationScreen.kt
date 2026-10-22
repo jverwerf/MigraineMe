@@ -158,10 +158,10 @@ fun PainLocationScreen(
     val scroll = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scroll) { scrollState ->
-        ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -172,56 +172,58 @@ fun PainLocationScreen(
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
+            WizardSheet {
 
-            // ── 1. Pain Hero Card ──
-            HeroCard(watermarkRes = R.drawable.brainy_treatments) {
-                Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
-                Text(t("Pain"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    t("Rate the severity and mark where you feel it. Add another entry if the pain moved or peaked later"),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
+                // ── 1. Pain Hero Card ──
+                HeroCard(watermarkRes = R.drawable.brainy_treatments) {
+                    Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
+                    Text(t("Pain"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        t("Rate the severity and mark where you feel it. Add another entry if the pain moved or peaked later"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) })
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) })
 
-            // ── 2. One card per timestamped pain entry ──
-            draft.painEntries.forEachIndexed { index, entry ->
-                PainEntryCard(
-                    vm = vm,
-                    entry = entry,
-                    index = index,
-                    canRemove = draft.painEntries.size > 1
-                )
-            }
+                // ── 2. One card per timestamped pain entry ──
+                draft.painEntries.forEachIndexed { index, entry ->
+                    PainEntryCard(
+                        vm = vm,
+                        entry = entry,
+                        index = index,
+                        canRemove = draft.painEntries.size > 1
+                    )
+                }
 
-            // ── 3. Add entry ──
-            OutlinedButton(
-                onClick = { vm.addPainEntry() },
-                modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.35f)),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-            ) { Text(t("+ Add pain entry"), fontWeight = FontWeight.SemiBold) }
-
-            // Navigation
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+                // ── 3. Add entry ──
                 OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                    onClick = { vm.addPainEntry() },
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.35f)),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-                Button(
-                    onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(t("Next")) }
-            }
+                ) { Text(t("+ Add pain entry"), fontWeight = FontWeight.SemiBold) }
 
-            Spacer(Modifier.height(32.dp))
+                // Navigation
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(t("Back")) }
+                    Button(
+                        onClick = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.PAIN_LOCATION)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(t("Next")) }
+                }
+
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 }

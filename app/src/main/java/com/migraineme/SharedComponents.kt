@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.unit.dp
 
 /**
@@ -138,13 +139,16 @@ fun ScrollableScreenContent(
     scrollState: ScrollState,
     logoRevealHeight: Dp = AppTheme.LogoRevealHeight,
     spacing: Dp = 16.dp,
+    // Wizard steps pass 0 for both: their WizardSheet runs edge to edge and past the bottom.
+    horizontalPadding: Dp = 16.dp,
+    bottomPadding: Dp = 12.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = horizontalPadding, end = horizontalPadding, top = 12.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // Space at top to reveal background image
@@ -220,6 +224,36 @@ fun HeroCard(
             )
         }
     }
+}
+
+/**
+ * One solid purple sheet that holds every card of a wizard / check-in page, so the
+ * page reads as one screen sitting above the lattice instead of loose cards on the
+ * pattern (Jordy 2026-10-22, option A). Starts under the step's back row with rounded
+ * top corners and runs past the bottom of the screen, so no lattice shows below the
+ * last card however short the step is. Same FadeColor the page scrolls to, so a
+ * scrolled step and a short step look identical.
+ */
+@Composable
+fun WizardSheet(
+    modifier: Modifier = Modifier,
+    horizontalPadding: Dp = 16.dp,
+    spacing: Dp = 16.dp,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val minHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = minHeight)
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(AppTheme.FadeColor)
+            .padding(horizontal = horizontalPadding, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing),
+        horizontalAlignment = horizontalAlignment,
+        content = content
+    )
 }
 
 /**

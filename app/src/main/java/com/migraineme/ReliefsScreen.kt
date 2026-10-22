@@ -161,12 +161,12 @@ fun ReliefsScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
             // Quick log keeps ONE back: the app top bar. This row is only for the full wizard, where that bar is hidden.
             if (!quickLogMode) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
@@ -187,194 +187,196 @@ fun ReliefsScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
-            }
+            WizardSheet {
+                }
 
-            // ── HeroCard ──
-            HeroCard(watermarkRes = R.drawable.brainy_recover) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .drawBehind { HubIcons.run { drawReliefLeaf(Color(0xFF81C784)) } }
-                )
-                Text(t("Reliefs"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    if (draft.rels.isEmpty()) t("Add reliefs that helped")
-                    else (if (draft.rels.size == 1) t("1 relief added") else t("%s reliefs added", draft.rels.size)),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-                if (draft.rels.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    draft.rels.forEachIndexed { index, r ->
-                        val relief = ReliefScale.fromString(r.reliefScale)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.06f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    r.type,
-                                    color = AppTheme.BodyTextColor,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // ── HeroCard ──
+                HeroCard(watermarkRes = R.drawable.brainy_recover) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .drawBehind { HubIcons.run { drawReliefLeaf(Color(0xFF81C784)) } }
+                    )
+                    Text(t("Reliefs"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        if (draft.rels.isEmpty()) t("Add reliefs that helped")
+                        else (if (draft.rels.size == 1) t("1 relief added") else t("%s reliefs added", draft.rels.size)),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    if (draft.rels.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        draft.rels.forEachIndexed { index, r ->
+                            val relief = ReliefScale.fromString(r.reliefScale)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.06f))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        if (r.startAtIso == null) t("Same as migraine start")
-                                        else formatReliefTime(r.startAtIso),
-                                        color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
-                                        style = MaterialTheme.typography.labelSmall
+                                        r.type,
+                                        color = AppTheme.BodyTextColor,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                     )
-                                    if (r.endAtIso != null) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(
-                                            "→ ${formatReliefTime(r.endAtIso)}",
+                                            if (r.startAtIso == null) t("Same as migraine start")
+                                            else formatReliefTime(r.startAtIso),
                                             color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                             style = MaterialTheme.typography.labelSmall
                                         )
-                                    }
-                                    if (r.startAtIso != null && r.endAtIso != null) {
-                                        deriveDurationMinutes(r.startAtIso, r.endAtIso)?.let { mins ->
+                                        if (r.endAtIso != null) {
                                             Text(
-                                                t("• %smin", mins),
+                                                "→ ${formatReliefTime(r.endAtIso)}",
                                                 color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                                 style = MaterialTheme.typography.labelSmall
                                             )
                                         }
-                                    } else if (r.endAtIso == null && r.durationMinutes != null) {
+                                        if (r.startAtIso != null && r.endAtIso != null) {
+                                            deriveDurationMinutes(r.startAtIso, r.endAtIso)?.let { mins ->
+                                                Text(
+                                                    t("• %smin", mins),
+                                                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                                    style = MaterialTheme.typography.labelSmall
+                                                )
+                                            }
+                                        } else if (r.endAtIso == null && r.durationMinutes != null) {
+                                            Text(
+                                                t("• %smin", r.durationMinutes),
+                                                color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                    // Relief scale
+                                    Text(
+                                        t("Relief: %s", relief.display),
+                                        color = relief.color,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                    )
+                                    // Side effects: the ticked items, or a legacy scale
+                                    sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { se ->
                                         Text(
-                                            t("• %smin", r.durationMinutes),
-                                            color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                            se,
+                                            color = SideEffectScale.fromString(SideEffectItem.scaleFor(r.sideEffects, r.sideEffectScale)).color,
                                             style = MaterialTheme.typography.labelSmall
                                         )
                                     }
                                 }
-                                // Relief scale
-                                Text(
-                                    t("Relief: %s", relief.display),
-                                    color = relief.color,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                Icon(
+                                    Icons.Outlined.Edit,
+                                    contentDescription = t("Edit"),
+                                    tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            editIndex = index
+                                            showEditDialog = true
+                                        }
                                 )
-                                // Side effects: the ticked items, or a legacy scale
-                                sideEffectsLine(r.sideEffects, r.sideEffectScale)?.let { se ->
-                                    Text(
-                                        se,
-                                        color = SideEffectScale.fromString(SideEffectItem.scaleFor(r.sideEffects, r.sideEffectScale)).color,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            }
-                            Icon(
-                                Icons.Outlined.Edit,
-                                contentDescription = t("Edit"),
-                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable {
-                                        editIndex = index
-                                        showEditDialog = true
-                                    }
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                Icons.Outlined.Close,
-                                contentDescription = t("Remove"),
-                                tint = AppTheme.AccentPink.copy(alpha = 0.6f),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable {
-                                        val updated = draft.rels.toMutableList().apply { removeAt(index) }
-                                        rebuildDraftWithRels(updated)
-                                    }
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (!quickLogMode) {
-                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) })
-            }
-
-            // Manage card (own card)
-            BaseCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(t("Reliefs"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_RELIEFS) })
-                }
-            }
-
-            WizardFavouritesTip()
-
-            if (quickLogMode && onMigraineSelect != null) {
-                val firstIso = draft.rels.firstOrNull()?.startAtIso
-                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
-            }
-
-            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF81C784))
-
-            // ── Single reliefs card: Frequent → divider → categories ──
-            BaseCard {
-                if (frequentLabels.isNotEmpty()) {
-                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        searchPool.filter { it.label in frequentLabels }.forEach { rel ->
-                            ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
-                                onReliefTap(rel.label)
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    Icons.Outlined.Close,
+                                    contentDescription = t("Remove"),
+                                    tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            val updated = draft.rels.toMutableList().apply { removeAt(index) }
+                                            rebuildDraftWithRels(updated)
+                                        }
+                                )
                             }
                         }
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
 
-                val categoryEntries = grouped.entries.toList()
-                categoryEntries.forEachIndexed { catIndex, (category, items) ->
-                    val nonFreqItems = items.filter { it.label !in frequentLabels }
-                    if (nonFreqItems.isNotEmpty()) {
-                        Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                if (!quickLogMode) {
+                    WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) })
+                }
+
+                // Manage card (own card)
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Reliefs"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_RELIEFS) })
+                    }
+                }
+
+                WizardFavouritesTip()
+
+                if (quickLogMode && onMigraineSelect != null) {
+                    val firstIso = draft.rels.firstOrNull()?.startAtIso
+                    MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+                }
+
+                WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF81C784))
+
+                // ── Single reliefs card: Frequent → divider → categories ──
+                BaseCard {
+                    if (frequentLabels.isNotEmpty()) {
+                        Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreqItems.forEach { rel ->
+                            searchPool.filter { it.label in frequentLabels }.forEach { rel ->
                                 ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
                                     onReliefTap(rel.label)
                                 }
                             }
                         }
-                        val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
-                        if (hasMore) {
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    }
+
+                    val categoryEntries = grouped.entries.toList()
+                    categoryEntries.forEachIndexed { catIndex, (category, items) ->
+                        val nonFreqItems = items.filter { it.label !in frequentLabels }
+                        if (nonFreqItems.isNotEmpty()) {
+                            Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                nonFreqItems.forEach { rel ->
+                                    ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
+                                        onReliefTap(rel.label)
+                                    }
+                                }
+                            }
+                            val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
+                            if (hasMore) {
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                            }
                         }
+                    }
+
+                    if (pool.isEmpty()) {
+                        Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
 
-                if (pool.isEmpty()) {
-                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                // Navigation
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                    Button(
+                        onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) },
+                        enabled = !quickLogMode || draft.rels.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                    ) { Text(if (quickLogMode) t("Save") else t("Next")) }
                 }
-            }
 
-            // Navigation
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
-                Button(
-                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(WizardStepConfig.nextRoute(navController.context, Routes.RELIEFS)) },
-                    enabled = !quickLogMode || draft.rels.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
+                Spacer(Modifier.height(32.dp))
             }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

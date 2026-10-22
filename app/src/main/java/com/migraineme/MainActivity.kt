@@ -13,6 +13,9 @@ import com.google.firebase.messaging.FirebaseMessaging
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -1124,6 +1127,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                 else -> {
                     ObLatticeBackground()
+                    // Wizard steps and the check-in sit on a WizardSheet that runs to the bottom
+                    // of the content area; paint the navigation-bar inset below it too, or the
+                    // lattice peeks out as a strip under the gesture bar.
+                    if (isWizardFullscreen) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                .background(AppTheme.FadeColor)
+                        )
+                    }
                     // Page fade for screens that do not bring their own ScrollFadeContainer:
                     // same scroll signal as the top bar, so page and bar go solid together.
                     if (PageFade.screenHandled == 0) {

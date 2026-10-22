@@ -35,10 +35,10 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
     val postdromeLabelSet = postdromePool.map { it.label }.toSet()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, horizontalPadding = 0.dp, bottomPadding = 0.dp) {
 
             // Top bar: <- Previous | Title | X Close
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -49,210 +49,212 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                     Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
+            WizardSheet {
 
-            // Hero
-            HeroCard(watermarkRes = R.drawable.brainy_goals, flipWatermark = true) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .drawBehind { HubIcons.run { drawReviewCheck(AppTheme.AccentPurple) } }
-                )
-                Text(t("Review Log"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    t("Review your entries before saving"),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // Split symptoms into during-attack vs postdrome based on pool category
-            val attackSymptoms = draft.migraine?.symptoms?.filter { it !in postdromeLabelSet } ?: emptyList()
-            val postdromeSymptoms = draft.migraine?.symptoms?.filter { it in postdromeLabelSet } ?: emptyList()
-
-            // Migraine
-            draft.migraine?.let { m ->
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Migraine"), iconTint = AppTheme.AccentPink) {
-                    if (attackSymptoms.isNotEmpty()) {
-                        Text(t("Symptoms"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        Text(
-                            attackSymptoms.joinToString(" • "),
-                            color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    ReviewRow("Severity", m.severity?.toString() ?: "-")
-                    ReviewRow("Start", formatIsoDdMmYyHm(m.beganAtIso))
-                    ReviewRow("End", formatIsoDdMmYyHm(m.endedAtIso))
-                    if (!m.note.isNullOrBlank()) ReviewRow("Note", m.note)
-                }
-            }
-
-            // Pain (timestamped entries)
-            val painEntriesWithLocs = draft.painEntries.filter { it.locations.isNotEmpty() }
-            if (painEntriesWithLocs.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Pain (%s)", painEntriesWithLocs.size), iconTint = AppTheme.AccentPink) {
-                    painEntriesWithLocs.forEach { entry ->
-                        Text(
-                            entry.startAtIso?.let { formatIsoDdMmYyHm(it) } ?: t("At attack start"),
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        val labels = entry.locations.mapNotNull { ALL_PAIN_POINTS_MAP[it] }
-                        Text(
-                            "${entry.severity}/10 • " + labels.joinToString(" • "),
-                            color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-
-            // Aura
-            if (draft.auraLocations.isNotEmpty() || draft.auraDurationMinutes != null) {
-                ReviewSection(drawIcon = { HubIcons.run { drawProdromeEye(it) } }, title = t("Aura"), iconTint = AppTheme.AccentPurple) {
-                    if (draft.auraLocations.isNotEmpty()) {
-                        Text(
-                            draft.auraLocations.joinToString(" • ") { AuraZones.label(it) },
-                            color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    draft.auraDurationMinutes?.let { ReviewRow("Duration", formatAuraDuration(it)) }
-                }
-            }
-
-            // Triggers
-            if (draft.triggers.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawTriggerBolt(it) } }, title = t("Triggers (%s)", draft.triggers.size), iconTint = Color(0xFFFFB74D)) {
-                    draft.triggers.forEach { t ->
-                        ReviewRow(t.type, formatIsoDdMmYyHm(t.startAtIso))
-                    }
-                }
-            }
-
-            // Medicines
-            if (draft.meds.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMedicinePill(it) } }, title = t("Medicines (%s)", draft.meds.size), iconTint = Color(0xFF4FC3F7)) {
-                    draft.meds.forEach { m ->
-                        ReviewRow(m.name ?: "?", "${m.amount ?: "-"} · ${formatIsoDdMmYyHm(m.startAtIso)}")
-                    }
-                }
-            }
-
-            // Reliefs
-            if (draft.rels.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawReliefLeaf(it) } }, title = t("Reliefs (%s)", draft.rels.size), iconTint = Color(0xFF81C784)) {
-                    draft.rels.forEach { r ->
-                        ReviewRow(r.type, "${formatIsoDdMmYyHm(r.startAtIso)}${if (r.endAtIso != null) " -> ${formatIsoDdMmYyHm(r.endAtIso)}" else ""}")
-                    }
-                }
-            }
-
-            // Locations
-            if (draft.locations.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = t("Locations (%s)", draft.locations.size), iconTint = Color(0xFF78909C)) {
-                    draft.locations.forEach { loc ->
-                        ReviewRow(loc.type, formatIsoDdMmYyHm(loc.startAtIso))
-                    }
-                }
-            }
-
-            // Activities
-            if (draft.activities.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawActivityPulse(it) } }, title = t("Activities (%s)", draft.activities.size), iconTint = Color(0xFFFF8A65)) {
-                    draft.activities.forEach { act ->
-                        ReviewRow(act.type, formatIsoDdMmYyHm(act.startAtIso))
-                    }
-                }
-            }
-
-            // Postdrome
-            if (postdromeSymptoms.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Postdrome (%s)", postdromeSymptoms.size), iconTint = Color(0xFFCE93D8)) {
+                // Hero
+                HeroCard(watermarkRes = R.drawable.brainy_goals, flipWatermark = true) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .drawBehind { HubIcons.run { drawReviewCheck(AppTheme.AccentPurple) } }
+                    )
+                    Text(t("Review Log"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     Text(
-                        postdromeSymptoms.joinToString(" • "),
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodyMedium
+                        t("Review your entries before saving"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
 
-            // Missed Activities
-            if (draft.missedActivities.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = t("Missed (%s)", draft.missedActivities.size), iconTint = Color(0xFFFF7043)) {
-                    draft.missedActivities.forEach { ma ->
-                        ReviewRow(ma.type, formatIsoDdMmYyHm(ma.startAtIso))
+                // Split symptoms into during-attack vs postdrome based on pool category
+                val attackSymptoms = draft.migraine?.symptoms?.filter { it !in postdromeLabelSet } ?: emptyList()
+                val postdromeSymptoms = draft.migraine?.symptoms?.filter { it in postdromeLabelSet } ?: emptyList()
+
+                // Migraine
+                draft.migraine?.let { m ->
+                    ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Migraine"), iconTint = AppTheme.AccentPink) {
+                        if (attackSymptoms.isNotEmpty()) {
+                            Text(t("Symptoms"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                attackSymptoms.joinToString(" • "),
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        ReviewRow("Severity", m.severity?.toString() ?: "-")
+                        ReviewRow("Start", formatIsoDdMmYyHm(m.beganAtIso))
+                        ReviewRow("End", formatIsoDdMmYyHm(m.endedAtIso))
+                        if (!m.note.isNullOrBlank()) ReviewRow("Note", m.note)
                     }
                 }
-            }
 
-            // Empty state
-            if (draft.migraine == null && draft.triggers.isEmpty() && draft.meds.isEmpty() && draft.rels.isEmpty() && draft.locations.isEmpty() && draft.activities.isEmpty() && draft.missedActivities.isEmpty()) {
-                BaseCard {
-                    Text(t("Nothing to review yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                }
-            }
-
-            // Save
-            Button(
-                onClick = {
-                    val token = authState.accessToken ?: return@Button
-                    val migraine = draft.migraine
-                    val editId = vm.editMigraineId.value ?: draft.editMigraineId
-                    println("DEBUG ReviewLogScreen Save: editMigraineId.value=${vm.editMigraineId.value}, draft.editMigraineId=${draft.editMigraineId}, resolved editId=$editId")
-                    if (migraine != null) {
-                        if (editId != null) {
-                            vm.updateFull(
-                                accessToken = token,
-                                migraineId = editId,
-                                type = migraine.type,
-                                severity = migraine.severity,
-                                beganAtIso = migraine.beganAtIso ?: "",
-                                endedAtIso = migraine.endedAtIso,
-                                note = migraine.note,
-                                meds = draft.meds,
-                                rels = draft.rels
+                // Pain (timestamped entries)
+                val painEntriesWithLocs = draft.painEntries.filter { it.locations.isNotEmpty() }
+                if (painEntriesWithLocs.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Pain (%s)", painEntriesWithLocs.size), iconTint = AppTheme.AccentPink) {
+                        painEntriesWithLocs.forEach { entry ->
+                            Text(
+                                entry.startAtIso?.let { formatIsoDdMmYyHm(it) } ?: t("At attack start"),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
                             )
-                        } else {
-                            vm.addFull(
-                                accessToken = token,
-                                type = migraine.type,
-                                severity = migraine.severity,
-                                beganAtIso = migraine.beganAtIso ?: "",
-                                endedAtIso = migraine.endedAtIso,
-                                note = migraine.note,
-                                meds = draft.meds,
-                                rels = draft.rels
+                            val labels = entry.locations.mapNotNull { ALL_PAIN_POINTS_MAP[it] }
+                            Text(
+                                "${entry.severity}/10 • " + labels.joinToString(" • "),
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
-                    vm.clearDraft()
-                    WizardStepConfig.startRun()
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = false }
-                        launchSingleTop = true
+                }
+
+                // Aura
+                if (draft.auraLocations.isNotEmpty() || draft.auraDurationMinutes != null) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawProdromeEye(it) } }, title = t("Aura"), iconTint = AppTheme.AccentPurple) {
+                        if (draft.auraLocations.isNotEmpty()) {
+                            Text(
+                                draft.auraLocations.joinToString(" • ") { AuraZones.label(it) },
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        draft.auraDurationMinutes?.let { ReviewRow("Duration", formatAuraDuration(it)) }
                     }
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                shape = AppTheme.BaseCardShape
-            ) {
-                val editId by vm.editMigraineId.collectAsState()
-                val isEdit = editId != null || draft.editMigraineId != null
-                Text(if (isEdit) t("Update Log") else t("Save Log"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
+                }
 
-            // Back
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-            }
+                // Triggers
+                if (draft.triggers.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawTriggerBolt(it) } }, title = t("Triggers (%s)", draft.triggers.size), iconTint = Color(0xFFFFB74D)) {
+                        draft.triggers.forEach { t ->
+                            ReviewRow(t.type, formatIsoDdMmYyHm(t.startAtIso))
+                        }
+                    }
+                }
 
-            Spacer(Modifier.height(32.dp))
+                // Medicines
+                if (draft.meds.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawMedicinePill(it) } }, title = t("Medicines (%s)", draft.meds.size), iconTint = Color(0xFF4FC3F7)) {
+                        draft.meds.forEach { m ->
+                            ReviewRow(m.name ?: "?", "${m.amount ?: "-"} · ${formatIsoDdMmYyHm(m.startAtIso)}")
+                        }
+                    }
+                }
+
+                // Reliefs
+                if (draft.rels.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawReliefLeaf(it) } }, title = t("Reliefs (%s)", draft.rels.size), iconTint = Color(0xFF81C784)) {
+                        draft.rels.forEach { r ->
+                            ReviewRow(r.type, "${formatIsoDdMmYyHm(r.startAtIso)}${if (r.endAtIso != null) " -> ${formatIsoDdMmYyHm(r.endAtIso)}" else ""}")
+                        }
+                    }
+                }
+
+                // Locations
+                if (draft.locations.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = t("Locations (%s)", draft.locations.size), iconTint = Color(0xFF78909C)) {
+                        draft.locations.forEach { loc ->
+                            ReviewRow(loc.type, formatIsoDdMmYyHm(loc.startAtIso))
+                        }
+                    }
+                }
+
+                // Activities
+                if (draft.activities.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawActivityPulse(it) } }, title = t("Activities (%s)", draft.activities.size), iconTint = Color(0xFFFF8A65)) {
+                        draft.activities.forEach { act ->
+                            ReviewRow(act.type, formatIsoDdMmYyHm(act.startAtIso))
+                        }
+                    }
+                }
+
+                // Postdrome
+                if (postdromeSymptoms.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Postdrome (%s)", postdromeSymptoms.size), iconTint = Color(0xFFCE93D8)) {
+                        Text(
+                            postdromeSymptoms.joinToString(" • "),
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+                // Missed Activities
+                if (draft.missedActivities.isNotEmpty()) {
+                    ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = t("Missed (%s)", draft.missedActivities.size), iconTint = Color(0xFFFF7043)) {
+                        draft.missedActivities.forEach { ma ->
+                            ReviewRow(ma.type, formatIsoDdMmYyHm(ma.startAtIso))
+                        }
+                    }
+                }
+
+                // Empty state
+                if (draft.migraine == null && draft.triggers.isEmpty() && draft.meds.isEmpty() && draft.rels.isEmpty() && draft.locations.isEmpty() && draft.activities.isEmpty() && draft.missedActivities.isEmpty()) {
+                    BaseCard {
+                        Text(t("Nothing to review yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                // Save
+                Button(
+                    onClick = {
+                        val token = authState.accessToken ?: return@Button
+                        val migraine = draft.migraine
+                        val editId = vm.editMigraineId.value ?: draft.editMigraineId
+                        println("DEBUG ReviewLogScreen Save: editMigraineId.value=${vm.editMigraineId.value}, draft.editMigraineId=${draft.editMigraineId}, resolved editId=$editId")
+                        if (migraine != null) {
+                            if (editId != null) {
+                                vm.updateFull(
+                                    accessToken = token,
+                                    migraineId = editId,
+                                    type = migraine.type,
+                                    severity = migraine.severity,
+                                    beganAtIso = migraine.beganAtIso ?: "",
+                                    endedAtIso = migraine.endedAtIso,
+                                    note = migraine.note,
+                                    meds = draft.meds,
+                                    rels = draft.rels
+                                )
+                            } else {
+                                vm.addFull(
+                                    accessToken = token,
+                                    type = migraine.type,
+                                    severity = migraine.severity,
+                                    beganAtIso = migraine.beganAtIso ?: "",
+                                    endedAtIso = migraine.endedAtIso,
+                                    note = migraine.note,
+                                    meds = draft.meds,
+                                    rels = draft.rels
+                                )
+                            }
+                        }
+                        vm.clearDraft()
+                        WizardStepConfig.startRun()
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.HOME) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                    shape = AppTheme.BaseCardShape
+                ) {
+                    val editId by vm.editMigraineId.collectAsState()
+                    val isEdit = editId != null || draft.editMigraineId != null
+                    Text(if (isEdit) t("Update Log") else t("Save Log"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+
+                // Back
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPurple)
+                    ) { Text(t("Back")) }
+                }
+
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 }
