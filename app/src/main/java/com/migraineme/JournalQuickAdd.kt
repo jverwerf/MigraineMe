@@ -25,7 +25,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -734,13 +737,23 @@ private fun formatQuickAddIso(iso: String): String = try {
 /** Attack red, same value the journal tags an attack row with. */
 private val MigraineCardRed = Color(0xFFE57373)
 
+/** The four things people log mid-attack; the other seven sit behind More. */
+private val InProgressTileKinds = listOf(
+    QuickAddKind.PAIN, QuickAddKind.MEDICINE, QuickAddKind.RELIEF, QuickAddKind.SYMPTOM
+)
+
 /**
  * Shown on Home in place of the quick-log strip while any migraine is still
  * open. Quick log itself is untouched — Home simply renders this instead.
  *
+ * Built from the house card parts (BaseCard, Brainy blob, title + one line,
+ * round quick-log tiles, state pills) so it sits with Quick log and the nav
+ * cards instead of reading as a different app. Static, no motion.
+ *
  * With several attacks open it pages between them rather than stacking, so
  * Home never fills up with migraine cards.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MigraineInProgressCard(
     open: List<SupabaseDbService.MigraineRow>,
@@ -753,14 +766,15 @@ fun MigraineInProgressCard(
     if (open.isEmpty()) return
     var index by remember(open.size) { mutableStateOf(0) }
     val row = open.getOrNull(index.coerceIn(0, open.lastIndex)) ?: return
+    var more by rememberSaveable { mutableStateOf(false) }
 
-    // Mid-attack forecast (similar-attacks edge fn): a red pill in the header
-    // shows the one-line read and opens the full AttackForecastSheet on tap.
+    // Mid-attack forecast (similar-attacks edge fn): the one line under the
+    // title carries the read and opens the full AttackForecastSheet on tap.
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var forecast by remember { mutableStateOf<EdgeFunctionsService.SimilarAttacksResponse?>(null) }
     var showForecast by remember { mutableStateOf(false) }
     // Premium only: free users (and a still-loading entitlement) never call
-    // similar-attacks; free users get a locked pill that opens the paywall.
+    // similar-attacks; free users get a locked line that opens the paywall.
     val forecastAccess = PremiumManager.state.collectAsState().value.access
     LaunchedEffect(open.firstOrNull()?.id, forecastAccess) {
         if (forecastAccess != PremiumAccess.ENTITLED) {
@@ -780,184 +794,166 @@ fun MigraineInProgressCard(
         )
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (LocalSolidCards.current) AppTheme.HeroCardSolid else AppTheme.HeroCardContainer
-        ),
-        elevation = CardDefaults.cardElevation(0.dp),
-        border = BorderStroke(1.dp, MigraineCardRed.copy(alpha = 0.35f))
-    ) {
-        // Thin accent rule along the top edge, the one flash of attack colour.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(
-                    androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        listOf(MigraineCardRed, AppTheme.AccentPink)
-                    )
-                )
-        )
-        Column(Modifier.padding(15.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (open.size > 1) {
-                    PagerArrow("‹") { index = (index - 1 + open.size) % open.size }
-                    Spacer(Modifier.width(8.dp))
-                }
+    BaseCard(contentPadding = 12.dp, innerSpacing = 10.dp) {
+        // ── Header: same build as the Home nav cards (blob, title, one line) ──
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (open.size > 1) {
+                PagerArrow("‹") { index = (index - 1 + open.size) % open.size }
+                Spacer(Modifier.width(6.dp))
+            }
+            BrainyBlobIcon(resId = R.drawable.brainy_recover_small)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
                 Text(
-                    t("Migraine in progress").uppercase(appLocale()),
-                    color = MigraineCardRed,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold, letterSpacing = 0.09.em
-                    ),
-                    modifier = Modifier.weight(1f)
+                    t("Migraine in progress"),
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
-                if (open.size > 1) {
-                    Text(
-                        "${index + 1} / ${open.size}",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    PagerArrow("›") { index = (index + 1) % open.size }
-                }
-                if (forecastAccess == PremiumAccess.NOT_ENTITLED) {
-                    Spacer(Modifier.width(8.dp))
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(MigraineCardRed.copy(alpha = 0.16f))
-                            .border(1.dp, MigraineCardRed.copy(alpha = 0.34f), RoundedCornerShape(999.dp))
-                            .clickable { onUpgrade() }
-                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                val started = t("Started %s", formatOpenMigraineStart(row.startAt))
+                val inline = fc?.let { forecastInlineLabel(it) }
+                when {
+                    forecastAccess == PremiumAccess.NOT_ENTITLED -> Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onUpgrade() }
                     ) {
+                        Text("$started · ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Icon(
-                            Icons.Outlined.Lock,
-                            contentDescription = null,
-                            tint = MigraineCardRed,
-                            modifier = Modifier.size(11.dp)
+                            Icons.Outlined.Lock, contentDescription = null,
+                            tint = AppTheme.AccentPurple, modifier = Modifier.size(11.dp)
                         )
-                        Spacer(Modifier.width(3.dp))
                         Text(
-                            t("Premium"),
-                            color = MigraineCardRed,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            maxLines = 1,
+                            " ${t("Premium")} ›",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                         )
-                        Spacer(Modifier.width(3.dp))
-                        Text("›", color = MigraineCardRed, style = MaterialTheme.typography.labelSmall)
                     }
-                }
-                forecast?.let { f ->
-                    forecastPillLabel(f)?.let { pill ->
-                        Spacer(Modifier.width(8.dp))
-                        Row(
-                            Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(MigraineCardRed.copy(alpha = 0.16f))
-                                .border(1.dp, MigraineCardRed.copy(alpha = 0.34f), RoundedCornerShape(999.dp))
-                                .clickable { showForecast = true }
-                                .padding(horizontal = 9.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                pill,
-                                color = MigraineCardRed,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                maxLines = 1,
-                            )
-                            Spacer(Modifier.width(3.dp))
-                            Text("›", color = MigraineCardRed, style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
+                    inline != null -> Text(
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(color = AppTheme.SubtleTextColor)) { append("$started · ") }
+                            withStyle(SpanStyle(color = AppTheme.BodyTextColor, fontWeight = FontWeight.Medium)) { append(inline) }
+                            withStyle(SpanStyle(color = AppTheme.AccentPurple)) { append(" ›") }
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        modifier = Modifier.clickable { showForecast = true }
+                    )
+                    else -> Text(started, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
-
-            Spacer(Modifier.height(4.dp))
-            Text(
-                t("Started %s", formatOpenMigraineStart(row.startAt)),
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-
-            Spacer(Modifier.height(15.dp))
-            Text(
-                t("Add to this migraine").uppercase(appLocale()),
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.SemiBold, letterSpacing = 0.06.em
+            if (open.size > 1) {
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "${index + 1} / ${open.size}",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall
                 )
-            )
-            Spacer(Modifier.height(8.dp))
-
-            // Same eleven the journal's "+ Add" offers, laid out six then five.
-            QuickAddKind.entries.filter { !it.compact }.chunked(3).forEach { chunk ->
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                    chunk.forEach { kind ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(11.dp))
-                                .background(Color.White.copy(alpha = 0.05f))
-                                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.11f)), RoundedCornerShape(11.dp))
-                                .clickable { onAdd(row, kind) }
-                                .padding(vertical = 9.dp, horizontal = 3.dp)
-                        ) {
-                            QuickAddIconChip(kind, circle = 26.dp, icon = 14.dp)
-                            Text(t(kind.label), color = Color.White, fontSize = 11.sp, maxLines = 1)
-                        }
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.width(6.dp))
+                PagerArrow("›") { index = (index + 1) % open.size }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                QuickAddKind.entries.filter { it.compact }.forEach { kind ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
-                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.11f)), RoundedCornerShape(11.dp))
-                            .clickable { onAdd(row, kind) }
-                            .padding(vertical = 7.dp, horizontal = 2.dp)
-                    ) {
-                        QuickAddIconChip(kind, circle = 20.dp, icon = 11.dp)
-                        Text(t(kind.label), color = Color.White, fontSize = 9.5.sp, maxLines = 1)
-                    }
+        }
+
+        // ── Tiles: Quick log's round buttons, the four mid-attack kinds + More ──
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            InProgressTileKinds.forEach { kind ->
+                InProgressTile(label = t(kind.label), onClick = { onAdd(row, kind) }) {
+                    QuickAddIconChip(kind, circle = 42.dp, icon = 22.dp)
                 }
             }
-
-            Spacer(Modifier.height(13.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
-                    onClick = { onFullLog(row) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Full log"), fontWeight = FontWeight.SemiBold) }
-                Button(
-                    onClick = { onEndNow(row) },
-                    enabled = !ending,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MigraineCardRed)
+            InProgressTile(label = t("More"), onClick = { more = !more }) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = if (more) 0.16f else 0.07f))
+                        .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (ending) {
-                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(t("End now"), color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text("···", color = AppTheme.SubtleTextColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
+
+        // The other seven, as the journal's "+ Add" chips. Picking one folds the row.
+        if (more) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                QuickAddKind.entries.filter { it !in InProgressTileKinds }.forEach { kind ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.04f))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)), RoundedCornerShape(10.dp))
+                            .clickable { more = false; onAdd(row, kind) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        QuickAddIconChip(kind, circle = 20.dp, icon = 11.dp)
+                        Spacer(Modifier.width(6.dp))
+                        Text(t(kind.label), color = Color.White, fontSize = 11.sp, maxLines = 1)
+                    }
+                }
+            }
+        }
+
+        // ── Actions: the house pills, right-aligned like Accept all / Reject all ──
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        ) {
+            InProgressPill(t("Full log"), color = AppTheme.AccentPurple, filled = false) { onFullLog(row) }
+            InProgressPill(t("End now"), color = MigraineCardRed, filled = true, busy = ending) {
+                if (!ending) onEndNow(row)
+            }
+        }
+    }
+}
+
+/** One round quick-log tile: the chip above a small label. */
+@Composable
+private fun InProgressTile(label: String, onClick: () -> Unit, chip: @Composable () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+    ) {
+        chip()
+        Text(label, color = AppTheme.SubtleTextColor, fontSize = 10.sp, maxLines = 1)
+    }
+}
+
+/** Same build as the recalibration review's StatePill; filled = the selected look. */
+@Composable
+private fun InProgressPill(
+    label: String,
+    color: Color,
+    filled: Boolean,
+    busy: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(color.copy(alpha = if (filled) 0.45f else 0.16f))
+            .border(1.dp, color.copy(alpha = if (filled) 0.9f else 0.40f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        if (busy) {
+            CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp, color = Color.White)
+            Spacer(Modifier.width(6.dp))
+        }
+        Text(
+            label,
+            color = if (filled) Color.White else color,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+        )
     }
 }
 
