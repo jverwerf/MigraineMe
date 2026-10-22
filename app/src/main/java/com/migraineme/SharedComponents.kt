@@ -247,8 +247,9 @@ fun WizardSheet(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = minHeight)
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(AppTheme.FadeColor)
+            // Shaped background, NOT clip(): a clip layer on a sheet this tall (Triggers has
+            // hundreds of pool items) stopped taps reaching the lower part of the page.
+            .background(AppTheme.FadeColor, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .padding(horizontal = horizontalPadding, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(spacing),
         horizontalAlignment = horizontalAlignment,
