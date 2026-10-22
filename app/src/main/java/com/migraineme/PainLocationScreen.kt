@@ -174,7 +174,7 @@ fun PainLocationScreen(
             }
 
             // ── 1. Pain Hero Card ──
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_treatments) {
                 Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
                 Text(t("Pain"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(

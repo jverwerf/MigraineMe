@@ -168,7 +168,7 @@ fun TimingScreen(
             }
 
             // Hero
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_migraines) {
                 Icon(
                     imageVector = Icons.Outlined.AccessTime,
                     contentDescription = t("Timing"),

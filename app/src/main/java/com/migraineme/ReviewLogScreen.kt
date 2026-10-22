@@ -51,7 +51,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             }
 
             // Hero
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_goals, flipWatermark = true) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

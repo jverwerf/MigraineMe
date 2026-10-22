@@ -184,7 +184,7 @@ fun MissedActivitiesScreen(
                 }
             }
 
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_briefcase) {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawMissedActivity(Color(0xFFFF7043)) }
                 })

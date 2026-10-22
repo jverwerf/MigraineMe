@@ -176,7 +176,7 @@ fun MedicinesScreen(
             }
 
             // ── HeroCard: icon + title + subtitle + selected list ──
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_medicines) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

@@ -97,7 +97,7 @@ fun PostdromesScreen(
                 }
             }
 
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_sleep) {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawMigraineStarburst(accent) }
                 })

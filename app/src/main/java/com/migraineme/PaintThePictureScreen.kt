@@ -381,7 +381,7 @@ fun PaintThePictureScreen(
             }
 
             // Hero
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_cognitive) {
                 Icon(
                     imageVector = Icons.Outlined.Notes,
                     contentDescription = t("Paint the picture"),

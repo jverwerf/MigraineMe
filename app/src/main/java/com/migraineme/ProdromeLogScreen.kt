@@ -227,7 +227,7 @@ fun ProdromeLogScreen(
             }
 
             // ── Selected prodromes card (hero area) ──
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_risk, flipWatermark = true) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

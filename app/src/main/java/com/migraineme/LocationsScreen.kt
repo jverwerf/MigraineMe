@@ -90,7 +90,7 @@ fun LocationsScreen(
                 if (!quickLogMode)                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_guide) {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawLocationPin(Color(0xFF78909C)) }
                 })

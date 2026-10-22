@@ -190,7 +190,7 @@ fun ReliefsScreen(
             }
 
             // ── HeroCard ──
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_recover) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

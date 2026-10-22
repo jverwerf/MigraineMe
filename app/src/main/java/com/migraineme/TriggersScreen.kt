@@ -234,7 +234,7 @@ fun TriggersScreen(
             }
 
             // ── HeroCard: icon + title + subtitle + selected list ──
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_trigger) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

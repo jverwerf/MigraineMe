@@ -114,7 +114,7 @@ fun NotesScreen(
             }
 
             // Hero
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_gardener) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)

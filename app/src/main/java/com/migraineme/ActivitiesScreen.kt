@@ -205,7 +205,7 @@ fun ActivitiesScreen(
             }
             }
 
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_runner, flipWatermark = true) {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawActivityPulse(Color(0xFFFF8A65)) }
                 })

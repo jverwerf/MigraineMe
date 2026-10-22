@@ -153,7 +153,7 @@ fun LogHomeScreen(
             }
 
             // Hero
-            HeroCard {
+            HeroCard(watermarkRes = R.drawable.brainy_detective) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
