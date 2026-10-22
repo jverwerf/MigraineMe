@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4911 entries.
+ * 4914 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1001,6 +1001,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Comments (%s)" to "Kommentare (%s)",
     "Community" to "Community",
     "Community Summary" to "Community",
+    "Community is for adults" to "Die Community ist für Erwachsene",
     "Community opens on Guidance. This is where the people who help you with your migraine live: practitioners you can connect with and, if you choose, share parts of your diary with. You decide exactly what they may see and you can stop the sharing at any time. That is why it comes first: it is the one thing here with consequences for your data.\n\nArticles is a library of expert-written pieces on migraine science, treatments, lifestyle changes, and patient experience.\n\nSwitch between For You (personalised to the conditions and triggers you've tagged), Latest, Browse, and Saved.\n\nForum is open discussion: post anything, comment on others, save threads.\n\nConnect to one of our AI companions in Manage Items (each one has its own focus area: nutrition, sleep, hormonal, etc.) and the For You feed re-ranks toward articles that match your subscribed companions and your actual data." to "Community öffnet sich auf Begleitung. Hier findest du die Menschen, die dich bei deiner Migräne unterstützen: Fachpersonen, mit denen du dich verbinden und, wenn du möchtest, Teile deines Tagebuchs teilen kannst. Du entscheidest genau, was sie sehen dürfen, und kannst das Teilen jederzeit beenden. Darum steht es an erster Stelle: Es ist das Einzige hier, das Folgen für deine Daten hat.\n\nArtikel ist eine Bibliothek von Fachbeiträgen zu Migräneforschung, Therapien, Lebensstil und Erfahrungen von Betroffenen.\n\nWechsle zwischen Für dich (personalisiert auf deine markierten Bedingungen und Auslöser), Neueste, Stöbern und Gespeichert.\n\nDas Forum ist offene Diskussion: poste, was du willst, kommentiere andere, speichere Threads.\n\nVerbinde dich in Elemente verwalten mit einem unserer KI-Begleiter (jeder hat seinen eigenen Fokus: Ernährung, Schlaf, hormonell usw.), und der Für-dich-Feed sortiert sich neu auf Artikel, die zu deinen abonnierten Begleitern und deinen echten Daten passen.",
     "Community — Articles & Forum" to "Community — Artikel & Forum",
     "Community — Guidance, Articles & Forum" to "Community — Begleitung, Artikel & Forum",
@@ -1516,10 +1517,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Fallback: high trigger count (%1\$s active)" to "Standard: viele Auslöser (%1\$s aktiv)",
     "Fallback: low trigger count (%1\$s active)" to "Standard: wenige Auslöser (%1\$s aktiv)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
-    "Falling" to "Fallend",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Falling" to "Fallend",
     "Falling barometric pressure / storm fronts" to "Fallender Luftdruck / Gewitterfronten",
     "False alarm" to "Fehlalarm",
     "False alarms" to "Fehlalarme",
@@ -1907,6 +1908,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luftfeuchte hoch",
     "Humidity low" to "Luftfeuchte niedrig",
     "Hydration" to "Flüssigkeit",
+    "I am 18 or over" to "Ich bin 18+",
     "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Ich helfe dir, deine Muster zu verstehen, mit den Daten der letzten 7 Tage — Schlaf, HRV, Erholung, Auslöser und mehr.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Mir ist aufgefallen, dass dein MigraineMe-Test vor einer Weile ausgelaufen ist und du nicht weitergemacht hast, was völlig okay ist. Ich wollte mich nur melden, bevor wir uns aus den Augen verlieren.",
     "I suspect so" to "Vermutlich ja",
@@ -2897,6 +2899,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Postdrome" to "Postdrom",
     "Postdrome (%s)" to "Postdrom (%s)",
     "Postdrome (after attack)" to "Postdrom (danach)",
+    "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Beiträge hier stammen von anderen Erwachsenen. Bitte bestätige dein Alter, bevor du eintrittst.",
     "Posture and deep neck" to "Haltung und tiefer Nacken",
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoch",
@@ -3017,12 +3020,12 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recovery below 33%" to "Erholung unter 33%",
     "Recovery high" to "Erholung hoch",
     "Recovery low" to "Erholung niedrig",
-    "Recovery score" to "Erholungsscore",
-    "Recovery symptoms" to "Erholungssympt.",
-    "Recovery symptoms that lingered after the attack ended" to "Symptome, die nach dem Ende der Attacke blieben",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Recovery score" to "Erholungsscore",
+    "Recovery symptoms" to "Erholungssympt.",
+    "Recovery symptoms that lingered after the attack ended" to "Symptome, die nach dem Ende der Attacke blieben",
     "Red bands = migraine days" to "Rot = Migränetage",
     "Red wine" to "Rotwein",
     "Redo Onboarding" to "Neu einrichten",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Dein Pool an Therapie-Nebenwirkungen. Die Liste der Beschwerden, die du als Folge einer Therapie und nicht der Migräne markieren möchtest: Übelkeit (von einem Triptan), Müdigkeit (von einem Vorbeugemittel), Gewichtszunahme (von Betablockern), Denkschwäche (von Topiramat), Verstopfung, Schwindel, Stimmungswechsel, alles, was dein Medikament mit dir macht.\n\nFür jede Nebenwirkung:\n• Tippe den Stern, um sie als Favorit zu setzen. Favoriten stehen auf der Nebenwirkungsseite des Tagechecks und im Therapie-Detail oben.\n• Tippe den Papierkorb, um sie ganz zu entfernen. Frühere Einträge damit bleiben unberührt.\n\nMit + fügst du hinzu, was zu deinen Therapien passt (z. B. „den ganzen Tag durstig“, „taube Fingerspitzen“, „wenig Lust“). Eben das, was deine Mittel wirklich mit dir machen.\n\nIm Tagescheck fragt die Nebenwirkungsseite je aktiver Therapie, welche davon du heute hattest. Der Wirksamkeitswert der Therapien wiegt dann die gemeldeten Nebenwirkungen gegen den Nutzen jeder Therapie ab: Ein Mittel, das die Attacken um 40% senkt, dir aber dauernd Müdigkeit macht, schneidet schlechter ab als eines mit 35% ohne Nebenwirkungen.",
     "Your treatment story" to "Therapiegeschichte",
     "Your trigger areas" to "Deine Auslöser",
-    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
-    "Your triggers" to "Deine Auslöser",
-    "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
+    "Your triggers" to "Deine Auslöser",
+    "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",
     "Your weekly goal review is ready" to "Deine wöchentliche Ziel-Auswertung ist da",
     "Your weekly overview will appear after your first week of tracking." to "Deine Wochenübersicht erscheint nach der ersten Woche.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Du hast dein Tageslimit an Nachrichten erreicht. Es setzt um Mitternacht zurück — bis morgen!",

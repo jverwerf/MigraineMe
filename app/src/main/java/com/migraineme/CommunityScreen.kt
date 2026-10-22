@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -70,6 +71,31 @@ fun CommunityScreen(
     // tap away, and the underlying topTab stays on Articles for when the
     // patient taps off.
     var guidance by remember { mutableStateOf(true) }
+
+    // 18+ self-declaration before first entry (CommunityAgeGate.kt). null =
+    // unknown (loading or unreadable): never lock the screen on a blip.
+    val gateContext = LocalContext.current
+    val gateScope = rememberCoroutineScope()
+    var ageConfirmed by remember { mutableStateOf<Boolean?>(null) }
+    var ageBusy by remember { mutableStateOf(false) }
+    LaunchedEffect(authState.accessToken) {
+        ageConfirmed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CommunityAgeGate.isConfirmed(gateContext) }
+    }
+    if (ageConfirmed == false) {
+        CommunityAgeGateCard(
+            onConfirm = {
+                ageBusy = true
+                gateScope.launch {
+                    val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CommunityAgeGate.confirm(gateContext) }
+                    ageBusy = false
+                    if (ok) ageConfirmed = true
+                }
+            },
+            onNotNow = { navController.popBackStack() },
+            busy = ageBusy
+        )
+        return
+    }
 
     // Refresh forum data every time this screen becomes visible
     var refreshKey by remember { mutableIntStateOf(0) }

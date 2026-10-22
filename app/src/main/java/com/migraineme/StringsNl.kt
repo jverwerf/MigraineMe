@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4911 entries.
+ * 4914 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1001,6 +1001,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Comments (%s)" to "Reacties (%s)",
     "Community" to "Community",
     "Community Summary" to "Community",
+    "Community is for adults" to "De community is voor volwassenen",
     "Community opens on Guidance. This is where the people who help you with your migraine live: practitioners you can connect with and, if you choose, share parts of your diary with. You decide exactly what they may see and you can stop the sharing at any time. That is why it comes first: it is the one thing here with consequences for your data.\n\nArticles is a library of expert-written pieces on migraine science, treatments, lifestyle changes, and patient experience.\n\nSwitch between For You (personalised to the conditions and triggers you've tagged), Latest, Browse, and Saved.\n\nForum is open discussion: post anything, comment on others, save threads.\n\nConnect to one of our AI companions in Manage Items (each one has its own focus area: nutrition, sleep, hormonal, etc.) and the For You feed re-ranks toward articles that match your subscribed companions and your actual data." to "Community opent op Begeleiding. Hier vind je de mensen die je helpen met je migraine: begeleiders met wie je kunt verbinden en, als je wilt, delen van je dagboek kunt delen. Jij bepaalt precies wat ze mogen zien en je kunt het delen altijd stoppen. Daarom staat het vooraan: het is het enige hier met gevolgen voor je gegevens.\n\nArtikelen is een bibliotheek met stukken van experts over migrainewetenschap, behandelingen, leefstijl en ervaringen van patiënten.\n\nWissel tussen Voor jou (afgestemd op de aandoeningen en triggers die je hebt getagd), Nieuwste, Bladeren en Bewaard.\n\nForum is open gesprek: post wat je wilt, reageer op anderen, bewaar draadjes.\n\nVerbind met een van onze AI-companions bij Items beheren (elk met een eigen gebied: voeding, slaap, hormonen, enz.) en de Voor jou-feed schuift op naar artikelen die bij je companions en je eigen data passen.",
     "Community — Articles & Forum" to "Community — artikelen & forum",
     "Community — Guidance, Articles & Forum" to "Community — begeleiding, artikelen, forum",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Fallback: high trigger count (%1\$s active)" to "Standaard: veel triggers (%1\$s actief)",
     "Fallback: low trigger count (%1\$s active)" to "Standaard: weinig triggers (%1\$s actief)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standaard: gemiddeld aantal triggers (%1\$s actief)",
-    "Falling" to "Dalend",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Falling" to "Dalend",
     "Falling barometric pressure / storm fronts" to "Dalende luchtdruk / stormfronten",
     "False alarm" to "Vals alarm",
     "False alarms" to "Vals alarm",
@@ -1907,6 +1908,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luchtvochtigheid hoog",
     "Humidity low" to "Luchtvochtigheid laag",
     "Hydration" to "Hydratatie",
+    "I am 18 or over" to "Ik ben 18 of ouder",
     "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Ik help je je patronen te snappen met je gegevens van de laatste 7 dagen: slaap, HRV, herstel, triggers en meer.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Ik zag dat je proefperiode van MigraineMe een tijdje geleden afliep en dat je niet bent doorgegaan, wat helemaal prima is. Ik wilde alleen even van me laten horen voordat we elkaar uit het oog verliezen.",
     "I suspect so" to "Ik denk het",
@@ -2897,6 +2899,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Postdrome" to "Nawee",
     "Postdrome (%s)" to "Postdroom (%s)",
     "Postdrome (after attack)" to "Nawee (erna)",
+    "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Berichten hier zijn geschreven door andere volwassenen. Bevestig je leeftijd voordat je verder gaat.",
     "Posture and deep neck" to "Houding en diepe nekspieren",
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoog",
@@ -3017,12 +3020,12 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recovery below 33%" to "Herstel onder 33%",
     "Recovery high" to "Herstel hoog",
     "Recovery low" to "Herstel laag",
-    "Recovery score" to "Herstelscore",
-    "Recovery symptoms" to "Naweeën",
-    "Recovery symptoms that lingered after the attack ended" to "Klachten die bleven na het einde van de aanval",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Recovery score" to "Herstelscore",
+    "Recovery symptoms" to "Naweeën",
+    "Recovery symptoms that lingered after the attack ended" to "Klachten die bleven na het einde van de aanval",
     "Red bands = migraine days" to "Rood = migrainedagen",
     "Red wine" to "Rode wijn",
     "Redo Onboarding" to "Setup opnieuw",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Je pool met bijwerkingen van behandelingen. De lijst met klachten die je wilt kunnen markeren als veroorzaakt door een behandeling in plaats van door je migraine: misselijkheid (van een triptaan), sufheid (van een preventief), gewichtstoename (van bètablokkers), wattenhoofd (van topiramaat), verstopping, duizeligheid, stemmingswisselingen, alles wat je medicatie met je doet.\n\nPer bijwerking:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan op de bijwerkingenpagina van de dagcheck en in het Behandelingen-detail.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jouw behandelingen hoort (bijv. \"de hele dag dorst\", \"dove vingertoppen\", \"weinig zin\"). Wat je medicijnen echt met je doen.\n\nTijdens de dagcheck vraagt de bijwerkingenpagina per lopende behandeling welke je vandaag had. De effectscore van Behandelingen weegt die bijwerkingen dan tegen het voordeel per behandeling: een middel dat je aanvallen met 40% verlaagt maar je constant moe maakt scoort slechter dan een dat ze met 35% verlaagt zonder bijwerkingen.",
     "Your treatment story" to "Je behandelverhaal",
     "Your trigger areas" to "Je triggergebieden",
-    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
-    "Your triggers" to "Je triggers",
-    "Your weekly goal review and new goal ideas" to "Je wekelijkse doelenoverzicht en nieuwe doelideeën",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
+    "Your triggers" to "Je triggers",
+    "Your weekly goal review and new goal ideas" to "Je wekelijkse doelenoverzicht en nieuwe doelideeën",
     "Your weekly goal review is ready" to "Je wekelijkse doelenoverzicht staat klaar",
     "Your weekly overview will appear after your first week of tracking." to "Je weekoverzicht verschijnt na de eerste week.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Je hebt je daglimiet aan berichten bereikt. Om middernacht staat de teller weer op nul.",

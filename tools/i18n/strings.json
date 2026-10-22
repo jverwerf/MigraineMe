@@ -132,8 +132,8 @@
       "app/src/main/java/com/migraineme/ActivitiesScreen.kt:201",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:631",
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:74",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:230",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:504",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:233",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:507",
       "... 16 more"
     ],
     "max_len": 15,
@@ -368,10 +368,10 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:800",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:845",
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:116",
       "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:181",
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:1048",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:1314",
       "... 7 more"
     ],
     "max_len": 14,
@@ -831,7 +831,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:317",
       "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:353",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:377",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:380",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:288",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:844",
       "... 1 more"
@@ -944,7 +944,7 @@
       "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:461",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2353",
       "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:97",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:358",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:361",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:268",
       "... 1 more"
     ],
@@ -1091,11 +1091,11 @@
     "en": "Disconnect",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:709",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:764",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:819",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:873",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:955"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:711",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:766",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:821",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:875",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:957"
     ],
     "max_len": 14,
     "count": 5
@@ -1195,7 +1195,7 @@
     "en": "Set time",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:350",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:353",
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:556",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:258",
       "app/src/main/java/com/migraineme/ProdromeLogScreen.kt:434",
@@ -1444,9 +1444,9 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PairGarminScreen.kt:98",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1234",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1318",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1168"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1236",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1320",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1170"
     ],
     "max_len": 14,
     "count": 4
@@ -1456,9 +1456,9 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PairGarminScreen.kt:98",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1234",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1318",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1166"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1236",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1320",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1168"
     ],
     "max_len": 14,
     "count": 4
@@ -1648,7 +1648,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ArticleDetailScreen.kt:107",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:494",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:520",
       "app/src/main/java/com/migraineme/ForumScreen.kt:169",
       "app/src/main/java/com/migraineme/ForumScreen.kt:445"
     ],
@@ -1701,6 +1701,18 @@
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1418"
     ],
     "max_len": 15,
+    "count": 4
+  },
+  {
+    "en": "Not now",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/CommunityAgeGate.kt:89",
+      "app/src/main/java/com/migraineme/LocationPermissionBanner.kt:237",
+      "app/src/main/java/com/migraineme/PaywallScreen.kt:570",
+      "app/src/main/java/com/migraineme/PractitionerScreen.kt:612"
+    ],
+    "max_len": 14,
     "count": 4
   },
   {
@@ -1840,7 +1852,7 @@
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/ArticleDetailScreen.kt:107",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:494",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:520",
       "app/src/main/java/com/migraineme/ForumScreen.kt:169",
       "app/src/main/java/com/migraineme/ForumScreen.kt:445"
     ],
@@ -1911,7 +1923,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AuraDetailSheet.kt:238",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:393",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:396",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:305"
     ],
     "max_len": 20,
@@ -1977,7 +1989,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AuraDetailSheet.kt:238",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:393",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:396",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:305"
     ],
     "max_len": 18,
@@ -2545,17 +2557,6 @@
     "count": 3
   },
   {
-    "en": "Not now",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/LocationPermissionBanner.kt:237",
-      "app/src/main/java/com/migraineme/PaywallScreen.kt:570",
-      "app/src/main/java/com/migraineme/PractitionerScreen.kt:612"
-    ],
-    "max_len": 14,
-    "count": 3
-  },
-  {
     "en": "Pain Character",
     "class": "hard",
     "sites": [
@@ -2735,7 +2736,7 @@
     "en": "Severe",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:378",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:381",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:289",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:845"
     ],
@@ -3346,8 +3347,8 @@
     "en": "About Connections",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1110",
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:993"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1112",
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:995"
     ],
     "max_len": 20,
     "count": 2
@@ -3937,7 +3938,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/BlogScreen.kt:58",
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:339"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:365"
     ],
     "max_len": 19,
     "count": 2
@@ -4267,7 +4268,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:364",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:431"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:434"
     ],
     "max_len": 14,
     "count": 2
@@ -4643,6 +4644,16 @@
     "count": 2
   },
   {
+    "en": "More",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ForumScreen.kt:98",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:862"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
     "en": "Name: %s",
     "class": "hard",
     "sites": [
@@ -4816,7 +4827,7 @@
     "en": "Pain entry %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:337",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:340",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:244"
     ],
     "max_len": 16,
@@ -4986,7 +4997,7 @@
     "en": "Remove entry",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:344",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:347",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:251"
     ],
     "max_len": 22,
@@ -5016,7 +5027,7 @@
     "en": "Report post",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:364",
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:390",
       "app/src/main/java/com/migraineme/ForumScreen.kt:374"
     ],
     "max_len": 14,
@@ -5296,8 +5307,8 @@
     "en": "Started %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:881",
-      "app/src/main/java/com/migraineme/LogHomeScreen.kt:548"
+      "app/src/main/java/com/migraineme/LogHomeScreen.kt:548",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:812"
     ],
     "max_len": 14,
     "count": 2
@@ -5336,7 +5347,7 @@
     "en": "Tap the dots on the head to mark where it hurts",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:385",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:388",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:297"
     ],
     "max_len": 68,
@@ -5706,7 +5717,7 @@
     "en": "Where did you feel the pain?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:383",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:386",
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:295"
     ],
     "max_len": 40,
@@ -7395,7 +7406,7 @@
     "en": "%sd ago",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:928"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:954"
     ],
     "max_len": 14,
     "count": 1
@@ -7404,7 +7415,7 @@
     "en": "%sw ago",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:929"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:955"
     ],
     "max_len": 14,
     "count": 1
@@ -7458,7 +7469,7 @@
     "en": "+ Add",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:116"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:119"
     ],
     "max_len": 14,
     "count": 1
@@ -7476,7 +7487,7 @@
     "en": "+ Add another entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:259"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:262"
     ],
     "max_len": 22,
     "count": 1
@@ -8736,7 +8747,7 @@
     "en": "Add pain",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:236"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:239"
     ],
     "max_len": 14,
     "count": 1
@@ -8745,7 +8756,7 @@
     "en": "Add postdrome",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:510"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:513"
     ],
     "max_len": 16,
     "count": 1
@@ -8772,7 +8783,7 @@
     "en": "Add symptom",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:510"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:513"
     ],
     "max_len": 14,
     "count": 1
@@ -8793,15 +8804,6 @@
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:413"
     ],
     "max_len": 25,
-    "count": 1
-  },
-  {
-    "en": "Add to this migraine",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:888"
-    ],
-    "max_len": 23,
     "count": 1
   },
   {
@@ -9816,7 +9818,7 @@
     "en": "Are you sure you want to disconnect Garmin?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:838"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:840"
     ],
     "max_len": 62,
     "count": 1
@@ -9825,7 +9827,7 @@
     "en": "Are you sure you want to disconnect Oura?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:729"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:731"
     ],
     "max_len": 59,
     "count": 1
@@ -9834,7 +9836,7 @@
     "en": "Are you sure you want to disconnect Polar?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:784"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:786"
     ],
     "max_len": 60,
     "count": 1
@@ -9843,7 +9845,7 @@
     "en": "Are you sure you want to disconnect WHOOP?",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:674"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:676"
     ],
     "max_len": 60,
     "count": 1
@@ -12090,6 +12092,15 @@
     "count": 1
   },
   {
+    "en": "Community is for adults",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/CommunityAgeGate.kt:79"
+    ],
+    "max_len": 33,
+    "count": 1
+  },
+  {
     "en": "Commuting",
     "class": "hard",
     "sites": [
@@ -12237,7 +12248,7 @@
     "en": "Confirm",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1520"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1522"
     ],
     "max_len": 14,
     "count": 1
@@ -12372,7 +12383,7 @@
     "en": "Connected Services",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:982"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:984"
     ],
     "max_len": 21,
     "count": 1
@@ -13614,7 +13625,7 @@
     "en": "Disconnect Garmin?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:837"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:839"
     ],
     "max_len": 21,
     "count": 1
@@ -13623,7 +13634,7 @@
     "en": "Disconnect Oura?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:728"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:730"
     ],
     "max_len": 19,
     "count": 1
@@ -13632,7 +13643,7 @@
     "en": "Disconnect Polar?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:783"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:785"
     ],
     "max_len": 20,
     "count": 1
@@ -13641,7 +13652,7 @@
     "en": "Disconnect WHOOP?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:673"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:675"
     ],
     "max_len": 20,
     "count": 1
@@ -13650,7 +13661,7 @@
     "en": "Disconnect?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:900"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:902"
     ],
     "max_len": 14,
     "count": 1
@@ -13659,7 +13670,7 @@
     "en": "Disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:954"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:956"
     ],
     "max_len": 16,
     "count": 1
@@ -14622,7 +14633,7 @@
     "en": "End now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:957"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:907"
     ],
     "max_len": 14,
     "count": 1
@@ -16179,7 +16190,7 @@
     "en": "Full log",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:945"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:906"
     ],
     "max_len": 14,
     "count": 1
@@ -16260,7 +16271,7 @@
     "en": "Garmin connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:828"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:830"
     ],
     "max_len": 34,
     "count": 1
@@ -16269,7 +16280,7 @@
     "en": "Garmin disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:870"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:872"
     ],
     "max_len": 23,
     "count": 1
@@ -16926,7 +16937,7 @@
     "en": "Health Connect",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1219"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1221"
     ],
     "max_len": 17,
     "count": 1
@@ -16953,7 +16964,7 @@
     "en": "Health Connect not available.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1004"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1006"
     ],
     "max_len": 42,
     "count": 1
@@ -17865,6 +17876,15 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "I am 18 or over",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/CommunityAgeGate.kt:87"
+    ],
+    "max_len": 18,
     "count": 1
   },
   {
@@ -19104,7 +19124,7 @@
     "en": "Loading articles…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:278"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:304"
     ],
     "max_len": 20,
     "count": 1
@@ -19122,7 +19142,7 @@
     "en": "Loading discussions…",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:385"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:411"
     ],
     "max_len": 23,
     "count": 1
@@ -20283,7 +20303,7 @@
     "en": "Migraine in progress",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:810"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:808"
     ],
     "max_len": 23,
     "count": 1
@@ -20793,15 +20813,6 @@
     "count": 1
   },
   {
-    "en": "More",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/ForumScreen.kt:98"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
     "en": "More energy",
     "class": "hard",
     "sites": [
@@ -21156,7 +21167,7 @@
     "en": "New discussion",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:164"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:190"
     ],
     "max_len": 24,
     "count": 1
@@ -21192,7 +21203,7 @@
     "en": "New pain entry",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:337"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:340"
     ],
     "max_len": 17,
     "count": 1
@@ -21372,7 +21383,7 @@
     "en": "No articles yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:337"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:363"
     ],
     "max_len": 18,
     "count": 1
@@ -21588,7 +21599,7 @@
     "en": "No discussions yet",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:396"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:422"
     ],
     "max_len": 21,
     "count": 1
@@ -21993,7 +22004,7 @@
     "en": "No saved articles yet",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:306"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:332"
     ],
     "max_len": 31,
     "count": 1
@@ -22380,7 +22391,7 @@
     "en": "Nothing in your list yet.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:543"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:546"
     ],
     "max_len": 36,
     "count": 1
@@ -22956,7 +22967,7 @@
     "en": "Oura connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:719"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:721"
     ],
     "max_len": 32,
     "count": 1
@@ -22965,7 +22976,7 @@
     "en": "Oura disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:761"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:763"
     ],
     "max_len": 21,
     "count": 1
@@ -24126,7 +24137,7 @@
     "en": "Polar connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:774"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:776"
     ],
     "max_len": 33,
     "count": 1
@@ -24135,7 +24146,7 @@
     "en": "Polar disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:816"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:818"
     ],
     "max_len": 22,
     "count": 1
@@ -24273,6 +24284,15 @@
       "app/src/main/java/com/migraineme/ManageSymptomsScreen.kt:327"
     ],
     "max_len": 34,
+    "count": 1
+  },
+  {
+    "en": "Posts here are written by other adults. To keep it that way, please confirm your age before you go in.",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/CommunityAgeGate.kt:81"
+    ],
+    "max_len": 147,
     "count": 1
   },
   {
@@ -24918,7 +24938,7 @@
     "en": "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:238"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:241"
     ],
     "max_len": 163,
     "count": 1
@@ -26223,7 +26243,7 @@
     "en": "Search models",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1469"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1471"
     ],
     "max_len": 16,
     "count": 1
@@ -27096,7 +27116,7 @@
     "en": "Shown on your Monitor badges per Garmin's brand guidelines.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1458"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1460"
     ],
     "max_len": 85,
     "count": 1
@@ -28815,7 +28835,7 @@
     "en": "Tap + to start the conversation!",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:398"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:424"
     ],
     "max_len": 46,
     "count": 1
@@ -29067,7 +29087,7 @@
     "en": "Tap the heart on any article to save it",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/CommunityScreen.kt:308"
+      "app/src/main/java/com/migraineme/CommunityScreen.kt:334"
     ],
     "max_len": 56,
     "count": 1
@@ -29949,7 +29969,7 @@
     "en": "This will stop syncing Health Connect data. To fully disconnect, revoke permissions in Health Connect settings.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:901"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:903"
     ],
     "max_len": 160,
     "count": 1
@@ -32118,7 +32138,7 @@
     "en": "WHOOP connection failed",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:664"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:666"
     ],
     "max_len": 33,
     "count": 1
@@ -32127,7 +32147,7 @@
     "en": "WHOOP disconnected.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:706"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:708"
     ],
     "max_len": 22,
     "count": 1
@@ -32955,7 +32975,7 @@
     "en": "What did you feel? Tap one to rate it.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:515"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:518"
     ],
     "max_len": 55,
     "count": 1
@@ -33108,7 +33128,7 @@
     "en": "What lingered after the attack? Tap one to rate it.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:514"
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:517"
     ],
     "max_len": 73,
     "count": 1
@@ -33747,7 +33767,7 @@
     "en": "Which Garmin device?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1453"
+      "app/src/main/java/com/migraineme/ThirdPartyConnectionsScreen.kt:1455"
     ],
     "max_len": 23,
     "count": 1

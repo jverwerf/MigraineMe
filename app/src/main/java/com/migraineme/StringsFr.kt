@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4911 entries.
+ * 4914 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -1001,6 +1001,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Comments (%s)" to "Commentaires",
     "Community" to "Communauté",
     "Community Summary" to "Communauté",
+    "Community is for adults" to "Comm. pour adultes",
     "Community opens on Guidance. This is where the people who help you with your migraine live: practitioners you can connect with and, if you choose, share parts of your diary with. You decide exactly what they may see and you can stop the sharing at any time. That is why it comes first: it is the one thing here with consequences for your data.\n\nArticles is a library of expert-written pieces on migraine science, treatments, lifestyle changes, and patient experience.\n\nSwitch between For You (personalised to the conditions and triggers you've tagged), Latest, Browse, and Saved.\n\nForum is open discussion: post anything, comment on others, save threads.\n\nConnect to one of our AI companions in Manage Items (each one has its own focus area: nutrition, sleep, hormonal, etc.) and the For You feed re-ranks toward articles that match your subscribed companions and your actual data." to "Communauté s'ouvre sur Suivi. C'est là que se trouvent les personnes qui t'aident avec ta migraine : des praticiens avec qui tu peux te connecter et, si tu le souhaites, partager des parties de ton journal. Tu décides exactement ce qu'ils peuvent voir et tu peux arrêter le partage à tout moment. C'est pourquoi il vient en premier : c'est la seule chose ici qui a des conséquences pour tes données.\n\nArticles est une bibliothèque de textes d'experts sur la science de la migraine, les traitements, les habitudes de vie et le vécu des patients.\n\nBascule entre Pour toi (personnalisé selon les conditions et facteurs que tu as marqués), Récents, Parcourir et Enregistrés.\n\nForum, c'est la discussion ouverte : publie ce que tu veux, commente les autres, garde des fils.\n\nConnecte-toi à l'un de nos compagnons IA dans Gérer les éléments (chacun a son domaine : nutrition, sommeil, hormones, etc.) et le fil Pour toi se réordonne vers les articles qui collent à tes compagnons et à tes données.",
     "Community — Articles & Forum" to "Communauté — articles et forum",
     "Community — Guidance, Articles & Forum" to "Communauté — suivi, articles et forum",
@@ -1516,10 +1517,10 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Fallback: high trigger count (%1\$s active)" to "Par défaut : beaucoup de facteurs (%1\$s actifs)",
     "Fallback: low trigger count (%1\$s active)" to "Par défaut : peu de facteurs (%1\$s actifs)",
     "Fallback: moderate trigger count (%1\$s active)" to "Par défaut : facteurs modérés (%1\$s actifs)",
-    "Falling" to "En baisse",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Falling" to "En baisse",
     "Falling barometric pressure / storm fronts" to "Chute de pression / fronts orageux",
     "False alarm" to "Fausse alerte",
     "False alarms" to "Fausses alertes",
@@ -1907,6 +1908,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Humidité élevée",
     "Humidity low" to "Humidité faible",
     "Hydration" to "Hydratation",
+    "I am 18 or over" to "J'ai 18 ans+",
     "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Je peux t'aider à comprendre tes tendances avec tes 7 derniers jours : sommeil, VFC, récupération, facteurs et plus.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "J'ai vu que ton essai MigraineMe s'est terminé il y a quelque temps et que tu n'as pas continué, ce qui est tout à fait normal. Je voulais juste te faire signe avant qu'on se perde de vue.",
     "I suspect so" to "Je crois",
@@ -2897,6 +2899,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Postdrome" to "Postdrome",
     "Postdrome (%s)" to "Postdrome (%s)",
     "Postdrome (after attack)" to "Postdrome (après)",
+    "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Les publications ici sont écrites par d'autres adultes. Pour que cela reste ainsi, merci de confirmer votre âge avant d'entrer.",
     "Posture and deep neck" to "Posture et nuque profonde",
     "Potassium" to "Potassium",
     "Potassium high" to "Potassium élevé",
@@ -3017,12 +3020,12 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Recovery below 33%" to "Récupération <33%",
     "Recovery high" to "Récupération élevée",
     "Recovery low" to "Récupération faible",
-    "Recovery score" to "Score de récupération",
-    "Recovery symptoms" to "Après la crise",
-    "Recovery symptoms that lingered after the attack ended" to "Symptômes restés après la fin de la crise",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Recovery score" to "Score de récupération",
+    "Recovery symptoms" to "Après la crise",
+    "Recovery symptoms that lingered after the attack ended" to "Symptômes restés après la fin de la crise",
     "Red bands = migraine days" to "Rouge = jours de crise",
     "Red wine" to "Vin rouge",
     "Redo Onboarding" to "Refaire la config",
@@ -4520,12 +4523,12 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Ton pool d'effets secondaires de traitement. La liste des symptômes que tu veux pouvoir attribuer à un traitement plutôt qu'à tes migraines : nausée (d'un triptan), somnolence (d'un traitement de fond), prise de poids (de bêtabloquants), brouillard mental (du topiramate), constipation, vertiges, changements d'humeur, tout ce que ton médicament te fait.\n\nPour chaque effet secondaire :\n• Touche l'étoile pour l'épingler en favori. Les favoris passent en premier sur la page effets du bilan du jour et dans le détail Traitements.\n• Touche la corbeille pour en retirer un entièrement. Les entrées passées restent intactes.\n\nUtilise le + pour ajouter ce qui colle à tes traitements (p. ex. « soif toute la journée », « bouts des doigts engourdis », « libido en berne »). Ce que tes médicaments te font vraiment.\n\nPendant le bilan du jour, la page effets te demande lesquels tu as eus aujourd'hui, pour chaque traitement en cours. Le score d'efficacité des Traitements pèse alors ces effets face au bénéfice de chacun : un médicament qui réduit tes crises de 40 % mais te laisse épuisé note moins bien qu'un autre à 35 % sans effets.",
     "Your treatment story" to "Ton parcours de soins",
     "Your trigger areas" to "Tes zones à risque",
-    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Tes facteurs, seuils et favoris ont été mis à jour.",
-    "Your triggers" to "Tes facteurs",
-    "Your weekly goal review and new goal ideas" to "Ton bilan hebdo des objectifs et de nouvelles idées",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Your trigger settings, gauge thresholds, and favorites have been updated." to "Tes facteurs, seuils et favoris ont été mis à jour.",
+    "Your triggers" to "Tes facteurs",
+    "Your weekly goal review and new goal ideas" to "Ton bilan hebdo des objectifs et de nouvelles idées",
     "Your weekly goal review is ready" to "Ton bilan hebdo des objectifs est prêt",
     "Your weekly overview will appear after your first week of tracking." to "Ton bilan de la semaine arrivera après une semaine de suivi.",
     "You’ve reached your daily message limit. It resets at midnight — come back tomorrow!" to "Tu as atteint ta limite de messages du jour. Ça repart à minuit — à demain !",
