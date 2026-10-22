@@ -187,8 +187,8 @@ fun ReliefsScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
+            }
             WizardSheet {
-                }
 
                 // ── HeroCard ──
                 HeroCard(watermarkRes = R.drawable.brainy_recover) {

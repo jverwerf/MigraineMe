@@ -203,8 +203,8 @@ fun ActivitiesScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
+            }
             WizardSheet {
-                }
 
                 HeroCard(watermarkRes = R.drawable.brainy_runner, flipWatermark = true) {
                     Box(Modifier.size(40.dp).drawBehind {

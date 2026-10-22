@@ -231,8 +231,8 @@ fun TriggersScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
+            }
             WizardSheet {
-                }
 
                 // ── HeroCard: icon + title + subtitle + selected list ──
                 HeroCard(watermarkRes = R.drawable.brainy_trigger) {

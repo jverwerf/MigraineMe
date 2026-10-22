@@ -224,8 +224,8 @@ fun ProdromeLogScreen(
                     Spacer(Modifier.size(28.dp))
                 }
             }
+            }
             WizardSheet {
-                }
 
                 // ── Selected prodromes card (hero area) ──
                 HeroCard(watermarkRes = R.drawable.brainy_risk, flipWatermark = true) {
