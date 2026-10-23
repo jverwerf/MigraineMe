@@ -680,6 +680,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 } catch (e: Exception) {
                     android.util.Log.w("MainActivity", "recordAppLaunch failed: ${e.message}")
                 }
+                // Local mirror of the ping above; fires the Google Ads
+                // "third_open" conversion on the third launch.
+                LaunchCounter.bump(appCtx)
             }
         } else {
             PremiumManager.reset()

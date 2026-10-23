@@ -166,6 +166,8 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging-ktx")
+    // Analytics only for the "third_open" conversion Google Ads bids on (LaunchCounter.kt).
+    implementation("com.google.firebase:firebase-analytics")
 
     // Meta app events — install and in-app event attribution for the Meta ad
     // campaigns. facebook-core only: we do not use Facebook Login or sharing.
