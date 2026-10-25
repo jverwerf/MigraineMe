@@ -423,7 +423,14 @@ internal fun hitExpanded(text: String, label: String): Boolean {
     if (text.contains(l)) return true
     val words = l.split(" ", "_", "-").filter { it.length > 2 }
     if (words.size > 1 && words.all { text.contains(it) }) return true
-    return EXPANDED_SYNONYMS[l]?.any { text.contains(it) } == true
+    if (EXPANDED_SYNONYMS[l]?.any { text.contains(it) } != true) return false
+    // "Caffeine high" must not fire on "skipped my coffee": when the story
+    // matches the family's "... low" cues, the high label stays quiet.
+    if (l.endsWith(" high")) {
+        val low = l.removeSuffix(" high") + " low"
+        if (EXPANDED_SYNONYMS[low]?.any { text.contains(it) } == true) return false
+    }
+    return true
 }
 
 private val EXPANDED_SYNONYMS: Map<String, List<String>> = mapOf(
@@ -431,6 +438,15 @@ private val EXPANDED_SYNONYMS: Map<String, List<String>> = mapOf(
     "alcohol" to listOf("wine", "beer", "drink", "drinking", "booze", "cocktail", "spirits", "vodka", "whisky", "whiskey", "gin", "rum", "champagne", "prosecco", "pint", "pub"),
     "red wine" to listOf("red wine", "merlot", "cabernet", "shiraz", "pinot noir"),
     "white wine" to listOf("white wine", "chardonnay", "sauvignon", "pinot grigio", "riesling"),
+    // Exposure families (the labels the pool actually carries). Keep every cue
+    // a safe substring: no bare "gin"/"rum"/"tea"/"pie"/"pub" (ginger, drum,
+    // steak, piece, public).
+    "alcohol exposure high" to listOf("alcohol", "wine", "beer", "beers", "lager", "cider", "pint", "pints", "cocktail", "cocktails", "booze", "boozy", "vodka", "whisky", "whiskey", "bourbon", "tequila", "gin and tonic", "gin tonic", "rum and coke", "champagne", "prosecco", "cava", "aperol", "spritz", "few drinks", "some drinks", "drinks last night", "drinks with", "went drinking", "out drinking", "hangover", "hungover", "tipsy", "night out", "the pub"),
+    "tyramine exposure high" to listOf("tyramine", "red wine", "aged cheese", "mature cheese", "old cheese", "strong cheese", "cheese", "cheddar", "parmesan", "blue cheese", "stilton", "gorgonzola", "roquefort", "brie", "camembert", "gouda", "feta", "cured meat", "cured meats", "salami", "pepperoni", "chorizo", "prosciutto", "smoked fish", "smoked salmon", "pickled", "sauerkraut", "kimchi", "soy sauce", "miso", "fermented", "yeast extract", "marmite", "vegemite", "overripe banana", "aged meat", "leftovers"),
+    "histamine exposure high" to listOf("histamine", "red wine", "champagne", "prosecco", "aged cheese", "mature cheese", "cheese", "cured meat", "cured meats", "salami", "pepperoni", "chorizo", "prosciutto", "smoked fish", "smoked salmon", "tuna", "mackerel", "sardines", "anchovies", "shellfish", "prawns", "shrimp", "fermented", "sauerkraut", "kimchi", "vinegar", "pickled", "soy sauce", "tomato", "tomatoes", "spinach", "aubergine", "eggplant", "avocado", "strawberries", "leftovers"),
+    "gluten exposure high" to listOf("gluten", "bread", "toast", "sandwich", "sandwiches", "bagel", "pasta", "spaghetti", "lasagne", "lasagna", "noodles", "pizza", "pastry", "pastries", "croissant", "cake", "cakes", "biscuit", "biscuits", "cookies", "crackers", "cereal", "wheat", "flour", "pancakes", "waffles", "doughnut", "donut", "muffin", "beer", "beers", "pint", "pints", "lager"),
+    "caffeine high" to listOf("caffeine", "coffee", "coffees", "espresso", "americano", "latte", "cappuccino", "flat white", "cold brew", "energy drink", "energy drinks", "red bull", "monster", "cola", "coke", "pepsi", "cup of tea", "cups of tea", "black tea", "green tea", "matcha", "earl grey", "iced tea", "pre-workout", "preworkout"),
+    "caffeine low" to listOf("no coffee", "no caffeine", "skipped coffee", "skipped my coffee", "missed coffee", "missed my coffee", "without coffee", "without my coffee", "didn't have coffee", "didnt have coffee", "didn't have my coffee", "didnt have my coffee", "haven't had coffee", "havent had coffee", "no morning coffee", "caffeine withdrawal", "less coffee", "cut coffee", "cut out coffee", "cut back on coffee", "cutting down on coffee", "quit coffee", "decaf"),
     "poor sleep" to listOf("slept badly", "bad sleep", "insomnia", "couldn't sleep", "barely slept", "tossed and turned", "restless night", "woke up lots"),
     "skipped meal" to listOf("skipped lunch", "skipped dinner", "skipped breakfast", "didn't eat", "forgot to eat", "missed lunch", "missed dinner", "missed breakfast", "no breakfast", "no lunch"),
     "dehydration" to listOf("dehydrated", "not enough water", "thirsty", "didn't drink enough", "forgot to drink"),
