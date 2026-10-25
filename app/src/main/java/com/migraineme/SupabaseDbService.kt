@@ -1372,6 +1372,22 @@ class SupabaseDbService(
         } catch (_: Exception) {}
     }
 
+    /**
+     * Number of active days in the last 14 (launch OR manual log), server-side
+     * definition shared with the business dashboard. Null when offline/failed.
+     */
+    suspend fun activeDays14d(accessToken: String): Int? {
+        return try {
+            val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/active_days_14d") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+            if (!response.status.isSuccess()) null else response.bodyAsText().trim().toIntOrNull()
+        } catch (_: Exception) { null }
+    }
+
     //  TREATMENT NARRATIVE EDGE FUNCTION
     @Serializable
     data class TreatmentNarrativeRequest(val regimen_id: String, val force: Boolean = false)

@@ -4,29 +4,25 @@ import android.content.Context
 import com.google.firebase.analytics.FirebaseAnalytics
 
 /**
- * Local launch counter feeding Google Ads.
- *
- * Bumped at the same spot as the server-side daily activity ping, so it mirrors
- * user_activity_daily.launch_count. On the THIRD launch it logs a single
- * Firebase Analytics event ("third_open"), which Google Ads imports as the
- * conversion the app campaigns bid for: people who come back, not click-and-go
- * installs. Best-effort, never blocks startup.
+ * Fires the Google Ads conversion "third_open" once, on the user's THIRD ACTIVE
+ * DAY within 14 days. An active day is a cold launch OR a manual log, counted by
+ * the server (rpc active_days_14d) so it matches the business dashboard's
+ * "engaged" definition. Before 25 Oct 2026 this fired on the third cold launch.
+ * Best-effort, never blocks startup; an offline launch simply retries next time.
  */
 object LaunchCounter {
     private const val PREFS = "launch_counter"
-    private const val KEY_COUNT = "n"
     private const val KEY_SENT = "third_open_sent"
     const val EVENT_THIRD_OPEN = "third_open"
+    const val ACTIVE_DAYS_NEEDED = 3
 
-    fun bump(ctx: Context) {
+    fun maybeFire(ctx: Context, activeDays: Int?) {
+        if (activeDays == null || activeDays < ACTIVE_DAYS_NEEDED) return
         try {
             val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            val n = sp.getInt(KEY_COUNT, 0) + 1
-            sp.edit().putInt(KEY_COUNT, n).apply()
-            if (n >= 3 && !sp.getBoolean(KEY_SENT, false)) {
-                FirebaseAnalytics.getInstance(ctx).logEvent(EVENT_THIRD_OPEN, null)
-                sp.edit().putBoolean(KEY_SENT, true).apply()
-            }
+            if (sp.getBoolean(KEY_SENT, false)) return
+            FirebaseAnalytics.getInstance(ctx).logEvent(EVENT_THIRD_OPEN, null)
+            sp.edit().putBoolean(KEY_SENT, true).apply()
         } catch (_: Exception) {}
     }
 }

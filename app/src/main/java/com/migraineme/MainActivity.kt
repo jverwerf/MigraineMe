@@ -677,12 +677,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 try {
                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
                     db.recordAppLaunch(token, "android")
+                    // Google Ads "third_open" conversion: fires once on the
+                    // third ACTIVE day (launch or manual log) in 14 days, as
+                    // counted by the server right after today's ping.
+                    LaunchCounter.maybeFire(appCtx, db.activeDays14d(token))
                 } catch (e: Exception) {
                     android.util.Log.w("MainActivity", "recordAppLaunch failed: ${e.message}")
                 }
-                // Local mirror of the ping above; fires the Google Ads
-                // "third_open" conversion on the third launch.
-                LaunchCounter.bump(appCtx)
             }
         } else {
             PremiumManager.reset()
