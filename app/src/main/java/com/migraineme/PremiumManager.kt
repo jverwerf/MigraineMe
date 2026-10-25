@@ -363,6 +363,11 @@ object PremiumManager {
         _state.update { current ->
             val tier = when {
                 rcState.isSubscribed -> PremiumTier.PREMIUM
+                // PREMIUM already published from premium_status (comped or manual
+                // premium, no store entitlement). This callback can land after
+                // loadState on a slow network; "no subscription" from RevenueCat
+                // must not overwrite what the server said.
+                current.tier == PremiumTier.PREMIUM -> PremiumTier.PREMIUM
                 current.tier == PremiumTier.TRIAL -> PremiumTier.TRIAL
                 else -> PremiumTier.FREE
             }
