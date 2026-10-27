@@ -65,6 +65,13 @@ const FAVORITE_ITEM_TYPES = new Set([
  * label/enum in the JSON is matched against English rows downstream. So the
  * directive pins those explicitly and frees only the prose.
  */
+/** The directive at the START and the END of the prompt: only at the end, the model copied the
+ *  prompt's English example sentences into Portuguese reviews (2026-10-27). */
+function withLang(prompt: string, lang: Lang): string {
+  const d = modelLanguageDirective(lang);
+  return d ? d.trim() + "\n\n" + prompt + d : prompt;
+}
+
 function modelLanguageDirective(lang: Lang): string {
   const base = languageDirective(lang);
   if (!base) return "";
@@ -932,7 +939,7 @@ serve(async (req: Request) => {
       symSeverityByLabel, auraSummary, corrLines, treatmentLines, bedtimeStats,
     ) + rejectionBlock;
 
-    const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT + CALL1_ANSWER_STEP + modelLanguageDirective(lang), call1UserMessage);
+    const call1Result = await callOpenAI(withLang(CALL1_SYSTEM_PROMPT + CALL1_ANSWER_STEP, lang), call1UserMessage);
 
     // ══════════════════════════════════════════════════════════════
     // CALL 2 — The Statistician (skip for profile_only mode)
@@ -949,7 +956,7 @@ serve(async (req: Request) => {
         thresholdRows ?? [], decayRows ?? [],
       ) + rejectionBlock;
 
-      call2Result = await callOpenAI(CALL2_SYSTEM_PROMPT + modelLanguageDirective(lang), call2UserMessage);
+      call2Result = await callOpenAI(withLang(CALL2_SYSTEM_PROMPT, lang), call2UserMessage);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -1030,7 +1037,7 @@ serve(async (req: Request) => {
           offsetHistogram, menstrualDecayRow, menstruationConfig,
           predictOvulation ? { histogram: ovulationHistogram, onCount: onOvulationCount, current: ovulationDecayRow } : null,
         );
-        call3Result = await callOpenAI(CALL3_SYSTEM_PROMPT + modelLanguageDirective(lang), call3UserMessage);
+        call3Result = await callOpenAI(withLang(CALL3_SYSTEM_PROMPT, lang), call3UserMessage);
       }
     }
 
@@ -1409,14 +1416,14 @@ CRITICAL RULES:
 - Only adjust ONE NOTCH at a time: NONE→LOW, LOW→MILD, MILD→HIGH (and reverse). NEVER skip levels.
 - Use ONLY exact label strings from the AVAILABLE LABELS lists.
 - At most 10 changes.
-- Frame gently: "We've noticed X was linked to Y of your migraines — we suggest adjusting it up a notch."
+- Frame gently, in the user's language (this English line only shows the tone, never copy it word for word): "We've noticed X was linked to Y of your migraines — we suggest adjusting it up a notch."
 - Lowering IS allowed — the user approves every change.
 
 STEP 3 — FAVORITE ADJUSTMENTS:
 Medicines, reliefs, symptoms, activities, missed activities. If logged frequently but not favorited → suggest favorite. If favorited but rarely used → suggest removing. Only clear-cut cases backed by the counts; an empty list is fine.
 
 STEP 4 — DATA WARNINGS:
-If a trigger is rated HIGH or MILD but the relevant data source isn't connected, flag it.
+If a trigger is rated HIGH or MILD but the relevant data source isn't connected, flag it (the message in the user's language).
 
 Respond with ONLY valid JSON (no markdown fences):
 {
