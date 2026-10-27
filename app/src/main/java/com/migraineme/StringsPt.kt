@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4916 entries.
+ * 4919 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -332,6 +332,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "A bed edge or a chair" to "A beira da cama ou uma cadeira",
     "A bed or a mat" to "Cama ou tapete",
     "A bed, a cold pack and a dim room" to "Uma cama, uma compressa fria e pouca luz",
+    "A chair, or standing" to "Uma cadeira, ou de pé",
     "A check-in *each evening.*" to "Um check-in *todas as noites.*",
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "Um fio cronológico de cada enxaqueca, fator, pródromo, medicamento, alívio, atividade, local e atividade perdida.\n\nFiltra por tipo ou período, ou vai direto a «Precisa de atenção» para veres entradas com campos vazios (uma crise sem hora de fim, uma enxaqueca sem força, um registo rápido à espera de detalhes).\n\nToca numa entrada para a abrires em edição e preencheres o que falta. O número no separador mostra quantas entradas precisam de atenção, para não teres de te lembrar.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "Um puxão nítido pela lateral ou pela parte de trás do pescoço, que alivia enquanto manténs. O benefício vem de o fazeres na maioria dos dias durante algumas semanas. Nunca alongues até uma dor aguda.",
@@ -931,6 +932,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Childcare" to "Cuidar das crianças",
     "Chills or sweating" to "Arrepios ou suores",
     "Chin tuck" to "Recolher queixo",
+    "Chin tuck with pinch" to "Recolher queixo com pinça",
     "Chin tucks" to "Queixo atrás",
     "Chloride" to "Cloreto",
     "Chocolate" to "Chocolate",
@@ -1515,11 +1517,11 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Failed to save. Please try again." to "Falha ao guardar. Tenta novamente.",
     "Fairly sure" to "Quase certo",
     "Fallback defaults" to "Valores padrão",
-    "Fallback: high trigger count (%1\$s active)" to "Padrão: muitos fatores (%1\$s ativos)",
-    "Fallback: low trigger count (%1\$s active)" to "Padrão: poucos fatores (%1\$s ativos)",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Fallback: high trigger count (%1\$s active)" to "Padrão: muitos fatores (%1\$s ativos)",
+    "Fallback: low trigger count (%1\$s active)" to "Padrão: poucos fatores (%1\$s ativos)",
     "Fallback: moderate trigger count (%1\$s active)" to "Padrão: fatores moderados (%1\$s ativos)",
     "Falling" to "A descer",
     "Falling barometric pressure / storm fronts" to "Pressão a descer / frentes de tempestade",
@@ -1884,6 +1886,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "How the pain and symptoms moved through each attack" to "Como a dor e os sintomas correram em cada crise",
     "How the pain moves" to "Como a dor se move",
     "How the pair itself changed an attack is not measured yet — this is how often you reached for both." to "Ainda não medimos como o par em si mudou uma crise — isto mostra quantas vezes recorreste a ambos.",
+    "How to do it" to "Como fazer",
     "How to read it: green and grey are the gauge being right; amber and red are the two ways it can be wrong. Together the four cells cover all %s tracked days." to "Como ler: verde e cinzento são o medidor a acertar; âmbar e vermelho são as duas formas de errar. Juntas, as quatro células cobrem os %s dias seguidos.",
     "How was today?" to "Como foi hoje?",
     "How we read your words" to "Como lemos as suas palavras",
@@ -3017,12 +3020,12 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recommendations" to "Sugestões",
     "Recommended" to "Recomendado",
     "Record what triggers your migraines to find patterns" to "Anota o que te desencadeia as crises para veres padrões",
-    "Recovery" to "Recuperação",
-    "Recovery 2 standard deviations below your average" to "Recuperação 2 desvios abaixo da tua média",
-    "Recovery below 33%" to "Recuperação <33%",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Recovery" to "Recuperação",
+    "Recovery 2 standard deviations below your average" to "Recuperação 2 desvios abaixo da tua média",
+    "Recovery below 33%" to "Recuperação <33%",
     "Recovery high" to "Recuperação alta",
     "Recovery low" to "Recuperação baixa",
     "Recovery score" to "Pontuação de recuperação",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "O teu modelo de risco está pronto.\n\nVamos carregar dados de exemplo para veres a app a funcionar. A seguir: uma visita rápida a cada ecrã.",
     "Your subscription" to "A tua subscrição",
-    "Your summary" to "O teu resumo",
-    "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "O que os teus tratamentos e alívios valem, julgado pelo que os teus dados mostram mesmo.\n• Tratamentos soltos: que medicamentos e alívios cumprem de forma fiável. Dois sinais principais:\n  - Menos força: quanto mais suaves ficam as tuas enxaquecas com este tratamento, face à tua força de base sem tratar.\n  - Menos duração: quanto menos duram face a uma crise típica da mesma força em ti.\n  - A tua própria nota de alívio (o cursor ao registar) também entra, sobretudo enquanto não tiveres crises sem tratar que cheguem para comparar.\n• Combinações: que tratamentos costumam resultar bem aos pares. Às vezes dois fracos sozinhos ficam fortes juntos; às vezes juntá-los não acrescenta nada.\n• Por sintoma: que tratamento ajuda mais em cada sintoma. Útil quando uma crise tem um sintoma dominante: um triptano pode resultar melhor com náuseas, um AINE pode assentar nas crises em que domina a dor.\n\nA pré-visualização mostra os 2 primeiros de cada camada. Entra para a lista completa por ordem.\n\nOs achados afinam-se à medida que registas, sobretudo com notas de alívio constantes, a dose e as horas de fim em cada crise. \"Tomei algo mas não apontei o quê\" não pode entrar aqui.",
-    "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "A tua lista de efeitos secundários dos tratamentos. Os sintomas que queres poder marcar como causados por um tratamento e não pelas tuas crises: náuseas (de um triptano), sonolência (de um preventivo), aumento de peso (de betabloqueadores), cabeça pesada (do topiramato), prisão de ventre, tonturas, mudanças de ânimo, tudo o que a medicação te esteja a fazer.\n\nPara cada efeito secundário:\n• Toca na estrela para o fixares como favorito. Os favoritos aparecem primeiro na página de efeitos do ponto diário e no detalhe de Tratamentos.\n• Toca no caixote para o tirares por completo. As entradas já marcadas ficam na mesma.\n\nUsa o + para juntares o que é próprio dos teus tratamentos (p. ex. «sede o dia todo», «pontas dos dedos dormentes», «pouca vontade»). O que os teus medicamentos te estão mesmo a fazer.\n\nNo ponto diário, a página de efeitos pergunta quais tiveste hoje, por cada tratamento a decorrer. A nota de eficácia dos Tratamentos pesa depois esses efeitos face ao benefício de cada um: um fármaco que baixa as tuas crises 40% mas te deixa sempre cansado fica pior do que um que as baixa 35% sem efeitos.",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your summary" to "O teu resumo",
+    "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "O que os teus tratamentos e alívios valem, julgado pelo que os teus dados mostram mesmo.\n• Tratamentos soltos: que medicamentos e alívios cumprem de forma fiável. Dois sinais principais:\n  - Menos força: quanto mais suaves ficam as tuas enxaquecas com este tratamento, face à tua força de base sem tratar.\n  - Menos duração: quanto menos duram face a uma crise típica da mesma força em ti.\n  - A tua própria nota de alívio (o cursor ao registar) também entra, sobretudo enquanto não tiveres crises sem tratar que cheguem para comparar.\n• Combinações: que tratamentos costumam resultar bem aos pares. Às vezes dois fracos sozinhos ficam fortes juntos; às vezes juntá-los não acrescenta nada.\n• Por sintoma: que tratamento ajuda mais em cada sintoma. Útil quando uma crise tem um sintoma dominante: um triptano pode resultar melhor com náuseas, um AINE pode assentar nas crises em que domina a dor.\n\nA pré-visualização mostra os 2 primeiros de cada camada. Entra para a lista completa por ordem.\n\nOs achados afinam-se à medida que registas, sobretudo com notas de alívio constantes, a dose e as horas de fim em cada crise. \"Tomei algo mas não apontei o quê\" não pode entrar aqui.",
+    "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "A tua lista de efeitos secundários dos tratamentos. Os sintomas que queres poder marcar como causados por um tratamento e não pelas tuas crises: náuseas (de um triptano), sonolência (de um preventivo), aumento de peso (de betabloqueadores), cabeça pesada (do topiramato), prisão de ventre, tonturas, mudanças de ânimo, tudo o que a medicação te esteja a fazer.\n\nPara cada efeito secundário:\n• Toca na estrela para o fixares como favorito. Os favoritos aparecem primeiro na página de efeitos do ponto diário e no detalhe de Tratamentos.\n• Toca no caixote para o tirares por completo. As entradas já marcadas ficam na mesma.\n\nUsa o + para juntares o que é próprio dos teus tratamentos (p. ex. «sede o dia todo», «pontas dos dedos dormentes», «pouca vontade»). O que os teus medicamentos te estão mesmo a fazer.\n\nNo ponto diário, a página de efeitos pergunta quais tiveste hoje, por cada tratamento a decorrer. A nota de eficácia dos Tratamentos pesa depois esses efeitos face ao benefício de cada um: um fármaco que baixa as tuas crises 40% mas te deixa sempre cansado fica pior do que um que as baixa 35% sem efeitos.",
     "Your treatment story" to "O teu percurso",
     "Your trigger areas" to "Áreas de risco",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Os teus fatores, limiares e favoritos foram atualizados.",

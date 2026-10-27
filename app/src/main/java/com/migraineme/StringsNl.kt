@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4916 entries.
+ * 4919 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -332,6 +332,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "A bed edge or a chair" to "Een bedrand of een stoel",
     "A bed or a mat" to "Een bed of mat",
     "A bed, a cold pack and a dim room" to "Bed, koud kompres en schemerige kamer",
+    "A chair, or standing" to "Een stoel, of staand",
     "A check-in *each evening.*" to "Een check-in *elke avond.*",
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "Een chronologische stroom van elke migraine, trigger, prodroom, medicijn, verlichting, activiteit, plek en gemiste activiteit.\n\nFilter op type of periode, of ga direct naar \"Aandacht nodig\" voor items met lege velden (een aanval zonder eindtijd, een migraine zonder zwaarte, iets snel genoteerd dat nog details mist).\n\nTik een item aan om het te openen en aan te vullen. Het cijfer op de tab laat zien hoeveel items aandacht nodig hebben, zodat je er niet aan hoeft te denken.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "Een duidelijke rek langs de zijkant of achterkant van de nek, die afneemt terwijl je vasthoudt. De winst komt als je het een paar weken de meeste dagen doet. Rek nooit tot in scherpe pijn.",
@@ -931,6 +932,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Childcare" to "Kinderzorg",
     "Chills or sweating" to "Rillingen of zweten",
     "Chin tuck" to "Kin intrekken",
+    "Chin tuck with pinch" to "Kin intrekken met knijp",
     "Chin tucks" to "Kin intrekken",
     "Chloride" to "Chloride",
     "Chocolate" to "Chocola",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Failed to save. Please try again." to "Opslaan mislukt. Probeer het opnieuw.",
     "Fairly sure" to "Vrij zeker",
     "Fallback defaults" to "Standaardwaarden",
-    "Fallback: high trigger count (%1\$s active)" to "Standaard: veel triggers (%1\$s actief)",
-    "Fallback: low trigger count (%1\$s active)" to "Standaard: weinig triggers (%1\$s actief)",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Fallback: high trigger count (%1\$s active)" to "Standaard: veel triggers (%1\$s actief)",
+    "Fallback: low trigger count (%1\$s active)" to "Standaard: weinig triggers (%1\$s actief)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standaard: gemiddeld aantal triggers (%1\$s actief)",
     "Falling" to "Dalend",
     "Falling barometric pressure / storm fronts" to "Dalende luchtdruk / stormfronten",
@@ -1884,6 +1886,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "How the pain and symptoms moved through each attack" to "Hoe pijn en klachten door elke aanval liepen",
     "How the pain moves" to "Hoe de pijn zich verplaatst",
     "How the pair itself changed an attack is not measured yet — this is how often you reached for both." to "Hoe het duo zelf een aanval veranderde is nog niet gemeten — dit laat zien hoe vaak je naar allebei greep.",
+    "How to do it" to "Zo doe je het",
     "How to read it: green and grey are the gauge being right; amber and red are the two ways it can be wrong. Together the four cells cover all %s tracked days." to "Zo lees je het: groen en grijs zijn de meter die klopt; amber en rood zijn de twee manieren waarop hij ernaast zit. Samen dekken de vier vakken alle %s gevolgde dagen.",
     "How was today?" to "Hoe was vandaag?",
     "How we read your words" to "Zo lazen we je woorden",
@@ -3017,12 +3020,12 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recommendations" to "Tips",
     "Recommended" to "Aanbevolen",
     "Record what triggers your migraines to find patterns" to "Noteer wat je migraines aanzet om patronen te vinden",
-    "Recovery" to "Herstel",
-    "Recovery 2 standard deviations below your average" to "Herstel 2 standaarddeviaties onder je gemiddelde",
-    "Recovery below 33%" to "Herstel onder 33%",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Recovery" to "Herstel",
+    "Recovery 2 standard deviations below your average" to "Herstel 2 standaarddeviaties onder je gemiddelde",
+    "Recovery below 33%" to "Herstel onder 33%",
     "Recovery high" to "Herstel hoog",
     "Recovery low" to "Herstel laag",
     "Recovery score" to "Herstelscore",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
     "Your subscription" to "Je abonnement",
-    "Your summary" to "Samenvatting",
-    "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Je staat van dienst met behandelingen en verlichting, afgemeten aan wat je gegevens echt laten zien.\n• Losse behandelingen: welke medicijnen en verlichting betrouwbaar hun werk doen. Twee hoofdsignalen:\n  - Minder zwaarte: hoeveel milder je migraines verlopen met deze behandeling, tegenover je zwaarte zonder behandeling.\n  - Minder duur: hoeveel korter ze duren dan een gewone aanval van dezelfde zwaarte bij jou.\n  - Je eigen cijfer voor verlichting (de schuif bij het noteren) telt ook mee, vooral zolang je te weinig onbehandelde aanvallen hebt om mee te vergelijken.\n• Combinaties: welke behandelingen samen goed werken. Soms worden twee losse zwakke samen sterk; soms voegt de combinatie niets toe.\n• Per klacht: welke behandeling bij welke klacht het meest helpt. Handig als één klacht een aanval bepaalt: een triptaan werkt misschien beter bij misselijkheid, een NSAID past eerder als de pijn overheerst.\n\nDe voorvertoning toont de 2 hoogste uit elke laag. Tik erop voor de hele gesorteerde lijst.\n\nBevindingen worden scherper naarmate je meer noteert, vooral met vaste cijfers voor verlichting, notities over de dosis en eindtijden per aanval. \"Iets genomen maar niet genoteerd wat\" kan hier niet in meetellen.",
-    "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Je pool met bijwerkingen van behandelingen. De lijst met klachten die je wilt kunnen markeren als veroorzaakt door een behandeling in plaats van door je migraine: misselijkheid (van een triptaan), sufheid (van een preventief), gewichtstoename (van bètablokkers), wattenhoofd (van topiramaat), verstopping, duizeligheid, stemmingswisselingen, alles wat je medicatie met je doet.\n\nPer bijwerking:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan op de bijwerkingenpagina van de dagcheck en in het Behandelingen-detail.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jouw behandelingen hoort (bijv. \"de hele dag dorst\", \"dove vingertoppen\", \"weinig zin\"). Wat je medicijnen echt met je doen.\n\nTijdens de dagcheck vraagt de bijwerkingenpagina per lopende behandeling welke je vandaag had. De effectscore van Behandelingen weegt die bijwerkingen dan tegen het voordeel per behandeling: een middel dat je aanvallen met 40% verlaagt maar je constant moe maakt scoort slechter dan een dat ze met 35% verlaagt zonder bijwerkingen.",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your summary" to "Samenvatting",
+    "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Je staat van dienst met behandelingen en verlichting, afgemeten aan wat je gegevens echt laten zien.\n• Losse behandelingen: welke medicijnen en verlichting betrouwbaar hun werk doen. Twee hoofdsignalen:\n  - Minder zwaarte: hoeveel milder je migraines verlopen met deze behandeling, tegenover je zwaarte zonder behandeling.\n  - Minder duur: hoeveel korter ze duren dan een gewone aanval van dezelfde zwaarte bij jou.\n  - Je eigen cijfer voor verlichting (de schuif bij het noteren) telt ook mee, vooral zolang je te weinig onbehandelde aanvallen hebt om mee te vergelijken.\n• Combinaties: welke behandelingen samen goed werken. Soms worden twee losse zwakke samen sterk; soms voegt de combinatie niets toe.\n• Per klacht: welke behandeling bij welke klacht het meest helpt. Handig als één klacht een aanval bepaalt: een triptaan werkt misschien beter bij misselijkheid, een NSAID past eerder als de pijn overheerst.\n\nDe voorvertoning toont de 2 hoogste uit elke laag. Tik erop voor de hele gesorteerde lijst.\n\nBevindingen worden scherper naarmate je meer noteert, vooral met vaste cijfers voor verlichting, notities over de dosis en eindtijden per aanval. \"Iets genomen maar niet genoteerd wat\" kan hier niet in meetellen.",
+    "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Je pool met bijwerkingen van behandelingen. De lijst met klachten die je wilt kunnen markeren als veroorzaakt door een behandeling in plaats van door je migraine: misselijkheid (van een triptaan), sufheid (van een preventief), gewichtstoename (van bètablokkers), wattenhoofd (van topiramaat), verstopping, duizeligheid, stemmingswisselingen, alles wat je medicatie met je doet.\n\nPer bijwerking:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan op de bijwerkingenpagina van de dagcheck en in het Behandelingen-detail.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jouw behandelingen hoort (bijv. \"de hele dag dorst\", \"dove vingertoppen\", \"weinig zin\"). Wat je medicijnen echt met je doen.\n\nTijdens de dagcheck vraagt de bijwerkingenpagina per lopende behandeling welke je vandaag had. De effectscore van Behandelingen weegt die bijwerkingen dan tegen het voordeel per behandeling: een middel dat je aanvallen met 40% verlaagt maar je constant moe maakt scoort slechter dan een dat ze met 35% verlaagt zonder bijwerkingen.",
     "Your treatment story" to "Je behandelverhaal",
     "Your trigger areas" to "Je triggergebieden",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Je triggers, drempels en favorieten zijn bijgewerkt.",
