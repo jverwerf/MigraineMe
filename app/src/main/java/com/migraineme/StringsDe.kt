@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4914 entries.
+ * 4916 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1358,6 +1358,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Edit Settings" to "Einstellungen",
     "Edit Trigger" to "Auslöser",
     "Edit aura details" to "Aura-Details ändern",
+    "Edit goal" to "Ziel bearbeiten",
     "Edit time" to "Zeit ändern",
     "Edit — %1\$s" to "Ändern — %1\$s",
     "Effect on migraines" to "Wirkung auf Migräne",
@@ -1516,10 +1517,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Fallback defaults" to "Standardwerte",
     "Fallback: high trigger count (%1\$s active)" to "Standard: viele Auslöser (%1\$s aktiv)",
     "Fallback: low trigger count (%1\$s active)" to "Standard: wenige Auslöser (%1\$s aktiv)",
-    "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
     "Falling" to "Fallend",
     "Falling barometric pressure / storm fronts" to "Fallender Luftdruck / Gewitterfronten",
     "False alarm" to "Fehlalarm",
@@ -2434,6 +2435,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "New Insights" to "Neue Erkenntnis",
     "New articles matching your triggers" to "Neue Artikel zu deinen Auslösern",
     "New discussion" to "Neue Diskussion",
+    "New goal" to "Neues Ziel",
     "New goals" to "Neue Ziele",
     "New medicine label" to "Neues Medikament",
     "New migraine label" to "Neue Migräne",
@@ -3018,11 +3020,11 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recovery" to "Erholung",
     "Recovery 2 standard deviations below your average" to "Erholung 2 Standardabweichungen unter deinem Schnitt",
     "Recovery below 33%" to "Erholung unter 33%",
-    "Recovery high" to "Erholung hoch",
-    "Recovery low" to "Erholung niedrig",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Recovery high" to "Erholung hoch",
+    "Recovery low" to "Erholung niedrig",
     "Recovery score" to "Erholungsscore",
     "Recovery symptoms" to "Erholungssympt.",
     "Recovery symptoms that lingered after the attack ended" to "Symptome, die nach dem Ende der Attacke blieben",
@@ -4521,11 +4523,11 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your summary" to "Zusammenfassung",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Deine Bilanz zu Therapien und Linderung, gemessen an dem, was deine Daten wirklich zeigen.\n• Einzelne Therapien: welche Medikamente und Linderungen verlässlich etwas bringen. Zwei Hauptsignale:\n  - Weniger Stärke: wie viel milder deine Migränen mit dieser Therapie verlaufen, verglichen mit deiner Stärke ohne Behandlung.\n  - Weniger Dauer: wie viel kürzer sie verlaufen als eine übliche Attacke gleicher Stärke bei dir.\n  - Auch deine eigene Bewertung der Linderung (der Regler beim Erfassen) fließt ein, vor allem solange du zu wenige unbehandelte Attacken zum Vergleich hast.\n• Kombinationen: welche Therapien im Paar gut wirken. Manchmal werden zwei allein schwache zusammen stark; manchmal bringt das Paar nichts dazu.\n• Nach Symptom: welche Therapie bei welchem Symptom am meisten hilft. Nützlich, wenn eine Attacke ein bestimmendes Symptom hat: ein Triptan wirkt vielleicht besser bei Übelkeit, ein NSAR passt eher, wenn der Schmerz im Vordergrund steht.\n\nDie Vorschau zeigt die 2 wichtigsten aus jeder Schicht. Tippe hinein für die ganze sortierte Liste.\n\nDie Funde werden schärfer, je mehr du erfasst, vor allem mit gleichmäßigen Bewertungen der Linderung, Angaben zur Dosis und Endzeiten pro Attacke. \"Etwas genommen, aber nicht notiert was\" kann hier nicht einfließen.",
     "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Dein Pool an Therapie-Nebenwirkungen. Die Liste der Beschwerden, die du als Folge einer Therapie und nicht der Migräne markieren möchtest: Übelkeit (von einem Triptan), Müdigkeit (von einem Vorbeugemittel), Gewichtszunahme (von Betablockern), Denkschwäche (von Topiramat), Verstopfung, Schwindel, Stimmungswechsel, alles, was dein Medikament mit dir macht.\n\nFür jede Nebenwirkung:\n• Tippe den Stern, um sie als Favorit zu setzen. Favoriten stehen auf der Nebenwirkungsseite des Tagechecks und im Therapie-Detail oben.\n• Tippe den Papierkorb, um sie ganz zu entfernen. Frühere Einträge damit bleiben unberührt.\n\nMit + fügst du hinzu, was zu deinen Therapien passt (z. B. „den ganzen Tag durstig“, „taube Fingerspitzen“, „wenig Lust“). Eben das, was deine Mittel wirklich mit dir machen.\n\nIm Tagescheck fragt die Nebenwirkungsseite je aktiver Therapie, welche davon du heute hattest. Der Wirksamkeitswert der Therapien wiegt dann die gemeldeten Nebenwirkungen gegen den Nutzen jeder Therapie ab: Ein Mittel, das die Attacken um 40% senkt, dir aber dauernd Müdigkeit macht, schneidet schlechter ab als eines mit 35% ohne Nebenwirkungen.",
-    "Your treatment story" to "Therapiegeschichte",
-    "Your trigger areas" to "Deine Auslöser",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your treatment story" to "Therapiegeschichte",
+    "Your trigger areas" to "Deine Auslöser",
     "Your trigger settings, gauge thresholds, and favorites have been updated." to "Deine Auslöser, Schwellenwerte und Favoriten wurden aktualisiert.",
     "Your triggers" to "Deine Auslöser",
     "Your weekly goal review and new goal ideas" to "Deine wöchentliche Ziel-Auswertung und neue Zielideen",

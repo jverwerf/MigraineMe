@@ -7459,6 +7459,22 @@
         "SideDrawer / Data screen title (via t())"
       ],
       "max_len": 28
+    },
+    {
+      "en": "New goal",
+      "class": "soft",
+      "sites": [
+        "MainActivity.kt:topbar-goal-editor"
+      ],
+      "max_len": 24
+    },
+    {
+      "en": "Edit goal",
+      "class": "soft",
+      "sites": [
+        "MainActivity.kt:topbar-goal-editor"
+      ],
+      "max_len": 24
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
