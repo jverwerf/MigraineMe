@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4922 entries.
+ * 4923 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -2028,6 +2028,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Last Period Start Date" to "Inicio de la última regla",
     "Last Year" to "Último año",
     "Last looked %1\$s" to "Visto %1\$s",
+    "Last migraine" to "Última migraña",
     "Last period" to "Última regla",
     "Last period: %s" to "Última regla: %s",
     "Last rewritten %1\$s by a weekly check-in" to "Reescrito %1\$s por la revisión semanal",
@@ -3019,10 +3020,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Avisos de sugerencias",
     "Recommendations" to "Sugerencias",
     "Recommended" to "Recomendado",
-    "Record what triggers your migraines to find patterns" to "Anota qué te dispara las migrañas para ver patrones",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Record what triggers your migraines to find patterns" to "Anota qué te dispara las migrañas para ver patrones",
     "Recovery" to "Recuperación",
     "Recovery 2 standard deviations below your average" to "Recuperación 2 desviaciones bajo tu media",
     "Recovery below 33%" to "Recuperación <33%",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your risk *today.*" to "Tu riesgo *hoy.*",
     "Your risk gauge is personal from day one instead of week five." to "Tu medidor de riesgo es personal desde el primer día, no desde la quinta semana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Tu modelo de riesgo está listo.\n\nCargamos datos de ejemplo para que veas la app en marcha. Después: un recorrido rápido por cada pantalla.",
-    "Your subscription" to "Tu suscripción",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Your subscription" to "Tu suscripción",
     "Your summary" to "Tu resumen",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Tu historial de tratamientos y alivios, juzgado con lo que tus datos enseñan de verdad.\n• Tratamientos sueltos: qué medicinas y alivios cumplen de forma fiable. Dos señales principales:\n  - Menos fuerza: cuánto más suaves van tus migrañas con ese tratamiento, frente a tu fuerza habitual sin tratar.\n  - Menos duración: cuánto menos duran frente a un ataque típico de la misma fuerza en ti.\n  - Tu propia nota de alivio (la barra al anotarlo) también entra, sobre todo mientras no tengas suficientes ataques sin tratar con los que comparar.\n• Combinaciones: qué tratamientos suelen ir bien en pareja. A veces dos flojos por separado se hacen fuertes juntos; a veces juntarlos no aporta nada.\n• Por síntoma: qué tratamiento ayuda más con cada síntoma. Útil cuando un ataque tiene un síntoma que manda: un triptán puede ir mejor con náuseas, y un AINE encajar cuando manda el dolor.\n\nLa vista previa muestra los 2 primeros de cada capa. Entra para la lista completa ordenada.\n\nLos hallazgos se afinan cuanto más anotas, sobre todo con notas de alivio constantes, la dosis y la hora de fin en cada ataque. \"Tomé algo pero no apunté qué\" no puede entrar aquí.",
     "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\nFor each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\nUse the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\nDuring the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects." to "Tu lista de efectos secundarios del tratamiento. Los síntomas que quieres poder marcar como causados por una pauta y no por tus migrañas: náuseas (de un triptán), somnolencia (de un preventivo), subir de peso (de betabloqueantes), mente espesa (de topiramato), estreñimiento, mareo, cambios de ánimo, lo que sea que te esté haciendo la medicación.\n\nPara cada efecto secundario:\n• Toca la estrella para fijarlo como favorito. Los favoritos salen primero en la página de efectos del repaso diario y en el detalle de Tratamientos.\n• Toca la papelera para quitarlo del todo. Las entradas ya marcadas se quedan como están.\n\nUsa el + para añadir lo propio de tus tratamientos (p. ej. «sed todo el día», «yemas dormidas», «poco deseo»). Lo que de verdad te estén haciendo tus medicinas.\n\nEn el repaso diario, la página de efectos te pregunta cuáles (si alguno) has tenido hoy, por cada pauta activa. La nota de eficacia de Tratamientos pesa luego los efectos que marcas frente al beneficio que ve en cada pauta, así que un fármaco que te baja los ataques un 40% pero te deja agotado puntúa peor que otro que los baja un 35% sin efectos.",

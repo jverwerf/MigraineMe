@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2x2 Log widget: two states, MigraineMeLogWidget shows one of them.
+     Text here is placeholder only; the widget sets translated text on update. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_log_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    tools:ignore="HardcodedText">
+
+    <!-- Normal: one big Migraine button -->
+    <LinearLayout
+        android:id="@+id/widget_log_normal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/widget_log_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log"
+            android:textColor="#DCCEFF"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+            <ImageView
+                android:id="@+id/widget_log_migraine_btn"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_widget_migraine"
+                android:background="@drawable/widget_btn_migraine_bg"
+                android:padding="12dp"
+                android:contentDescription="Log migraine" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/widget_log_migraine_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Migraine"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/widget_log_last"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="Last migraine Mon 26 Oct"
+            android:textColor="#9EFFFFFF"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Attack open: the Home "in progress" card, shrunk to 2x2 -->
+    <LinearLayout
+        android:id="@+id/widget_log_attack"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/widget_attack_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/brainy_recover_small"
+                android:contentDescription="@null" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/widget_attack_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Migraine in progress"
+                    android:textColor="#DCCEFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+                <TextView
+                    android:id="@+id/widget_attack_started"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Started 13:05"
+                    android:textColor="#9EFFFFFF"
+                    android:textSize="10sp"
+                    android:maxLines="1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:baselineAligned="false">
+            <LinearLayout android:id="@+id/widget_attack_pain" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_pain" android:background="@drawable/widget_btn_pain_bg" android:padding="7dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_pain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pain" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/widget_attack_medicine" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_medicine" android:background="@drawable/widget_btn_medicine_bg" android:padding="7dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_medicine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Medicine" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/widget_attack_relief" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_relief" android:background="@drawable/widget_btn_relief_bg" android:padding="7dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_relief" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relief" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_attack_end"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:background="@drawable/widget_pill_end_bg"
+            android:text="End now"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="1" />
+    </LinearLayout>
+</FrameLayout>

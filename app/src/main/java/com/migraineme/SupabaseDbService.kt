@@ -1083,6 +1083,22 @@ class SupabaseDbService(
         return rows.firstOrNull()
     }
 
+    @Serializable
+    private data class StartAtOnly(@SerialName("start_at") val startAt: String)
+
+    /** start_at of the newest migraine, or null if none. The Log widget's "Last migraine" line. */
+    suspend fun getLatestMigraineStart(accessToken: String): String? {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "start_at")
+            parameter("order", "start_at.desc")
+            parameter("limit", "1")
+        }
+        if (!response.status.isSuccess()) return null
+        val rows: List<StartAtOnly> = response.body()
+        return rows.firstOrNull()?.startAt
+    }
+
     /**
      * Did any migraine touch this local day? An attack that started AND ended
      * today leaves `getOpenMigraine` null, so callers that need "was there a

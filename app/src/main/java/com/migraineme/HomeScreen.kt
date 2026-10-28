@@ -187,11 +187,20 @@ fun HomeScreenRoot(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     suspend fun reloadOpenMigraines() {
         val token = auth.accessToken ?: return
-        openMigraines = withContext(Dispatchers.IO) {
+        val fresh = withContext(Dispatchers.IO) {
             runCatching { db.getOpenMigraines(token) }.getOrDefault(emptyList())
         }
+        // The Log widget flips into attack mode off the same open/closed state.
+        if (fresh.map { it.id } != openMigraines.map { it.id }) {
+            com.migraineme.widget.MigraineMeWidget.requestUpdate(appCtx)
+        }
+        openMigraines = fresh
     }
-    LaunchedEffect(auth.accessToken) { reloadOpenMigraines() }
+    LaunchedEffect(auth.accessToken) {
+        reloadOpenMigraines()
+        // A new session (sign-in, account switch) also changes what the widgets show.
+        com.migraineme.widget.MigraineMeWidget.requestUpdate(appCtx)
+    }
 
     // ── Card order + visibility (Customize Home). Re-read whenever Home comes
     // back: on re-entering composition, same as Insights, and on resume. ──

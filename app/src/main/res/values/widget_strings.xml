@@ -1,5 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_name">MigraineMe</string>
-    <string name="widget_description">Risk gauge with quick-log buttons for Migraine, Trigger, Prodrome, Medicine, and Relief.</string>
+    <string name="widget_name">MigraineMe risk</string>
+    <string name="widget_description">Today\'s migraine risk gauge.</string>
+    <string name="widget_log_name">MigraineMe log</string>
+    <string name="widget_log_description">Log a migraine in one tap. During an attack: pain, medicine, relief and end it.</string>
 </resources>

@@ -850,6 +850,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             if (route == Routes.MONITOR_GOALS) {
                 nav.navigate(Routes.MONITOR) { launchSingleTop = true }
             }
+            // The Log widget's Migraine button: a fresh wizard run, same as onAcuteAttack.
+            if (route == Routes.LOG_MIGRAINE) WizardStepConfig.startRun()
             nav.navigate(route) { launchSingleTop = true }
             pendingNavigationRoute.value = null
         }

@@ -1,7 +1,6 @@
 ﻿// FILE: app/src/main/java/com/migraineme/widget/MigraineMeWidget.kt
 package com.migraineme.widget
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -12,68 +11,58 @@ import android.util.Log
 import android.widget.RemoteViews
 import com.migraineme.BuildConfig
 import com.migraineme.R
-import com.migraineme.MainActivity
 import com.migraineme.SessionStore
 import com.migraineme.SupabaseDbService
 import com.migraineme.tSync
 import kotlinx.coroutines.*
-import java.time.Instant
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
+/**
+ * The 2x2 Risk widget: today's gauge, score and zone. Tap opens Home.
+ *
+ * Logging lives in [MigraineMeLogWidget]. This class keeps its old name so
+ * widgets people already placed (the old 4x3 risk + quick-log one) carry on
+ * working and simply show the new layout.
+ */
 class MigraineMeWidget : AppWidgetProvider() {
 
     companion object {
         private const val TAG = "MigraineMeWidget"
-        const val ACTION_QUICK_LOG = "com.migraineme.widget.ACTION_QUICK_LOG"
-        const val EXTRA_CATEGORY = "extra_category"
 
+        /** Refreshes every placed MigraineMe widget, Risk and Log alike. */
         fun requestUpdate(context: Context) {
-            val intent = Intent(context, MigraineMeWidget::class.java).apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            }
             val mgr = AppWidgetManager.getInstance(context)
-            val ids = mgr.getAppWidgetIds(ComponentName(context, MigraineMeWidget::class.java))
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            context.sendBroadcast(intent)
+            for (cls in listOf(MigraineMeWidget::class.java, MigraineMeLogWidget::class.java)) {
+                val ids = mgr.getAppWidgetIds(ComponentName(context, cls))
+                if (ids.isEmpty()) continue
+                context.sendBroadcast(Intent(context, cls).apply {
+                    action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                })
+            }
         }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-        for (id in ids) {
-            updateWidgetLoading(context, mgr, id)
-            scope.launch {
-                try {
-                    val data = fetchWidgetData(context)
-                    withContext(Dispatchers.Main) { updateWidget(context, mgr, id, data) }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Widget update failed", e)
-                    withContext(Dispatchers.Main) { updateWidget(context, mgr, id, WidgetData()) }
-                }
+        val pending = goAsync()
+        for (id in ids) updateWidgetLoading(context, mgr, id)
+        scope.launch {
+            val data = try {
+                fetchWidgetData(context)
+            } catch (e: Exception) {
+                Log.e(TAG, "Widget update failed", e)
+                WidgetData()
             }
+            withContext(Dispatchers.Main) {
+                for (id in ids) updateWidget(context, mgr, id, data)
+            }
+            pending.finish()
         }
     }
-
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_QUICK_LOG) {
-            val category = intent.getStringExtra(EXTRA_CATEGORY) ?: return
-            Log.d(TAG, "Quick log: $category")
-            scope.launch {
-                try {
-                    performQuickLog(context, category)
-                    withContext(Dispatchers.Main) { requestUpdate(context) }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Quick log failed for $category", e)
-                }
-            }
-        }
-    }
-
-    override fun onDisabled(context: Context) { scope.cancel() }
 
     // === Data ===
 
@@ -81,32 +70,20 @@ class MigraineMeWidget : AppWidgetProvider() {
         val riskScore: Double = 0.0,
         val riskPercent: Int = 0,
         val riskZone: String = "NONE",
-        val loggedIn: Boolean = false
+        val loggedIn: Boolean = false,
+        val hasScore: Boolean = true
     )
 
     private suspend fun fetchWidgetData(context: Context): WidgetData {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return WidgetData()
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-        val live = db.getRiskScoreLive(token) ?: return WidgetData(loggedIn = true)
+        val live = db.getRiskScoreLive(token) ?: return WidgetData(loggedIn = true, hasScore = false)
         return WidgetData(
             riskScore = live.score,
             riskPercent = live.percent.coerceIn(0, 100),
             riskZone = live.zone,
             loggedIn = true
         )
-    }
-
-    private suspend fun performQuickLog(context: Context, category: String) {
-        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return
-        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-        val now = Instant.now().toString()
-        when (category) {
-            "Migraine" -> db.insertMigraine(token, "Migraine", 5, now, null, null)
-            "Trigger"  -> db.insertTrigger(token, null, "Unknown", now, null)
-            "Prodrome" -> db.insertProdrome(token, null, "Unknown", now, null)
-            "Medicine" -> db.insertMedicine(token, null, "Unknown", null, now, null)
-            "Relief"   -> db.insertRelief(token, null, "Unknown", now, null)
-        }
     }
 
     // === Rendering ===
@@ -116,29 +93,9 @@ class MigraineMeWidget : AppWidgetProvider() {
         views.setImageViewBitmap(R.id.widget_gauge_image, renderGauge(context, 0, 0.0, "NONE"))
         views.setTextViewText(R.id.widget_score_text, "...")
         views.setTextViewText(R.id.widget_zone_text, tSync("Loading"))
-        applyStaticLabels(views)
-        mgr.updateAppWidget(id, views)
-    }
-
-    /**
-     * The layout XML carries English placeholders only; every user-visible
-     * label is (re)applied here through tSync() so the widget follows the
-     * in-app language. LangPrefs.init() runs in MigraineMeApp.onCreate, so
-     * tSync() is safe from an AppWidgetProvider.
-     */
-    private fun applyStaticLabels(views: RemoteViews) {
-        views.setTextViewText(R.id.widget_quicklog_title, tSync("Quick log"))
-        views.setTextViewText(R.id.widget_label_migraine, tSync("Migraine"))
-        views.setTextViewText(R.id.widget_label_trigger, tSync("Trigger"))
-        views.setTextViewText(R.id.widget_label_prodrome, tSync("Prodrome"))
-        views.setTextViewText(R.id.widget_label_medicine, tSync("Medicine"))
-        views.setTextViewText(R.id.widget_label_relief, tSync("Relief"))
+        views.setTextColor(R.id.widget_zone_text, Color.argb(158, 255, 255, 255))
         views.setContentDescription(R.id.widget_gauge_image, tSync("Risk gauge"))
-        views.setContentDescription(R.id.widget_icon_migraine, tSync("Log migraine"))
-        views.setContentDescription(R.id.widget_icon_trigger, tSync("Log trigger"))
-        views.setContentDescription(R.id.widget_icon_prodrome, tSync("Log prodrome"))
-        views.setContentDescription(R.id.widget_icon_medicine, tSync("Log medicine"))
-        views.setContentDescription(R.id.widget_icon_relief, tSync("Log relief"))
+        mgr.updateAppWidget(id, views)
     }
 
     private fun updateWidget(context: Context, mgr: AppWidgetManager, id: Int, data: WidgetData) {
@@ -148,47 +105,37 @@ class MigraineMeWidget : AppWidgetProvider() {
             R.id.widget_gauge_image,
             renderGauge(context, data.riskPercent, data.riskScore, data.riskZone)
         )
+        views.setContentDescription(R.id.widget_gauge_image, tSync("Risk gauge"))
 
         if (!data.loggedIn) {
             views.setTextViewText(R.id.widget_score_text, "\u2013")
             views.setTextViewText(R.id.widget_zone_text, tSync("Sign in"))
+            views.setTextColor(R.id.widget_zone_text, Color.argb(158, 255, 255, 255))
+        } else if (!data.hasScore) {
+            views.setTextViewText(R.id.widget_score_text, "\u2013")
+            views.setTextViewText(R.id.widget_zone_text, tSync("No data"))
+            views.setTextColor(R.id.widget_zone_text, Color.argb(158, 255, 255, 255))
         } else {
             views.setTextViewText(R.id.widget_score_text, "%.1f".format(data.riskScore))
             views.setTextViewText(R.id.widget_zone_text, formatZone(data.riskZone))
-        }
-        applyStaticLabels(views)
-
-        val openApp = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        views.setOnClickPendingIntent(
-            R.id.widget_gauge_container,
-            PendingIntent.getActivity(context, 0, openApp, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        )
-
-        val categories = listOf("Migraine", "Trigger", "Prodrome", "Medicine", "Relief")
-        val buttonIds = listOf(R.id.widget_btn_migraine, R.id.widget_btn_trigger, R.id.widget_btn_prodrome, R.id.widget_btn_medicine, R.id.widget_btn_relief)
-        val iconIds = listOf(R.id.widget_icon_migraine, R.id.widget_icon_trigger, R.id.widget_icon_prodrome, R.id.widget_icon_medicine, R.id.widget_icon_relief)
-        val drawableIds = listOf(R.drawable.ic_widget_migraine, R.drawable.ic_widget_trigger, R.drawable.ic_widget_prodrome, R.drawable.ic_widget_medicine, R.drawable.ic_widget_relief)
-
-        for (i in categories.indices) {
-            val pi = PendingIntent.getBroadcast(
-                context, 100 + i,
-                Intent(context, MigraineMeWidget::class.java).apply {
-                    action = ACTION_QUICK_LOG
-                    putExtra(EXTRA_CATEGORY, categories[i])
-                },
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            views.setOnClickPendingIntent(buttonIds[i], pi)
-            views.setImageViewResource(iconIds[i], drawableIds[i])
+            views.setTextColor(R.id.widget_zone_text, zoneColor(data.riskZone))
         }
 
+        views.setOnClickPendingIntent(R.id.widget_root, WidgetIntents.openApp(context, 0, null))
         mgr.updateAppWidget(id, views)
     }
 
+    /** Same words as the Home gauge (RiskZone labels): a live row with zone NONE is "Negligible", not missing data. */
     private fun formatZone(zone: String): String = when (zone.uppercase()) {
-        "HIGH" -> tSync("High risk"); "MILD" -> tSync("Mild risk"); "LOW" -> tSync("Low risk"); else -> tSync("No data")
+        "HIGH" -> tSync("High"); "MILD" -> tSync("Mild"); "LOW" -> tSync("Low"); else -> tSync("Negligible")
+    }
+
+    /** Same zone colours as the in-app gauge label. */
+    private fun zoneColor(zone: String): Int = when (zone.uppercase()) {
+        "HIGH" -> Color.parseColor("#E57373")
+        "MILD" -> Color.parseColor("#FFB74D")
+        "LOW" -> Color.parseColor("#81C784")
+        else -> Color.argb(158, 255, 255, 255)
     }
 
     // === Canvas gauge (matches in-app RiskGauge) ===

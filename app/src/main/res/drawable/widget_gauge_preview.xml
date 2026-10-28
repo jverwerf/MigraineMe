@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker preview only; at runtime MigraineMeWidget draws the real gauge bitmap. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="220dp" android:height="130dp"
+    android:viewportWidth="220" android:viewportHeight="130">
+    <path android:pathData="M30,122 A80,80 0 0,1 190,122"
+        android:strokeColor="#1FFFFFFF" android:strokeWidth="11.5"
+        android:strokeLineCap="round" android:fillColor="@android:color/transparent"/>
+    <path android:pathData="M30,122 A80,80 0 0,1 99,43"
+        android:strokeWidth="16" android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:strokeColor">
+            <gradient android:type="linear" android:startX="30" android:startY="122"
+                android:endX="99" android:endY="43"
+                android:startColor="#B97BFF" android:endColor="#FF7BB0"/>
+        </aapt:attr>
+    </path>
+</vector>
