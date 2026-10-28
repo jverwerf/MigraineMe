@@ -745,6 +745,7 @@ private fun disciplineLabel(d: String?): String? = when (d) {
     "physiotherapist" -> t("physiotherapist")
     "osteopath" -> t("osteopath")
     "naturopath" -> t("naturopath")
+    "acupuncturist" -> t("acupuncturist")
     "homeopath" -> t("homeopath")
     "dietitian" -> t("dietitian")
     "neurologist" -> t("neurologist")
