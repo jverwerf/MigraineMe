@@ -2113,12 +2113,11 @@ private fun PostdromeStep(
         } catch (_: Exception) { null }
     }
     val isStale = (ageDays ?: 0) > 7
-    val migraineLabel: String = openMigraine?.startAt?.let {
-        try {
-            val s = OffsetDateTime.parse(it)
-            t("your migraine from %s", s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale())))
-        } catch (_: Exception) { t("your open migraine") }
-    } ?: t("your open migraine")
+    // t() is composable: format the date first, translate outside the try.
+    val migraineDay: String? = openMigraine?.startAt?.let {
+        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("E d MMM", appLocale())) } catch (_: Exception) { null }
+    }
+    val migraineLabel: String = migraineDay?.let { t("your migraine from %s", it) } ?: t("your open migraine")
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
         WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
@@ -2229,12 +2228,11 @@ private fun MigraineNowStep(
 ) {
     val scrollState = rememberScrollState()
     val accent = Color(0xFF4DB6AC)
-    val migraineLabel: String = openMigraine?.startAt?.let {
-        try {
-            val s = OffsetDateTime.parse(it)
-            t("your migraine from %s", s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale())))
-        } catch (_: Exception) { t("your open migraine") }
-    } ?: t("your open migraine")
+    // t() is composable: format the date first, translate outside the try.
+    val migraineDay: String? = openMigraine?.startAt?.let {
+        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("E d MMM", appLocale())) } catch (_: Exception) { null }
+    }
+    val migraineLabel: String = migraineDay?.let { t("your migraine from %s", it) } ?: t("your open migraine")
 
     // Symptoms already on the attack don't need re-adding.
     val existingTypeLabels = remember(openMigraine?.type) {
