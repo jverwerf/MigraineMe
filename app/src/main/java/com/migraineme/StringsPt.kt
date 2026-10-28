@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4920 entries.
+ * 4922 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -4887,6 +4887,8 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "your average severity this week (green / amber / red), and your all-time total.\n\n" to "a tua força média desta semana (verde / âmbar / vermelho) e o total de sempre.\n\n",
     "your device" to "o teu aparelho",
     "your longest run this year" to "a tua melhor série do ano",
+    "your migraine from %s" to "a tua enxaqueca de %s",
+    "your open migraine" to "a enxaqueca aberta",
     "your risk, checked every morning" to "o teu risco, verificado todas as manhãs",
     "{0} days" to "{0} dias",
     "{0} days before" to "{0} dias antes",

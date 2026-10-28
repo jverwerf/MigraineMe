@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4920 entries.
+ * 4922 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -4887,6 +4887,8 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "your average severity this week (green / amber / red), and your all-time total.\n\n" to "deine Ø Stärke diese Woche (grün / gelb / rot) und dein Gesamttotal.\n\n",
     "your device" to "dein Gerät",
     "your longest run this year" to "deine längste Serie dieses Jahr",
+    "your migraine from %s" to "deine Migräne vom %s",
+    "your open migraine" to "deine offene Migräne",
     "your risk, checked every morning" to "dein Risiko, jeden Morgen geprüft",
     "{0} days" to "{0} Tagen",
     "{0} days before" to "{0} Tage davor",

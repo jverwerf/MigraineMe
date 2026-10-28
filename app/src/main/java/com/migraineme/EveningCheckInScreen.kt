@@ -2116,9 +2116,9 @@ private fun PostdromeStep(
     val migraineLabel: String = openMigraine?.startAt?.let {
         try {
             val s = OffsetDateTime.parse(it)
-            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale()))}"
-        } catch (_: Exception) { "your open migraine" }
-    } ?: "your open migraine"
+            t("your migraine from %s", s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale())))
+        } catch (_: Exception) { t("your open migraine") }
+    } ?: t("your open migraine")
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
         WizardSheet(horizontalPadding = 20.dp, spacing = 0.dp) {
@@ -2232,9 +2232,9 @@ private fun MigraineNowStep(
     val migraineLabel: String = openMigraine?.startAt?.let {
         try {
             val s = OffsetDateTime.parse(it)
-            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale()))}"
-        } catch (_: Exception) { "your open migraine" }
-    } ?: "your open migraine"
+            t("your migraine from %s", s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale())))
+        } catch (_: Exception) { t("your open migraine") }
+    } ?: t("your open migraine")
 
     // Symptoms already on the attack don't need re-adding.
     val existingTypeLabels = remember(openMigraine?.type) {

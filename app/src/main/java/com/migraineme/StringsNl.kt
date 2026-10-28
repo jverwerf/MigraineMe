@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4920 entries.
+ * 4922 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -4887,6 +4887,8 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "your average severity this week (green / amber / red), and your all-time total.\n\n" to "je gemiddelde zwaarte deze week (groen / amber / rood) en je totaal ooit.\n\n",
     "your device" to "je apparaat",
     "your longest run this year" to "je langste reeks dit jaar",
+    "your migraine from %s" to "je migraine van %s",
+    "your open migraine" to "je open migraine",
     "your risk, checked every morning" to "je risico, elke ochtend gecheckt",
     "{0} days" to "{0} dagen",
     "{0} days before" to "{0} dagen ervoor",
