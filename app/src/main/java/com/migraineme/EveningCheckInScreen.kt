@@ -1631,8 +1631,8 @@ private fun ReviewItemRow(label: String, color: Color, isAiMatched: Boolean, inf
                 )
             )
             val tagParts = mutableListOf<String>()
-            if (isAiMatched) tagParts.add("matched from note")
-            if (inferred) tagParts.add("suggested")
+            if (isAiMatched) tagParts.add(t("matched from note"))
+            if (inferred) tagParts.add(t("suggested"))
             subtitle?.let { tagParts.add(it) }
             if (tagParts.isNotEmpty()) {
                 Text(tagParts.joinToString(" · "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)

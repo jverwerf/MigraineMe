@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4919 entries.
+ * 4920 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -4707,6 +4707,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "low" to "faible",
     "magnesium" to "magnésium",
     "manufacturer's." to "du fabricant.",
+    "matched from note" to "tiré de ta note",
     "mcg" to "µg",
     "meal timing" to "rythme des repas",
     "mean duration" to "durée moy",

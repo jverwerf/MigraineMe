@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4919 entries.
+ * 4920 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -4707,6 +4707,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "low" to "basso",
     "magnesium" to "magnesio",
     "manufacturer's." to "del produttore.",
+    "matched from note" to "dalla tua nota",
     "mcg" to "µg",
     "meal timing" to "orario dei pasti",
     "mean duration" to "durata media",

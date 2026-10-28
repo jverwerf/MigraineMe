@@ -232,7 +232,11 @@ private fun EventCard(
     onSetSeverity: (String) -> Unit = {},
 ) {
     val type = mapping.targetType ?: "activity"
-    val label = mapping.targetLabel ?: t("(unknown)")
+    // Pool labels are English keys (Gym, Walking): show them in the user's language.
+    val label = mapping.targetLabel?.let { t(it) } ?: t("(unknown)")
+    val typeTitle = t(type.replaceFirstChar { it.uppercase() })
+    // Inline after "Saved as": English keeps "activity", other languages use their own word.
+    val typeInline = if (typeTitle == type.replaceFirstChar { it.uppercase() }) type else typeTitle
     val categoryColor = when (type) {
         "activity" -> Color(0xFF64B5F6)
         "relief" -> Color(0xFF81C784)
@@ -262,7 +266,7 @@ private fun EventCard(
                 Modifier.background(categoryColor.copy(alpha = 0.18f), RoundedCornerShape(999.dp))
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
-                Text(type.replaceFirstChar { it.uppercase() },
+                Text(typeTitle,
                     color = categoryColor, fontSize = 9.sp, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -276,7 +280,7 @@ private fun EventCard(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                if (isUndone) t("Removed") else t("Saved as %1\$s: %2\$s", type, label),
+                if (isUndone) t("Removed") else t("Saved as %1\$s: %2\$s", typeInline, label),
                 color = if (isUndone) AppTheme.SubtleTextColor else Color.White,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
