@@ -1133,7 +1133,7 @@ private fun FavouritesPage(
                 val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
                 orderedCats.forEachIndexed { idx, cat ->
                     if (idx > 0) Spacer(Modifier.height(12.dp))
-                    Text(cat, color = AppTheme.TitleColor,
+                    Text(t(cat), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(12.dp))
                     FlowRow(
@@ -1334,7 +1334,7 @@ private fun NoteMatchPill(label: String, category: String, color: Color, inferre
         if (inferred) {
             Text(t("suggested"), color = color.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), modifier = Modifier.padding(end = 4.dp))
         }
-        Text(category.replaceFirstChar { it.uppercase() }, color = color, style = MaterialTheme.typography.labelSmall)
+        Text(t(category.replaceFirstChar { it.uppercase() }), color = color, style = MaterialTheme.typography.labelSmall)
         IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
             Icon(Icons.Outlined.Close, t("Remove"), tint = color.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
         }
@@ -2181,7 +2181,7 @@ private fun PostdromeStep(
                     val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
                     orderedCats.forEachIndexed { idx, cat ->
                         if (idx > 0) Spacer(Modifier.height(12.dp))
-                        Text(cat, color = AppTheme.TitleColor,
+                        Text(t(cat), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(12.dp))
                         FlowRow(
@@ -2544,7 +2544,7 @@ private fun SideEffectsPageV2(
                 val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
                 orderedCats.forEachIndexed { idx, cat ->
                     if (idx > 0) Spacer(Modifier.height(12.dp))
-                    Text(cat, color = AppTheme.TitleColor,
+                    Text(t(cat), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(12.dp))
                     FlowRow(
