@@ -790,7 +790,7 @@ fun RowScope.PractitionerTab(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                t("Guidance"),
+                t("Practitioners"),
                 color = if (selected) Color.White else AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
