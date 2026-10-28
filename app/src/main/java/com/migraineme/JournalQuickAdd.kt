@@ -201,6 +201,9 @@ private class QuickPainEntry(
     locations: List<String> = emptyList(),
 ) {
     var startAtIso by mutableStateOf(startAtIso)
+    /** Still the attack's own start: a real instant from the DB, not the
+     *  picker's wall-clock string, so it is shown in the phone's zone. */
+    var isAttackStart by mutableStateOf(startAtIso != null)
     var severity by mutableStateOf(severity)
     var locations by mutableStateOf(locations)
 }
@@ -350,8 +353,10 @@ private fun QuickPainEntryCard(
         }
 
         AppDateTimePicker(
-            label = entry.startAtIso?.let { "When: ${formatQuickAddIso(it)}" } ?: t("Set time")
-        ) { entry.startAtIso = it }
+            label = entry.startAtIso?.let {
+                "When: ${if (entry.isAttackStart) formatQuickAddInstant(it) else formatQuickAddIso(it)}"
+            } ?: t("Set time")
+        ) { entry.startAtIso = it; entry.isAttackStart = false }
         Spacer(Modifier.height(8.dp))
 
         val sev = entry.severity
@@ -731,6 +736,11 @@ private fun formatQuickAddIso(iso: String): String = try {
     val ldt = odt?.toLocalDateTime() ?: java.time.LocalDateTime.parse(iso)
     ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
 } catch (_: Exception) { iso }
+
+private fun formatQuickAddInstant(iso: String): String = try {
+    java.time.OffsetDateTime.parse(iso).atZoneSameInstant(java.time.ZoneId.systemDefault())
+        .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
+} catch (_: Exception) { formatQuickAddIso(iso) }
 
 // ── Home: "Migraine in progress" card ──────────────────────────
 
