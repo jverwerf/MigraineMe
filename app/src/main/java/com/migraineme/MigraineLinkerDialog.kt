@@ -66,7 +66,7 @@ fun MigraineLinkerDialog(
     // Determine the item date
     val itemDate = remember(itemStartAtIso) {
         try {
-            if (itemStartAtIso != null) LocalDate.parse(itemStartAtIso.substring(0, 10))
+            if (itemStartAtIso != null) LocalDate.parse(TimeOfDay.localDay(itemStartAtIso))
             else LocalDate.now()
         } catch (_: Exception) { LocalDate.now() }
     }

@@ -78,7 +78,7 @@ fun EditReliefScreen(
         if (startIso.isNullOrBlank()) return "Unknown"
         return try {
             val odt = runCatching { OffsetDateTime.parse(startIso) }.getOrNull()
-            val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
+            val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
             ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm", appLocale()))
         } catch (_: Exception) { "Unknown" }
     }
@@ -91,7 +91,7 @@ fun EditReliefScreen(
         if (iso.isNullOrBlank()) return "Not set"
         return try {
             val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-            val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
+            val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(iso)
             ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
         } catch (_: Exception) { "Not set" }
     }

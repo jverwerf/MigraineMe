@@ -252,7 +252,7 @@ fun MonitorScreen(
                 riskLive = db.getRiskScoreLive(token)
                 riskHistory = db.getRiskScoreDaily(token, 14).sortedBy { it.date }
                 val migraines = db.getMigraines(token)
-                migraineDates = migraines.map { it.startAt.take(10) }.toSet()
+                migraineDates = migraines.mapNotNull { TimeOfDay.localDay(it.startAt) }.toSet()
                 android.util.Log.d("MonitorScreen", "Risk history: ${riskHistory.size} days, migraines on: $migraineDates")
             } catch (e: Exception) {
                 android.util.Log.e("MonitorScreen", "Risk history load failed: ${e.message}", e)

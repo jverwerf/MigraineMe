@@ -114,7 +114,7 @@ fun auraDurationBucket(minutes: Int): String = when {
  *  pain entries' formatIsoDdMmYyHm, so picker-set and shown times agree. */
 internal fun formatAuraMomentIso(iso: String): String = try {
     val odt = runCatching { java.time.OffsetDateTime.parse(iso) }.getOrNull()
-    val ldt = odt?.toLocalDateTime() ?: java.time.LocalDateTime.parse(iso)
+    val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: java.time.LocalDateTime.parse(iso)
     ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
 } catch (_: Exception) {
     iso

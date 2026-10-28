@@ -94,7 +94,7 @@ fun EditMedicineScreen(
         if (startIso.isNullOrBlank()) return tSync("Unknown")
         return try {
             val odt = runCatching { OffsetDateTime.parse(startIso) }.getOrNull()
-            val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
+            val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
             ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm", appLocale()))
         } catch (_: Exception) { tSync("Unknown") }
     }
@@ -107,7 +107,7 @@ fun EditMedicineScreen(
         if (iso.isNullOrBlank()) return tSync("Not set")
         return try {
             val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-            val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
+            val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(iso)
             ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
         } catch (_: Exception) { tSync("Not set") }
     }

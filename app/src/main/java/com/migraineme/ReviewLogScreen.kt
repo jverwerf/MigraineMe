@@ -295,7 +295,7 @@ private fun formatIsoDdMmYyHm(iso: String?): String {
     if (iso.isNullOrBlank()) return "-"
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(iso)
         ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
     } catch (_: Exception) { "-" }
 }

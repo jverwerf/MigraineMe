@@ -39,6 +39,15 @@ object TimeOfDay {
         return null
     }
 
+    /** The device-local day ("yyyy-MM-dd") of a stored timestamp; a bare
+     *  date passes through. Slicing the first ten characters gives the UTC
+     *  day, which is the wrong day near midnight. */
+    fun localDay(raw: String?): String? {
+        if (raw.isNullOrBlank()) return null
+        val instant = parseInstant(raw) ?: return raw.take(10).takeIf { it.length == 10 }
+        return instant.atZone(ZoneId.systemDefault()).toLocalDate().toString()
+    }
+
     /** Decimal hour-of-day in the device timezone (e.g. 22:30 → 22.5). */
     fun toHoursOfDay(raw: String): Double? {
         val instant = parseInstant(raw) ?: return null

@@ -254,7 +254,7 @@ private fun formatIsoDdMmYyHm(iso: String?): String {
     if (iso.isNullOrBlank()) return "-"
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(iso)
         ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
     } catch (_: Exception) { "-" }
 }
@@ -277,8 +277,8 @@ private fun DrawScope.drawMigraineIcon(color: Color) {
 
 private fun computeDurationText(startIso: String, endIso: String): String? {
     return try {
-        val s = runCatching { OffsetDateTime.parse(startIso).toLocalDateTime() }.getOrNull() ?: LocalDateTime.parse(startIso)
-        val e = runCatching { OffsetDateTime.parse(endIso).toLocalDateTime() }.getOrNull() ?: LocalDateTime.parse(endIso)
+        val s = runCatching { OffsetDateTime.parse(startIso).atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: LocalDateTime.parse(startIso)
+        val e = runCatching { OffsetDateTime.parse(endIso).atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: LocalDateTime.parse(endIso)
         val dur = java.time.Duration.between(s, e)
         if (dur.isNegative) return null
         val h = dur.toHours()

@@ -347,8 +347,7 @@ fun LogHomeScreen(
                 }
                 vm.setAuraEntries(
                     base + AuraEntryDraft(
-                        startAtIso = at ?: java.time.LocalDateTime.now()
-                            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")),
+                        startAtIso = at ?: java.time.Instant.now().toString(),
                         zones = zones,
                         durationMinutes = dur,
                     ),
@@ -367,8 +366,7 @@ fun LogHomeScreen(
                 } else {
                     val last = if (zones.isEmpty()) staged
                     else staged + AuraEntryDraft(
-                        startAtIso = at ?: java.time.LocalDateTime.now()
-                            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")),
+                        startAtIso = at ?: java.time.Instant.now().toString(),
                         zones = zones,
                         durationMinutes = dur,
                     )

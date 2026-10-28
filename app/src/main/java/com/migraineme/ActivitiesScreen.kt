@@ -64,7 +64,7 @@ fun ActivitiesScreen(
     val recent by vm.recent.collectAsState()
 
     // Day key of the migraine start the draft currently claims.
-    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
+    val currentRefDate = TimeOfDay.localDay(draft.migraine?.beganAtIso)
 
     fun rebuildDraftWithActivities(acts: List<ActivityDraft>) {
         logVm.replaceActivities(acts)
@@ -399,7 +399,7 @@ private fun formatActTime(iso: String?): String {
     if (iso.isNullOrBlank()) return tSync("Not set")
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
             ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return tSync("Not set")
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { tSync("Not set") }
@@ -407,10 +407,10 @@ private fun formatActTime(iso: String?): String {
 
 private fun deriveDurationMinutes(startIso: String, endIso: String): Int? {
     return try {
-        val s = runCatching { OffsetDateTime.parse(startIso).toLocalDateTime() }.getOrNull()
+        val s = runCatching { OffsetDateTime.parse(startIso).atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
             ?: runCatching { LocalDateTime.parse(startIso) }.getOrNull()
             ?: runCatching { Instant.parse(startIso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return null
-        val e = runCatching { OffsetDateTime.parse(endIso).toLocalDateTime() }.getOrNull()
+        val e = runCatching { OffsetDateTime.parse(endIso).atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
             ?: runCatching { LocalDateTime.parse(endIso) }.getOrNull()
             ?: runCatching { Instant.parse(endIso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return null
         val dur = java.time.Duration.between(s, e)

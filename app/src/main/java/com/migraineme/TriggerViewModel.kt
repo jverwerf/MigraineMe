@@ -76,7 +76,7 @@ class TriggerViewModel : PoolViewModel() {
                     val type = row.type ?: continue
                     val startAt = row.startAt ?: continue
                     val date = try {
-                        java.time.LocalDate.parse(startAt.substring(0, 10))
+                        java.time.LocalDate.parse(TimeOfDay.localDay(startAt))
                     } catch (_: Exception) { continue }
                     val daysAgo = kotlin.math.abs(java.time.temporal.ChronoUnit.DAYS.between(date, refDate).toInt())
                     if (daysAgo in 0..3) {

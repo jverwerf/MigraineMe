@@ -395,7 +395,7 @@ fun QuickLogMedicineScreen(
 
 private fun formatIsoForDisplay(iso: String): String {
     return try {
-        val instant = java.time.OffsetDateTime.parse(iso)
+        val instant = java.time.OffsetDateTime.parse(iso).atZoneSameInstant(java.time.ZoneId.systemDefault())
         instant.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
     } catch (_: Exception) {
         try {

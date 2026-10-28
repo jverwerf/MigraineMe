@@ -59,7 +59,7 @@ class ActivityViewModel : PoolViewModel() {
                 val isoMap = mutableMapOf<String, String>()
                 for (row in rows) {
                     val type = row.activityType ?: continue
-                    val dateStr = row.date ?: row.startAt?.substring(0, 10) ?: continue
+                    val dateStr = row.date ?: TimeOfDay.localDay(row.startAt) ?: continue
                     val date = try {
                         java.time.LocalDate.parse(dateStr.substring(0, 10))
                     } catch (_: Exception) { continue }

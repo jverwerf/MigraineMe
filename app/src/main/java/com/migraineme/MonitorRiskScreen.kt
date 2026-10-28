@@ -96,7 +96,7 @@ fun MonitorRiskScreen(
                 riskLive = db.getRiskScoreLive(token)
                 riskHistory = db.getRiskScoreDaily(token, 14).sortedBy { it.date }
                 val migraines = db.getMigraines(token)
-                migraineDates = migraines.map { it.startAt.take(10) }.toSet()
+                migraineDates = migraines.mapNotNull { TimeOfDay.localDay(it.startAt) }.toSet()
             } catch (_: Exception) {}
             try { weatherSummary = loadWeatherSummary(ctx, token, today) } catch (_: Exception) {}
             try { physicalSummary = loadPhysicalSummary(ctx, token, today) } catch (_: Exception) {}

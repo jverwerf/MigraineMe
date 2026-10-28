@@ -261,7 +261,7 @@ fun EveningCheckInScreen(
         return calendarMappings.mapNotNull { m ->
             val label = m.targetLabel ?: return@mapNotNull null
             if (m.targetType != type) return@mapNotNull null
-            val startDate = m.startAt?.take(10) ?: return@mapNotNull null
+            val startDate = TimeOfDay.localDay(m.startAt) ?: return@mapNotNull null
             if (startDate != today) return@mapNotNull null
             label
         }
@@ -271,7 +271,7 @@ fun EveningCheckInScreen(
         val today = java.time.LocalDate.now().toString()
         return calendarMappings.firstOrNull { m ->
             m.targetType == type && m.targetLabel == label &&
-                (m.startAt?.take(10) == today)
+                (TimeOfDay.localDay(m.startAt) == today)
         }
     }
 
@@ -1385,7 +1385,7 @@ private fun ReviewPage(
 ) {
     val scrollState = rememberScrollState()
     val today = java.time.LocalDate.now().toString()
-    val todayCalendar = calendarMappings.filter { (it.startAt?.take(10) ?: "") == today && it.targetType != "skip" && it.targetType != null }
+    val todayCalendar = calendarMappings.filter { TimeOfDay.localDay(it.startAt) == today && it.targetType != "skip" && it.targetType != null }
     val migraineNowCount = nowSymptoms.size +
         (if (painNowLocations.isNotEmpty()) 1 else 0) +
         (if (auraNowZones.isNotEmpty()) 1 else 0) +

@@ -301,11 +301,11 @@ private fun formatTimeRange(startAt: String?, endAt: String?): String? {
     val fmt = DateTimeFormatter.ofPattern("h:mm a", appLocale())
     return try {
         val start = if (startAt.contains("T")) {
-            java.time.LocalDateTime.parse(startAt.substringBefore("Z").substringBefore("+")).format(fmt)
+            TimeOfDay.parseInstant(startAt)!!.atZone(java.time.ZoneId.systemDefault()).format(fmt)
         } else startAt
 
         val end = if (!endAt.isNullOrBlank() && endAt.contains("T")) {
-            java.time.LocalDateTime.parse(endAt.substringBefore("Z").substringBefore("+")).format(fmt)
+            TimeOfDay.parseInstant(endAt)!!.atZone(java.time.ZoneId.systemDefault()).format(fmt)
         } else null
 
         if (end != null) "$start – $end" else start

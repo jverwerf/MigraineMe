@@ -61,7 +61,7 @@ fun MissedActivitiesScreen(
 
     // Day key of the migraine start the draft currently claims. The suggestions
     // are relative to it, so a date change has to re-run the load.
-    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
+    val currentRefDate = TimeOfDay.localDay(draft.migraine?.beganAtIso)
 
     LaunchedEffect(authState.accessToken, currentRefDate) {
         authState.accessToken?.let {
@@ -347,7 +347,7 @@ private fun formatMissedTime(iso: String?): String {
     if (iso.isNullOrBlank()) return "Not set"
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
             ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return "Not set"
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { "Not set" }

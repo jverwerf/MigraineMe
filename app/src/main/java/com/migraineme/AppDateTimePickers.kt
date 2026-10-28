@@ -71,8 +71,7 @@ fun appTimePickerColors(): TimePickerColors = TimePickerDefaults.colors(
  * These two are the only sanctioned way to cross that boundary. The picked
  * value is a calendar date the user pointed at, not an instant, so it is
  * carried as a [LocalDate] and combined with the picked wall-clock time by the
- * caller. That matches [PastOnlyDates] and the ISO writer below, which already
- * treat these timestamps as wall clock.
+ * caller. That matches [PastOnlyDates], which compares against the local day.
  */
 private val DATE_PICKER_ZONE: ZoneId = ZoneId.of("UTC")
 
@@ -83,9 +82,8 @@ fun localDateToDatePickerMillis(date: LocalDate): Long =
     date.atStartOfDay(DATE_PICKER_ZONE).toInstant().toEpochMilli()
 
 /**
- * Days from today onwards are unselectable. Timestamps in this app are wall
- * clock, so "today" is the local day — a UTC-based comparison would open
- * tomorrow early for anyone east of Greenwich.
+ * Days after today are unselectable. "Today" is the local day — a UTC-based
+ * comparison would open tomorrow early for anyone east of Greenwich.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 internal object PastOnlyDates : SelectableDates {
@@ -181,11 +179,10 @@ fun DateTimePickerField(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val iso = "%sT%02d:%02d:00Z".format(
-                            pickedDate!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                            timePickerState.hour,
-                            timePickerState.minute
-                        )
+                        // The picked wall clock is local; store the real
+                        // instant so Home and the Journal show what was picked.
+                        val iso = pickedDate!!.atTime(timePickerState.hour, timePickerState.minute)
+                            .atZone(ZoneId.systemDefault()).toInstant().toString()
                         onDateTimeSelected(iso)
                         showTimePicker = false
                     },

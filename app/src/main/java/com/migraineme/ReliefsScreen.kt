@@ -676,7 +676,7 @@ private fun formatReliefTime(iso: String?): String {
     if (iso.isNullOrBlank()) return "Not set"
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime()
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime()
             ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
             ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
             ?: return "Not set"

@@ -87,7 +87,7 @@ fun ProdromeLogScreen(
     val recent by vm.recent.collectAsState()
 
     // Day key of the migraine start the draft currently claims.
-    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
+    val currentRefDate = TimeOfDay.localDay(draft.migraine?.beganAtIso)
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithProdromes(prodromes: List<ProdromeDraft>) {
@@ -541,7 +541,7 @@ private fun formatProdromeTime(iso: String?): String {
     if (iso.isNullOrBlank()) return "Not set"
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime()
+        val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime()
             ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
             ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
             ?: return "Not set"
