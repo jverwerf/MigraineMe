@@ -268,7 +268,7 @@ data class CommunityState(
     val commentCounts: Map<String, Int> = emptyMap(),
     val loading: Boolean = false,
     val error: String? = null,
-    val topTab: Int = 0,        // 0 = Articles, 1 = Forum, 2 = Blogs
+    val topTab: Int = 1,        // 0 = Articles, 1 = Forum, 2 = Blogs
     val selectedTab: Int = 0,   // Article sub-tab: 0 = For You, 1 = Latest, 2 = Browse, 3 = Saved
     // Forum state
     val forumPosts: List<ForumPostRow> = emptyList(),
