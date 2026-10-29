@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -3260,6 +3260,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Choisis jusqu'à 3 mesures pour la carte.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Choisis jusqu'à 3 mesures de sommeil pour la carte.",
     "Select what you experience and use" to "Choisis ce que tu vis et utilises",
+    "Select..." to "Choisir...",
     "Selenium" to "Sélénium",
     "Selenium high" to "Sélénium élevé",
     "Selenium low" to "Sélénium bas",
@@ -4522,10 +4523,10 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "Ton pouls au repos",
     "Your risk *today.*" to "Ton risque *aujourd'hui.*",
     "Your risk gauge is personal from day one instead of week five." to "Ta jauge de risque est personnelle dès le premier jour, pas à la cinquième semaine.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Ton modèle de risque est prêt.\n\nNous chargeons des données d'exemple pour te montrer l'appli en action. Ensuite : une visite rapide de chaque écran.",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Ton modèle de risque est prêt.\n\nNous chargeons des données d'exemple pour te montrer l'appli en action. Ensuite : une visite rapide de chaque écran.",
     "Your subscription" to "Ton abonnement",
     "Your summary" to "Ton résumé",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Le bilan de tes traitements et soulagements, jugé sur ce que tes données montrent vraiment.\n• Traitements seuls : quels médicaments et soulagements font leur travail de façon fiable. Deux signaux principaux :\n  - Baisse d'intensité : à quel point tes migraines sont plus douces sous ce traitement, comparé à ton intensité de base sans traitement.\n  - Baisse de durée : à quel point elles sont plus courtes qu'une crise typique de même intensité chez toi.\n  - Ta propre note de soulagement (le curseur au moment de la saisie) entre aussi en compte, surtout tant que tu n'as pas assez de crises non traitées à comparer.\n• Combinaisons : quels traitements marchent bien en paire. Parfois deux traitements faibles seuls deviennent forts ensemble ; parfois les associer n'apporte rien.\n• Par symptôme : quel traitement aide le plus pour quel symptôme. Utile quand une crise a un symptôme dominant : un triptan peut mieux marcher avec des nausées, un AINS convenir aux crises où la douleur domine.\n\nL'aperçu montre les 2 premiers de chaque couche. Entre pour la liste complète classée.\n\nLes résultats s'affinent à mesure que tu saisis, surtout avec des notes de soulagement régulières, la dose et l'heure de fin sur chaque crise. \"J'ai pris quelque chose mais je n'ai pas noté quoi\" ne peut pas nourrir ça.",

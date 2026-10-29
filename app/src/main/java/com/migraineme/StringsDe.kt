@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -3260,6 +3260,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Wähle bis zu 3 Werte für die Monitor-Karte.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Wähle bis zu 3 Schlafwerte für die Monitor-Karte.",
     "Select what you experience and use" to "Wähle, was du erlebst und nutzt",
+    "Select..." to "Auswählen...",
     "Selenium" to "Selen",
     "Selenium high" to "Selen hoch",
     "Selenium low" to "Selen niedrig",
@@ -4522,10 +4523,10 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "Dein Ruhepuls",
     "Your risk *today.*" to "Dein Risiko *heute.*",
     "Your risk gauge is personal from day one instead of week five." to "Deine Risikoanzeige ist ab Tag eins persönlich, nicht erst ab Woche fünf.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Dein Risikomodell steht.\n\nWir laden ein paar Beispieldaten, damit du die App in Aktion siehst. Danach: eine kurze Tour durch alle Seiten.",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Dein Risikomodell steht.\n\nWir laden ein paar Beispieldaten, damit du die App in Aktion siehst. Danach: eine kurze Tour durch alle Seiten.",
     "Your subscription" to "Dein Abo",
     "Your summary" to "Zusammenfassung",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Deine Bilanz zu Therapien und Linderung, gemessen an dem, was deine Daten wirklich zeigen.\n• Einzelne Therapien: welche Medikamente und Linderungen verlässlich etwas bringen. Zwei Hauptsignale:\n  - Weniger Stärke: wie viel milder deine Migränen mit dieser Therapie verlaufen, verglichen mit deiner Stärke ohne Behandlung.\n  - Weniger Dauer: wie viel kürzer sie verlaufen als eine übliche Attacke gleicher Stärke bei dir.\n  - Auch deine eigene Bewertung der Linderung (der Regler beim Erfassen) fließt ein, vor allem solange du zu wenige unbehandelte Attacken zum Vergleich hast.\n• Kombinationen: welche Therapien im Paar gut wirken. Manchmal werden zwei allein schwache zusammen stark; manchmal bringt das Paar nichts dazu.\n• Nach Symptom: welche Therapie bei welchem Symptom am meisten hilft. Nützlich, wenn eine Attacke ein bestimmendes Symptom hat: ein Triptan wirkt vielleicht besser bei Übelkeit, ein NSAR passt eher, wenn der Schmerz im Vordergrund steht.\n\nDie Vorschau zeigt die 2 wichtigsten aus jeder Schicht. Tippe hinein für die ganze sortierte Liste.\n\nDie Funde werden schärfer, je mehr du erfasst, vor allem mit gleichmäßigen Bewertungen der Linderung, Angaben zur Dosis und Endzeiten pro Attacke. \"Etwas genommen, aber nicht notiert was\" kann hier nicht einfließen.",

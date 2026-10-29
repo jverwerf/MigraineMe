@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -3260,6 +3260,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Scegli fino a 3 misure per la scheda.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Scegli fino a 3 misure del sonno per la scheda.",
     "Select what you experience and use" to "Scegli cosa provi e cosa usi",
+    "Select..." to "Scegli...",
     "Selenium" to "Selenio",
     "Selenium high" to "Selenio alto",
     "Selenium low" to "Selenio basso",
@@ -4522,10 +4523,10 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "Il tuo battito a riposo",
     "Your risk *today.*" to "Il tuo rischio *oggi.*",
     "Your risk gauge is personal from day one instead of week five." to "Il tuo indicatore di rischio è personale dal primo giorno, non dalla quinta settimana.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Il tuo modello di rischio è pronto.\n\nCarichiamo dei dati di esempio per mostrarti l'app all'opera. Poi: un giro veloce su ogni schermata.",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Il tuo modello di rischio è pronto.\n\nCarichiamo dei dati di esempio per mostrarti l'app all'opera. Poi: un giro veloce su ogni schermata.",
     "Your subscription" to "Il tuo abbonamento",
     "Your summary" to "Riepilogo",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Il bilancio delle tue terapie e dei tuoi sollievi, giudicato su ciò che i dati mostrano davvero.\n• Terapie singole: quali farmaci e sollievi fanno la loro parte in modo affidabile. Due segnali principali:\n  - Meno intensità: quanto più leggere vanno le tue emicranie con questa terapia, rispetto alla tua intensità senza cure.\n  - Meno durata: quanto più corte vanno rispetto a un attacco tipico della stessa intensità per te.\n  - Conta anche il tuo voto sul sollievo (il cursore quando inserisci), soprattutto finché non hai abbastanza attacchi non curati da confrontare.\n• Combinazioni: quali terapie funzionano bene in coppia. A volte due deboli da sole diventano forti insieme; a volte metterle insieme non aggiunge nulla.\n• Per sintomo: quale terapia aiuta di più con quale sintomo. Utile quando un attacco ha un sintomo dominante: un triptano può andare meglio con la nausea, un FANS può adattarsi agli attacchi in cui domina il dolore.\n\nL'anteprima mostra i 2 principali di ogni livello. Entra per l'elenco completo in ordine.\n\nI risultati si affinano man mano che inserisci, soprattutto con voti di sollievo costanti, note sulla dose e orari di fine su ogni attacco. \"Ho preso qualcosa ma non ho segnato cosa\" qui non può entrare.",

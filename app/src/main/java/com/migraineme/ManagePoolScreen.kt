@@ -642,7 +642,7 @@ fun ManagePoolScreen(
                             onExpandedChange = { categoryExpanded = it }
                         ) {
                             OutlinedTextField(
-                                value = newCategory ?: "Select...",
+                                value = newCategory?.let { t(it) } ?: t("Select..."),
                                 onValueChange = {},
                                 readOnly = true,
                                 singleLine = true,
@@ -966,7 +966,7 @@ private fun PoolItemRow(
                     var catExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
                         OutlinedTextField(
-                            value = item.category ?: "None",
+                            value = t(item.category ?: "None"),
                             onValueChange = {},
                             readOnly = true,
                             singleLine = true,

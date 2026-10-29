@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -3260,6 +3260,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Kies maximaal 3 waarden voor de kaart.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Kies maximaal 3 slaapwaarden voor de kaart.",
     "Select what you experience and use" to "Kies wat je merkt en gebruikt",
+    "Select..." to "Kies...",
     "Selenium" to "Selenium",
     "Selenium high" to "Seleen hoog",
     "Selenium low" to "Seleen laag",
@@ -4522,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "Je rusthartslag",
     "Your risk *today.*" to "Je risico *vandaag.*",
     "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
     "Your subscription" to "Je abonnement",
     "Your summary" to "Samenvatting",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Je staat van dienst met behandelingen en verlichting, afgemeten aan wat je gegevens echt laten zien.\n• Losse behandelingen: welke medicijnen en verlichting betrouwbaar hun werk doen. Twee hoofdsignalen:\n  - Minder zwaarte: hoeveel milder je migraines verlopen met deze behandeling, tegenover je zwaarte zonder behandeling.\n  - Minder duur: hoeveel korter ze duren dan een gewone aanval van dezelfde zwaarte bij jou.\n  - Je eigen cijfer voor verlichting (de schuif bij het noteren) telt ook mee, vooral zolang je te weinig onbehandelde aanvallen hebt om mee te vergelijken.\n• Combinaties: welke behandelingen samen goed werken. Soms worden twee losse zwakke samen sterk; soms voegt de combinatie niets toe.\n• Per klacht: welke behandeling bij welke klacht het meest helpt. Handig als één klacht een aanval bepaalt: een triptaan werkt misschien beter bij misselijkheid, een NSAID past eerder als de pijn overheerst.\n\nDe voorvertoning toont de 2 hoogste uit elke laag. Tik erop voor de hele gesorteerde lijst.\n\nBevindingen worden scherper naarmate je meer noteert, vooral met vaste cijfers voor verlichting, notities over de dosis en eindtijden per aanval. \"Iets genomen maar niet genoteerd wat\" kan hier niet in meetellen.",

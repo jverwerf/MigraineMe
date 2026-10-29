@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -3260,6 +3260,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Elige hasta 3 métricas para la tarjeta.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Elige hasta 3 métricas de sueño para la tarjeta.",
     "Select what you experience and use" to "Elige lo que notas y lo que usas",
+    "Select..." to "Elegir...",
     "Selenium" to "Selenio",
     "Selenium high" to "Selenio alto",
     "Selenium low" to "Selenio bajo",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "Tu pulso en reposo",
     "Your risk *today.*" to "Tu riesgo *hoy.*",
     "Your risk gauge is personal from day one instead of week five." to "Tu medidor de riesgo es personal desde el primer día, no desde la quinta semana.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Tu modelo de riesgo está listo.\n\nCargamos datos de ejemplo para que veas la app en marcha. Después: un recorrido rápido por cada pantalla.",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Tu modelo de riesgo está listo.\n\nCargamos datos de ejemplo para que veas la app en marcha. Después: un recorrido rápido por cada pantalla.",
     "Your subscription" to "Tu suscripción",
     "Your summary" to "Tu resumen",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Tu historial de tratamientos y alivios, juzgado con lo que tus datos enseñan de verdad.\n• Tratamientos sueltos: qué medicinas y alivios cumplen de forma fiable. Dos señales principales:\n  - Menos fuerza: cuánto más suaves van tus migrañas con ese tratamiento, frente a tu fuerza habitual sin tratar.\n  - Menos duración: cuánto menos duran frente a un ataque típico de la misma fuerza en ti.\n  - Tu propia nota de alivio (la barra al anotarlo) también entra, sobre todo mientras no tengas suficientes ataques sin tratar con los que comparar.\n• Combinaciones: qué tratamientos suelen ir bien en pareja. A veces dos flojos por separado se hacen fuertes juntos; a veces juntarlos no aporta nada.\n• Por síntoma: qué tratamiento ayuda más con cada síntoma. Útil cuando un ataque tiene un síntoma que manda: un triptán puede ir mejor con náuseas, y un AINE encajar cuando manda el dolor.\n\nLa vista previa muestra los 2 primeros de cada capa. Entra para la lista completa ordenada.\n\nLos hallazgos se afinan cuanto más anotas, sobre todo con notas de alivio constantes, la dosis y la hora de fin en cada ataque. \"Tomé algo pero no apunté qué\" no puede entrar aquí.",

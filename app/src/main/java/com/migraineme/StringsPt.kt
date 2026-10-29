@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4923 entries.
+ * 4924 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -3260,6 +3260,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Select up to 3 metrics to show on the Monitor card." to "Escolhe até 3 medidas para o cartão.",
     "Select up to 3 sleep metrics to show on the Monitor card." to "Escolhe até 3 medidas de sono para o cartão.",
     "Select what you experience and use" to "Escolhe o que sentes e usas",
+    "Select..." to "Escolher...",
     "Selenium" to "Selénio",
     "Selenium high" to "Selénio alto",
     "Selenium low" to "Selénio baixo",
@@ -4522,10 +4523,10 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your resting BPM" to "O teu pulso em repouso",
     "Your risk *today.*" to "O teu risco *hoje.*",
     "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",
-    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "O teu modelo de risco está pronto.\n\nVamos carregar dados de exemplo para veres a app a funcionar. A seguir: uma visita rápida a cada ecrã.",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "O teu modelo de risco está pronto.\n\nVamos carregar dados de exemplo para veres a app a funcionar. A seguir: uma visita rápida a cada ecrã.",
     "Your subscription" to "A tua subscrição",
     "Your summary" to "O teu resumo",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "O que os teus tratamentos e alívios valem, julgado pelo que os teus dados mostram mesmo.\n• Tratamentos soltos: que medicamentos e alívios cumprem de forma fiável. Dois sinais principais:\n  - Menos força: quanto mais suaves ficam as tuas enxaquecas com este tratamento, face à tua força de base sem tratar.\n  - Menos duração: quanto menos duram face a uma crise típica da mesma força em ti.\n  - A tua própria nota de alívio (o cursor ao registar) também entra, sobretudo enquanto não tiveres crises sem tratar que cheguem para comparar.\n• Combinações: que tratamentos costumam resultar bem aos pares. Às vezes dois fracos sozinhos ficam fortes juntos; às vezes juntá-los não acrescenta nada.\n• Por sintoma: que tratamento ajuda mais em cada sintoma. Útil quando uma crise tem um sintoma dominante: um triptano pode resultar melhor com náuseas, um AINE pode assentar nas crises em que domina a dor.\n\nA pré-visualização mostra os 2 primeiros de cada camada. Entra para a lista completa por ordem.\n\nOs achados afinam-se à medida que registas, sobretudo com notas de alívio constantes, a dose e as horas de fim em cada crise. \"Tomei algo mas não apontei o quê\" não pode entrar aqui.",
