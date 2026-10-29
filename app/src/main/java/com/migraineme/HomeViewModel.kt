@@ -157,6 +157,9 @@ class HomeViewModel : ViewModel() {
         }
 
         if (live != null) {
+            // Keep the home-screen widgets on the same score Home is about to show;
+            // otherwise they only catch up on their 30-minute tick.
+            com.migraineme.widget.MigraineMeWidget.requestUpdate(appCtx)
             return mapLiveToUiState(live, edge, appCtx)
         }
 
