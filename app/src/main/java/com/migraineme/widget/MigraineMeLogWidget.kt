@@ -9,11 +9,15 @@ import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import com.migraineme.BuildConfig
+import com.migraineme.EdgeFunctionsService
+import com.migraineme.PremiumAccess
+import com.migraineme.PremiumManager
 import com.migraineme.R
 import com.migraineme.Routes
 import com.migraineme.SessionStore
 import com.migraineme.SupabaseDbService
 import com.migraineme.appLocale
+import com.migraineme.forecastPillLabel
 import com.migraineme.tSync
 import kotlinx.coroutines.*
 import java.net.URLEncoder
@@ -26,7 +30,8 @@ import java.time.format.DateTimeFormatter
 /**
  * The 2x2 Log widget. Normally one big Migraine button that opens the full
  * log wizard. While a migraine is open it turns into the Home "in progress"
- * card: Pain / Medicine / Relief for that attack, and End now.
+ * card: Pain / Medicine / Relief / Symptom for that attack, Full log and
+ * End now, plus the Premium "usually over by" line.
  *
  * Nothing here writes a log row itself. Every log button opens the app on
  * the right screen; only End now touches the database, the same update the
@@ -45,7 +50,9 @@ class MigraineMeLogWidget : AppWidgetProvider() {
     data class LogData(
         val loggedIn: Boolean = false,
         val open: SupabaseDbService.MigraineRow? = null,
-        val lastStart: String? = null
+        val lastStart: String? = null,
+        /** Premium only, same line as the Home card. Null hides it. */
+        val usualEnd: String? = null
     )
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
@@ -89,7 +96,12 @@ class MigraineMeLogWidget : AppWidgetProvider() {
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val open = db.getOpenMigraine(token)
         val last = if (open == null) db.getLatestMigraineStart(token) else null
-        return LogData(loggedIn = true, open = open, lastStart = last)
+        // Same gate as the Home card: free users never call similar-attacks.
+        val usual = if (open != null && PremiumManager.state.value.access == PremiumAccess.ENTITLED) {
+            runCatching { EdgeFunctionsService().getSimilarAttacks(context) }.getOrNull()
+                ?.let { forecastPillLabel(it) }
+        } else null
+        return LogData(loggedIn = true, open = open, lastStart = last, usualEnd = usual)
     }
 
     private fun render(context: Context, mgr: AppWidgetManager, id: Int, data: LogData) {
@@ -97,7 +109,7 @@ class MigraineMeLogWidget : AppWidgetProvider() {
         val open = data.open
         views.setViewVisibility(R.id.widget_log_normal, if (open == null) View.VISIBLE else View.GONE)
         views.setViewVisibility(R.id.widget_log_attack, if (open == null) View.GONE else View.VISIBLE)
-        if (open == null) renderNormal(context, views, data) else renderAttack(context, views, open)
+        if (open == null) renderNormal(context, views, data) else renderAttack(context, views, open, data.usualEnd)
         mgr.updateAppWidget(id, views)
     }
 
@@ -117,12 +129,16 @@ class MigraineMeLogWidget : AppWidgetProvider() {
         views.setOnClickPendingIntent(R.id.widget_log_normal, WidgetIntents.openApp(context, 200, route))
     }
 
-    private fun renderAttack(context: Context, views: RemoteViews, row: SupabaseDbService.MigraineRow) {
+    private fun renderAttack(context: Context, views: RemoteViews, row: SupabaseDbService.MigraineRow, usualEnd: String?) {
         views.setTextViewText(R.id.widget_attack_title, tSync("Migraine in progress"))
         views.setTextViewText(R.id.widget_attack_started, tSync("Started %s", formatStart(row.startAt)))
+        views.setTextViewText(R.id.widget_attack_usual, usualEnd ?: "")
+        views.setViewVisibility(R.id.widget_attack_usual, if (usualEnd == null) View.GONE else View.VISIBLE)
         views.setTextViewText(R.id.widget_attack_label_pain, tSync("Pain"))
         views.setTextViewText(R.id.widget_attack_label_medicine, tSync("Medicine"))
         views.setTextViewText(R.id.widget_attack_label_relief, tSync("Relief"))
+        views.setTextViewText(R.id.widget_attack_label_symptom, tSync("Symptom"))
+        views.setTextViewText(R.id.widget_attack_full, tSync("Full log"))
         views.setTextViewText(R.id.widget_attack_end, tSync("End now"))
 
         // Same routes the Home in-progress card opens for these kinds.
@@ -135,6 +151,10 @@ class MigraineMeLogWidget : AppWidgetProvider() {
             WidgetIntents.openApp(context, 212, "${Routes.JOURNAL_ADD}/medicine/${row.id}/$start"))
         views.setOnClickPendingIntent(R.id.widget_attack_relief,
             WidgetIntents.openApp(context, 213, "${Routes.JOURNAL_ADD}/relief/${row.id}/$start"))
+        views.setOnClickPendingIntent(R.id.widget_attack_symptom,
+            WidgetIntents.openApp(context, 214, "${Routes.JOURNAL_ADD_SYMPTOM}/${row.id}"))
+        views.setOnClickPendingIntent(R.id.widget_attack_full,
+            WidgetIntents.openApp(context, 215, "${Routes.EDIT_MIGRAINE}/${row.id}"))
 
         val end = PendingIntent.getBroadcast(
             context, 220,

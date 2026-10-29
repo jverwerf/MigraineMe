@@ -108,6 +108,17 @@
                     android:textColor="#9EFFFFFF"
                     android:textSize="10sp"
                     android:maxLines="1" />
+                <TextView
+                    android:id="@+id/widget_attack_usual"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="usually over by today 19:00"
+                    android:textColor="#DCCEFF"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 
@@ -119,22 +130,44 @@
             android:gravity="center"
             android:baselineAligned="false">
             <LinearLayout android:id="@+id/widget_attack_pain" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_pain" android:background="@drawable/widget_btn_pain_bg" android:padding="7dp" android:contentDescription="@null" />
-                <TextView android:id="@+id/widget_attack_label_pain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pain" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_widget_pain" android:background="@drawable/widget_btn_pain_bg" android:padding="6dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_pain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pain" android:textColor="#9EFFFFFF" android:textSize="8sp" android:maxLines="1" android:layout_marginTop="2dp" />
             </LinearLayout>
             <LinearLayout android:id="@+id/widget_attack_medicine" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_medicine" android:background="@drawable/widget_btn_medicine_bg" android:padding="7dp" android:contentDescription="@null" />
-                <TextView android:id="@+id/widget_attack_label_medicine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Medicine" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_widget_medicine" android:background="@drawable/widget_btn_medicine_bg" android:padding="6dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_medicine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Medicine" android:textColor="#9EFFFFFF" android:textSize="8sp" android:maxLines="1" android:layout_marginTop="2dp" />
             </LinearLayout>
             <LinearLayout android:id="@+id/widget_attack_relief" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:src="@drawable/ic_widget_relief" android:background="@drawable/widget_btn_relief_bg" android:padding="7dp" android:contentDescription="@null" />
-                <TextView android:id="@+id/widget_attack_label_relief" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relief" android:textColor="#9EFFFFFF" android:textSize="9sp" android:maxLines="1" android:layout_marginTop="2dp" />
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_widget_relief" android:background="@drawable/widget_btn_relief_bg" android:padding="6dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_relief" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relief" android:textColor="#9EFFFFFF" android:textSize="8sp" android:maxLines="1" android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/widget_attack_symptom" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_widget_migraine" android:background="@drawable/widget_btn_symptom_bg" android:padding="6dp" android:contentDescription="@null" />
+                <TextView android:id="@+id/widget_attack_label_symptom" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Symptom" android:textColor="#9EFFFFFF" android:textSize="8sp" android:maxLines="1" android:layout_marginTop="2dp" />
             </LinearLayout>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:orientation="horizontal">
+        <TextView
+            android:id="@+id/widget_attack_full"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:gravity="center"
+            android:background="@drawable/widget_pill_full_bg"
+            android:text="Full log"
+            android:textColor="#DCCEFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="1" />
         <TextView
             android:id="@+id/widget_attack_end"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="30dp"
             android:gravity="center"
             android:background="@drawable/widget_pill_end_bg"
@@ -143,5 +176,6 @@
             android:textSize="12sp"
             android:textStyle="bold"
             android:maxLines="1" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

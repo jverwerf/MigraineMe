@@ -3,5 +3,7 @@
     <string name="widget_name">MigraineMe risk</string>
     <string name="widget_description">Today\'s migraine risk gauge.</string>
     <string name="widget_log_name">MigraineMe log</string>
-    <string name="widget_log_description">Log a migraine in one tap. During an attack: pain, medicine, relief and end it.</string>
+    <string name="widget_log_description">Log a migraine in one tap. During an attack: pain, medicine, relief, symptoms and end it.</string>
+    <string name="widget_forecast_name">MigraineMe forecast</string>
+    <string name="widget_forecast_description">Today\'s risk, what is driving it, and the next 7 days.</string>
 </resources>
