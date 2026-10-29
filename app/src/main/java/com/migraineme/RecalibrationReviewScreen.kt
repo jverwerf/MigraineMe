@@ -558,7 +558,7 @@ private fun SeverityBadge(value: String) {
     }
 
     Text(
-        value.uppercase(),
+        prettyValue(value),
         color = color,
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
     )
