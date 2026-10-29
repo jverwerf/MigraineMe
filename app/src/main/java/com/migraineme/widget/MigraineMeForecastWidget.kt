@@ -65,6 +65,7 @@ class MigraineMeForecastWidget : AppWidgetProvider() {
 
     private suspend fun fetch(context: Context): ForecastData {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return ForecastData()
+        if (!WidgetPremium.isEntitled(context)) return ForecastData(loggedIn = true)
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val live = db.getRiskScoreLive(token) ?: return ForecastData(loggedIn = true)
         return ForecastData(
@@ -97,6 +98,10 @@ class MigraineMeForecastWidget : AppWidgetProvider() {
     }.getOrDefault(emptyList())
 
     private fun render(context: Context, mgr: AppWidgetManager, id: Int, data: ForecastData) {
+        if (data.loggedIn && !WidgetPremium.isEntitled(context)) {
+            mgr.updateAppWidget(id, WidgetIntents.lockedViews(context, 402))
+            return
+        }
         val views = RemoteViews(context.packageName, R.layout.widget_migraineme_forecast)
         views.setTextViewText(R.id.widget_fc_today, tSync("Today"))
 

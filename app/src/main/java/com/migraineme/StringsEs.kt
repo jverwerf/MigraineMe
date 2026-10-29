@@ -2924,6 +2924,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednisona",
     "Prefer not to say" to "Prefiero no decirlo",
     "Premium" to "Premium",
+    "Tap to unlock" to "Toca para desbloquear",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium está activo. Sin tarjeta y sin ataduras.",
     "Premium trial — %s days left" to "Prueba Premium — %s días",

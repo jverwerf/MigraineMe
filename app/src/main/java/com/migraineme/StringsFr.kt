@@ -2924,6 +2924,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednisone",
     "Prefer not to say" to "Je préfère taire",
     "Premium" to "Premium",
+    "Tap to unlock" to "Touchez pour débloquer",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium est actif. Sans carte, sans engagement.",
     "Premium trial — %s days left" to "Essai Premium — %s jours",

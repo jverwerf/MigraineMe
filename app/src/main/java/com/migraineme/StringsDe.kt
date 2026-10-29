@@ -2924,6 +2924,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednison",
     "Prefer not to say" to "Keine Angabe",
     "Premium" to "Premium",
+    "Tap to unlock" to "Zum Freischalten tippen",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium ist frei. Keine Karte nötig, keine Bedingungen.",
     "Premium trial — %s days left" to "Premium-Test — noch %s Tage",

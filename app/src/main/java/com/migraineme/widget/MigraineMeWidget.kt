@@ -76,6 +76,7 @@ class MigraineMeWidget : AppWidgetProvider() {
 
     private suspend fun fetchWidgetData(context: Context): WidgetData {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return WidgetData()
+        if (!WidgetPremium.isEntitled(context)) return WidgetData(loggedIn = true)
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val live = db.getRiskScoreLive(token) ?: return WidgetData(loggedIn = true, hasScore = false)
         return WidgetData(
@@ -99,6 +100,10 @@ class MigraineMeWidget : AppWidgetProvider() {
     }
 
     private fun updateWidget(context: Context, mgr: AppWidgetManager, id: Int, data: WidgetData) {
+        if (data.loggedIn && !WidgetPremium.isEntitled(context)) {
+            mgr.updateAppWidget(id, WidgetIntents.lockedViews(context, 400))
+            return
+        }
         val views = RemoteViews(context.packageName, R.layout.widget_migraineme)
 
         views.setImageViewBitmap(

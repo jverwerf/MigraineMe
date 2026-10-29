@@ -23,4 +23,14 @@ object WidgetIntents {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
+
+    /** The Premium face every widget shows without Premium; tap opens the paywall. */
+    fun lockedViews(context: Context, requestCode: Int): android.widget.RemoteViews {
+        val views = android.widget.RemoteViews(context.packageName, com.migraineme.R.layout.widget_migraineme_locked)
+        views.setTextViewText(com.migraineme.R.id.widget_locked_title, com.migraineme.tSync("Premium"))
+        views.setTextViewText(com.migraineme.R.id.widget_locked_sub, com.migraineme.tSync("Tap to unlock"))
+        views.setOnClickPendingIntent(com.migraineme.R.id.widget_locked_root,
+            openApp(context, requestCode, com.migraineme.Routes.PAYWALL))
+        return views
+    }
 }

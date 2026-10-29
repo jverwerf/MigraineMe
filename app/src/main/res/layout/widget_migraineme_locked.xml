@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premium face shared by every MigraineMe widget for users without Premium.
+     Text here is placeholder only; the widget sets translated text. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_locked_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/widget_background"
+    android:padding="12dp"
+    tools:ignore="HardcodedText">
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_widget_lock"
+        android:background="@drawable/widget_btn_lock_bg"
+        android:padding="12dp"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/widget_locked_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Premium"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="1" />
+
+    <TextView
+        android:id="@+id/widget_locked_sub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:text="Tap to unlock"
+        android:textColor="#9EFFFFFF"
+        android:textSize="11sp"
+        android:maxLines="1" />
+</LinearLayout>

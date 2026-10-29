@@ -10,8 +10,6 @@ import android.view.View
 import android.widget.RemoteViews
 import com.migraineme.BuildConfig
 import com.migraineme.EdgeFunctionsService
-import com.migraineme.PremiumAccess
-import com.migraineme.PremiumManager
 import com.migraineme.R
 import com.migraineme.Routes
 import com.migraineme.SessionStore
@@ -93,11 +91,12 @@ class MigraineMeLogWidget : AppWidgetProvider() {
 
     private suspend fun fetch(context: Context): LogData {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return LogData()
+        if (!WidgetPremium.isEntitled(context)) return LogData(loggedIn = true)
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val open = db.getOpenMigraine(token)
         val last = if (open == null) db.getLatestMigraineStart(token) else null
-        // Same gate as the Home card: free users never call similar-attacks.
-        val usual = if (open != null && PremiumManager.state.value.access == PremiumAccess.ENTITLED) {
+        // Only Premium reaches here (the whole widget is Premium), same line as the Home card.
+        val usual = if (open != null) {
             runCatching { EdgeFunctionsService().getSimilarAttacks(context) }.getOrNull()
                 ?.let { forecastPillLabel(it) }
         } else null
@@ -105,6 +104,10 @@ class MigraineMeLogWidget : AppWidgetProvider() {
     }
 
     private fun render(context: Context, mgr: AppWidgetManager, id: Int, data: LogData) {
+        if (data.loggedIn && !WidgetPremium.isEntitled(context)) {
+            mgr.updateAppWidget(id, WidgetIntents.lockedViews(context, 401))
+            return
+        }
         val views = RemoteViews(context.packageName, R.layout.widget_migraineme_log)
         val open = data.open
         views.setViewVisibility(R.id.widget_log_normal, if (open == null) View.VISIBLE else View.GONE)

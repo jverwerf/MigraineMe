@@ -15,5 +15,7 @@ class MigraineMeApp : Application() {
         LangPrefs.init(this)
         // Ask Play once whether an ad brought this install here. See InstallAttribution.
         InstallAttribution.captureOnce(this)
+        // Home-screen widgets are Premium; keep their stored answer in step.
+        com.migraineme.widget.WidgetPremium.watch(this)
     }
 }

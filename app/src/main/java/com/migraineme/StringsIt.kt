@@ -2924,6 +2924,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednisone",
     "Prefer not to say" to "Preferisco non dirlo",
     "Premium" to "Premium",
+    "Tap to unlock" to "Tocca per sbloccare",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium è attivo. Nessuna carta, nessun vincolo.",
     "Premium trial — %s days left" to "Prova Premium — %s giorni",

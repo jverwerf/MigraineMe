@@ -2924,6 +2924,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednison",
     "Prefer not to say" to "Zeg ik liever niet",
     "Premium" to "Premium",
+    "Tap to unlock" to "Tik om te ontgrendelen",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium staat aan. Geen kaart nodig, geen addertjes.",
     "Premium trial — %s days left" to "Premium-proef — nog %s dagen",
