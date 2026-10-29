@@ -4922,5 +4922,13 @@
   "your migraine from %s": "tu migraña del %s",
   "your open migraine": "tu migraña abierta",
   "Last migraine": "Última migraña",
-  "Select...": "Elegir..."
+  "Select...": "Elegir...",
+  "migraine": "migraña",
+  "trigger": "factor",
+  "prodrome": "pródromo",
+  "medicine": "medicina",
+  "relief": "alivio",
+  "activity": "actividad",
+  "location": "lugar",
+  "missed": "perdida"
 }

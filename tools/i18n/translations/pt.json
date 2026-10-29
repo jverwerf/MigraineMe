@@ -4922,5 +4922,13 @@
   "your migraine from %s": "a tua enxaqueca de %s",
   "your open migraine": "a enxaqueca aberta",
   "Last migraine": "Última enxaqueca",
-  "Select...": "Escolher..."
+  "Select...": "Escolher...",
+  "migraine": "enxaqueca",
+  "trigger": "fator",
+  "prodrome": "pródromo",
+  "medicine": "medicamento",
+  "relief": "alívio",
+  "activity": "atividade",
+  "location": "local",
+  "missed": "falhada"
 }

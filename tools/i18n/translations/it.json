@@ -4922,5 +4922,13 @@
   "your migraine from %s": "la tua emicrania del %s",
   "your open migraine": "l'emicrania aperta",
   "Last migraine": "Ultima emicrania",
-  "Select...": "Scegli..."
+  "Select...": "Scegli...",
+  "migraine": "emicrania",
+  "trigger": "fattore",
+  "prodrome": "prodromo",
+  "medicine": "farmaco",
+  "relief": "sollievo",
+  "activity": "attività",
+  "location": "luogo",
+  "missed": "saltata"
 }

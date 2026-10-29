@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4924 entries.
+ * 4932 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -2924,7 +2924,6 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednisona",
     "Prefer not to say" to "Prefiro não dizer",
     "Premium" to "Premium",
-    "Tap to unlock" to "Toque para desbloquear",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "O Premium está ligado. Sem cartão e sem compromissos.",
     "Premium trial — %s days left" to "Teste Premium — %s dias",
@@ -4564,6 +4563,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "accept or reject, one tap" to "aceita ou rejeita, um toque",
     "active" to "ativo",
     "activities / locations were linked to each one\n" to "atividades / locais estavam ligados a cada uma\n",
+    "activity" to "atividade",
     "acupuncturist" to "acupuntor",
     "add triggers, medicines, reliefs; switch off the rest" to "adiciona fatores, medicamentos, alívios; desliga o resto",
     "after a few logged attacks" to "após algumas crises registadas",
@@ -4701,6 +4701,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "lifestyle" to "hábitos",
     "light sensitivity" to "sensibilidade à luz",
     "likely" to "provável",
+    "location" to "local",
     "longer than usual" to "mais que o habitual",
     "longest %s" to "máximo %s",
     "longest ran %s" to "o mais longo: %s",
@@ -4716,9 +4717,11 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "mean duration" to "duração méd",
     "mean severity" to "força média",
     "medication overuse" to "uso excessivo de medicação",
+    "medicine" to "medicamento",
     "medicines" to "medicamentos",
     "melatonin" to "melatonina",
     "metrics active" to "medidas ativas",
+    "migraine" to "enxaqueca",
     "migraine clinic" to "clínica enxaqueca",
     "migraine coach" to "coach enxaqueca",
     "migraine days" to "dias enxaqueca",
@@ -4729,6 +4732,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "min" to "min",
     "mindfulness" to "mindfulness",
     "mini-prevention" to "miniprofilaxia",
+    "missed" to "falhada",
     "missed %1\$s times · %2\$s%%" to "perdida %1\$s vezes · %2\$s%%",
     "missed %1\$s× · %2\$s%%" to "perdida %1\$s× · %2\$s%%",
     "missed during %s%% of migraines" to "perdida em %s%% das crises",
@@ -4779,6 +4783,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "posture" to "postura",
     "pregnancy" to "gravidez",
     "preventive medications" to "medicação preventiva",
+    "prodrome" to "pródromo",
     "psychologist" to "psicólogo",
     "pulse_%s" to "pulse_%s",
     "questions about your own data" to "perguntas sobre os teus dados",
@@ -4786,6 +4791,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "rebound headaches" to "cefaleias de rebote",
     "recovery scores" to "pontuações de recuperação",
     "relaxation techniques" to "técnicas de relaxamento",
+    "relief" to "alívio",
     "relief %1\$s · %2\$s×" to "alívio %1\$s · %2\$s×",
     "relief: %s" to "alívio: %s",
     "removed from quick-log" to "retirado do registo rápido",
@@ -4858,6 +4864,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "training strain" to "carga de treino",
     "treatment guidelines" to "diretrizes de tratamento",
     "treatment side effects" to "efeitos secundários",
+    "trigger" to "fator",
     "trigger detection based on your health data." to "deteção de fatores a partir dos teus dados de saúde.",
     "triptans" to "triptanos",
     "up" to "cima",

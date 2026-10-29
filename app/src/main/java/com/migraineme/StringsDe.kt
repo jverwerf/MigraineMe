@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4924 entries.
+ * 4932 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -2924,7 +2924,6 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednison",
     "Prefer not to say" to "Keine Angabe",
     "Premium" to "Premium",
-    "Tap to unlock" to "Tippen zum Freischalten",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium ist frei. Keine Karte nötig, keine Bedingungen.",
     "Premium trial — %s days left" to "Premium-Test — noch %s Tage",
@@ -4564,6 +4563,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "accept or reject, one tap" to "annehmen oder ablehnen, ein Tipp",
     "active" to "aktiv",
     "activities / locations were linked to each one\n" to "Aktivitäten / Orte hingen jeweils daran\n",
+    "activity" to "Aktivität",
     "acupuncturist" to "Akupunktur",
     "add triggers, medicines, reliefs; switch off the rest" to "Auslöser, Medikamente, Hilfen hinzufügen; den Rest abschalten",
     "after a few logged attacks" to "nach ein paar eingetragenen Anfällen",
@@ -4701,6 +4701,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "lifestyle" to "Lebensstil",
     "light sensitivity" to "Lichtempfindlichkeit",
     "likely" to "wahrscheinlich",
+    "location" to "Ort",
     "longer than usual" to "länger als sonst",
     "longest %s" to "längste %s",
     "longest ran %s" to "längste: %s",
@@ -4716,9 +4717,11 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "mean duration" to "Ø Dauer",
     "mean severity" to "Ø Stärke",
     "medication overuse" to "Medikamentenübergebrauch",
+    "medicine" to "Medikament",
     "medicines" to "Medikamente",
     "melatonin" to "Melatonin",
     "metrics active" to "Werte aktiv",
+    "migraine" to "Migräne",
     "migraine clinic" to "Migräneklinik",
     "migraine coach" to "Migräne-Coach",
     "migraine days" to "Migränetage",
@@ -4729,6 +4732,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "min" to "min",
     "mindfulness" to "Achtsamkeit",
     "mini-prevention" to "Kurzzeitprophylaxe",
+    "missed" to "verpasst",
     "missed %1\$s times · %2\$s%%" to "%1\$s× verpasst · %2\$s%%",
     "missed %1\$s× · %2\$s%%" to "verpasst %1\$s× · %2\$s%%",
     "missed during %s%% of migraines" to "bei %s%% der Migränen verpasst",
@@ -4779,6 +4783,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "posture" to "Haltung",
     "pregnancy" to "Schwangerschaft",
     "preventive medications" to "Prophylaxe-Medikamente",
+    "prodrome" to "Prodrom",
     "psychologist" to "Psychologe",
     "pulse_%s" to "pulse_%s",
     "questions about your own data" to "Fragen zu deinen eigenen Daten",
@@ -4786,6 +4791,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "rebound headaches" to "Rebound-Kopfschmerzen",
     "recovery scores" to "Erholungswerte",
     "relaxation techniques" to "Entspannungstechniken",
+    "relief" to "Linderung",
     "relief %1\$s · %2\$s×" to "Linderung %1\$s · %2\$s×",
     "relief: %s" to "Hilfe: %s",
     "removed from quick-log" to "aus Quick Log entfernt",
@@ -4858,6 +4864,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "training strain" to "Trainingsbelastung",
     "treatment guidelines" to "Behandlungsleitlinien",
     "treatment side effects" to "Nebenwirkungen",
+    "trigger" to "Auslöser",
     "trigger detection based on your health data." to "Auslöser-Erkennung aus deinen Gesundheitsdaten.",
     "triptans" to "Triptane",
     "up" to "hoch",

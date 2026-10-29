@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4924 entries.
+ * 4932 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2924,7 +2924,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Prednisone" to "Prednison",
     "Prefer not to say" to "Zeg ik liever niet",
     "Premium" to "Premium",
-    "Tap to unlock" to "Tik om te ontgrendelen",
     "Premium Feature" to "Premium",
     "Premium is unlocked. No card needed, no strings attached." to "Premium staat aan. Geen kaart nodig, geen addertjes.",
     "Premium trial — %s days left" to "Premium-proef — nog %s dagen",
@@ -4564,6 +4563,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "accept or reject, one tap" to "accepteren of afwijzen, één tik",
     "active" to "actief",
     "activities / locations were linked to each one\n" to "activiteiten / plekken hingen aan elk ervan\n",
+    "activity" to "activiteit",
     "acupuncturist" to "acupuncturist",
     "add triggers, medicines, reliefs; switch off the rest" to "voeg triggers, medicijnen, verlichting toe; zet de rest uit",
     "after a few logged attacks" to "na een paar gelogde aanvallen",
@@ -4701,6 +4701,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "lifestyle" to "gewoonten",
     "light sensitivity" to "lichtgevoeligheid",
     "likely" to "waarschijnlijk",
+    "location" to "plek",
     "longer than usual" to "langer dan normaal",
     "longest %s" to "langste %s",
     "longest ran %s" to "langste duurde %s",
@@ -4716,9 +4717,11 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "mean duration" to "gem duur",
     "mean severity" to "gem zwaarte",
     "medication overuse" to "medicijnovergebruik",
+    "medicine" to "medicijn",
     "medicines" to "medicijnen",
     "melatonin" to "melatonine",
     "metrics active" to "waarden actief",
+    "migraine" to "migraine",
     "migraine clinic" to "migrainekliniek",
     "migraine coach" to "migrainecoach",
     "migraine days" to "migrainedagen",
@@ -4729,6 +4732,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "min" to "min",
     "mindfulness" to "mindfulness",
     "mini-prevention" to "miniprofylaxe",
+    "missed" to "gemist",
     "missed %1\$s times · %2\$s%%" to "%1\$s× gemist · %2\$s%%",
     "missed %1\$s× · %2\$s%%" to "gemist %1\$s× · %2\$s%%",
     "missed during %s%% of migraines" to "gemist bij %s%% van de migraines",
@@ -4779,6 +4783,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "posture" to "houding",
     "pregnancy" to "zwangerschap",
     "preventive medications" to "preventieve medicatie",
+    "prodrome" to "prodroom",
     "psychologist" to "psycholoog",
     "pulse_%s" to "pulse_%s",
     "questions about your own data" to "vragen over je eigen data",
@@ -4786,6 +4791,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "rebound headaches" to "rebound-hoofdpijn",
     "recovery scores" to "herstelscores",
     "relaxation techniques" to "ontspanningstechnieken",
+    "relief" to "verlichting",
     "relief %1\$s · %2\$s×" to "hulp %1\$s · %2\$s×",
     "relief: %s" to "hulp: %s",
     "removed from quick-log" to "uit snel noteren gehaald",
@@ -4858,6 +4864,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "training strain" to "trainingsbelasting",
     "treatment guidelines" to "behandelrichtlijnen",
     "treatment side effects" to "bijwerkingen",
+    "trigger" to "trigger",
     "trigger detection based on your health data." to "triggerdetectie op basis van je gezondheidsdata.",
     "triptans" to "triptanen",
     "up" to "omhoog",

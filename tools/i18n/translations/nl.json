@@ -4922,5 +4922,13 @@
   "your migraine from %s": "je migraine van %s",
   "your open migraine": "je open migraine",
   "Last migraine": "Laatste migraine",
-  "Select...": "Kies..."
+  "Select...": "Kies...",
+  "migraine": "migraine",
+  "trigger": "trigger",
+  "prodrome": "prodroom",
+  "medicine": "medicijn",
+  "relief": "verlichting",
+  "activity": "activiteit",
+  "location": "plek",
+  "missed": "gemist"
 }

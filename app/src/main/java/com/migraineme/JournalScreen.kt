@@ -1129,7 +1129,7 @@ private fun JournalEntryRow(
         BrainyRowIcon(info.iconLabel, category = info.cat.key, size = 18.dp)
         Column(Modifier.weight(1f)) {
             Text(
-                info.title,
+                t(info.title),   // pool labels are English keys
                 color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis
