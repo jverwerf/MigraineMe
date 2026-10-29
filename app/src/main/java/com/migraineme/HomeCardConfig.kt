@@ -36,8 +36,9 @@ data class HomeCardConfig(
          * Customize Home, so nothing reaches the Exercises screens. Flip to true
          * to bring it back; users who saved a Home order get it appended at the end.
          * Off again for the next release (Jordy 2026-10-02: "I don't want that yet").
+         * On again 2026-10-29: Home decides per user (only with an exercise on the list).
          */
-        const val EXERCISES_ENABLED = false
+        const val EXERCISES_ENABLED = true
 
         // Default order = the fixed order Home had before it became configurable,
         // with Exercises placed right after the risk gauge.

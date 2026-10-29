@@ -398,9 +398,9 @@ fun HomeScreenRoot(
                 // ── Exercises: one plain card, as before (Jordy 10-02). The list of
                 // your exercises and the Add buttons live on the Exercises screen.
                 // No counts on Home; those are Monitor's.
-                // Shown only while a linked practitioner has an active exercise
-                // on the list (Jordy 10-20); own-added exercises do not count. ──
-                if (practitionerGoals.any { it.isActive && it.isExercise && !it.isOwn }) {
+                // Shown only while there is an active exercise on the list, set by
+                // a linked practitioner or added by the user (Jordy 10-29). ──
+                if (practitionerGoals.any { it.isActive && it.isExercise }) {
                     ExercisesHomeCard(onTap = { onNavigateRoute(Routes.EXERCISES) })
                 }
                 }
