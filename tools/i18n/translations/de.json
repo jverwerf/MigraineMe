@@ -4930,5 +4930,7 @@
   "relief": "Linderung",
   "activity": "Aktivität",
   "location": "Ort",
-  "missed": "verpasst"
+  "missed": "verpasst",
+  "Menstruation predicted": "Menstruation erwartet",
+  "Ovulation predicted": "Eisprung erwartet"
 }

@@ -4930,5 +4930,7 @@
   "relief": "alivio",
   "activity": "actividad",
   "location": "lugar",
-  "missed": "perdida"
+  "missed": "perdida",
+  "Menstruation predicted": "Menstruación prevista",
+  "Ovulation predicted": "Ovulación prevista"
 }

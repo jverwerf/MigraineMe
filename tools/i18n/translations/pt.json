@@ -4930,5 +4930,7 @@
   "relief": "alívio",
   "activity": "atividade",
   "location": "local",
-  "missed": "falhada"
+  "missed": "falhada",
+  "Menstruation predicted": "Menstruação prevista",
+  "Ovulation predicted": "Ovulação prevista"
 }

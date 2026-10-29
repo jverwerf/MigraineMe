@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4932 entries.
+ * 4934 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2271,6 +2271,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Menstruation Tracking" to "Cyclus bijhouden",
     "Menstruation Tracking Setup" to "Cyclus instellen",
     "Menstruation connected." to "Menstruatie gekoppeld.",
+    "Menstruation predicted" to "Menstruatie verwacht",
     "Mental clarity" to "Helder hoofd",
     "Mental health tracking is disabled" to "Geest staat uit",
     "Metoclopramide" to "Metoclopramide",
@@ -2735,6 +2736,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Ovulation day must be a number." to "Eisprongdag moet een getal zijn.",
     "Ovulation day should be between cycle day 5 and 40." to "Eisprongdag moet tussen cyclusdag 5 en 40 liggen.",
     "Ovulation decay" to "Eisprongcurve",
+    "Ovulation predicted" to "Ovulatie verwacht",
     "Oxygen saturation" to "Zuurstofverzadiging",
     "Oxygen therapy" to "Zuurstoftherapie",
     "Ozone" to "Ozon",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recalibration applied!" to "Opnieuw geijkt!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Recente triggers wegen zwaarder. De waarde zakt over 7 dagen.",
     "Recommendation alerts" to "Meldingen bij tips",
-    "Recommendations" to "Tips",
-    "Recommended" to "Aanbevolen",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Recommendations" to "Tips",
+    "Recommended" to "Aanbevolen",
     "Record what triggers your migraines to find patterns" to "Noteer wat je migraines aanzet om patronen te vinden",
     "Recovery" to "Herstel",
     "Recovery 2 standard deviations below your average" to "Herstel 2 standaarddeviaties onder je gemiddelde",
@@ -4521,11 +4523,11 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your recommendations for today are ready. Tap to see them." to "Je aanbevelingen voor vandaag staan klaar. Tik om te zien.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Je aanvraag wordt bekeken. We zetten WHOOP binnenkort aan voor je account.",
     "Your resting BPM" to "Je rusthartslag",
-    "Your risk *today.*" to "Je risico *vandaag.*",
-    "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your risk *today.*" to "Je risico *vandaag.*",
+    "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
     "Your subscription" to "Je abonnement",
     "Your summary" to "Samenvatting",

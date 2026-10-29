@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4932 entries.
+ * 4934 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -2271,6 +2271,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Menstruation Tracking" to "Seguir o ciclo",
     "Menstruation Tracking Setup" to "Configurar o ciclo",
     "Menstruation connected." to "Menstruação ligada.",
+    "Menstruation predicted" to "Menstruação prevista",
     "Mental clarity" to "Clareza mental",
     "Mental health tracking is disabled" to "A mente está desligada",
     "Metoclopramide" to "Metoclopramida",
@@ -2735,6 +2736,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Ovulation day must be a number." to "O dia da ovulação tem de ser um número.",
     "Ovulation day should be between cycle day 5 and 40." to "O dia da ovulação deve estar entre o dia 5 e o dia 40 do ciclo.",
     "Ovulation decay" to "Curva da ovulação",
+    "Ovulation predicted" to "Ovulação prevista",
     "Oxygen saturation" to "Saturação de oxigénio",
     "Oxygen therapy" to "Oxigenoterapia",
     "Ozone" to "Ozono",
@@ -3018,11 +3020,11 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recalibration applied!" to "Recalibrado!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Os fatores recentes pesam mais. O valor desce ao longo de 7 dias.",
     "Recommendation alerts" to "Avisos de sugestões",
-    "Recommendations" to "Sugestões",
-    "Recommended" to "Recomendado",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Recommendations" to "Sugestões",
+    "Recommended" to "Recomendado",
     "Record what triggers your migraines to find patterns" to "Anota o que te desencadeia as crises para veres padrões",
     "Recovery" to "Recuperação",
     "Recovery 2 standard deviations below your average" to "Recuperação 2 desvios abaixo da tua média",
@@ -4521,11 +4523,11 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your recommendations for today are ready. Tap to see them." to "As tuas sugestões de hoje estão prontas. Toca para veres.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "O teu pedido está a ser visto. Vamos ativar o WHOOP na tua conta em breve.",
     "Your resting BPM" to "O teu pulso em repouso",
-    "Your risk *today.*" to "O teu risco *hoje.*",
-    "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your risk *today.*" to "O teu risco *hoje.*",
+    "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "O teu modelo de risco está pronto.\n\nVamos carregar dados de exemplo para veres a app a funcionar. A seguir: uma visita rápida a cada ecrã.",
     "Your subscription" to "A tua subscrição",
     "Your summary" to "O teu resumo",

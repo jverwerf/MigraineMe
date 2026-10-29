@@ -4930,5 +4930,7 @@
   "relief": "verlichting",
   "activity": "activiteit",
   "location": "plek",
-  "missed": "gemist"
+  "missed": "gemist",
+  "Menstruation predicted": "Menstruatie verwacht",
+  "Ovulation predicted": "Ovulatie verwacht"
 }
