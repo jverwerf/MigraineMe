@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -2076,6 +2076,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Light" to "Luce",
     "Light Sleep" to "Sonno leggero",
     "Light and glare" to "Luce e riflessi",
+    "Light seeking" to "Cercare la luce",
     "Light sensitivity" to "Sensibilità alla luce",
     "Light sensitivity lingering" to "Sensibilità alla luce persiste",
     "Light sleep" to "Sonno leggero",
@@ -3019,10 +3020,10 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Ritaratura",
     "Recalibration applied!" to "Ritarato!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "I fattori recenti pesano di più. Il punteggio cala in 7 giorni.",
-    "Recommendation alerts" to "Avvisi sui consigli",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Avvisi sui consigli",
     "Recommendations" to "Consigli",
     "Recommended" to "Consigliato",
     "Record what triggers your migraines to find patterns" to "Inserisci cosa scatena le emicranie per trovare schemi",
@@ -4522,10 +4523,10 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "I tuoi ultimi consigli",
     "Your recommendations for today are ready. Tap to see them." to "I tuoi consigli di oggi sono pronti. Tocca per vederli.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "La tua richiesta è in esame. Attiveremo WHOOP sul tuo account a breve.",
-    "Your resting BPM" to "Il tuo battito a riposo",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "Il tuo battito a riposo",
     "Your risk *today.*" to "Il tuo rischio *oggi.*",
     "Your risk gauge is personal from day one instead of week five." to "Il tuo indicatore di rischio è personale dal primo giorno, non dalla quinta settimana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Il tuo modello di rischio è pronto.\n\nCarichiamo dei dati di esempio per mostrarti l'app all'opera. Poi: un giro veloce su ogni schermata.",
@@ -4571,6 +4572,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "dopo pochi attacchi registrati",
     "alcohol" to "alcol",
     "all time" to "totale",
+    "amount" to "quantità",
     "and %1\$s more" to "e altri %1\$s",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "e un grafico a barre di 14 giorni filtrabile per farmaco o categoria.",
     "and running" to "e continua",
@@ -4651,6 +4653,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "each line's average" to "media per linea",
     "elimination diets" to "diete di eliminazione",
     "emotional overload" to "sovraccarico emotivo",
+    "end time" to "ora di fine",
     "enough data to trust this" to "dati sufficienti per fidarsi",
     "environmental control" to "controllo dell'ambiente",
     "error" to "errore",
@@ -4812,6 +4815,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "visto %1\$s×",
     "sensory management" to "gestione sensoriale",
     "sev %s" to "intens. %s",
+    "severity" to "intensità",
     "severity %s/10" to "intensità %s/10",
     "shift work" to "lavoro a turni",
     "showing progress" to "in miglioramento",
@@ -4825,6 +4829,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "some effect" to "qualche effetto",
     "some relief %1\$s of %2\$s times" to "un po' di sollievo %1\$s volte su %2\$s",
     "stable" to "stabile",
+    "start time" to "ora di inizio",
     "started %s" to "iniziato %s",
     "steadier %s" to "stabile: %s",
     "steady" to "stabile",
@@ -4855,6 +4860,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "therapy" to "terapia",
     "this practitioner" to "questo specialista",
     "this week (vs %1\$s)" to "settimana (vs %1\$s)",
+    "time" to "ora",
     "today" to "oggi",
     "today only" to "solo oggi",
     "tomorrow" to "domani",

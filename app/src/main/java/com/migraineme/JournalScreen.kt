@@ -869,7 +869,7 @@ private fun entryRowInfo(ev: JournalEvent, labels: Map<String, String>): EntryRo
         val sub = buildList {
             ev.row.severity?.let { add(tSync("Sev %s/10", it)) }
             durationLabel(ev.row.startAt, ev.row.endAt)?.let { add(it) }
-            if (missing.isNotEmpty()) add(tSync("missing %s", missing.joinToString(", ")))
+            if (missing.isNotEmpty()) add(tSync("missing %s", missing.joinToString(", ") { tSync(it) }))
         }.joinToString(" · ").ifBlank { ev.row.notes }
         EntryRowInfo(
             title = tSync("Migraine"),
@@ -1218,7 +1218,7 @@ private fun JournalEntryRow(
 private fun MigraineDetailLines(ev: JournalEvent.Migraine, labels: Map<String, String>) {
     Spacer(Modifier.height(2.dp))
     val missing = missingFields(ev)
-    if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
+    if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { tSync(it).replaceFirstChar { c -> c.uppercase() } })
     ev.row.type?.let { JournalDetail("Type", it.replaceFirstChar { c -> c.uppercase() }) }
     // Only the symptoms the user actually rated — Type above already lists them all.
     val ratedSymptoms = ev.linked.postdromes.filter { it.severity != null }

@@ -338,7 +338,7 @@ fun ReliefsScreen(
                     categoryEntries.forEachIndexed { catIndex, (category, items) ->
                         val nonFreqItems = items.filter { it.label !in frequentLabels }
                         if (nonFreqItems.isNotEmpty()) {
-                            Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t(category), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 nonFreqItems.forEach { rel ->
                                     ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {

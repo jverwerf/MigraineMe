@@ -4932,5 +4932,11 @@
   "location": "lieu",
   "missed": "manquée",
   "Menstruation predicted": "Règles prévues",
-  "Ovulation predicted": "Ovulation prévue"
+  "Ovulation predicted": "Ovulation prévue",
+  "time": "heure",
+  "amount": "quantité",
+  "start time": "heure de début",
+  "end time": "heure de fin",
+  "severity": "intensité",
+  "Light seeking": "Recherche de lumière"
 }

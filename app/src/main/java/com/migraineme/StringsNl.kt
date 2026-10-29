@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2076,6 +2076,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Light" to "Licht",
     "Light Sleep" to "Lichte slaap",
     "Light and glare" to "Licht en glans",
+    "Light seeking" to "Licht opzoeken",
     "Light sensitivity" to "Lichtgevoeligheid",
     "Light sensitivity lingering" to "Lichtgevoeligheid houdt aan",
     "Light sleep" to "Lichte slaap",
@@ -3019,10 +3020,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Herijking",
     "Recalibration applied!" to "Opnieuw geijkt!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Recente triggers wegen zwaarder. De waarde zakt over 7 dagen.",
-    "Recommendation alerts" to "Meldingen bij tips",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Meldingen bij tips",
     "Recommendations" to "Tips",
     "Recommended" to "Aanbevolen",
     "Record what triggers your migraines to find patterns" to "Noteer wat je migraines aanzet om patronen te vinden",
@@ -4522,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Je laatste advies op maat",
     "Your recommendations for today are ready. Tap to see them." to "Je aanbevelingen voor vandaag staan klaar. Tik om te zien.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Je aanvraag wordt bekeken. We zetten WHOOP binnenkort aan voor je account.",
-    "Your resting BPM" to "Je rusthartslag",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "Je rusthartslag",
     "Your risk *today.*" to "Je risico *vandaag.*",
     "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
@@ -4571,6 +4572,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "na een paar gelogde aanvallen",
     "alcohol" to "alcohol",
     "all time" to "totaal",
+    "amount" to "hoeveelheid",
     "and %1\$s more" to "en nog %1\$s",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "en een gestapelde 14-daagse balkgrafiek, te filteren op medicijn of categorie.",
     "and running" to "en bezig",
@@ -4651,6 +4653,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "each line's average" to "gem. per lijn",
     "elimination diets" to "eliminatiediëten",
     "emotional overload" to "emotionele overbelasting",
+    "end time" to "eindtijd",
     "enough data to trust this" to "genoeg data om op te vertrouwen",
     "environmental control" to "omgevingsbeheersing",
     "error" to "fout",
@@ -4812,6 +4815,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "%1\$s× gezien",
     "sensory management" to "prikkelbeheer",
     "sev %s" to "zwaarte %s",
+    "severity" to "zwaarte",
     "severity %s/10" to "zwaarte %s/10",
     "shift work" to "ploegendienst",
     "showing progress" to "vooruitgang",
@@ -4825,6 +4829,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "some effect" to "enig effect",
     "some relief %1\$s of %2\$s times" to "wat verlichting %1\$s van %2\$s keer",
     "stable" to "stabiel",
+    "start time" to "begintijd",
     "started %s" to "gestart %s",
     "steadier %s" to "stabieler %s",
     "steady" to "stabiel",
@@ -4855,6 +4860,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "therapy" to "therapie",
     "this practitioner" to "deze behandelaar",
     "this week (vs %1\$s)" to "week (vs %1\$s)",
+    "time" to "tijd",
     "today" to "vandaag",
     "today only" to "alleen vandaag",
     "tomorrow" to "morgen",

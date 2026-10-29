@@ -153,7 +153,7 @@ fun LocationsScreen(
                     entries.forEachIndexed { ci, (cat, items) ->
                         val nonFreq = items.filter { it.label !in frequentLabels }
                         if (nonFreq.isNotEmpty()) {
-                            Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t(cat), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 nonFreq.forEach { loc -> CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) } }
                             }

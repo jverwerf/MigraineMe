@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -2076,6 +2076,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Light" to "Luz",
     "Light Sleep" to "Sono leve",
     "Light and glare" to "Luz e brilho",
+    "Light seeking" to "Procurar luz",
     "Light sensitivity" to "Sensibilidade à luz",
     "Light sensitivity lingering" to "Sensibilidade à luz persiste",
     "Light sleep" to "Sono leve",
@@ -3019,10 +3020,10 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Recalibração",
     "Recalibration applied!" to "Recalibrado!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Os fatores recentes pesam mais. O valor desce ao longo de 7 dias.",
-    "Recommendation alerts" to "Avisos de sugestões",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Avisos de sugestões",
     "Recommendations" to "Sugestões",
     "Recommended" to "Recomendado",
     "Record what triggers your migraines to find patterns" to "Anota o que te desencadeia as crises para veres padrões",
@@ -4522,10 +4523,10 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Os teus últimos conselhos",
     "Your recommendations for today are ready. Tap to see them." to "As tuas sugestões de hoje estão prontas. Toca para veres.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "O teu pedido está a ser visto. Vamos ativar o WHOOP na tua conta em breve.",
-    "Your resting BPM" to "O teu pulso em repouso",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "O teu pulso em repouso",
     "Your risk *today.*" to "O teu risco *hoje.*",
     "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "O teu modelo de risco está pronto.\n\nVamos carregar dados de exemplo para veres a app a funcionar. A seguir: uma visita rápida a cada ecrã.",
@@ -4571,6 +4572,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "após algumas crises registadas",
     "alcohol" to "álcool",
     "all time" to "total",
+    "amount" to "quantidade",
     "and %1\$s more" to "e mais %1\$s",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "e um gráfico de barras de 14 dias que podes filtrar por medicamento ou categoria.",
     "and running" to "e a contar",
@@ -4651,6 +4653,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "each line's average" to "média por linha",
     "elimination diets" to "dietas de eliminação",
     "emotional overload" to "sobrecarga emocional",
+    "end time" to "hora de fim",
     "enough data to trust this" to "dados suficientes para confiar",
     "environmental control" to "controlo do ambiente",
     "error" to "erro",
@@ -4812,6 +4815,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "visto %1\$s×",
     "sensory management" to "gestão sensorial",
     "sev %s" to "força %s",
+    "severity" to "intensidade",
     "severity %s/10" to "força %s/10",
     "shift work" to "trabalho por turnos",
     "showing progress" to "a melhorar",
@@ -4825,6 +4829,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "some effect" to "algum efeito",
     "some relief %1\$s of %2\$s times" to "algum alívio %1\$s de %2\$s vezes",
     "stable" to "estável",
+    "start time" to "hora de início",
     "started %s" to "começou %s",
     "steadier %s" to "estável: %s",
     "steady" to "estável",
@@ -4855,6 +4860,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "therapy" to "terapia",
     "this practitioner" to "este profissional",
     "this week (vs %1\$s)" to "semana (vs %1\$s)",
+    "time" to "hora",
     "today" to "hoje",
     "today only" to "só hoje",
     "tomorrow" to "amanhã",

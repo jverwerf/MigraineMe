@@ -4932,5 +4932,11 @@
   "location": "plek",
   "missed": "gemist",
   "Menstruation predicted": "Menstruatie verwacht",
-  "Ovulation predicted": "Ovulatie verwacht"
+  "Ovulation predicted": "Ovulatie verwacht",
+  "time": "tijd",
+  "amount": "hoeveelheid",
+  "start time": "begintijd",
+  "end time": "eindtijd",
+  "severity": "zwaarte",
+  "Light seeking": "Licht opzoeken"
 }

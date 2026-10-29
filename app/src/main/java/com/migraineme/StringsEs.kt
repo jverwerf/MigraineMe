@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -2076,6 +2076,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Light" to "Luz",
     "Light Sleep" to "Sueño ligero",
     "Light and glare" to "Luz y brillo",
+    "Light seeking" to "Buscar luz",
     "Light sensitivity" to "Sensibilidad a la luz",
     "Light sensitivity lingering" to "Sensibilidad a la luz persiste",
     "Light sleep" to "Sueño ligero",
@@ -3019,10 +3020,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Recalibrado",
     "Recalibration applied!" to "¡Recalibrado!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Los factores recientes pesan más. El valor baja a lo largo de 7 días.",
-    "Recommendation alerts" to "Avisos de sugerencias",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Avisos de sugerencias",
     "Recommendations" to "Sugerencias",
     "Recommended" to "Recomendado",
     "Record what triggers your migraines to find patterns" to "Anota qué te dispara las migrañas para ver patrones",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Tus últimos consejos",
     "Your recommendations for today are ready. Tap to see them." to "Tus recomendaciones de hoy están listas. Toca para verlas.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Estamos revisando tu solicitud. Activaremos WHOOP en tu cuenta pronto.",
-    "Your resting BPM" to "Tu pulso en reposo",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "Tu pulso en reposo",
     "Your risk *today.*" to "Tu riesgo *hoy.*",
     "Your risk gauge is personal from day one instead of week five." to "Tu medidor de riesgo es personal desde el primer día, no desde la quinta semana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Tu modelo de riesgo está listo.\n\nCargamos datos de ejemplo para que veas la app en marcha. Después: un recorrido rápido por cada pantalla.",
@@ -4571,6 +4572,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "tras unos pocos ataques registrados",
     "alcohol" to "alcohol",
     "all time" to "total",
+    "amount" to "cantidad",
     "and %1\$s more" to "y %1\$s más",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "y una gráfica de barras de 14 días que puedes filtrar por medicina o categoría.",
     "and running" to "y sigue",
@@ -4651,6 +4653,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "each line's average" to "media por línea",
     "elimination diets" to "dietas de eliminación",
     "emotional overload" to "sobrecarga emocional",
+    "end time" to "hora de fin",
     "enough data to trust this" to "datos suficientes para fiarse",
     "environmental control" to "control del entorno",
     "error" to "error",
@@ -4812,6 +4815,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "visto %1\$s×",
     "sensory management" to "manejo sensorial",
     "sev %s" to "fuerza %s",
+    "severity" to "intensidad",
     "severity %s/10" to "fuerza %s/10",
     "shift work" to "trabajo por turnos",
     "showing progress" to "va mejorando",
@@ -4825,6 +4829,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "some effect" to "algo de efecto",
     "some relief %1\$s of %2\$s times" to "algo de alivio %1\$s de %2\$s veces",
     "stable" to "estable",
+    "start time" to "hora de inicio",
     "started %s" to "empezó %s",
     "steadier %s" to "estable: %s",
     "steady" to "estable",
@@ -4855,6 +4860,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "therapy" to "terapia",
     "this practitioner" to "este profesional",
     "this week (vs %1\$s)" to "semana (vs %1\$s)",
+    "time" to "hora",
     "today" to "hoy",
     "today only" to "solo hoy",
     "tomorrow" to "mañana",

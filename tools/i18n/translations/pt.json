@@ -4932,5 +4932,11 @@
   "location": "local",
   "missed": "falhada",
   "Menstruation predicted": "Menstruação prevista",
-  "Ovulation predicted": "Ovulação prevista"
+  "Ovulation predicted": "Ovulação prevista",
+  "time": "hora",
+  "amount": "quantidade",
+  "start time": "hora de início",
+  "end time": "hora de fim",
+  "severity": "intensidade",
+  "Light seeking": "Procurar luz"
 }

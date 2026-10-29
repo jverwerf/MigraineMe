@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -2076,6 +2076,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Light" to "Licht",
     "Light Sleep" to "Leichtschlaf",
     "Light and glare" to "Licht und Blendung",
+    "Light seeking" to "Licht suchen",
     "Light sensitivity" to "Lichtempfindlichkeit",
     "Light sensitivity lingering" to "Lichtempfindlichkeit hält an",
     "Light sleep" to "Leichtschlaf",
@@ -3019,10 +3020,10 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Neujustierung",
     "Recalibration applied!" to "Neu kalibriert!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Neue Auslöser wiegen schwerer als alte. Der Wert klingt über 7 Tage ab.",
-    "Recommendation alerts" to "Empfehlungshinweise",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Empfehlungshinweise",
     "Recommendations" to "Empfehlungen",
     "Recommended" to "Empfohlen",
     "Record what triggers your migraines to find patterns" to "Erfasse, was deine Migräne auslöst, und finde Muster",
@@ -4522,10 +4523,10 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Dein letzter persönlicher Rat",
     "Your recommendations for today are ready. Tap to see them." to "Deine Empfehlungen für heute sind da. Tippe zum Ansehen.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Deine Anfrage wird geprüft. Wir schalten WHOOP bald für dein Konto frei.",
-    "Your resting BPM" to "Dein Ruhepuls",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "Dein Ruhepuls",
     "Your risk *today.*" to "Dein Risiko *heute.*",
     "Your risk gauge is personal from day one instead of week five." to "Deine Risikoanzeige ist ab Tag eins persönlich, nicht erst ab Woche fünf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Dein Risikomodell steht.\n\nWir laden ein paar Beispieldaten, damit du die App in Aktion siehst. Danach: eine kurze Tour durch alle Seiten.",
@@ -4571,6 +4572,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "nach ein paar eingetragenen Anfällen",
     "alcohol" to "Alkohol",
     "all time" to "gesamt",
+    "amount" to "Menge",
     "and %1\$s more" to "und %1\$s mehr",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "und ein 14-Tage-Balkenverlauf, filterbar nach Medikament oder Kategorie.",
     "and running" to "und läuft",
@@ -4651,6 +4653,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "each line's average" to "Mittel je Linie",
     "elimination diets" to "Eliminationsdiäten",
     "emotional overload" to "emotionale Überlastung",
+    "end time" to "Ende",
     "enough data to trust this" to "genug Daten, um dem zu trauen",
     "environmental control" to "Umgebungskontrolle",
     "error" to "Fehler",
@@ -4812,6 +4815,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "%1\$s× gesehen",
     "sensory management" to "Reizmanagement",
     "sev %s" to "Stärke %s",
+    "severity" to "Stärke",
     "severity %s/10" to "Stärke %s/10",
     "shift work" to "Schichtarbeit",
     "showing progress" to "zeigt Fortschritt",
@@ -4825,6 +4829,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "some effect" to "etwas Wirkung",
     "some relief %1\$s of %2\$s times" to "etwas Linderung %1\$s von %2\$s Mal",
     "stable" to "stabil",
+    "start time" to "Beginn",
     "started %s" to "begonnen %s",
     "steadier %s" to "stetiger %s",
     "steady" to "stabil",
@@ -4855,6 +4860,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "therapy" to "Therapie",
     "this practitioner" to "diese Fachperson",
     "this week (vs %1\$s)" to "Woche (vs %1\$s)",
+    "time" to "Zeit",
     "today" to "heute",
     "today only" to "nur heute",
     "tomorrow" to "morgen",

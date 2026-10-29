@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4934 entries.
+ * 4940 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -2076,6 +2076,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Light" to "Lumière",
     "Light Sleep" to "Sommeil léger",
     "Light and glare" to "Lumière vive",
+    "Light seeking" to "Recherche de lumière",
     "Light sensitivity" to "Sensibilité à la lumière",
     "Light sensitivity lingering" to "Sensibilité lumineuse durable",
     "Light sleep" to "Sommeil léger",
@@ -3019,10 +3020,10 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Recalibrage",
     "Recalibration applied!" to "Recalibré !",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Les facteurs récents pèsent plus. Le score retombe sur 7 jours.",
-    "Recommendation alerts" to "Alertes de conseils",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Recommendation alerts" to "Alertes de conseils",
     "Recommendations" to "Conseils",
     "Recommended" to "Recommandé",
     "Record what triggers your migraines to find patterns" to "Note ce qui déclenche tes migraines pour voir des schémas",
@@ -4522,10 +4523,10 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Tes derniers conseils sur mesure",
     "Your recommendations for today are ready. Tap to see them." to "Tes recommandations du jour sont prêtes. Touche pour voir.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Ta demande est en cours d'examen. On activera WHOOP sur ton compte sous peu.",
-    "Your resting BPM" to "Ton pouls au repos",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Your resting BPM" to "Ton pouls au repos",
     "Your risk *today.*" to "Ton risque *aujourd'hui.*",
     "Your risk gauge is personal from day one instead of week five." to "Ta jauge de risque est personnelle dès le premier jour, pas à la cinquième semaine.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Ton modèle de risque est prêt.\n\nNous chargeons des données d'exemple pour te montrer l'appli en action. Ensuite : une visite rapide de chaque écran.",
@@ -4571,6 +4572,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "after a few logged attacks" to "après quelques crises notées",
     "alcohol" to "alcool",
     "all time" to "total",
+    "amount" to "quantité",
     "and %1\$s more" to "et %1\$s de plus",
     "and a 14-day stacked-bar history chart you can filter by medicine or category." to "et un historique en barres sur 14 jours, filtrable par médicament ou catégorie.",
     "and running" to "et ça continue",
@@ -4651,6 +4653,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "each line's average" to "moyenne par ligne",
     "elimination diets" to "régimes d'éviction",
     "emotional overload" to "surcharge émotionnelle",
+    "end time" to "heure de fin",
     "enough data to trust this" to "assez de données pour s'y fier",
     "environmental control" to "contrôle de l'environnement",
     "error" to "erreur",
@@ -4812,6 +4815,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "seen %1\$s×" to "vu %1\$s×",
     "sensory management" to "gestion sensorielle",
     "sev %s" to "intens. %s",
+    "severity" to "intensité",
     "severity %s/10" to "intensité %s/10",
     "shift work" to "travail posté",
     "showing progress" to "des progrès",
@@ -4825,6 +4829,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "some effect" to "un peu d'effet",
     "some relief %1\$s of %2\$s times" to "un peu de soulagement %1\$s fois sur %2\$s",
     "stable" to "stable",
+    "start time" to "heure de début",
     "started %s" to "commencé %s",
     "steadier %s" to "stable : %s",
     "steady" to "stable",
@@ -4855,6 +4860,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "therapy" to "thérapie",
     "this practitioner" to "ce praticien",
     "this week (vs %1\$s)" to "semaine (vs %1\$s)",
+    "time" to "heure",
     "today" to "aujourd'hui",
     "today only" to "aujourd'hui",
     "tomorrow" to "demain",
