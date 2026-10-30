@@ -186,7 +186,7 @@ fun MonitorRiskScreen(
                                 Text(t("Score"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(live.zone.lowercase().replaceFirstChar { it.uppercase() }, color = slotColors[1], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                Text(t(live.zone.lowercase().replaceFirstChar { it.uppercase() }), color = slotColors[1], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 Text(t("Zone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -235,10 +235,10 @@ fun MonitorRiskScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(trigger.name, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(trigger.name), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text("${trigger.score}", color = sevColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
-                                        Text(trigger.severity, color = sevColor, style = MaterialTheme.typography.labelSmall)
+                                        Text(t(trigger.severity), color = sevColor, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -261,7 +261,7 @@ fun MonitorRiskScreen(
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Box(Modifier.size(8.dp).background(color, CircleShape))
-                                Text(category, color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                                Text(t(category), color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                             }
                             Spacer(Modifier.height(2.dp))
                             entries.forEach { entry ->

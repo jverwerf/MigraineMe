@@ -184,7 +184,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                         Text(if (isForecast) t("Forecast") else t("Score"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(zone, color = slotColors[1], style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                        Text(t(zone), color = slotColors[1], style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                         Text(t("Zone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -245,10 +245,10 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(trigger.name, color = Color.White, style = MaterialTheme.typography.bodySmall)
+                            Text(t(trigger.name), color = Color.White, style = MaterialTheme.typography.bodySmall)
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text("${trigger.score}", color = sevColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
-                                Text(trigger.severity, color = sevColor, style = MaterialTheme.typography.labelSmall)
+                                Text(t(trigger.severity), color = sevColor, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
