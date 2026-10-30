@@ -1279,7 +1279,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.PHYSICAL_CONFIG -> "Customize Physical Health"
                                     Routes.FULL_GRAPH_RISK -> "Risk History"
                                     Routes.MENTAL_CONFIG -> "Customize Cognitive"
-                                    Routes.MANAGE_CALENDAR_SKIPS -> "Calendar Skips"
+                                    Routes.MANAGE_CALENDAR_SKIPS -> "Calendar opt-outs"
                                     Routes.TRIGGERS_SETTINGS -> "Triggers Settings"
                                     Routes.RECALIBRATION_REVIEW -> "Recalibration"
                                     Routes.PROFILE_BASIS -> "What this is based on"
