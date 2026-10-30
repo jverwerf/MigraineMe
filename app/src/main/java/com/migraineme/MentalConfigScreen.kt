@@ -153,7 +153,7 @@ fun MentalConfigScreen(
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                         for ((metricKey, metricLabel) in availableMetrics) {
                             val isSelected = metricKey in selectedMetrics
-                            val label = metricLabel
+                            val label = t(metricLabel)
                             val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metricKey) else -1
                             val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
 

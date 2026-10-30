@@ -125,7 +125,7 @@ fun PhysicalConfigScreen(
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                         for (metric in availableMetrics) {
                             val isSelected = metric.key in selectedMetrics
-                            val label = metric.label
+                            val label = t(metric.label)
                             val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric.key) else -1
                             val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
 
