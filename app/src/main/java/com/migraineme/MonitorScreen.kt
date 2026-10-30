@@ -1512,7 +1512,7 @@ internal suspend fun loadSleepSummary(
                 val arr = org.json.JSONArray(body)
                 if (arr.length() > 0) {
                     val src = arr.getJSONObject(0).optString("source", "")
-                    sourceLabel = sourceDisplayLabel(src, ctx)
+                    sourceLabel = src
                 }
             }
         } catch (_: Exception) {}

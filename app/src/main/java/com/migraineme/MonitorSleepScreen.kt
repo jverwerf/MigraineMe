@@ -309,7 +309,7 @@ private suspend fun loadSleepDetailData(
     if (duration == null) return@withContext null
 
     val sourceInfo = try { sleepFetchSource(ctx, token, date) } catch (_: Exception) { null }
-    val sourceLabel = if (sourceInfo != null) sourceDisplayLabel(sourceInfo, ctx) else "Unknown"
+    val sourceLabel = sourceInfo ?: "Unknown"
 
     val fellAsleep = try { sleepFetchTime(ctx, token, date, "fell_asleep_time_daily") } catch (_: Exception) { null }
     val wokeUp = try { sleepFetchTime(ctx, token, date, "woke_up_time_daily") } catch (_: Exception) { null }
