@@ -514,7 +514,7 @@ class InsightsViewModel : ViewModel() {
      * before. Mirrors the PDF report's Lifestyle context table
      * (build-report-html lifestyleContext + data.ts lifestyle loader): plain
      * means of the daily values already in the metrics cache. Risk metrics
-     * (alcohol, tyramine) average the 0-3 daily exposure level over days the
+     * (the eight food flags) average the 0-3 daily exposure level over days the
      * user logged food — zero-exposure days included, same denominator as the
      * report. Time metrics (bedtime) average clock hours, with readings before
      * noon shifted +24h so the mean doesn't zigzag across midnight.
@@ -547,6 +547,12 @@ class InsightsViewModel : ViewModel() {
         HabitDef("caffeine", "Caffeine", "mg"),
         HabitDef("alcohol", "Alcohol", "risk"),
         HabitDef("tyramine", "Tyramine", "risk"),
+        HabitDef("gluten", "Gluten", "risk"),
+        HabitDef("histamine", "Histamine", "risk"),
+        HabitDef("aspartame", "Aspartame", "risk"),
+        HabitDef("msg", "MSG", "risk"),
+        HabitDef("nitrates", "Nitrates", "risk"),
+        HabitDef("sulfites", "Sulfites", "risk"),
         HabitDef("stress", "Stress index", ""),
         HabitDef("hrv", "HRV", "ms"),
         HabitDef("rhr", "Resting HR", "bpm"),

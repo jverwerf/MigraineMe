@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4954 entries.
+ * 4965 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -494,6 +494,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Added" to "Toegevoegd",
     "Added to your lists" to "Nieuw in je lijsten",
     "Adding %1\$s of %2\$s…" to "Toevoegen %1\$s/%2\$s…",
+    "Additives" to "Additieven",
     "Adds a smaller risk bump around mid-cycle." to "Kleine extra risicopiek rond het midden van je cyclus.",
     "Adjust" to "Bijstellen",
     "Adjust Medicines" to "Medicijnen bij",
@@ -749,6 +750,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Back to Home" to "Naar start",
     "Back##bodymap" to "Achter",
     "Background pain" to "Achtergrondpijn",
+    "Bacon, ham, cured meats" to "Spek, ham, vleeswaren",
     "Bad sleep sets one off" to "Slecht slapen triggert",
     "Band worn on the calf that delivers TENS-style stimulation." to "Band om de kuit die prikkelt zoals TENS.",
     "Bar / pub" to "Bar / kroeg",
@@ -879,6 +881,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Caffeine sets one off" to "Cafeïne triggert",
     "Caffeine withdrawal" to "Cafeïne-ontwenning",
     "Caffeine, sodium, tyramine, alcohol, gluten and histamine — flagged in every meal." to "Cafeïne, natrium, tyramine, alcohol, gluten en histamine — gemarkeerd in elke maaltijd.",
+    "Caffeine, sodium, tyramine, histamine, alcohol, gluten and additives — flagged in every meal." to "Cafeïne, natrium, tyramine, histamine, alcohol, gluten en additieven — gemarkeerd in elke maaltijd.",
     "Café" to "Koffiebar",
     "Calcium" to "Calcium",
     "Calcium high" to "Calcium hoog",
@@ -1238,6 +1241,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Diet" to "Voeding",
     "Diet & Substances" to "Voeding & stoffen",
     "Diet History" to "Eethistorie",
+    "Diet drinks, sugar-free sweets" to "Lightdranken, suikervrij snoep",
     "Diet — What You're Eating" to "Voeding — wat je eet",
     "Difficulty concentrating" to "Concentratieproblemen",
     "Difficulty focusing" to "Moeite met focussen",
@@ -1269,6 +1273,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Dizziness" to "Duizeligheid",
     "Dizziness (after)" to "Duizeligheid (erna)",
     "Do any eating patterns trigger migraines?" to "Geven bepaalde eetpatronen migraine?",
+    "Do any of these additives trigger migraines?" to "Geeft een van deze additieven migraine?",
     "Do any of these foods trigger migraines?" to "Geeft een van deze voedingsmiddelen migraine?",
     "Do any physical factors trigger migraines?" to "Geven lichamelijke factoren migraine?",
     "Do migraines relate to your cycle?" to "Hangt je migraine samen met je cyclus?",
@@ -1512,14 +1517,14 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Failed to change password." to "Wachtwoord wijzigen mislukt.",
     "Failed to delete account. Please try again." to "Account verwijderen mislukt. Probeer het opnieuw.",
     "Failed to generate PDF" to "PDF maken mislukt",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Failed to load proposals" to "Voorstellen laden mislukt",
     "Failed to log period" to "Periode niet gelogd",
     "Failed to remove: %1\$s" to "Verwijderen mislukt: %1\$s",
     "Failed to save weights." to "Gewichten niet opgeslagen.",
     "Failed to save." to "Opslaan mislukt.",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Failed to save. Please try again." to "Opslaan mislukt. Probeer het opnieuw.",
     "Fairly sure" to "Vrij zeker",
     "Fallback defaults" to "Standaardwaarden",
@@ -1594,6 +1599,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Foods Added!" to "Toegevoegd!",
     "Foods containing gluten" to "Producten met gluten",
     "Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol and gluten when ticked under Use for insights." to "Voeding blijft de trigger die je aangaf en kan op histamine, tyramine, alcohol en gluten worden gescoord als het is aangevinkt onder Voor inzichten.",
+    "Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol, gluten and additives when ticked under Use for insights." to "Voeding blijft de trigger die je aangaf en kan op histamine, tyramine, alcohol, gluten en additieven worden gescoord als het is aangevinkt onder Voor inzichten.",
     "Foods, not triggers" to "Voeding, geen triggers",
     "For You" to "Voor jou",
     "For example: Drink water" to "Bijvoorbeeld: water drinken",
@@ -3014,15 +3020,15 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Geef de ernst aan en markeer waar je het voelt. Invoer komt bovenop wat al is gelogd bij deze migraine.",
     "Re-assess my profile" to "Profiel opnieuw",
     "Re-authentication failed." to "Opnieuw inloggen mislukt.",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Gelezen als waarschijnlijk, met reden",
     "Read full article" to "Lees verder",
     "Read full assessment" to "Lees het oordeel",
     "Read more" to "Lees meer",
     "Read-only, never written back" to "Alleen lezen, nooit terugschrijven",
     "Reading" to "Lezen",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Reading data from Health Connect..." to "Data lezen uit Health Connect...",
     "Reading your file…" to "Bestand lezen…",
     "Reading your history. This takes a minute for a big file." to "Je geschiedenis wordt gelezen. Bij een groot bestand duurt dit een minuut.",
@@ -3624,6 +3630,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Take the Tour" to "Rondleiding",
     "Take the full tour" to "Hele rondleiding",
     "Take the tour" to "Doe de tour",
+    "Takeaways, instant noodles, stock cubes" to "Afhaaleten, instantnoedels, bouillonblokjes",
     "Taken within %1\$s (your median delay): peak %2\$s · later: peak %3\$s" to "Binnen %1\$s ingenomen (je mediaan): piek %2\$s · later: piek %3\$s",
     "Takes about 5 minutes. You can leave the tour at any point." to "Duurt zo'n 5 minuten. Je kunt de rondleiding altijd verlaten.",
     "Taking longer than expected..." to "Duurt langer dan verwacht...",
@@ -3836,6 +3843,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Today's Log" to "Vandaag",
     "Today's Weather" to "Weer vandaag",
     "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods." to "De voedingstotalen van vandaag plus de drie waarden die je hebt vastgezet. We volgen de klassieke migrainegerelateerde: cafeïne, natrium, suiker, tyramine, alcohol, gluten en histamine. Zowel te veel ALS te weinig telt: je gewone koffie overslaan zet net zo vaak een aanval aan als te veel drinken.\n\nAutomatisch indelen hangt af van wat je voedings-app naar Health Connect stuurt. Niet elke app geeft data per voedingsmiddel door; sommige sturen alleen dagtotalen, bruikbaar voor cijfers maar niet om op naam in te delen. De streepjescodescanner en de USDA-zoekfunctie op het detailscherm delen altijd goed in, dus die zijn het betrouwbaarst voor bekende triggervoeding.",
+    "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten, histamine and the additives aspartame, MSG, nitrates and sulfites. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods." to "De voedingstotalen van vandaag plus de drie waarden die je hebt vastgezet. We volgen de klassieke migrainegerelateerde: cafeïne, natrium, suiker, tyramine, alcohol, gluten, histamine en de additieven aspartaam, MSG, nitraten en sulfieten. Zowel te veel ALS te weinig telt: je gewone koffie overslaan zet net zo vaak een aanval aan als te veel drinken.\n\nAutomatisch indelen hangt af van wat je voedings-app naar Health Connect stuurt. Niet elke app geeft data per voedingsmiddel door; sommige sturen alleen dagtotalen, bruikbaar voor cijfers maar niet om op naam in te delen. De streepjescodescanner en de USDA-zoekfunctie op het detailscherm delen altijd goed in, dus die zijn het betrouwbaarst voor bekende triggervoeding.",
     "Today's risk: %s" to "Risico vandaag: %s",
     "Today: %1\$s %2\$s" to "Vandaag: %1\$s %2\$s",
     "Today: %s" to "Vandaag: %s",
@@ -3970,6 +3978,8 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Tyramine, gluten, and alcohol risk classification" to "Risico-indeling voor tyramine, gluten en alcohol",
     "Tyramine, gluten, and alcohol risk scoring" to "Risicoscore voor tyramine, gluten en alcohol",
     "Tyramine, histamine, gluten and alcohol get flagged as you add a food." to "Tyramine, histamine, gluten en alcohol worden gemarkeerd zodra je iets toevoegt.",
+    "Tyramine, histamine, gluten, alcohol and additive flags" to "Vlaggen voor tyramine, histamine, gluten, alcohol en additieven",
+    "Tyramine, histamine, gluten, alcohol and additives get flagged as you add a food." to "Tyramine, histamine, gluten, alcohol en additieven worden gemarkeerd zodra je iets toevoegt.",
     "UV Index" to "UV-index",
     "UV index" to "UV-index",
     "UV index high" to "Uv-index hoog",
@@ -4380,6 +4390,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Window around migraine" to "Venster rond de migraine",
     "Windy or gusty conditions" to "Winderig of vlagerig",
     "Wine, beer, spirits" to "Wijn, bier, sterke drank",
+    "Wine, dried fruit" to "Wijn, gedroogd fruit",
     "Winter" to "Winter",
     "With %1\$s: %2\$s · Without: %3\$s" to "Met %1\$s: %2\$s · Zonder: %3\$s",
     "Within %s" to "Binnen %s",
@@ -4512,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Je medicijngebruik over 30 dagen. Elke rij toont de naam en de ",
     "Your migraine data is not affected by this." to "Dit verandert niets aan je migrainegegevens.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "Je migrainekans als één score. We tellen je triggers en prodromen van de laatste 7 dagen op, waarbij recente dagen zwaarder wegen dan oudere (vandaag telt het zwaarst). Het gewicht van elk item komt uit de zwaarte die je in je instellingen gaf; menstruation_predicted gebruikt een symmetrisch venster rond je voorspelde menstruatiedatum, en ovulation_predicted doet hetzelfde rond de voorspelde eisprong als die schakelaar aanstaat.\n\nDe kaart toont: de score, je zone (LAAG / LICHT / HOOG — drempels zijn persoonlijk), het aantal triggers van vandaag en de drie favoriete waarden die je vastzette. Tik voor de bijdragende triggers op volgorde en een scoregeschiedenis van 14 dagen (premium).\n\nGebruik het als dagelijkse check: amber of rood betekent vandaag geen nieuwe triggers stapelen en alvast verlichting overwegen.",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score." to "Je migrainekans voor vandaag, volgens de emmertheorie: elke trigger en prodroom van de laatste 7 dagen stapelt zich op in jouw emmer, recente dagen zwaarder dan oudere.\n\nDe meter wordt amber zodra je je LICHT-drempel passeert en rood bij HOOG.\n\nBoven de meter zit Snel noteren voor invoer met één tik (migraine, prodroom, trigger, medicijn, verlichting, klacht). Eronder: Vraag MigraineMe (chat met je data) en de top 3 bijdragen aan de score van vandaag.",
     "Your migraine profile" to "Je migraineprofiel",
     "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." to "Je migrainerisico voor vandaag, berekend uit elke trigger en elk prodroom dat je de laatste 7 dagen noteerde. Het gaat uit van de emmertheorie: triggers stapelen zich op in je eigen emmer, en als het peil hoog genoeg komt, kiept het om in een aanval.\n\nProdromen tellen ook mee. Zit je in een prodroom (gapen, stijve nek, stemmingswisselingen en de rest), dan is een aanval al onderweg, dus een genoteerd prodroom duwt de emmer net zo omhoog als een verse trigger.\n\nHet gewicht van elk item hangt van twee dingen af: hoe zwaar je het aanmerkte (HOOG telt zwaarder dan LICHT of LAAG, GEEN telt niet mee) en hoe recent het is. De bijdrage zakt elke dag erna, dus een trigger van vanochtend telt veel zwaarder dan een van zes dagen terug.\n\nHet grote getal is je ruwe waarde (je huidige peil in de emmer). De kleur komt uit je drie eigen drempels: boven de drempel LAAG wordt de meter groen; boven LICHT wordt hij oranje; boven HOOG wordt hij rood en zit de emmer dicht bij overlopen. De drempels beginnen op verstandige standaarden en worden na verloop van tijd bijgesteld, zodat de kleur laat zien hoe een risicovolle dag er voor jou uitziet, niet voor het gemiddelde.\n\nOnder de meter toont de kaart met actieve triggers de 3 dingen die nu het hardst duwen. Tik op de meter zelf om het scherm Risico te openen, dat alle factoren op volgorde toont met hoeveel elk toevoegt. Tik daar bovenaan de meter op \"Historie →\" om de grafiek van 14 dagen te openen en te zien hoe je peil de afgelopen twee weken dag na dag steeg en daalde (handig om te zien op welke dagen je waarde piekte vóór een aanval).\n\nAlles is in te stellen. Open het menu en tik Je lijsten om te wijzigen welke triggers en prodromen voor jou tellen en hoe zwaar elk meetelt. Tik Risicomodel voor de drempels en de afbouwcurve.",
@@ -4523,9 +4537,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your months" to "Jouw maanden",
     "Your most surprising trigger" to "Je meest verrassende trigger",
     "Your note" to "Je notitie",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your notes" to "Je notities",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Je overzicht van genoteerde aanvallen. De kaart toont drie dingen naast elkaar: ",
     "Your own pool" to "Je eigen pool",

@@ -300,7 +300,7 @@ fun OnboardingPaywallScreen(
                     Triple(R.drawable.brainy_trigger_small, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
                     Triple(R.drawable.brainy_archer_small, "Smart Calibration", "Personalised risk model tuned to you"),
                     Triple(R.drawable.brainy_briefcase_small, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
-                    Triple(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk scoring"),
+                    Triple(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, histamine, gluten, alcohol and additive flags"),
                 )
 
                 // Last card on the page, so it carries the page watermark.

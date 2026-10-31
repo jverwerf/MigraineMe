@@ -437,6 +437,12 @@ object DemoDataSeeder {
                         put("total_biotin_mcg",(10+Random.nextInt(80)).toDouble())
                         put("max_tyramine_exposure", if (bad) 1+Random.nextInt(2) else 0)
                         put("max_gluten_exposure", if (bad) 1+Random.nextInt(2) else 0)
+                        put("max_alcohol_exposure", if (bad && Random.nextBoolean()) 2 else 0)
+                        put("max_histamine_exposure", if (bad && Random.nextBoolean()) 1+Random.nextInt(2) else 0)
+                        put("max_aspartame_exposure", if (bad && Random.nextBoolean()) 3 else 0)
+                        put("max_msg_exposure", if (bad && Random.nextInt(3) == 0) 2 else 0)
+                        put("max_nitrates_exposure", if (bad && Random.nextInt(3) == 0) 2 else 0)
+                        put("max_sulfites_exposure", if (bad && Random.nextInt(3) == 0) 1+Random.nextInt(2) else 0)
                     })
             }
             // Today's nutrition_records for Monitor card

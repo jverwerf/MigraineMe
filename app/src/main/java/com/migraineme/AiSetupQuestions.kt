@@ -453,6 +453,7 @@ fun AiQuestionsPage4(
     specificDrinks: Set<String>, onToggleDrink: (String) -> Unit,
     tyramineFoods: Map<String, DeterministicMapper.Certainty>, onTyramineFoods: (Map<String, DeterministicMapper.Certainty>) -> Unit,
     histamineFoods: Map<String, DeterministicMapper.Certainty>, onHistamineFoods: (Map<String, DeterministicMapper.Certainty>) -> Unit,
+    additiveFoods: Map<String, DeterministicMapper.Certainty>, onAdditiveFoods: (Map<String, DeterministicMapper.Certainty>) -> Unit,
     glutenSensitivity: String?, onGlutenSensitivity: (String) -> Unit,
     glutenTriggers: DeterministicMapper.Certainty?, onGlutenTriggers: (DeterministicMapper.Certainty) -> Unit,
     eatingPatterns: Map<String, DeterministicMapper.Certainty>, onEatingPatterns: (Map<String, DeterministicMapper.Certainty>) -> Unit,
@@ -480,6 +481,9 @@ fun AiQuestionsPage4(
         }
         QCard(t("Any high-histamine foods trigger migraines?"), Icons.Outlined.Science, t("Select all, set certainty"), fieldKey = "histamine_foods") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Aged or smoked fish", "Aged or smoked fish", "Tuna, mackerel, sardines, anchovies"), CertaintyItem("Avocado", "Avocado"), CertaintyItem("Spinach", "Spinach or aubergine"), CertaintyItem("Tomatoes", "Tomatoes (esp. tinned/cooked)"), CertaintyItem("Strawberries", "Strawberries or citrus"), CertaintyItem("Vinegar", "Vinegar or pickled foods")), selections = histamineFoods, onSelectionChanged = onHistamineFoods)
+        }
+        QCard(t("Do any of these additives trigger migraines?"), Icons.Outlined.LocalDrink, t("Select all, set certainty"), fieldKey = "additive_foods") {
+            CertaintyMultiSelect(items = listOf(CertaintyItem("Aspartame", "Aspartame", "Diet drinks, sugar-free sweets"), CertaintyItem("MSG", "MSG", "Takeaways, instant noodles, stock cubes"), CertaintyItem("Nitrates", "Nitrates", "Bacon, ham, cured meats"), CertaintyItem("Sulfites", "Sulfites", "Wine, dried fruit")), selections = additiveFoods, onSelectionChanged = onAdditiveFoods)
         }
         QCard(t("Are you sensitive to gluten?"), Icons.Outlined.SetMeal, fieldKey = "gluten_sensitivity") { QSingleChips(listOf("Yes, diagnosed", "I suspect so", "No", "Not sure"), glutenSensitivity, onGlutenSensitivity) }
         AnimatedVisibility(visible = glutenSensitivity == "Yes, diagnosed" || glutenSensitivity == "I suspect so", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {

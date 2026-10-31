@@ -212,7 +212,7 @@ fun AddFoodDialog(
                         }
                     }
 
-                    // Trigger exposure meters (tyramine, alcohol, gluten, histamine)
+                    // Trigger exposure meters (the eight food flags)
                     Spacer(Modifier.height(4.dp))
                     RiskExposureMeters(
                         risks = if (isClassifyingRisks) null else (risks ?: FoodRiskResult()),

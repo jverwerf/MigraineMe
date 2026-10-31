@@ -397,7 +397,7 @@ fun PaywallScreen(
                     FeatureItem(R.drawable.brainy_archer_small, "Smart Calibration", "Personalised tuning of your risk model"),
                     FeatureItem(R.drawable.brainy_briefcase_small, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
                     FeatureItem(R.drawable.brainy_treatments_small, "Monitor Dashboard Trends", "Sleep, physical, mental, and nutrition history"),
-                    FeatureItem(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),
+                    FeatureItem(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, histamine, gluten, alcohol and additive flags"),
                 )
 
                 features.forEach { feat ->

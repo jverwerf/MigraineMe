@@ -220,6 +220,7 @@ fun AiSetupScreen(
     var specificDrinks by remember { mutableStateOf(setOf<String>()) }
     var tyramineFoods by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
     var histamineFoods by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
+    var additiveFoods by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
     var glutenSensitivity by remember { mutableStateOf<String?>(null) }
     var glutenTriggers by remember { mutableStateOf<DeterministicMapper.Certainty?>(null) }
     var eatingPatterns by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
@@ -319,6 +320,7 @@ fun AiSetupScreen(
         alcoholTriggers = alcoholTriggers ?: DeterministicMapper.Certainty.NO,
         specificDrinks = specificDrinks, tyramineFoods = tyramineFoods,
         histamineFoods = histamineFoods,
+        additiveFoods = additiveFoods,
         glutenSensitivity = glutenSensitivity,
         glutenTriggers = glutenTriggers ?: DeterministicMapper.Certainty.NO,
         eatingPatterns = eatingPatterns, waterIntake = waterIntake, tracksNutrition = tracksNutrition,
@@ -382,6 +384,7 @@ fun AiSetupScreen(
         if (pf.specificDrinks.isNotEmpty()) { specificDrinks = specificDrinks + pf.specificDrinks; filled.add("specificDrinks") }
         if (pf.tyramineFoods.isNotEmpty()) { tyramineFoods = tyramineFoods + pf.tyramineFoods; filled.add("tyramineFoods") }
         if (pf.histamineFoods.isNotEmpty()) { histamineFoods = histamineFoods + pf.histamineFoods; filled.add("histamineFoods") }
+        if (pf.additiveFoods.isNotEmpty()) { additiveFoods = additiveFoods + pf.additiveFoods; filled.add("additiveFoods") }
         pf.glutenSensitivity?.let { glutenSensitivity = it; filled.add("glutenSensitivity") }
         pf.glutenTriggers?.let { glutenTriggers = it; filled.add("glutenTriggers") }
         if (pf.eatingPatterns.isNotEmpty()) { eatingPatterns = eatingPatterns + pf.eatingPatterns; filled.add("eatingPatterns") }
@@ -824,7 +827,7 @@ fun AiSetupScreen(
                         AiPage.Q1 -> AiQuestionsPage1(gender, { gender = it }, ageRange, { ageRange = it }, frequency, { frequency = it }, duration, { duration = it }, experience, { experience = it }, trajectory, { trajectory = it }, warningBefore, { warningBefore = it }, triggerDelay, { triggerDelay = it }, dailyRoutine, { dailyRoutine = it }, seasonalPattern, { seasonalPattern = it })
                         AiPage.Q2 -> AiQuestionsPage2(sleepHours, { sleepHours = it }, sleepQuality, { sleepQuality = it }, poorQualityTriggers, { poorQualityTriggers = it }, tooLittleSleepTriggers, { tooLittleSleepTriggers = it }, oversleepTriggers, { oversleepTriggers = it }, sleepIssues, { i -> sleepIssues = if (i in sleepIssues) sleepIssues - i else sleepIssues + i })
                         AiPage.Q3 -> AiQuestionsPage3(stressLevel, { stressLevel = it }, stressChangeTriggers, { stressChangeTriggers = it }, emotionalPatterns, { emotionalPatterns = it }, screenTimeDaily, { screenTimeDaily = it }, screenTimeTriggers, { screenTimeTriggers = it }, lateScreenTriggers, { lateScreenTriggers = it })
-                        AiPage.Q4 -> AiQuestionsPage4(caffeineIntake, { caffeineIntake = it }, caffeineDirection, { caffeineDirection = it }, caffeineCertainty, { caffeineCertainty = it }, alcoholFrequency, { alcoholFrequency = it }, alcoholTriggers, { alcoholTriggers = it }, specificDrinks, { d -> specificDrinks = if (d in specificDrinks) specificDrinks - d else specificDrinks + d }, tyramineFoods, { tyramineFoods = it }, histamineFoods, { histamineFoods = it }, glutenSensitivity, { glutenSensitivity = it }, glutenTriggers, { glutenTriggers = it }, eatingPatterns, { eatingPatterns = it }, waterIntake, { waterIntake = it }, tracksNutrition, { tracksNutrition = it })
+                        AiPage.Q4 -> AiQuestionsPage4(caffeineIntake, { caffeineIntake = it }, caffeineDirection, { caffeineDirection = it }, caffeineCertainty, { caffeineCertainty = it }, alcoholFrequency, { alcoholFrequency = it }, alcoholTriggers, { alcoholTriggers = it }, specificDrinks, { d -> specificDrinks = if (d in specificDrinks) specificDrinks - d else specificDrinks + d }, tyramineFoods, { tyramineFoods = it }, histamineFoods, { histamineFoods = it }, additiveFoods, { additiveFoods = it }, glutenSensitivity, { glutenSensitivity = it }, glutenTriggers, { glutenTriggers = it }, eatingPatterns, { eatingPatterns = it }, waterIntake, { waterIntake = it }, tracksNutrition, { tracksNutrition = it })
                         AiPage.Q5 -> AiQuestionsPage5(weatherTriggers, { weatherTriggers = it }, specificWeather, { specificWeather = it }, environmentSensitivities, { environmentSensitivities = it }, physicalFactors, { physicalFactors = it })
                         AiPage.Q6 -> AiQuestionsPage6(exerciseFrequency, { exerciseFrequency = it }, exerciseTriggers, { exerciseTriggers = it }, exercisePattern, { p -> exercisePattern = if (p in exercisePattern) exercisePattern - p else exercisePattern + p }, tracksCycle, { tracksCycle = it }, cyclePatterns, { new ->
                             // Marking "Around ovulation" (any certainty but No) flips the ovulation switch on; the user can still turn it off.

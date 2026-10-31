@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4954 entries.
+ * 4965 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -494,6 +494,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Added" to "Aggiunto",
     "Added to your lists" to "Nuovo nelle tue liste",
     "Adding %1\$s of %2\$s…" to "Aggiungo %1\$s di %2\$s…",
+    "Additives" to "Additivi",
     "Adds a smaller risk bump around mid-cycle." to "Aggiunge un piccolo aumento del rischio a metà ciclo.",
     "Adjust" to "Regola",
     "Adjust Medicines" to "Regola farmaci",
@@ -749,6 +750,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Back to Home" to "Alla home",
     "Back##bodymap" to "Dietro",
     "Background pain" to "Dolore di fondo",
+    "Bacon, ham, cured meats" to "Pancetta, prosciutto, salumi",
     "Bad sleep sets one off" to "Dormire male la scatena",
     "Band worn on the calf that delivers TENS-style stimulation." to "Fascia da mettere sul polpaccio che dà una stimolazione tipo TENS.",
     "Bar / pub" to "Bar / pub",
@@ -879,6 +881,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Caffeine sets one off" to "La caffeina la scatena",
     "Caffeine withdrawal" to "Astinenza caffeina",
     "Caffeine, sodium, tyramine, alcohol, gluten and histamine — flagged in every meal." to "Caffeina, sodio, tiramina, alcol, glutine e istamina — segnalati in ogni pasto.",
+    "Caffeine, sodium, tyramine, histamine, alcohol, gluten and additives — flagged in every meal." to "Caffeina, sodio, tiramina, istamina, alcol, glutine e additivi — segnalati in ogni pasto.",
     "Café" to "Caffetteria",
     "Calcium" to "Calcio",
     "Calcium high" to "Calcio alto",
@@ -1238,6 +1241,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Diet" to "Dieta",
     "Diet & Substances" to "Dieta e sostanze",
     "Diet History" to "Storico dieta",
+    "Diet drinks, sugar-free sweets" to "Bibite light, dolci senza zucchero",
     "Diet — What You're Eating" to "Dieta: cosa mangi",
     "Difficulty concentrating" to "Difficoltà di concentrazione",
     "Difficulty focusing" to "Fatica a mettere a fuoco",
@@ -1269,6 +1273,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Dizziness" to "Capogiri",
     "Dizziness (after)" to "Capogiri (dopo)",
     "Do any eating patterns trigger migraines?" to "Certe abitudini alimentari ti scatenano emicranie?",
+    "Do any of these additives trigger migraines?" to "Uno di questi additivi ti scatena emicranie?",
     "Do any of these foods trigger migraines?" to "Uno di questi cibi ti scatena emicranie?",
     "Do any physical factors trigger migraines?" to "Fattori fisici ti scatenano emicranie?",
     "Do migraines relate to your cycle?" to "Le emicranie seguono il tuo ciclo?",
@@ -1512,14 +1517,14 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Failed to change password." to "Cambio password non riuscito.",
     "Failed to delete account. Please try again." to "Impossibile eliminare l'account. Riprova.",
     "Failed to generate PDF" to "Generazione PDF non riuscita",
+)
+
+private fun itStrings1(): Map<String, String> = mapOf(
     "Failed to load proposals" to "Proposte non caricate",
     "Failed to log period" to "Ciclo non segnato",
     "Failed to remove: %1\$s" to "Rimozione fallita: %1\$s",
     "Failed to save weights." to "Pesi non salvati.",
     "Failed to save." to "Non salvato.",
-)
-
-private fun itStrings1(): Map<String, String> = mapOf(
     "Failed to save. Please try again." to "Salvataggio fallito. Riprova.",
     "Fairly sure" to "Quasi certo",
     "Fallback defaults" to "Valori predefiniti",
@@ -1594,6 +1599,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Foods Added!" to "Aggiunti!",
     "Foods containing gluten" to "Alimenti con glutine",
     "Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol and gluten when ticked under Use for insights." to "I cibi restano il trigger che hai segnato e possono essere valutati per istamina, tiramina, alcol e glutine se spuntati in Usa per gli insight.",
+    "Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol, gluten and additives when ticked under Use for insights." to "I cibi restano il trigger che hai segnato e possono essere valutati per istamina, tiramina, alcol, glutine e additivi se spuntati in Usa per gli insight.",
     "Foods, not triggers" to "Cibi, non trigger",
     "For You" to "Per te",
     "For example: Drink water" to "Per esempio: bere acqua",
@@ -3014,15 +3020,15 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Valuta l'intensità e segna dove la senti. Le voci si aggiungono a questa emicrania senza cancellare quanto già registrato.",
     "Re-assess my profile" to "Rivedi il profilo",
     "Re-authentication failed." to "Riautenticazione fallita.",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Letto come probabile, con il motivo",
     "Read full article" to "Leggi tutto",
     "Read full assessment" to "Leggi tutto",
     "Read more" to "Leggi di più",
     "Read-only, never written back" to "Solo lettura, mai riscritti",
     "Reading" to "Leggere",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Reading data from Health Connect..." to "Leggo i dati da Health Connect...",
     "Reading your file…" to "Lettura del file…",
     "Reading your history. This takes a minute for a big file." to "Lettura dello storico. Con un file grande ci vuole un minuto.",
@@ -3240,7 +3246,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "See our Privacy Policy for details." to "Dettagli nella Privacy.",
     "See plans" to "Vedi i piani",
     "See severity, pain locations & missed activities" to "Intensità, zone e attività perse",
-    "See the habits behind your calmer days" to "Le abitudini dietro i tuoi giorni più tranquilli",
+    "See the habits behind your calmer days" to "Le abitudini dei giorni tranquilli",
     "See the habits behind your migraine-free days" to "Le abitudini dei giorni senza emicrania",
     "See weather conditions ahead of time" to "Guarda il meteo in anticipo",
     "See what the risk gauge, insights and auto-tracking actually do." to "Guarda cosa fanno davvero indicatore di rischio, approfondimenti e tracciamento automatico.",
@@ -3624,6 +3630,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Take the Tour" to "Giro guidato",
     "Take the full tour" to "Giro completo",
     "Take the tour" to "Fai il tour",
+    "Takeaways, instant noodles, stock cubes" to "Cibo da asporto, noodle istantanei, dadi da brodo",
     "Taken within %1\$s (your median delay): peak %2\$s · later: peak %3\$s" to "Preso entro %1\$s (la tua mediana): picco %2\$s · più tardi: picco %3\$s",
     "Takes about 5 minutes. You can leave the tour at any point." to "Dura circa 5 minuti. Puoi lasciare il giro quando vuoi.",
     "Taking longer than expected..." to "Ci vuole più del previsto...",
@@ -3836,6 +3843,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Today's Log" to "Oggi",
     "Today's Weather" to "Meteo di oggi",
     "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods." to "I totali nutrizionali di oggi più le tre misure che hai fissato. Seguiamo quelle classiche per l'emicrania: caffeina, sodio, zucchero, tiramina, alcol, glutine e istamina. Contano sia l'eccesso SIA la mancanza: saltare il solito caffè scatena attacchi quanto esagerare.\n\nLa classificazione automatica dipende da cosa la tua app di nutrizione manda a Health Connect. Non tutte inviano il dettaglio per alimento; alcune mandano solo i totali giornalieri, utili per i numeri ma non per classificare per nome. Lo scanner di codici a barre e la ricerca USDA nel dettaglio classificano sempre bene, quindi sono la via più affidabile per gli alimenti che sai essere fattori.",
+    "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten, histamine and the additives aspartame, MSG, nitrates and sulfites. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods." to "I totali nutrizionali di oggi più le tre misure che hai fissato. Seguiamo quelle classiche per l'emicrania: caffeina, sodio, zucchero, tiramina, alcol, glutine, istamina e gli additivi aspartame, MSG, nitrati e solfiti. Contano sia l'eccesso SIA la mancanza: saltare il solito caffè scatena attacchi quanto esagerare.\n\nLa classificazione automatica dipende da cosa la tua app di nutrizione manda a Health Connect. Non tutte inviano il dettaglio per alimento; alcune mandano solo i totali giornalieri, utili per i numeri ma non per classificare per nome. Lo scanner di codici a barre e la ricerca USDA nel dettaglio classificano sempre bene, quindi sono la via più affidabile per gli alimenti che sai essere fattori.",
     "Today's risk: %s" to "Rischio di oggi: %s",
     "Today: %1\$s %2\$s" to "Oggi: %1\$s %2\$s",
     "Today: %s" to "Oggi: %s",
@@ -3970,6 +3978,8 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Tyramine, gluten, and alcohol risk classification" to "Classifica il rischio di tiramina, glutine e alcol",
     "Tyramine, gluten, and alcohol risk scoring" to "Punteggio di rischio per tiramina, glutine e alcol",
     "Tyramine, histamine, gluten and alcohol get flagged as you add a food." to "Tiramina, istamina, glutine e alcol vengono segnalati appena aggiungi un cibo.",
+    "Tyramine, histamine, gluten, alcohol and additive flags" to "Segnali per tiramina, istamina, glutine, alcol e additivi",
+    "Tyramine, histamine, gluten, alcohol and additives get flagged as you add a food." to "Tiramina, istamina, glutine, alcol e additivi vengono segnalati appena aggiungi un cibo.",
     "UV Index" to "Indice UV",
     "UV index" to "Indice UV",
     "UV index high" to "Indice UV alto",
@@ -4380,6 +4390,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Window around migraine" to "Finestra dell'emicrania",
     "Windy or gusty conditions" to "Vento o raffiche",
     "Wine, beer, spirits" to "Vino, birra, superalcolici",
+    "Wine, dried fruit" to "Vino, frutta secca",
     "Winter" to "Inverno",
     "With %1\$s: %2\$s · Without: %3\$s" to "Con %1\$s: %2\$s · Senza: %3\$s",
     "Within %s" to "Entro %s",
@@ -4512,6 +4523,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Il tuo uso di farmaci in 30 giorni. Ogni riga mostra il nome e la ",
     "Your migraine data is not affected by this." to "Questo non tocca i tuoi dati sull'emicrania.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "La tua probabilità di emicrania in un solo punteggio. Sommiamo fattori e prodromi degli ultimi 7 giorni, pesando i giorni recenti più di quelli vecchi (oggi conta di più). Il peso di ogni voce viene dalla gravità che le hai dato nelle impostazioni; menstruation_predicted usa una finestra simmetrica attorno alla data prevista del ciclo, e ovulation_predicted fa lo stesso attorno all'ovulazione prevista quando quell'interruttore è attivo.\n\nLa scheda mostra: il punteggio, la tua zona (BASSO / LIEVE / ALTO, con soglie personali), il numero di fattori di oggi e le tre misure preferite che hai fissato. Tocca per vedere i fattori che pesano, in ordine, e uno storico di 14 giorni (premium).\n\nUsalo come controllo quotidiano: ambra o rosso vuol dire non impilare nuovi fattori oggi e valutare un sollievo preventivo.",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score." to "La tua probabilità di emicrania oggi, secondo la teoria del secchio: ogni fattore e prodromo degli ultimi 7 giorni si accumula nel tuo secchio, con i giorni recenti che pesano più di quelli vecchi.\n\nL'indicatore diventa ambra quando superi la soglia LIEVE, rosso quando superi ALTO.\n\nSopra l'indicatore c'è l'inserimento rapido per voci con un tocco (emicrania, prodromo, fattore, farmaco, sollievo, sintomo). Sotto: Chiedi a MigraineMe (chat con i tuoi dati) e i primi 3 contributi al punteggio di oggi.",
     "Your migraine profile" to "Il tuo profilo",
     "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." to "Il tuo rischio di emicrania per oggi, calcolato da ogni fattore e prodromo inserito negli ultimi 7 giorni. Si basa sulla teoria del secchio: i fattori si accumulano dentro il tuo secchio personale e, quando il livello sale abbastanza, si trabocca in un attacco.\n\nAnche i prodromi contano. Quando sei dentro un prodromo (sbadigli, collo rigido, sbalzi d'umore e il resto), l'attacco è già in arrivo, quindi inserirlo alza il secchio come un fattore appena preso.\n\nIl peso di ogni voce dipende da due cose: l'intensità che le hai dato (ALTO conta più di LIEVE o BASSO, NESSUNA non conta) e quanto è recente. Il contributo cala ogni giorno dopo, così un fattore di stamattina conta molto più di uno di sei giorni fa.\n\nIl numero grande è il tuo punteggio grezzo (il livello attuale del secchio). Il colore viene dalle tue tre soglie personali: superata la soglia BASSO l'indice diventa verde; superata LIEVE diventa ambra; superata ALTO diventa rosso e il secchio è vicino a traboccare. Le soglie partono da valori sensati e si ritarano nel tempo, così il colore riflette com'è una giornata a rischio per te, non per la media.\n\nSotto l'indice, la scheda dei fattori attivi mostra le 3 cose che spingono di più adesso. Tocca l'indice per aprire la schermata Rischio, che elenca tutti i fattori in ordine con quanto aggiunge ognuno. Da lì tocca \"Cronologia →\" in cima all'indice per aprire il grafico di 14 giorni e vedere come il tuo livello è salito e sceso giorno per giorno nelle ultime due settimane (comodo per capire in quali giorni il punteggio è stato al massimo prima di un attacco).\n\nÈ tutto regolabile. Apri il menu e tocca Le tue liste per cambiare quali fattori e prodromi ti interessano e con quanta intensità. Tocca Modello di rischio per le soglie e la curva giorno per giorno.",
@@ -4523,9 +4537,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your months" to "I tuoi mesi",
     "Your most surprising trigger" to "Il fattore più sorprendente",
     "Your note" to "La tua nota",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "Your notes" to "Le tue note",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Il quadro degli attacchi segnati. La scheda mostra tre cose affiancate: ",
     "Your own pool" to "Il tuo pool",
@@ -4776,7 +4787,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "not sure, please check" to "non è certo, controlla",
     "now" to "ora",
     "nutritional therapist" to "terapista nutrizionale",
-    "on %s%% of calmer days" to "nel %s%% dei giorni più tranquilli",
+    "on %s%% of calmer days" to "nel %s%% dei giorni calmi",
     "on %s%% of migraine-free days" to "nel %s%% dei giorni senza emicrania",
     "on the same day" to "lo stesso giorno",
     "one place, one card each" to "un posto solo, una scheda ciascuno",

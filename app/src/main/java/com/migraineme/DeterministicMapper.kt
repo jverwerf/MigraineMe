@@ -22,6 +22,14 @@ object DeterministicMapper {
 
     enum class Certainty { EVERY_TIME, OFTEN, SOMETIMES, RARELY, NO }
 
+    /** AI-setup additive item -> pool trigger label (food flags v2). */
+    val ADDITIVE_TRIGGER_LABELS: Map<String, String> = mapOf(
+        "Aspartame" to "Aspartame exposure high",
+        "MSG" to "MSG exposure high",
+        "Nitrates" to "Nitrates exposure high",
+        "Sulfites" to "Sulfites exposure high",
+    )
+
     fun certaintyToSeverity(c: Certainty): String = when (c) {
         Certainty.EVERY_TIME -> "HIGH"
         Certainty.OFTEN      -> "MILD"
@@ -418,6 +426,7 @@ object DeterministicMapper {
         val specificDrinks: Set<String> = emptySet(),
         val tyramineFoods: Map<String, Certainty> = emptyMap(),
         val histamineFoods: Map<String, Certainty> = emptyMap(),
+        val additiveFoods: Map<String, Certainty> = emptyMap(),
         val glutenSensitivity: String? = null,
         val glutenTriggers: Certainty = Certainty.NO,
         val eatingPatterns: Map<String, Certainty> = emptyMap(),
@@ -777,6 +786,13 @@ object DeterministicMapper {
         if (maxHistCert != null && maxHistCert != Certainty.NO) {
             out["Histamine exposure high"] = TriggerSetting("Histamine exposure high",
                 certaintyToSeverity(maxHistCert), exposureLevel = exposureThreshold(maxHistCert), favorite = true)
+        }
+
+        // Additives: one pool trigger per class, same rules as the tyramine foods.
+        for ((item, cert) in a.additiveFoods) {
+            if (cert == Certainty.NO) continue
+            val label = ADDITIVE_TRIGGER_LABELS[item] ?: continue
+            out[label] = TriggerSetting(label, certaintyToSeverity(cert), exposureLevel = exposureThreshold(cert), favorite = true)
         }
 
         if (a.glutenTriggers != Certainty.NO) {

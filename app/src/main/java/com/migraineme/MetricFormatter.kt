@@ -21,7 +21,7 @@ object MetricFormatter {
      * @return         Formatted string like "7.5h", "62%", "11:30 PM", "High"
      */
     fun format(value: Double, unit: String, column: String = ""): String = when {
-        // Exposure metrics (0–3 categorical): tyramine, alcohol, gluten
+        // Exposure metrics (0–3 categorical): the eight food flags
         isExposureColumn(column) -> formatExposureLevel(value.toInt())
 
         // Time-of-day (decimal hours, may be >24 for post-midnight bedtimes)
@@ -129,21 +129,10 @@ object MetricFormatter {
      * Get the color for a risk/exposure level.
      * Preserves existing RiskColors behavior.
      */
-    fun exposureLevelColor(column: String, level: Int): Color = when {
-        column.contains("tyramine") -> when (level) {
-            3 -> Color(0xFFEF5350); 2 -> Color(0xFFEF9A9A); 1 -> Color(0xFFFFCDD2)
-            else -> Color.Unspecified
-        }
-        column.contains("alcohol") -> when (level) {
-            3 -> Color(0xFFFF8F00); 2 -> Color(0xFFFFB74D); 1 -> Color(0xFFFFE0B2)
-            else -> Color.Unspecified
-        }
-        column.contains("gluten") -> when (level) {
-            3 -> Color(0xFF1E88E5); 2 -> Color(0xFF64B5F6); 1 -> Color(0xFFBBDEFB)
-            else -> Color.Unspecified
-        }
-        else -> Color.Unspecified
-    }
+    fun exposureLevelColor(column: String, level: Int): Color =
+        // One palette for all eight flags (RiskColors); accepts bare
+        // "tyramine_exposure", "max_tyramine_exposure" or "nutrition:tyramine_exposure".
+        RiskColors.colorFor(column.substringAfter(':').removePrefix("max_"), level)
 
     // ── Time formatting ──────────────────────────────────────────────────────
 

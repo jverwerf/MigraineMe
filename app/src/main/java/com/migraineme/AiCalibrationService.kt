@@ -191,6 +191,11 @@ object AiCalibrationService {
                     .map { "${it.key} (${DeterministicMapper.certaintyToSeverity(it.value)})" }
                 if (items.isNotEmpty()) appendLine("- Histamine-triggering foods: ${items.joinToString(", ")}")
             }
+            if (answers.additiveFoods.isNotEmpty()) {
+                val items = answers.additiveFoods.filter { it.value != DeterministicMapper.Certainty.NO }
+                    .map { "${it.key} (${DeterministicMapper.certaintyToSeverity(it.value)})" }
+                if (items.isNotEmpty()) appendLine("- Additive triggers (aspartame/MSG/nitrates/sulfites): ${items.joinToString(", ")}")
+            }
             answers.freeText?.let {
                 if (it.isNotBlank()) {
                     appendLine()

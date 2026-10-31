@@ -158,7 +158,7 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
 
 
 /**
- * The exposure verdicts for a day — tyramine, alcohol, gluten, histamine, additives —
+ * The exposure verdicts for a day — tyramine, alcohol, gluten, histamine, aspartame, MSG, nitrates, sulfites —
  * as one compact block: geometric icon, name, severity word, vertical bar.
  *
  * These are the only nutrition numbers that mean anything on their own to

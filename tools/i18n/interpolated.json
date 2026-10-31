@@ -1,10 +1,10 @@
 [
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:778",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:781",
     "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:779",
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:782",
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
@@ -284,7 +284,7 @@
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:416",
+    "site": "app/src/main/java/com/migraineme/ProfileBasisScreen.kt:417",
     "line": "                (if (latest != null) t(\"Latest %1\\$s. \", latest) else \"\") + t(\"Everything here is a change you accepted — nothing moves without you.\"),"
   },
   {

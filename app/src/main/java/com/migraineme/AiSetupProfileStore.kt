@@ -214,6 +214,7 @@ object AiSetupProfileStore {
             specificDrinks = strSet("specific_drinks", "specificDrinks"),
             tyramineFoods = certMap("tyramine_foods", "tyramineFoods"),
             histamineFoods = certMap("histamine_foods", "histamineFoods"),
+            additiveFoods = certMap("additive_foods", "additiveFoods"),
             glutenSensitivity = str("gluten_sensitivity", "glutenSensitivity"),
             glutenTriggers = certOf("gluten_triggers", "glutenTriggers"),
             eatingPatterns = certMap("eating_patterns", "eatingPatterns"),
@@ -294,6 +295,7 @@ object AiSetupProfileStore {
             put("specific_drinks", JsonArray(a.specificDrinks.map { JsonPrimitive(it) }))
             put("tyramine_foods", certaintyMapToJson(a.tyramineFoods))
             put("histamine_foods", certaintyMapToJson(a.histamineFoods))
+            put("additive_foods", certaintyMapToJson(a.additiveFoods))
             put("gluten_sensitivity", a.glutenSensitivity)
             put("gluten_triggers", a.glutenTriggers.name)
             put("eating_patterns", certaintyMapToJson(a.eatingPatterns))
@@ -368,7 +370,8 @@ object AiSetupProfileStore {
             a.glutenTriggers != DeterministicMapper.Certainty.NO ||
             a.eatingPatterns.isNotEmpty() ||
             a.tyramineFoods.isNotEmpty() ||
-            a.histamineFoods.isNotEmpty()) areas.add("Diet")
+            a.histamineFoods.isNotEmpty() ||
+            a.additiveFoods.isNotEmpty()) areas.add("Diet")
         if (a.exerciseTriggers != DeterministicMapper.Certainty.NO) areas.add("Exercise")
         if (a.tracksCycle == "Yes" && a.cyclePatterns.isNotEmpty()) areas.add("Hormones")
         if (a.environmentSensitivities.isNotEmpty()) areas.add("Environment")

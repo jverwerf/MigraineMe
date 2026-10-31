@@ -518,7 +518,7 @@ private val LOADING_FACTS = listOf(
     "Cycle-aware: hormonal windows feed straight into your risk score.",
     "Watch your risk gauge fill in real time.",
     "\"It's happening right now\" — one tap to log, fill in details later.",
-    "Caffeine, sodium, tyramine, alcohol, gluten and histamine — flagged in every meal.",
+    "Caffeine, sodium, tyramine, histamine, alcohol, gluten and additives — flagged in every meal.",
     "One-tap doctor-ready PDF of everything you've logged.",
     "Talk through your day — voice-powered evening check-ins.",
     "Customise every trigger, prodrome, threshold and weight to fit you.",

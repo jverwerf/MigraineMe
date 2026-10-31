@@ -253,6 +253,7 @@ private fun BasisContent(
         AnswerRow(t("Drinks that do it"), a.pickSet("specific_drinks", "specificDrinks")),
         AnswerRow(t("Aged foods"), a.pickCertMap("tyramine_foods", "tyramineFoods")),
         AnswerRow(t("Fermented foods"), a.pickCertMap("histamine_foods", "histamineFoods")),
+        AnswerRow(t("Additives"), a.pickCertMap("additive_foods", "additiveFoods")),
         AnswerRow(t("Gluten"), a.pick("gluten_sensitivity", "glutenSensitivity")),
         AnswerRow(t("Gluten sets one off"), a.pickCert("gluten_triggers", "glutenTriggers")),
         AnswerRow(t("Eating patterns"), a.pickCertMap("eating_patterns", "eatingPatterns")),

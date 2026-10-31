@@ -172,7 +172,7 @@ val tourSteps = listOf(
         findIt = "{Monitor} tab › {Sleep} card", pop = R.drawable.tour_pop_05, brainy = R.drawable.brainy_detective_small),
     TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Diet", highlight = "", navHint = NavHintLocation.BOTTOM_MONITOR,
         headline = "What you *eat.*", sub = "scan it, or search it",
-        body = "Tyramine, histamine, gluten and alcohol get flagged as you add a food.",
+        body = "Tyramine, histamine, gluten, alcohol and additives get flagged as you add a food.",
         findIt = "{Monitor} tab › {Diet} card  ·  {Monitor} › {Menstruation}", pop = R.drawable.tour_pop_06_1, brainy = R.drawable.brainy_diet_small,
         second = TourSegment("Your *cycle.*", "risk rises around your period",
             "Set your last period and cycle length. Risk rises around the predicted date.",

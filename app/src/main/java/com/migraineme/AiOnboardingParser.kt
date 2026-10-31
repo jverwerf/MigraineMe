@@ -54,6 +54,7 @@ data class OnboardingPreFill(
     val specificDrinks: Set<String> = emptySet(),
     val tyramineFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
     val histamineFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val additiveFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
     val glutenSensitivity: String? = null,
     val glutenTriggers: DeterministicMapper.Certainty? = null,
     val eatingPatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
@@ -110,6 +111,7 @@ object AiOnboardingParser {
     private val SPECIFIC_DRINKS_VALUES = setOf("Red wine", "Beer", "White wine", "Spirits", "Any alcohol")
     private val TYRAMINE_FOODS_KEYS = setOf("Aged cheese", "Chocolate", "Cured meats", "Fermented foods")
     private val HISTAMINE_FOODS_KEYS = setOf("Aged or smoked fish", "Avocado", "Spinach", "Tomatoes", "Strawberries", "Vinegar")
+    private val ADDITIVE_FOODS_KEYS = setOf("Aspartame", "MSG", "Nitrates", "Sulfites")
     private val GLUTEN_SENSITIVITY_VALUES = setOf("Yes, diagnosed", "I suspect so", "No", "Not sure")
     private val EATING_PATTERNS_KEYS = setOf("Skipping meals", "Sugar", "Salty food", "Overeating", "Dehydration")
     private val WATER_INTAKE_VALUES = setOf("< 1L", "1-2L", "2-3L", "3L+")
@@ -488,6 +490,7 @@ object AiOnboardingParser {
             specificDrinks = optStrSet("specific_drinks", SPECIFIC_DRINKS_VALUES),
             tyramineFoods = optCertMap("tyramine_foods", TYRAMINE_FOODS_KEYS),
             histamineFoods = optCertMap("histamine_foods", HISTAMINE_FOODS_KEYS),
+            additiveFoods = optCertMap("additive_foods", ADDITIVE_FOODS_KEYS),
             glutenSensitivity = optStrIn("gluten_sensitivity", GLUTEN_SENSITIVITY_VALUES),
             glutenTriggers = optCert("gluten_triggers"),
             eatingPatterns = optCertMap("eating_patterns", EATING_PATTERNS_KEYS),
@@ -585,6 +588,7 @@ object AiOnboardingParser {
             specificDrinks = deter.specificDrinks + gpt.specificDrinks,
             tyramineFoods = deter.tyramineFoods + gpt.tyramineFoods,
             histamineFoods = deter.histamineFoods + gpt.histamineFoods,
+            additiveFoods = deter.additiveFoods + gpt.additiveFoods,
             glutenSensitivity = gpt.glutenSensitivity ?: deter.glutenSensitivity,
             glutenTriggers = gpt.glutenTriggers ?: deter.glutenTriggers,
             eatingPatterns = deter.eatingPatterns + gpt.eatingPatterns,

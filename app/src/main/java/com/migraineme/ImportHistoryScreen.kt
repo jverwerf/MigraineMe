@@ -833,7 +833,7 @@ private fun WordsScreen(p: JsonObject, onDone: () -> Unit) {
     if (foods.isNotEmpty()) { Spacer(Modifier.height(10.dp)); BaseCard(modifier = Modifier.fillMaxWidth()) {
         SectionLabel(t("Foods, not triggers"))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { foods.forEach { o -> PlainChip(o.str("phrase") ?: "") } }
-        Text(t("Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol and gluten when ticked under Use for insights."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+        Text(t("Foods stay as the trigger you tagged, and can be scored for histamine, tyramine, alcohol, gluten and additives when ticked under Use for insights."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
     } }
     if (pain.isNotEmpty()) { Spacer(Modifier.height(10.dp)); BaseCard(modifier = Modifier.fillMaxWidth()) {
         SectionLabel(t("Pain positions"))

@@ -286,7 +286,8 @@ private fun attackRowSpec(t: InsightsViewModel.AttackTrend): HabitRowSpec {
 private val HABIT_GOOD_UP =
     setOf("sleep_dur", "sleep_score", "hydration", "steps", "hrv", "mindfulness")
 private val HABIT_GOOD_DOWN =
-    setOf("stress", "rhr", "late_screen", "alcohol", "tyramine")
+    setOf("stress", "rhr", "late_screen", "alcohol", "tyramine", "gluten", "histamine",
+        "aspartame", "msg", "nitrates", "sulfites")
 
 // Neutral slate for moves without a clinical direction (bedtime, small
 // caffeine swings) — visible on the track without claiming good or bad.

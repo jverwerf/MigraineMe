@@ -525,8 +525,8 @@ fun PremiumRecoveryPrompt(
 }
 
 /**
- * Food Risk Analysis is premium. True for the exposure verdicts (tyramine,
- * alcohol, gluten, histamine) whether passed bare ("tyramine_exposure") or as a
+ * Food Risk Analysis is premium. True for the exposure verdicts (all eight
+ * food flags) whether passed bare ("tyramine_exposure") or as a
  * fav key ("nutrition:tyramine_exposure"). Calories, protein, caffeine and the
  * other nutrients stay free.
  */
