@@ -4966,8 +4966,6 @@
   "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten, histamine and the additives aspartame, MSG, nitrates and sulfites. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.": "Les totaux nutrition du jour plus les trois mesures que tu as épinglées. On suit les classiques liées à la migraine : caféine, sodium, sucre, tyramine, alcool, gluten, histamine et les additifs aspartame, MSG, nitrates et sulfites. L'excès ET le manque comptent : sauter ton café habituel déclenche des crises aussi souvent qu'en boire trop.\n\nLe classement automatique dépend de ce que ton app de nutrition envoie à Health Connect. Toutes ne transmettent pas le détail par aliment ; certaines n'envoient que des totaux quotidiens, utilisables pour les chiffres mais pas pour classer par nom. Le scanner de codes-barres et la recherche USDA sur l'écran de détail classent toujours correctement : c'est la voie la plus fiable pour les aliments déclencheurs connus.",
   "1 recommendation for you": "1 recommandation pour toi",
   "%s recommendations for you": "%s recommandations pour toi",
-  "Your risk score checked on 1 day": "Ton score de risque vérifié sur 1 jour",
-  "Your risk score checked on %s days": "Ton score de risque vérifié sur %s jours",
   "1 pattern found in your data": "1 tendance trouvée dans tes données",
   "%s patterns found in your data": "%s tendances trouvées dans tes données",
   "1 habit that helps you": "1 habitude qui t'aide",
@@ -4982,5 +4980,7 @@
   "%s triggers driving your risk today": "%s déclencheurs font grimper ton risque du jour",
   "Your insight for today is ready": "Ton analyse du jour est prête",
   "1 treatment rated from your logs": "1 traitement évalué",
-  "%s treatments rated from your logs": "%s traitements évalués"
+  "%s treatments rated from your logs": "%s traitements évalués",
+  "1 day of risk scores checked": "1 jour de scores de risque vérifié",
+  "%s days of risk scores checked": "%s jours de scores de risque vérifiés"
 }

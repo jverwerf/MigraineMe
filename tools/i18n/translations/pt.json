@@ -4966,8 +4966,6 @@
   "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten, histamine and the additives aspartame, MSG, nitrates and sulfites. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.": "Os totais de nutrição de hoje mais as três medidas que fixaste. Seguimos as clássicas da enxaqueca: cafeína, sódio, açúcar, tiramina, álcool, glúten, histamina e os aditivos aspartame, MSG, nitratos e sulfitos. Conta tanto o excesso COMO a falta: falhar o teu café do costume desencadeia crises tantas vezes como exagerar.\n\nA classificação automática depende do que a tua app de nutrição manda para o Health Connect. Nem todas enviam o detalhe por alimento; algumas mandam só totais diários, que servem para números mas não para classificar por nome. O leitor de códigos de barras e a pesquisa USDA no detalhe classificam sempre bem, por isso são a via mais fiável para alimentos que sabes serem gatilhos.",
   "1 recommendation for you": "1 recomendação para ti",
   "%s recommendations for you": "%s recomendações para ti",
-  "Your risk score checked on 1 day": "O teu risco, verificado em 1 dia",
-  "Your risk score checked on %s days": "O teu risco, verificado em %s dias",
   "1 pattern found in your data": "1 padrão encontrado nos teus dados",
   "%s patterns found in your data": "%s padrões encontrados nos teus dados",
   "1 habit that helps you": "1 hábito que te ajuda",
@@ -4982,5 +4980,7 @@
   "%s triggers driving your risk today": "%s gatilhos aumentam o teu risco hoje",
   "Your insight for today is ready": "O teu conselho de hoje está pronto",
   "1 treatment rated from your logs": "1 tratamento avaliado",
-  "%s treatments rated from your logs": "%s tratamentos avaliados"
+  "%s treatments rated from your logs": "%s tratamentos avaliados",
+  "1 day of risk scores checked": "1 dia de risco verificado",
+  "%s days of risk scores checked": "%s dias de risco verificados"
 }

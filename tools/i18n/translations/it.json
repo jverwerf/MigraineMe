@@ -4966,8 +4966,6 @@
   "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten, histamine and the additives aspartame, MSG, nitrates and sulfites. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.": "I totali nutrizionali di oggi più le tre misure che hai fissato. Seguiamo quelle classiche per l'emicrania: caffeina, sodio, zucchero, tiramina, alcol, glutine, istamina e gli additivi aspartame, MSG, nitrati e solfiti. Contano sia l'eccesso SIA la mancanza: saltare il solito caffè scatena attacchi quanto esagerare.\n\nLa classificazione automatica dipende da cosa la tua app di nutrizione manda a Health Connect. Non tutte inviano il dettaglio per alimento; alcune mandano solo i totali giornalieri, utili per i numeri ma non per classificare per nome. Lo scanner di codici a barre e la ricerca USDA nel dettaglio classificano sempre bene, quindi sono la via più affidabile per gli alimenti che sai essere fattori.",
   "1 recommendation for you": "1 consiglio per te",
   "%s recommendations for you": "%s consigli per te",
-  "Your risk score checked on 1 day": "Il tuo rischio, verificato su 1 giorno",
-  "Your risk score checked on %s days": "Il tuo rischio, verificato su %s giorni",
   "1 pattern found in your data": "1 schema trovato nei tuoi dati",
   "%s patterns found in your data": "%s schemi trovati nei tuoi dati",
   "1 habit that helps you": "1 abitudine che ti aiuta",
@@ -4982,5 +4980,7 @@
   "%s triggers driving your risk today": "%s fattori spingono il tuo rischio oggi",
   "Your insight for today is ready": "Il tuo consiglio di oggi è pronto",
   "1 treatment rated from your logs": "1 trattamento valutato",
-  "%s treatments rated from your logs": "%s trattamenti valutati"
+  "%s treatments rated from your logs": "%s trattamenti valutati",
+  "1 day of risk scores checked": "1 giorno di rischio verificato",
+  "%s days of risk scores checked": "%s giorni di rischio verificati"
 }

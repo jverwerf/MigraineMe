@@ -939,7 +939,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     message = t("Unlock Accuracy"),
                     subtitle = t("See how well your risk score lined up with your logged attacks"),
                     resultHeadline = (gaugeAccuracy?.totalDays ?: 0).let { n ->
-                        resultCountLine(n, t("Your risk score checked on 1 day"), t("Your risk score checked on %s days", n))
+                        resultCountLine(n, t("1 day of risk scores checked"), t("%s days of risk scores checked", n))
                     },
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {

@@ -7139,6 +7139,15 @@
     "count": 1
   },
   {
+    "en": "%s days of risk scores checked",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:942"
+    ],
+    "max_len": 43,
+    "count": 1
+  },
+  {
     "en": "%s events",
     "class": "hard",
     "sites": [
@@ -7874,6 +7883,15 @@
       "app/src/main/java/com/migraineme/EdgeFunctionsService.kt:2190"
     ],
     "max_len": 21,
+    "count": 1
+  },
+  {
+    "en": "1 day of risk scores checked",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:942"
+    ],
+    "max_len": 40,
     "count": 1
   },
   {
@@ -35387,24 +35405,6 @@
       "app/src/main/java/com/migraineme/OnboardingPages.kt:1074"
     ],
     "max_len": 198,
-    "count": 1
-  },
-  {
-    "en": "Your risk score checked on %s days",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:942"
-    ],
-    "max_len": 49,
-    "count": 1
-  },
-  {
-    "en": "Your risk score checked on 1 day",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:942"
-    ],
-    "max_len": 46,
     "count": 1
   },
   {
