@@ -575,25 +575,40 @@ fun QuickAddSymptomScreen(
                                         selected.forEach { label ->
                                             db.insertMigraineSymptom(token, migraineId, label, phase = "postdrome")
                                         }
+                                        // Postdromes added here happen now unless a time was picked.
+                                        selected.forEach { label ->
+                                            db.insertMigraineSymptom(
+                                                token, migraineId, label, phase = "postdrome",
+                                                severity = severities[label], startAt = times[label] ?: Instant.now().toString()
+                                            )
+                                        }
                                     } else {
-                                        // Active symptoms are never inserted directly: append to
-                                        // migraines.type and the sync trigger materialises the rows.
+                                        // Added from the journal or the in-progress card = it is
+                                        // happening now (or at the picked time), so every row gets a
+                                        // time. A symptom the attack already has is added AGAIN as a
+                                        // timed row (nausea on day 1 and again on day 5), which is how
+                                        // a long attack gets its per-day symptoms. A new one goes
+                                        // through migraines.type so the sync trigger materialises it,
+                                        // then gets its time and severity.
                                         val migraine = db.getMigraineById(token, migraineId)
                                         val existingTypes = migraine.type
                                             ?.split(", ")?.map { it.trim() }
                                             ?.filter { it.isNotBlank() && it != "Migraine" } ?: emptyList()
                                         val newSymptoms = selected.filter { s -> existingTypes.none { it.equals(s, ignoreCase = true) } }
+                                        val repeats = selected - newSymptoms.toSet()
                                         if (newSymptoms.isNotEmpty()) {
                                             db.updateMigraine(token, migraineId, type = (existingTypes + newSymptoms).joinToString(", "))
+                                            newSymptoms.forEach { label ->
+                                                runCatching {
+                                                    db.setSymptomDetail(token, migraineId, label, severities[label], times[label] ?: Instant.now().toString())
+                                                }
+                                            }
                                         }
-                                    }
-                                    // Severity/time land as an update after the rows exist,
-                                    // same contract as the wizard.
-                                    selected.forEach { label ->
-                                        val sev = severities[label]
-                                        val at = times[label]
-                                        if (sev != null || at != null) {
-                                            runCatching { db.setSymptomDetail(token, migraineId, label, sev, at) }
+                                        repeats.forEach { label ->
+                                            db.insertMigraineSymptom(
+                                                token, migraineId, label,
+                                                severity = severities[label], startAt = times[label] ?: Instant.now().toString()
+                                            )
                                         }
                                     }
                                 } catch (e: Exception) {

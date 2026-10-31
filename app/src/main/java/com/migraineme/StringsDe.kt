@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4950 entries.
+ * 4954 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1747,6 +1747,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "HRV tracking" to "HRV-Tracking",
     "HRV, pressure and sleep changes tracked alongside your attacks." to "HRV, Luftdruck und Schlaf — erfasst neben deinen Attacken.",
     "Habits that show up on migraine-free days, and what drives them" to "Gewohnheiten, die an migränefreien Tagen auftreten, und was dahintersteckt",
+    "Habits that show up on your calmer days" to "Gewohnheiten an deinen ruhigeren Tagen",
     "Habits that show up on your migraine-free days" to "Gewohnheiten an deinen migränefreien Tagen",
     "Half a day" to "Ein halber Tag",
     "Handheld device that paces your breathing and gives feedback as you go." to "Handgerät, das deine Atmung taktet und dir dabei laufend Rückmeldung gibt.",
@@ -2679,6 +2680,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Office" to "Büro",
     "Older" to "Älter",
     "Oldest" to "Älteste",
+    "On %s%% of your calmer days." to "An %s%% deiner ruhigeren Tage.",
     "On %s%% of your migraine-free days." to "An %s%% deiner migränefreien Tage.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Auf Android: Öffne MigraineMe, geh zum Upgrade-Bildschirm und gib den Code %1\$s ein.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Nur an guten Tagen. Du brauchst ein freies Stück Wand, ein Bett oder eine Matte und einen Tennisball für das Lösen am Ende.",
@@ -3018,11 +3020,11 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Read more" to "Mehr lesen",
     "Read-only, never written back" to "Nur lesen, nie zurückschreiben",
     "Reading" to "Lesen",
-    "Reading data from Health Connect..." to "Lese Daten aus Health Connect...",
-    "Reading your file…" to "Datei wird gelesen…",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Reading data from Health Connect..." to "Lese Daten aus Health Connect...",
+    "Reading your file…" to "Datei wird gelesen…",
     "Reading your history. This takes a minute for a big file." to "Dein Verlauf wird gelesen. Bei großen Dateien dauert das eine Minute.",
     "Rebound headache" to "Rebound-Kopfschmerz",
     "Recalculate from logged periods" to "Aus erfassten Perioden neu rechnen",
@@ -3238,6 +3240,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "See our Privacy Policy for details." to "Details im Datenschutz.",
     "See plans" to "Tarife ansehen",
     "See severity, pain locations & missed activities" to "Stärke, Schmerzorte und Verpasstes ansehen",
+    "See the habits behind your calmer days" to "Die Gewohnheiten hinter ruhigeren Tagen",
     "See the habits behind your migraine-free days" to "Die Gewohnheiten hinter migränefreien Tagen",
     "See weather conditions ahead of time" to "Wetterlage im Voraus sehen",
     "See what the risk gauge, insights and auto-tracking actually do." to "Sieh, was Risikoanzeige, Erkenntnisse und Auto-Erfassung wirklich tun.",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your months" to "Deine Monate",
     "Your most surprising trigger" to "Dein überraschendster Auslöser",
     "Your note" to "Deine Notiz",
-    "Your notes" to "Deine Notizen",
-    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Deine Übersicht erfasster Attacken. Die Karte zeigt drei Dinge nebeneinander: ",
-    "Your own pool" to "Dein eigener Pool",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your notes" to "Deine Notizen",
+    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Deine Übersicht erfasster Attacken. Die Karte zeigt drei Dinge nebeneinander: ",
+    "Your own pool" to "Dein eigener Pool",
     "Your password has been changed." to "Dein Passwort wurde geändert.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Dein persönlicher KI-Assistent mit Lesezugriff auf deine Gesundheitsdaten: Schlaf, HRV, Ruhepuls, Stress, Schritte, Wetter, Attacken, Auslöser, Prodrome, Medikamente, Linderung und Aura-Details. Frag ihn alles in normaler Sprache, er antwortet aus dem, was er wirklich in deinen Daten sieht, nicht mit allgemeinen Ratschlägen.\n\nFragen zu einer Therapie oder einem Medikament? Auch die kannst du hier stellen. Wir sehen in deine Daten und geben dir etwas zum Nachdenken mit.\n\nGute Fragen zum Ausprobieren: \"Was hat meine letzte Migräne ausgelöst?\", \"Wie war mein Schlaf zuletzt?\", \"Wirkt mein Notfallmedikament wirklich?\", \"Wo taucht meine Aura meistens auf?\", \"Gibt es vorbeugende Therapien, nach denen ich fragen sollte?\"\n\nZur Sicherheit: Der Assistent erkennt Muster und nennt Dinge zum Überlegen, aber er ist keine Ärztin und kein Arzt und kann nichts verordnen. Für echte Entscheidungen zur Behandlung sprich mit der Neurologie oder deiner Hausarztpraxis.",
     "Your personalised model" to "Dein eigenes Modell",
@@ -4773,6 +4776,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "not sure, please check" to "unsicher, bitte prüfen",
     "now" to "jetzt",
     "nutritional therapist" to "Ernährungstherapeutin",
+    "on %s%% of calmer days" to "an %s%% der ruhigeren Tage",
     "on %s%% of migraine-free days" to "an %s%% der migränefreien Tage",
     "on the same day" to "am selben Tag",
     "one place, one card each" to "ein Ort, eine Karte pro Bereich",

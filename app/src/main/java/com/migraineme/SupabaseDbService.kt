@@ -1200,11 +1200,18 @@ class SupabaseDbService(
         // 'postdrome' marks check-in after-symptoms; the DB's sync trigger only
         // manages phase='active' rows, so postdromes survive later type edits.
         phase: String = "active",
+        // A timed row may repeat a symptom the attack already has (nausea on
+        // day 1 and again on day 5 of a long attack); an untimed one is still
+        // one per attack.
+        severity: String? = null,
+        startAt: String? = null,
     ) {
         val payload = buildJsonObject {
             put("migraine_id", migraineId)
             put("type", type)
             put("phase", phase)
+            if (severity != null) put("severity", severity)
+            if (startAt != null) put("start_at", startAt)
         }
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)

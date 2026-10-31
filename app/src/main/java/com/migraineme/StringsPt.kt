@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4950 entries.
+ * 4954 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -1747,6 +1747,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "HRV tracking" to "registo da VFC",
     "HRV, pressure and sleep changes tracked alongside your attacks." to "VFC, pressão e sono acompanhados a par das tuas crises.",
     "Habits that show up on migraine-free days, and what drives them" to "Hábitos dos dias sem crise e o que os explica",
+    "Habits that show up on your calmer days" to "Hábitos nos teus dias mais calmos",
     "Habits that show up on your migraine-free days" to "Hábitos dos teus dias sem enxaqueca",
     "Half a day" to "Meio dia",
     "Handheld device that paces your breathing and gives feedback as you go." to "Aparelho de mão que marca o ritmo da respiração e dá resposta enquanto usas.",
@@ -2679,6 +2680,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Office" to "Escritório",
     "Older" to "Mais antigo",
     "Oldest" to "Antigos",
+    "On %s%% of your calmer days." to "Em %s%% dos teus dias mais calmos.",
     "On %s%% of your migraine-free days." to "Em %s%% dos teus dias sem crise.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "No Android: abre o MigraineMe, vai ao ecrã de upgrade e introduz o código %1\$s.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Só nos dias bons. Precisas de um bocado de parede livre, de uma cama ou um tapete, e de uma bola de ténis para soltar no fim.",
@@ -3018,11 +3020,11 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Read more" to "Ler mais",
     "Read-only, never written back" to "Só leitura, nunca escrevemos",
     "Reading" to "Ler",
-    "Reading data from Health Connect..." to "A ler dados do Health Connect...",
-    "Reading your file…" to "A ler o ficheiro…",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Reading data from Health Connect..." to "A ler dados do Health Connect...",
+    "Reading your file…" to "A ler o ficheiro…",
     "Reading your history. This takes a minute for a big file." to "A ler o seu histórico. Um ficheiro grande demora um minuto.",
     "Rebound headache" to "Cefaleia de rebote",
     "Recalculate from logged periods" to "Recalcular pelas menstruações",
@@ -3238,6 +3240,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "See our Privacy Policy for details." to "Mais em Privacidade.",
     "See plans" to "Ver planos",
     "See severity, pain locations & missed activities" to "Força, zonas de dor e o que perdeste",
+    "See the habits behind your calmer days" to "Os hábitos por trás dos teus dias mais calmos",
     "See the habits behind your migraine-free days" to "Os hábitos dos dias sem enxaqueca",
     "See weather conditions ahead of time" to "Vê o tempo com antecedência",
     "See what the risk gauge, insights and auto-tracking actually do." to "Vê o que o medidor de risco, as ideias e o registo automático fazem de facto.",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your months" to "Os teus meses",
     "Your most surprising trigger" to "O teu fator mais inesperado",
     "Your note" to "A sua nota",
-    "Your notes" to "As tuas notas",
-    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "O teu resumo das crises registadas. O cartão mostra três coisas lado a lado: ",
-    "Your own pool" to "O teu pool",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your notes" to "As tuas notas",
+    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "O teu resumo das crises registadas. O cartão mostra três coisas lado a lado: ",
+    "Your own pool" to "O teu pool",
     "Your password has been changed." to "A tua chave foi mudada.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "O teu assistente de IA pessoal, com acesso de leitura aos teus dados de saúde: sono, HRV, pulso em repouso, stress, passos, tempo, crises, fatores, pródromos, medicamentos, alívios e detalhe da aura. Pergunta-lhe o que quiseres por palavras tuas: responde a partir do que vê mesmo nos teus dados, não com conselhos genéricos.\n\nDúvidas sobre um tratamento ou um medicamento? Também podes perguntar aqui. Vemos os teus dados e damos-te algo em que pensar.\n\nBoas perguntas para experimentar: \"O que despoletou a minha última enxaqueca?\", \"Como tenho dormido ultimamente?\", \"A minha medicação de recurso resulta mesmo?\", \"Onde costuma aparecer a minha aura?\", \"Há tratamentos preventivos que deva perguntar?\"\n\nAtenção: o assistente vê padrões e sugere coisas a considerar, mas não é médico e não pode receitar. Para decisões a sério sobre tratamento, fala em neurologia ou com o teu médico de família.",
     "Your personalised model" to "O teu modelo pessoal",
@@ -4773,6 +4776,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "not sure, please check" to "não é certo, verifique",
     "now" to "agora",
     "nutritional therapist" to "terapeuta nutricional",
+    "on %s%% of calmer days" to "em %s%% dos dias mais calmos",
     "on %s%% of migraine-free days" to "em %s%% dos dias sem enxaqueca",
     "on the same day" to "no mesmo dia",
     "one place, one card each" to "um só lugar, um cartão para cada",

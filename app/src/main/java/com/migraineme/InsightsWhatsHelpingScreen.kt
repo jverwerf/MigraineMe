@@ -91,7 +91,10 @@ fun InsightsWhatsHelpingScreen(
                                     Column {
                                         Text(t("Well Done"), color = AppTheme.TitleColor,
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                        Text(t("Habits that show up on your migraine-free days"),
+                                        // Chronic rows read against the calm days inside a long
+                                        // attack, so "migraine-free" would be wrong for them.
+                                        Text(if (wellDone.any { it.isChronic }) t("Habits that show up on your calmer days")
+                                             else t("Habits that show up on your migraine-free days"),
                                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -177,7 +180,8 @@ internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             ConfidenceDotsGreen(stat.pValue)
         }
-        Text(t("On %s%% of your migraine-free days.", stat.pctControlWindows.toInt()),
+        Text(if (stat.isChronic) t("On %s%% of your calmer days.", stat.pctControlWindows.toInt())
+             else t("On %s%% of your migraine-free days.", stat.pctControlWindows.toInt()),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }

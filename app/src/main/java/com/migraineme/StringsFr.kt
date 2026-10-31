@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4950 entries.
+ * 4954 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -1747,6 +1747,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "HRV tracking" to "suivi de la VFC",
     "HRV, pressure and sleep changes tracked alongside your attacks." to "VFC, pression et sommeil suivis en parallèle de tes crises.",
     "Habits that show up on migraine-free days, and what drives them" to "Les habitudes des jours sans migraine, et ce qui les porte",
+    "Habits that show up on your calmer days" to "Habitudes présentes tes jours plus calmes",
     "Habits that show up on your migraine-free days" to "Habitudes de tes jours sans migraine",
     "Half a day" to "Une demi-j.",
     "Handheld device that paces your breathing and gives feedback as you go." to "Appareil de poche qui rythme ta respiration et te renvoie un retour en direct.",
@@ -2679,6 +2680,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Office" to "Bureau",
     "Older" to "Plus ancien",
     "Oldest" to "Anciens",
+    "On %s%% of your calmer days." to "Sur %s%% de tes jours plus calmes.",
     "On %s%% of your migraine-free days." to "Sur %s%% de tes jours sans migraine.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Sur Android : ouvre MigraineMe, va sur l'écran d'abonnement et saisis le code %1\$s.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Seulement les bons jours. Il te faut un bout de mur dégagé, un lit ou un tapis, et une balle de tennis pour le relâchement à la fin.",
@@ -3018,11 +3020,11 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Read more" to "Lire la suite",
     "Read-only, never written back" to "Lecture seule, jamais d'écriture",
     "Reading" to "Lecture",
-    "Reading data from Health Connect..." to "Lecture des données Health Connect...",
-    "Reading your file…" to "Lecture du fichier…",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Reading data from Health Connect..." to "Lecture des données Health Connect...",
+    "Reading your file…" to "Lecture du fichier…",
     "Reading your history. This takes a minute for a big file." to "Lecture de votre historique. Un gros fichier prend une minute.",
     "Rebound headache" to "Céphalée de rebond",
     "Recalculate from logged periods" to "Recalculer d'après tes règles",
@@ -3238,6 +3240,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "See our Privacy Policy for details." to "Détails dans Confidentialité.",
     "See plans" to "Voir les plans",
     "See severity, pain locations & missed activities" to "Intensité, zones et activités manquées",
+    "See the habits behind your calmer days" to "Les habitudes derrière tes jours plus calmes",
     "See the habits behind your migraine-free days" to "Les habitudes de tes jours sans migraine",
     "See weather conditions ahead of time" to "Vois la météo à l'avance",
     "See what the risk gauge, insights and auto-tracking actually do." to "Vois ce que font vraiment la jauge de risque, les analyses et le suivi auto.",
@@ -4520,12 +4523,12 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your months" to "Tes mois",
     "Your most surprising trigger" to "Ton facteur le plus surprenant",
     "Your note" to "Votre note",
-    "Your notes" to "Tes notes",
-    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Ton aperçu des crises notées. La carte montre trois choses côte à côte : ",
-    "Your own pool" to "Ton propre pool",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Your notes" to "Tes notes",
+    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Ton aperçu des crises notées. La carte montre trois choses côte à côte : ",
+    "Your own pool" to "Ton propre pool",
     "Your password has been changed." to "Ton mot de passe a été changé.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Ton assistant IA personnel, avec accès en lecture à tes données de santé : sommeil, HRV, pouls au repos, stress, pas, météo, crises, facteurs, prodromes, médicaments, soulagements et détail de l'aura. Pose-lui n'importe quoi avec tes mots ; il répond à partir de ce qu'il voit vraiment dans tes données, pas avec des conseils tout faits.\n\nUne question sur un traitement ou un médicament ? Tu peux la poser ici aussi. Nous regardons tes données et te donnons de quoi réfléchir.\n\nDe bonnes questions à essayer : \"Qu'est-ce qui a déclenché ma dernière migraine ?\", \"Comment j'ai dormi ces derniers temps ?\", \"Mon traitement de crise marche-t-il vraiment ?\", \"Où mon aura apparaît-elle d'habitude ?\", \"Y a-t-il des traitements de fond à demander ?\"\n\nÀ savoir : l'assistant repère des tendances et propose des pistes, mais ce n'est pas un médecin et il ne peut rien prescrire. Pour les vraies décisions de traitement, parle à ton neurologue ou à ton médecin traitant.",
     "Your personalised model" to "Ton modèle perso",
@@ -4773,6 +4776,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "not sure, please check" to "pas sûr, à vérifier",
     "now" to "maintenant",
     "nutritional therapist" to "thérapeute nutritionnel",
+    "on %s%% of calmer days" to "sur %s%% des jours plus calmes",
     "on %s%% of migraine-free days" to "sur %s%% des jours sans migraine",
     "on the same day" to "le même jour",
     "one place, one card each" to "un seul endroit, une carte chacun",

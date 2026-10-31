@@ -634,7 +634,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 tSync("steadier %s", (it.factorB ?: "").lowercase()))
                         else
                             CardPreviewEntry(it.factorName,
-                                tSync("on %s%% of migraine-free days", it.pctControlWindows.toInt()))
+                                if (it.isChronic) tSync("on %s%% of calmer days", it.pctControlWindows.toInt())
+                                else tSync("on %s%% of migraine-free days", it.pctControlWindows.toInt()))
                     },
                     totalCount = pool.size
                 )
@@ -1100,13 +1101,15 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 var showWhatsHelpingInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = t("Unlock What Strengthens You"),
-                    subtitle = t("See the habits behind your migraine-free days"),
+                    subtitle = if (helpingPool.any { it.isChronic }) t("See the habits behind your calmer days")
+                               else t("See the habits behind your migraine-free days"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
                             title = t("What Strengthens You"),
-                            description = t("Habits that show up on your migraine-free days"),
+                            description = if (helpingPool.any { it.isChronic }) t("Habits that show up on your calmer days")
+                                          else t("Habits that show up on your migraine-free days"),
                             resId = R.drawable.brainy_gardener,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) },

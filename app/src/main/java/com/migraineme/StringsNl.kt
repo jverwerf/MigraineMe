@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4950 entries.
+ * 4954 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1747,6 +1747,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "HRV tracking" to "HRV bijhouden",
     "HRV, pressure and sleep changes tracked alongside your attacks." to "HRV, luchtdruk en slaap — bijgehouden naast je aanvallen.",
     "Habits that show up on migraine-free days, and what drives them" to "Gewoonten van migrainevrije dagen, en wat erachter zit",
+    "Habits that show up on your calmer days" to "Gewoonten op je rustigere dagen",
     "Habits that show up on your migraine-free days" to "Gewoonten op je migrainevrije dagen",
     "Half a day" to "Halve dag",
     "Handheld device that paces your breathing and gives feedback as you go." to "Handapparaat dat je ademhaling het tempo geeft en meteen feedback geeft.",
@@ -2679,6 +2680,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Office" to "Kantoor",
     "Older" to "Ouder",
     "Oldest" to "Oudste",
+    "On %s%% of your calmer days." to "Op %s%% van je rustigere dagen.",
     "On %s%% of your migraine-free days." to "Op %s%% van je migrainevrije dagen.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Op Android: open MigraineMe, ga naar het upgradescherm en voer de code %1\$s in.",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Alleen op goede dagen. Je hebt een vrij stuk muur nodig, een bed of een mat, en een tennisbal voor het loslaten aan het eind.",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Read more" to "Lees meer",
     "Read-only, never written back" to "Alleen lezen, nooit terugschrijven",
     "Reading" to "Lezen",
-    "Reading data from Health Connect..." to "Data lezen uit Health Connect...",
-    "Reading your file…" to "Bestand lezen…",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Reading data from Health Connect..." to "Data lezen uit Health Connect...",
+    "Reading your file…" to "Bestand lezen…",
     "Reading your history. This takes a minute for a big file." to "Je geschiedenis wordt gelezen. Bij een groot bestand duurt dit een minuut.",
     "Rebound headache" to "Rebound-hoofdpijn",
     "Recalculate from logged periods" to "Herbereken uit je menstruaties",
@@ -3238,6 +3240,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "See our Privacy Policy for details." to "Meer bij Privacy.",
     "See plans" to "Bekijk plannen",
     "See severity, pain locations & missed activities" to "Zwaarte, pijnplekken en wat je miste",
+    "See the habits behind your calmer days" to "De gewoonten achter je rustigere dagen",
     "See the habits behind your migraine-free days" to "De gewoonten achter je migrainevrije dagen",
     "See weather conditions ahead of time" to "Zie het weer van tevoren",
     "See what the risk gauge, insights and auto-tracking actually do." to "Zie wat de risicometer, inzichten en automatisch bijhouden echt doen.",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your months" to "Jouw maanden",
     "Your most surprising trigger" to "Je meest verrassende trigger",
     "Your note" to "Je notitie",
-    "Your notes" to "Je notities",
-    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Je overzicht van genoteerde aanvallen. De kaart toont drie dingen naast elkaar: ",
-    "Your own pool" to "Je eigen pool",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your notes" to "Je notities",
+    "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Je overzicht van genoteerde aanvallen. De kaart toont drie dingen naast elkaar: ",
+    "Your own pool" to "Je eigen pool",
     "Your password has been changed." to "Je wachtwoord is gewijzigd.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Je eigen AI-assistent met leestoegang tot je gezondheidsgegevens: slaap, HRV, rusthartslag, stress, stappen, weer, aanvallen, triggers, prodromen, medicijnen, verlichting en auradetails. Vraag hem alles in gewone taal; hij antwoordt vanuit wat hij echt in je gegevens ziet, niet met algemeen advies.\n\nVragen over een behandeling of medicijn? Die kun je hier ook stellen. Wij kijken in je gegevens en geven je iets om over na te denken.\n\nGoede vragen om te proberen: \"Wat lokte mijn laatste migraine uit?\", \"Hoe sliep ik de laatste tijd?\", \"Werkt mijn noodmedicatie echt?\", \"Waar zit mijn aura meestal?\", \"Zijn er preventieve behandelingen waar ik naar zou moeten vragen?\"\n\nLet op: de assistent ziet patronen en noemt dingen om te overwegen, maar hij is geen arts en kan niets voorschrijven. Voor echte keuzes over behandeling ga je naar je neuroloog of huisarts.",
     "Your personalised model" to "Je eigen model",
@@ -4773,6 +4776,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "not sure, please check" to "niet zeker, controleer",
     "now" to "nu",
     "nutritional therapist" to "voedingstherapeut",
+    "on %s%% of calmer days" to "op %s%% van de rustigere dagen",
     "on %s%% of migraine-free days" to "op %s%% van de migrainevrije dagen",
     "on the same day" to "op dezelfde dag",
     "one place, one card each" to "één plek, één kaart per onderdeel",
