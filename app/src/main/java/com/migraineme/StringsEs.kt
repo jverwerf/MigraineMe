@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4984 entries.
+ * 4988 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -540,6 +540,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Aged foods" to "Curados",
     "Aged or smoked fish" to "Pescado curado/ahumado",
     "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack." to "Va dirigido al estrés y la recuperación, que para mucha gente son el detonante más que el ataque en sí.",
+    "Air Quality" to "Calidad del aire",
     "Air quality" to "Calidad del aire",
     "Air quality poor" to "Aire contaminado",
     "Air quality warning" to "Aviso de calidad del aire",
@@ -829,6 +830,8 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Sin blog",
     "Blogs" to "Blogs",
+    "Blood Glucose" to "Glucemia",
+    "Blood Pressure" to "Presión arterial",
     "Blood glucose" to "Glucemia",
     "Blood glucose high" to "Glucosa alta",
     "Blood glucose low" to "Glucosa baja",
@@ -1007,6 +1010,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Cluster" to "Cluster",
     "Cluster headache" to "Cefalea en racimos",
     "CoQ10" to "CoQ10",
+    "Coarse Dust" to "Polvo grueso",
     "Coarse dust high" to "Polvo grueso alto",
     "Codeine" to "Codeína",
     "Cognitive" to "Mental",
@@ -1513,13 +1517,13 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Exercise sets one off" to "El ejercicio la causa",
     "Exercises" to "Ejercicios",
     "Exercising" to "Hacer ejercicio",
+)
+
+private fun esStrings1(): Map<String, String> = mapOf(
     "Exertional headache" to "Cefalea por esfuerzo",
     "Exit tour" to "Salir del tour",
     "Expand" to "Desplegar",
     "Expired" to "Caducado",
-)
-
-private fun esStrings1(): Map<String, String> = mapOf(
     "Expires in %1\$s:%2\$s" to "Caduca en %1\$s:%2\$s",
     "Explore Migraines" to "Explorar",
     "External" to "Externo",
@@ -3016,13 +3020,13 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Quick Log" to "Rápido",
     "Quick Log Medicine" to "Rápido: medicina",
     "Quick Log Relief" to "Rápido: alivio",
+)
+
+private fun esStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Rápido: factor",
     "Quick Migraine" to "Migraña ágil",
     "Quick log" to "Rápido",
     "Quiet" to "Silencioso",
-)
-
-private fun esStrings2(): Map<String, String> = mapOf(
     "Quiet days" to "Días buenos",
     "Quiet environment" to "Entorno tranquilo",
     "RECOMMENDED" to "RECOMENDADO",
@@ -4519,13 +4523,13 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Tus datos se guardan de forma segura y solo sirven para analizar tus patrones. Nunca los compartimos con terceros.",
     "Your data is yours, and it stays that way." to "Tus datos son tuyos, y así seguirá siendo.",
     "Your data suggests adjusting these triggers" to "Tus datos piden ajustar estos factores",
+)
+
+private fun esStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Tus datos, ligados a tu cuenta. Privados de principio a fin.",
     "Your exercises" to "Tus ejercicios",
     "Your free trial ends tomorrow" to "Tu prueba acaba mañana",
     "Your free trial just ended" to "Tu prueba gratis acaba de terminar",
-)
-
-private fun esStrings3(): Map<String, String> = mapOf(
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Tu lista completa de medicinas. Todo lo que puedas anotar con el asistente, el Registro rápido o el Repaso diario vive aquí, ordenado por categoría (Analgésico, Antinauseoso, CGRP, Preventivo, Suplemento, Triptán, Otro).\n\nPara cada medicina:\n• Toca la estrella para fijarla como favorita. Las favoritas salen primero en el Registro rápido, así tus medicinas más usadas están a un toque.\n• Toca la fila para cambiar su categoría. La categoría es lo que usan los consejos de la IA para avisar del riesgo de abuso (por ejemplo tomar un triptán más de 10 días al mes, o analgésicos a diario). Si no es la correcta, el aviso no saltará.\n• Toca la papelera para quitar una medicina del todo. Los registros pasados con ella no cambian.\n\nUsa el botón + para añadir lo que sea propio de tu rutina (una marca, un compuesto, una vitamina). Lo que añadas entra en tu lista y aparece en el asistente y en el Registro rápido al momento.\n\nLas medicinas no tienen peso de fuerza porque no suben tu cubo; la pantalla de Hallazgos puntúa aparte cómo funciona cada una en la tarjeta Qué funcionó.",
     "Your full migraine profile, AI-configured in under a minute." to "Tu perfil de migraña completo, configurado por IA en menos de un minuto.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Tu lista completa de pródromos. Los pródromos son las señales tempranas que saltan 6-48 horas antes del ataque: bostezos, cuello rígido, antojos, cambios de ánimo, cansancio, visión borrosa, orinar más, más sed, sensibilidad a luz o sonido.\n\nPara cada pródromo:\n• Toca la fila para desplegarla. Pon la gravedad (ALTA / MEDIA / BAJA / NINGUNA). A diferencia de los factores, que «causan» ataques, un pródromo significa que el ataque ya viene, así que anotarlo sube tu cubo como un factor nuevo. Los de peso ALTO disparan el indicador de forma notable.\n• Márcalo con estrella para fijarlo arriba del registro ágil.\n• Toca la papelera para sacarlo de tu lista.\n\nUsa el + para añadir lo que hayas notado en tus propias señales. Los pródromos personales (p. ej. «despierto del todo a las 3», «irritable sin motivo») suelen ser los que mejor predicen.\n\nAnótalos en cuanto los veas. La tarjeta «Qué pasó» de Hallazgos usa tu historial para puntuar qué señales predicen bien tus ataques, así que con el tiempo la app aprende cuáles pesar más en tu caso.",

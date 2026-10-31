@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4984 entries.
+ * 4988 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -540,6 +540,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Aged foods" to "Affinés",
     "Aged or smoked fish" to "Poisson fumé ou mariné",
     "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack." to "Cible le stress et la récupération, qui pour beaucoup sont le déclencheur plutôt que la crise.",
+    "Air Quality" to "Qualité de l'air",
     "Air quality" to "Qualité de l'air",
     "Air quality poor" to "Air pollué",
     "Air quality warning" to "Alerte qualité de l'air",
@@ -829,6 +830,8 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Introuvable",
     "Blogs" to "Blogs",
+    "Blood Glucose" to "Glycémie",
+    "Blood Pressure" to "Tension",
     "Blood glucose" to "Glycémie",
     "Blood glucose high" to "Glycémie élevée",
     "Blood glucose low" to "Glycémie basse",
@@ -1007,6 +1010,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Cluster" to "Cluster",
     "Cluster headache" to "Céphalée en grappe",
     "CoQ10" to "CoQ10",
+    "Coarse Dust" to "Poussières",
     "Coarse dust high" to "Poussière élevée",
     "Codeine" to "Codéine",
     "Cognitive" to "Mental",
@@ -1513,13 +1517,13 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Exercise sets one off" to "Le sport déclenche",
     "Exercises" to "Exercices",
     "Exercising" to "Faire de l'exercice",
+)
+
+private fun frStrings1(): Map<String, String> = mapOf(
     "Exertional headache" to "Céphalée d'effort",
     "Exit tour" to "Quitter la visite",
     "Expand" to "Déplier",
     "Expired" to "Expiré",
-)
-
-private fun frStrings1(): Map<String, String> = mapOf(
     "Expires in %1\$s:%2\$s" to "Expire dans %1\$s:%2\$s",
     "Explore Migraines" to "Explorer",
     "External" to "Externe",
@@ -3016,13 +3020,13 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Quick Log" to "Rapide",
     "Quick Log Medicine" to "Rapide : médicament",
     "Quick Log Relief" to "Rapide : soulag.",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Rapide : facteur",
     "Quick Migraine" to "Migraine rapide",
     "Quick log" to "Rapide",
     "Quiet" to "Calme",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Quiet days" to "Jours calmes",
     "Quiet environment" to "Environnement calme",
     "RECOMMENDED" to "RECOMMANDÉ",
@@ -4519,13 +4523,13 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Tes données sont stockées en sécurité et servent seulement à analyser tes tendances. Nous ne les partageons jamais.",
     "Your data is yours, and it stays that way." to "Tes données t'appartiennent, et ça ne changera pas.",
     "Your data suggests adjusting these triggers" to "Tes données invitent à ajuster ces facteurs",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Tes données, liées à ton compte. Privées de bout en bout.",
     "Your exercises" to "Tes exercices",
     "Your free trial ends tomorrow" to "Ton essai se termine demain",
     "Your free trial just ended" to "Ton essai gratuit vient de finir",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Ta liste complète de médicaments. Tout ce que tu peux noter via l'assistant, la saisie rapide ou le point du jour se trouve ici, rangé par catégorie (Antalgique, Anti-nausée, CGRP, Préventif, Complément, Triptan, Autre).\n\nPour chaque médicament :\n• Touche l'étoile pour l'épingler en favori. Les favoris arrivent en premier dans la saisie rapide, tes médicaments les plus utilisés sont à un geste.\n• Touche la ligne pour changer sa catégorie. C'est la catégorie qu'utilisent les conseils IA pour signaler un risque de surconsommation (ex. un triptan plus de 10 jours par mois, ou un antalgique tous les jours). Mets la bonne, sinon l'alerte ne partira pas.\n• Touche la corbeille pour retirer complètement un médicament. Les saisies passées restent intactes.\n\nUtilise le bouton + pour ajouter ce qui t'est propre (une marque, une préparation, une vitamine). Les éléments perso entrent directement dans ta liste et apparaissent aussitôt dans l'assistant et la saisie rapide.\n\nIl n'y a pas de poids d'intensité sur les médicaments, car ils ne font pas monter ton seau ; l'écran Analyses note séparément à quel point chacun marche pour toi, via la carte Ce qui a aidé.",
     "Your full migraine profile, AI-configured in under a minute." to "Ton profil migraine complet, configuré par l'IA en moins d'une minute.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Ton pool complet de prodromes. Les prodromes sont les signes précoces qui apparaissent 6 à 48 heures avant une crise : bâillements, nuque raide, fringales, bascules d'humeur, fatigue, vision floue, envies fréquentes d'uriner, soif accrue, sensibilité à la lumière ou au bruit.\n\nPour chaque prodrome :\n• Touche la ligne pour la déplier. Règle la gravité (ÉLEVÉE / MOYENNE / FAIBLE / AUCUNE). Contrairement aux facteurs qui « causent » les crises, un prodrome signifie qu'une crise est déjà en route, donc le noter fait monter ton seau comme un facteur frais. Les prodromes en ÉLEVÉ font clairement bouger ta jauge.\n• Mets une étoile pour l'épingler en haut de la saisie rapide.\n• Touche la corbeille pour le retirer du pool.\n\nUtilise le + pour ajouter ce que tu remarques de spécifique chez toi. Les prodromes personnels (p. ex. « bien réveillé à 3 h », « irritable sans raison ») sont souvent les meilleurs prédicteurs.\n\nNote-les dès que tu en repères un. La carte Analyses « Ce qui s'est passé » se sert de ton historique pour noter quels signes prédisent vraiment tes crises, et l'app apprend avec le temps lesquels peser le plus pour toi.",

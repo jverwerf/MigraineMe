@@ -413,6 +413,7 @@ object MetricRegistry {
         "phone_dark_mode_daily" to "Dark Mode",
         "screen_time_daily" to "Screen Time",
         "ambient_noise_index_daily" to "Noise",
+        "user_weather_daily::pm2_5_mean" to "Air Quality",
         // Nutrition B-vitamin display names
         "nutrition_daily::total_thiamin_mg" to "Thiamin (B1)",
         "nutrition_daily::total_riboflavin_mg" to "Riboflavin (B2)",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4984 entries.
+ * 4988 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -540,6 +540,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Aged foods" to "Gereiftes",
     "Aged or smoked fish" to "Gereifter/Räucherfisch",
     "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack." to "Zielt auf Stress und Erholung, bei vielen der eigentliche Auslöser, nicht die Attacke.",
+    "Air Quality" to "Luftqualität",
     "Air quality" to "Luftqualität",
     "Air quality poor" to "Schlechte Luft",
     "Air quality warning" to "Luftqualitätswarnung",
@@ -829,6 +830,8 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Blog fehlt",
     "Blogs" to "Blogs",
+    "Blood Glucose" to "Blutzucker",
+    "Blood Pressure" to "Blutdruck",
     "Blood glucose" to "Blutzucker",
     "Blood glucose high" to "Blutzucker hoch",
     "Blood glucose low" to "Blutzucker niedrig",
@@ -1007,6 +1010,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Cluster" to "Cluster",
     "Cluster headache" to "Clusterkopfschmerz",
     "CoQ10" to "CoQ10",
+    "Coarse Dust" to "Grobstaub",
     "Coarse dust high" to "Grobstaub hoch",
     "Codeine" to "Codein",
     "Cognitive" to "Kognitiv",
@@ -1513,13 +1517,13 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Exercise sets one off" to "Sport löst aus",
     "Exercises" to "Übungen",
     "Exercising" to "Training",
+)
+
+private fun deStrings1(): Map<String, String> = mapOf(
     "Exertional headache" to "Anstrengungskopfschmerz",
     "Exit tour" to "Tour beenden",
     "Expand" to "Aufklappen",
     "Expired" to "Abgelaufen",
-)
-
-private fun deStrings1(): Map<String, String> = mapOf(
     "Expires in %1\$s:%2\$s" to "Läuft ab in %1\$s:%2\$s",
     "Explore Migraines" to "Migräne erkunden",
     "External" to "Extern",
@@ -3016,13 +3020,13 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Quick Log" to "Schnell",
     "Quick Log Medicine" to "Schnell: Medikament",
     "Quick Log Relief" to "Schnell: Linderung",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Schnell: Auslöser",
     "Quick Migraine" to "Migräne schnell",
     "Quick log" to "Schnell",
     "Quiet" to "Leise",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Quiet days" to "Ruhige Tage",
     "Quiet environment" to "Ruhige Umgebung",
     "RECOMMENDED" to "EMPFOHLEN",
@@ -4519,13 +4523,13 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Deine Daten liegen sicher und dienen nur der Analyse deiner Muster. Wir geben sie nie an Dritte weiter.",
     "Your data is yours, and it stays that way." to "Deine Daten gehören dir, und das bleibt auch so.",
     "Your data suggests adjusting these triggers" to "Deine Daten sprechen für diese Anpassungen",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Deine Daten, an dein Konto gebunden. Durchgehend privat.",
     "Your exercises" to "Deine Übungen",
     "Your free trial ends tomorrow" to "Testphase endet morgen",
     "Your free trial just ended" to "Deine Testphase ist gerade abgelaufen",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Deine volle Medikamentenliste. Alles, was du über den Assistenten, Quick Log oder den Tages-Check erfassen könntest, liegt hier, sortiert nach Kategorie (Schmerzmittel, Mittel gegen Übelkeit, CGRP, Vorbeugung, Präparat, Triptan, Sonstiges).\n\nFür jedes Medikament:\n• Tippe den Stern an, um es als Favorit anzuheften. Favoriten stehen in Quick Log oben, deine meistgenutzten sind so einen Tipp entfernt.\n• Tippe die Zeile an, um die Kategorie zu ändern. Die Kategorie nutzen die KI-Empfehlungen, um Übergebrauch zu erkennen (z. B. ein Triptan an mehr als 10 Tagen im Monat oder tägliche Schmerzmittel). Stimmt sie nicht, greift die Warnung nicht.\n• Tippe den Papierkorb an, um ein Medikament ganz zu entfernen. Frühere Einträge bleiben unberührt.\n\nMit dem +-Knopf fügst du hinzu, was zu dir gehört (ein Markenname, ein Präparat, ein Vitamin). Eigene Einträge landen sofort in deiner Liste und erscheinen im Assistenten und in Quick Log.\n\nMedikamente haben keine Gewichtung, weil sie deinen Eimer nicht füllen; die Erkenntnisse bewerten über die Karte 'Was half' getrennt, wie gut jedes bei dir wirkt.",
     "Your full migraine profile, AI-configured in under a minute." to "Dein komplettes Migräneprofil, per KI in unter einer Minute eingerichtet.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Dein voller Prodrom-Pool. Prodrome sind die frühen Warnzeichen 6-48 Stunden vor einer Attacke: Gähnen, steifer Nacken, Heißhunger, Stimmungswechsel, Müdigkeit, verschwommenes Sehen, häufiges Wasserlassen, mehr Durst, Licht- oder Lärmempfindlichkeit.\n\nFür jedes Prodrom:\n• Tippe die Zeile zum Aufklappen. Setze die Stärke (HOCH / MITTEL / NIEDRIG / KEINE). Anders als Auslöser, die Attacken „verursachen“, heißen Prodrome, dass eine Attacke schon unterwegs ist, deshalb hebt ein erfasstes Prodrom deinen Eimer wie ein frischer Auslöser. HOCH gewichtete Prodrome heben deine Anzeige spürbar.\n• Setze einen Stern, um es oben im Schnell-Log zu halten.\n• Tippe den Papierkorb, um es aus dem Pool zu nehmen.\n\nMit + fügst du hinzu, was dir an eigenen Vorzeichen aufgefallen ist. Persönliche Prodrome (z. B. „um 3 Uhr hellwach“, „grundlos gereizt“) sind oft die verlässlichsten Vorboten.\n\nErfasse sie, sobald du eines bemerkst. Die Insights-Karte „Was ist passiert“ bewertet anhand deines Verlaufs, welche Zeichen deine Attacken zuverlässig vorhersagen, sodass die App mit der Zeit lernt, welche bei dir am stärksten zählen.",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4984 entries.
+ * 4988 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -540,6 +540,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Aged foods" to "Gerijpt eten",
     "Aged or smoked fish" to "Rijpe of gerookte vis",
     "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack." to "Richt zich op stress en herstel, wat voor veel mensen eerder de trigger is dan de aanval zelf.",
+    "Air Quality" to "Luchtkwaliteit",
     "Air quality" to "Luchtkwaliteit",
     "Air quality poor" to "Slechte lucht",
     "Air quality warning" to "Luchtkwaliteitswaarschuwing",
@@ -829,6 +830,8 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blog",
     "Blog not found" to "Niet gevonden",
     "Blogs" to "Blogs",
+    "Blood Glucose" to "Bloedsuiker",
+    "Blood Pressure" to "Bloeddruk",
     "Blood glucose" to "Bloedsuiker",
     "Blood glucose high" to "Bloedsuiker hoog",
     "Blood glucose low" to "Bloedsuiker laag",
@@ -1007,6 +1010,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Cluster" to "Cluster",
     "Cluster headache" to "Clusterhoofdpijn",
     "CoQ10" to "CoQ10",
+    "Coarse Dust" to "Grof stof",
     "Coarse dust high" to "Grof stof hoog",
     "Codeine" to "Codeïne",
     "Cognitive" to "Geestelijk",
@@ -1513,13 +1517,13 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Exercise sets one off" to "Sporten triggert",
     "Exercises" to "Oefeningen",
     "Exercising" to "Sporten",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Exertional headache" to "Inspanningshoofdpijn",
     "Exit tour" to "Tour sluiten",
     "Expand" to "Uitklappen",
     "Expired" to "Verlopen",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Expires in %1\$s:%2\$s" to "Verloopt in %1\$s:%2\$s",
     "Explore Migraines" to "Verkennen",
     "External" to "Extern",
@@ -3016,13 +3020,13 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Quick Log" to "Snel",
     "Quick Log Medicine" to "Snel: medicijn",
     "Quick Log Relief" to "Snel: verlichting",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Snel: trigger",
     "Quick Migraine" to "Snelle migraine",
     "Quick log" to "Snel",
     "Quiet" to "Stil",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Quiet days" to "Rustige dagen",
     "Quiet environment" to "Rustige omgeving",
     "RECOMMENDED" to "AANBEVOLEN",
@@ -4519,13 +4523,13 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Je gegevens staan veilig en dienen alleen om je patronen te bekijken. We delen ze nooit met anderen.",
     "Your data is yours, and it stays that way." to "Je gegevens zijn van jou, en dat blijft zo.",
     "Your data suggests adjusting these triggers" to "Je gegevens vragen om deze aanpassingen",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Jouw data, gekoppeld aan je account. Volledig privé.",
     "Your exercises" to "Je oefeningen",
     "Your free trial ends tomorrow" to "Je proefperiode stopt morgen",
     "Your free trial just ended" to "Je proefperiode is net afgelopen",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Je volledige lijst met medicijnen. Alles wat je via de wizard, Snel of de Dagcheck kunt noteren staat hier, geordend per categorie (pijnstiller, tegen misselijkheid, CGRP, preventief, supplement, triptaan, overig).\n\nPer medicijn:\n• Tik op de ster om het favoriet te maken. Favorieten staan vooraan bij Snel, zodat je meest gebruikte middelen één tik weg zijn.\n• Tik op de regel om de categorie te wijzigen. Die categorie gebruiken de AI-tips om overgebruik te signaleren (bijvoorbeeld meer dan 10 dagen per maand een triptaan, of dagelijks een pijnstiller). Klopt hij niet, dan gaat de waarschuwing niet af.\n• Tik op het prullenbakje om een medicijn helemaal weg te halen. Wat je er eerder mee noteerde blijft staan.\n\nMet de knop + voeg je toe wat bij jouw routine hoort (een merknaam, een middel, een vitamine). Eigen items komen direct in je lijst en staan meteen in de wizard en bij Snel.\n\nMedicijnen hebben geen zwaarte, want ze verhogen je risico niet; het scherm Inzichten scoort apart hoe goed elk middel voor je werkt via de kaart Wat hielp.",
     "Your full migraine profile, AI-configured in under a minute." to "Je volledige migraineprofiel, door AI ingesteld in nog geen minuut.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Je volledige prodroompool. Prodromen zijn de vroege waarschuwingen die 6-48 uur voor een aanval afgaan: gapen, stijve nek, eetlust-drang, stemmingswissels, moeheid, wazig zien, vaak plassen, meer dorst, gevoeligheid voor licht of geluid.\n\nPer prodroom:\n• Tik de rij open. Zet de zwaarte (HOOG / MATIG / LAAG / GEEN). Anders dan triggers die aanvallen \"veroorzaken\", betekent een prodroom dat er al een aanval aankomt, dus noteren duwt je emmer omhoog als een verse trigger. Prodromen met gewicht HOOG tillen je meter merkbaar op.\n• Zet er een ster bij om hem bovenaan Snel noteren te pinnen.\n• Tik het prullenbakje om hem uit je pool te halen.\n\nGebruik de +-knop voor wat jij zelf aan waarschuwingen merkt. Persoonlijke prodromen (bijv. \"klaarwakker om 3 uur\", \"zonder reden prikkelbaar\") zijn vaak de betrouwbaarste voorspellers.\n\nNoteer ze zodra je er een ziet. De Inzichten-kaart \"Wat gebeurde er\" scoort met je historie welke signalen je aanvallen betrouwbaar voorspellen, zodat de app leert welke bij jou het zwaarst moeten wegen.",

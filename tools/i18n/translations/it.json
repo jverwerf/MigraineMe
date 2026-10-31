@@ -4982,5 +4982,9 @@
   "1 treatment rated from your logs": "1 trattamento valutato",
   "%s treatments rated from your logs": "%s trattamenti valutati",
   "1 day of risk scores checked": "1 giorno di rischio verificato",
-  "%s days of risk scores checked": "%s giorni di rischio verificati"
+  "%s days of risk scores checked": "%s giorni di rischio verificati",
+  "Air Quality": "Qualità dell'aria",
+  "Coarse Dust": "Polvere grossa",
+  "Blood Glucose": "Glicemia",
+  "Blood Pressure": "Pressione"
 }

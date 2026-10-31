@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4984 entries.
+ * 4988 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -540,6 +540,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Aged foods" to "Curados",
     "Aged or smoked fish" to "Peixe curado/fumado",
     "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack." to "Foca o stress e a recuperação, que para muita gente são o gatilho mais do que a crise em si.",
+    "Air Quality" to "Qualidade do ar",
     "Air quality" to "Qualidade do ar",
     "Air quality poor" to "Qualidade do ar má",
     "Air quality warning" to "Aviso de qualidade do ar",
@@ -829,6 +830,8 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Blog" to "Blogue",
     "Blog not found" to "Não encontrado",
     "Blogs" to "Blogues",
+    "Blood Glucose" to "Glicemia",
+    "Blood Pressure" to "Tensão arterial",
     "Blood glucose" to "Glicemia",
     "Blood glucose high" to "Glicemia alta",
     "Blood glucose low" to "Glicemia baixa",
@@ -1007,6 +1010,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Cluster" to "Cluster",
     "Cluster headache" to "Cefaleia em salvas",
     "CoQ10" to "CoQ10",
+    "Coarse Dust" to "Poeira grossa",
     "Coarse dust high" to "Poeira grossa alta",
     "Codeine" to "Codeína",
     "Cognitive" to "Mental",
@@ -1513,13 +1517,13 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Exercise sets one off" to "O exercício desencadeia",
     "Exercises" to "Exercícios",
     "Exercising" to "Fazer exercício",
+)
+
+private fun ptStrings1(): Map<String, String> = mapOf(
     "Exertional headache" to "Cefaleia de esforço",
     "Exit tour" to "Sair da visita",
     "Expand" to "Abrir",
     "Expired" to "Expirado",
-)
-
-private fun ptStrings1(): Map<String, String> = mapOf(
     "Expires in %1\$s:%2\$s" to "Expira em %1\$s:%2\$s",
     "Explore Migraines" to "Explorar",
     "External" to "Externo",
@@ -3016,13 +3020,13 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Quick Log" to "Registo já",
     "Quick Log Medicine" to "Já: medicamento",
     "Quick Log Relief" to "Já: alívio",
+)
+
+private fun ptStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Já: fator",
     "Quick Migraine" to "Crise já",
     "Quick log" to "Registo já",
     "Quiet" to "Silencioso",
-)
-
-private fun ptStrings2(): Map<String, String> = mapOf(
     "Quiet days" to "Dias calmos",
     "Quiet environment" to "Ambiente calmo",
     "RECOMMENDED" to "RECOMENDADO",
@@ -4519,13 +4523,13 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Os teus dados ficam seguros e servem só para ver os teus padrões. Nunca os damos a terceiros.",
     "Your data is yours, and it stays that way." to "Os teus dados são teus, e vão continuar a ser.",
     "Your data suggests adjusting these triggers" to "Os teus dados pedem para ajustar estes fatores",
+)
+
+private fun ptStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Os teus dados, presos à tua conta. Privados de ponta a ponta.",
     "Your exercises" to "Exercícios",
     "Your free trial ends tomorrow" to "O teste acaba amanhã",
     "Your free trial just ended" to "O teu teste grátis acabou agora",
-)
-
-private fun ptStrings3(): Map<String, String> = mapOf(
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "A tua lista completa de medicamentos. Tudo o que possas registar pelo assistente, pelo Registo já ou pelo Ponto do dia vive aqui, organizado por categoria (Analgésico, Antiemético, CGRP, Preventivo, Suplemento, Triptano, Outro).\n\nEm cada medicamento:\n• Toca na estrela para o marcares como favorito. Os favoritos aparecem primeiro no Registo já, por isso os mais usados ficam a um toque.\n• Toca na linha para mudares a categoria. É a categoria que as Sugestões da IA usam para assinalar risco de uso excessivo (ex. tomar um Triptano mais de 10 dias por mês, ou um Analgésico todos os dias). Acerta nela ou o aviso não dispara.\n• Toca no caixote para tirar um medicamento de vez. Os registos passados ficam na mesma.\n\nUsa o botão + para juntar o que é próprio de ti (uma marca, um composto, uma vitamina). Os itens teus entram direto na lista e aparecem logo no assistente e no Registo já.\n\nOs medicamentos não têm peso de força, porque não sobem o teu balde; as Análises avaliam à parte o quanto cada um resulta para ti, no cartão O que ajudou.",
     "Your full migraine profile, AI-configured in under a minute." to "O teu perfil de enxaqueca completo, configurado por IA em menos de um minuto.",
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "A tua lista completa de pródromos. Os pródromos são os sinais precoces que aparecem 6-48 horas antes de uma crise: bocejos, pescoço rígido, desejos de comida, mudanças de ânimo, cansaço, visão turva, urinar muitas vezes, mais sede, sensibilidade à luz ou ao som.\n\nPara cada pródromo:\n• Toca na linha para a abrires. Define a gravidade (ALTA / MÉDIA / BAIXA / NENHUMA). Ao contrário dos fatores, que «causam» crises, um pródromo quer dizer que a crise já vem a caminho, por isso anotá-lo sobe o teu balde como um fator novo. Pródromos com peso ALTO fazem o medidor subir de forma notória.\n• Põe estrela para o fixares no topo do registo já.\n• Toca no caixote para o tirares da lista.\n\nUsa o + para juntares o que notas nos teus próprios sinais. Pródromos pessoais (p. ex. «bem acordado às 3», «irritado sem razão») costumam ser os que melhor preveem.\n\nAnota-os assim que vires um. O cartão de Análises «O que aconteceu» usa o teu histórico para avaliar que sinais preveem mesmo as tuas crises, e com o tempo a app aprende quais pesar mais no teu caso.",

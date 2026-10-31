@@ -4982,5 +4982,9 @@
   "1 treatment rated from your logs": "1 behandeling beoordeeld",
   "%s treatments rated from your logs": "%s behandelingen beoordeeld",
   "1 day of risk scores checked": "1 dag risicoscores getoetst",
-  "%s days of risk scores checked": "%s dagen risicoscores getoetst"
+  "%s days of risk scores checked": "%s dagen risicoscores getoetst",
+  "Air Quality": "Luchtkwaliteit",
+  "Coarse Dust": "Grof stof",
+  "Blood Glucose": "Bloedsuiker",
+  "Blood Pressure": "Bloeddruk"
 }
