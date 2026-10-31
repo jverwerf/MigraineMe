@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4940 entries.
+ * 4950 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -666,6 +666,8 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Chiede com'è andata la seduta 2 ore dopo l'inserimento",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Chiedi con parole semplici: il meteo ha influito, cosa ha aiutato l'ultima volta. Risponde dai tuoi stessi diari.",
     "Ask questions about your health data" to "Fai domande sui tuoi dati di salute",
+    "Aspartame" to "Aspartame",
+    "Aspartame exposure high" to "Molto aspartame",
     "Aspirin" to "Aspirina",
     "Assistant" to "Assistente",
     "At attack start" to "All'inizio",
@@ -706,6 +708,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Auto-update" to "Auto",
     "Auto-update Average" to "Media auto",
     "Auto-update average" to "Media auto",
+    "Automated food trigger flags: tyramine, histamine, additives and more" to "Allerte automatiche: tiramina, istamina, additivi e altro",
     "Automated tyramine, alcohol, gluten & histamine classification" to "Classificazione automatica di tiramina, alcol, glutine e istamina",
     "Automatic Triggers" to "Fattori auto",
     "Automatic triggers are checked daily at 9 AM your local time and will " to "I fattori automatici si controllano ogni giorno alle 9 e ",
@@ -1514,12 +1517,12 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Failed to remove: %1\$s" to "Rimozione fallita: %1\$s",
     "Failed to save weights." to "Pesi non salvati.",
     "Failed to save." to "Non salvato.",
-    "Failed to save. Please try again." to "Salvataggio fallito. Riprova.",
-    "Fairly sure" to "Quasi certo",
-    "Fallback defaults" to "Valori predefiniti",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Failed to save. Please try again." to "Salvataggio fallito. Riprova.",
+    "Fairly sure" to "Quasi certo",
+    "Fallback defaults" to "Valori predefiniti",
     "Fallback: high trigger count (%1\$s active)" to "Predefinito: molti fattori (%1\$s attivi)",
     "Fallback: low trigger count (%1\$s active)" to "Predefinito: pochi fattori (%1\$s attivi)",
     "Fallback: moderate trigger count (%1\$s active)" to "Predefinito: fattori moderati (%1\$s attivi)",
@@ -1585,6 +1588,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Food and drink" to "Cibo e bevande",
     "Food cravings" to "Voglie alimentari",
     "Food diary, MyFitnessPal, etc." to "Diario alimentare, MyFitnessPal, ecc.",
+    "Food trigger flags: tyramine, histamine, additives and more" to "Allerte cibo: tiramina, istamina, additivi e altro",
     "Food, drink, and nutrition triggers" to "Fattori di cibo, bevande e dieta",
     "Foods" to "Cibi",
     "Foods Added!" to "Aggiunti!",
@@ -2201,6 +2205,8 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "MIGRAINE DAYS PER MONTH" to "GIORNI CON EMICRANIA AL MESE",
     "MILD" to "LIEVE",
     "MODERATE" to "MEDIO",
+    "MSG" to "MSG",
+    "MSG exposure high" to "Molto glutammato",
     "Magnesium" to "Magnesio",
     "Magnesium high" to "Magnesio alto",
     "Magnesium low" to "Magnesio basso",
@@ -2468,6 +2474,8 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Niacin low" to "Niacina bassa",
     "Night" to "Notte",
     "Night out" to "Serata fuori",
+    "Nitrates" to "Nitrati",
+    "Nitrates exposure high" to "Molti nitrati",
     "No" to "No",
     "No\nmigraine" to "Nessuna\ncrisi",
     "No\nwarning" to "No\navviso",
@@ -3012,6 +3020,9 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Reading" to "Leggere",
     "Reading data from Health Connect..." to "Leggo i dati da Health Connect...",
     "Reading your file…" to "Lettura del file…",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "Reading your history. This takes a minute for a big file." to "Lettura dello storico. Con un file grande ci vuole un minuto.",
     "Rebound headache" to "Cefalea da rimbalzo",
     "Recalculate from logged periods" to "Ricalcola dai cicli segnati",
@@ -3020,9 +3031,6 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Ritaratura",
     "Recalibration applied!" to "Ritarato!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "I fattori recenti pesano di più. Il punteggio cala in 7 giorni.",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Avvisi sui consigli",
     "Recommendations" to "Consigli",
     "Recommended" to "Consigliato",
@@ -3575,6 +3583,8 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Suggested for you" to "Suggeriti per te",
     "Suggested · same name" to "Proposto · stesso nome",
     "Suggested: Low" to "Proposto: basso",
+    "Sulfites" to "Solfiti",
+    "Sulfites exposure high" to "Molti solfiti",
     "Sumatriptan" to "Sumatriptan",
     "Summary" to "Riepilogo",
     "Summer" to "Estate",
@@ -4513,6 +4523,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your notes" to "Le tue note",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Il quadro degli attacchi segnati. La scheda mostra tre cose affiancate: ",
     "Your own pool" to "Il tuo pool",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "Your password has been changed." to "La password è stata cambiata.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Il tuo assistente IA personale, con accesso in lettura ai tuoi dati di salute: sonno, HRV, battito a riposo, stress, passi, meteo, attacchi, fattori, prodromi, farmaci, sollievi e dettaglio dell'aura. Chiedigli qualsiasi cosa con parole tue: risponde da ciò che vede davvero nei tuoi dati, non con consigli generici.\n\nHai un dubbio su una terapia o un farmaco? Puoi chiederlo anche qui. Guardiamo i tuoi dati e ti diamo qualcosa su cui ragionare.\n\nBuone domande da provare: \"Cosa ha scatenato la mia ultima emicrania?\", \"Come ho dormito ultimamente?\", \"Il farmaco di soccorso funziona davvero?\", \"Dove compare di solito la mia aura?\", \"Ci sono terapie di prevenzione da chiedere al medico?\"\n\nAttenzione: l'assistente coglie schemi e propone spunti, ma non è un medico e non può prescrivere. Per le decisioni vere sulle cure, parlane in neurologia o con il tuo medico di base.",
     "Your personalised model" to "Il tuo modello",
@@ -4523,9 +4536,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "I tuoi ultimi consigli",
     "Your recommendations for today are ready. Tap to see them." to "I tuoi consigli di oggi sono pronti. Tocca per vederli.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "La tua richiesta è in esame. Attiveremo WHOOP sul tuo account a breve.",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "Your resting BPM" to "Il tuo battito a riposo",
     "Your risk *today.*" to "Il tuo rischio *oggi.*",
     "Your risk gauge is personal from day one instead of week five." to "Il tuo indicatore di rischio è personale dal primo giorno, non dalla quinta settimana.",

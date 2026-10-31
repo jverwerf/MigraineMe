@@ -104,6 +104,13 @@ data class MonitorCardConfig(
         const val METRIC_ALCOHOL_EXPOSURE = "alcohol_exposure"
         const val METRIC_GLUTEN_EXPOSURE = "gluten_exposure"
         const val METRIC_HISTAMINE_EXPOSURE = "histamine_exposure"
+        const val METRIC_ASPARTAME_EXPOSURE = "aspartame_exposure"
+        const val METRIC_MSG_EXPOSURE = "msg_exposure"
+        const val METRIC_NITRATES_EXPOSURE = "nitrates_exposure"
+        const val METRIC_SULFITES_EXPOSURE = "sulfites_exposure"
+        const val METRIC_PURINE_EXPOSURE = "purine_exposure"
+        const val METRIC_FRUCTOSE_EXPOSURE = "fructose_exposure"
+        const val METRIC_PROTECTIVE_EXPOSURE = "protective_exposure"
         
         val DEFAULT_NUTRITION_METRICS = listOf(
             METRIC_CALORIES,
@@ -149,7 +156,11 @@ data class MonitorCardConfig(
             METRIC_TYRAMINE_EXPOSURE,
             METRIC_ALCOHOL_EXPOSURE,
             METRIC_GLUTEN_EXPOSURE,
-            METRIC_HISTAMINE_EXPOSURE
+            METRIC_HISTAMINE_EXPOSURE,
+            METRIC_ASPARTAME_EXPOSURE,
+            METRIC_MSG_EXPOSURE,
+            METRIC_NITRATES_EXPOSURE,
+            METRIC_SULFITES_EXPOSURE
         )
         
         val NUTRITION_METRIC_LABELS = mapOf(
@@ -190,7 +201,11 @@ data class MonitorCardConfig(
             METRIC_TYRAMINE_EXPOSURE to "Tyramine",
             METRIC_ALCOHOL_EXPOSURE to "Alcohol",
             METRIC_GLUTEN_EXPOSURE to "Gluten",
-            METRIC_HISTAMINE_EXPOSURE to "Histamine"
+            METRIC_HISTAMINE_EXPOSURE to "Histamine",
+            METRIC_ASPARTAME_EXPOSURE to "Aspartame",
+            METRIC_MSG_EXPOSURE to "MSG",
+            METRIC_NITRATES_EXPOSURE to "Nitrates",
+            METRIC_SULFITES_EXPOSURE to "Sulfites"
         )
         
         val NUTRITION_METRIC_UNITS = mapOf(
@@ -231,11 +246,16 @@ data class MonitorCardConfig(
             METRIC_TYRAMINE_EXPOSURE to "",
             METRIC_ALCOHOL_EXPOSURE to "",
             METRIC_GLUTEN_EXPOSURE to "",
-            METRIC_HISTAMINE_EXPOSURE to ""
+            METRIC_HISTAMINE_EXPOSURE to "",
+            METRIC_ASPARTAME_EXPOSURE to "",
+            METRIC_MSG_EXPOSURE to "",
+            METRIC_NITRATES_EXPOSURE to "",
+            METRIC_SULFITES_EXPOSURE to ""
         )
 
         /** Set of categorical risk metrics (use MAX not SUM, display as labels) */
-        val RISK_METRICS = setOf(METRIC_TYRAMINE_EXPOSURE, METRIC_ALCOHOL_EXPOSURE, METRIC_GLUTEN_EXPOSURE, METRIC_HISTAMINE_EXPOSURE)
+        val RISK_METRICS = setOf(METRIC_TYRAMINE_EXPOSURE, METRIC_ALCOHOL_EXPOSURE, METRIC_GLUTEN_EXPOSURE, METRIC_HISTAMINE_EXPOSURE,
+            METRIC_ASPARTAME_EXPOSURE, METRIC_MSG_EXPOSURE, METRIC_NITRATES_EXPOSURE, METRIC_SULFITES_EXPOSURE, METRIC_PURINE_EXPOSURE, METRIC_FRUCTOSE_EXPOSURE, METRIC_PROTECTIVE_EXPOSURE)
 
         fun isRiskMetric(metric: String) = metric in RISK_METRICS
     }

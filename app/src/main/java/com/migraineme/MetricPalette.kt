@@ -105,6 +105,10 @@ object MetricPalette {
         "nutrition_daily::max_alcohol_exposure" to Color(0xFFFF8F00),
         "nutrition_daily::max_gluten_exposure" to Color(0xFF1E88E5),
         "nutrition_daily::max_histamine_exposure" to Color(0xFFAB47BC),
+        "nutrition_daily::max_aspartame_exposure" to Color(0xFF26A69A),
+        "nutrition_daily::max_msg_exposure" to Color(0xFF8D6E63),
+        "nutrition_daily::max_nitrates_exposure" to Color(0xFFD81B60),
+        "nutrition_daily::max_sulfites_exposure" to Color(0xFF5C6BC0),
     )
 
     /**

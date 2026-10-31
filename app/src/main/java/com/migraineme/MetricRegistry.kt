@@ -346,10 +346,14 @@ object MetricRegistry {
         // alcohol, gluten and histamine sat at 36-38, stranding three quarters
         // of the set below the vitamins. Negative keys keep them together at the
         // top without renumbering the thirty-odd nutrients below.
-        "nutrition_daily::max_tyramine_exposure" to -4,
-        "nutrition_daily::max_alcohol_exposure" to -3,
-        "nutrition_daily::max_gluten_exposure" to -2,
-        "nutrition_daily::max_histamine_exposure" to -1,
+        "nutrition_daily::max_tyramine_exposure" to -8,
+        "nutrition_daily::max_alcohol_exposure" to -7,
+        "nutrition_daily::max_gluten_exposure" to -6,
+        "nutrition_daily::max_histamine_exposure" to -5,
+        "nutrition_daily::max_aspartame_exposure" to -4,
+        "nutrition_daily::max_msg_exposure" to -3,
+        "nutrition_daily::max_nitrates_exposure" to -2,
+        "nutrition_daily::max_sulfites_exposure" to -1,
         "nutrition_daily::total_magnesium_mg" to 2,
         "nutrition_daily::total_caffeine_mg" to 3,
         "nutrition_daily::total_calories" to 4,
@@ -422,6 +426,10 @@ object MetricRegistry {
         "nutrition_daily::max_alcohol_exposure" to "Alcohol",
         "nutrition_daily::max_gluten_exposure" to "Gluten",
         "nutrition_daily::max_histamine_exposure" to "Histamine",
+        "nutrition_daily::max_aspartame_exposure" to "Aspartame",
+        "nutrition_daily::max_msg_exposure" to "MSG",
+        "nutrition_daily::max_nitrates_exposure" to "Nitrates",
+        "nutrition_daily::max_sulfites_exposure" to "Sulfites",
     )
 
     // ── Unit normalisation ───────────────────────────────────────────────────
@@ -527,6 +535,10 @@ object MetricRegistry {
         "nutrition_daily::max_alcohol_exposure" to "alcohol_exposure",
         "nutrition_daily::max_gluten_exposure" to "gluten_exposure",
         "nutrition_daily::max_histamine_exposure" to "histamine_exposure",
+        "nutrition_daily::max_aspartame_exposure" to "aspartame_exposure",
+        "nutrition_daily::max_msg_exposure" to "msg_exposure",
+        "nutrition_daily::max_nitrates_exposure" to "nitrates_exposure",
+        "nutrition_daily::max_sulfites_exposure" to "sulfites_exposure",
     )
 
     private val LEGACY_TO_REGISTRY_NUTRITION: Map<String, String> =

@@ -48,10 +48,7 @@ fun AddFoodDialog(
     onServingsChange: (Double) -> Unit,
     isAdding: Boolean,
     monitorMetrics: List<String>,
-    tyramineRisk: String? = null,
-    alcoholRisk: String? = null,
-    glutenRisk: String? = null,
-    histamineRisk: String? = null,
+    risks: FoodRiskResult? = null,
     isClassifyingRisks: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -218,12 +215,7 @@ fun AddFoodDialog(
                     // Trigger exposure meters (tyramine, alcohol, gluten, histamine)
                     Spacer(Modifier.height(4.dp))
                     RiskExposureMeters(
-                        risks = if (isClassifyingRisks) null else FoodRiskResult(
-                            tyramine = tyramineRisk ?: "none",
-                            alcohol = alcoholRisk ?: "none",
-                            gluten = glutenRisk ?: "none",
-                            histamine = histamineRisk ?: "none"
-                        ),
+                        risks = if (isClassifyingRisks) null else (risks ?: FoodRiskResult()),
                         isClassifying = isClassifyingRisks
                     )
 

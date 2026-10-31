@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4940 entries.
+ * 4950 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -666,6 +666,8 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Pergunta como correu a sessão 2 horas depois do registo",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Pergunta com as tuas palavras: o tempo influenciou, o que ajudou da última vez. Responde a partir dos teus registos.",
     "Ask questions about your health data" to "Faz perguntas sobre os teus dados",
+    "Aspartame" to "Aspartame",
+    "Aspartame exposure high" to "Muito aspartame",
     "Aspirin" to "Aspirina",
     "Assistant" to "Assistente",
     "At attack start" to "No início",
@@ -706,6 +708,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Auto-update" to "Auto",
     "Auto-update Average" to "Média auto",
     "Auto-update average" to "Média auto",
+    "Automated food trigger flags: tyramine, histamine, additives and more" to "Alertas automáticas: tiramina, histamina, aditivos e mais",
     "Automated tyramine, alcohol, gluten & histamine classification" to "Classificação automática de tiramina, álcool, glúten e histamina",
     "Automatic Triggers" to "Fatores auto",
     "Automatic triggers are checked daily at 9 AM your local time and will " to "Os fatores automáticos são vistos todos os dias às 9h e ",
@@ -1514,12 +1517,12 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Failed to remove: %1\$s" to "Falha ao remover: %1\$s",
     "Failed to save weights." to "Falha ao guardar os pesos.",
     "Failed to save." to "Falha ao guardar.",
-    "Failed to save. Please try again." to "Falha ao guardar. Tenta novamente.",
-    "Fairly sure" to "Quase certo",
-    "Fallback defaults" to "Valores padrão",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Failed to save. Please try again." to "Falha ao guardar. Tenta novamente.",
+    "Fairly sure" to "Quase certo",
+    "Fallback defaults" to "Valores padrão",
     "Fallback: high trigger count (%1\$s active)" to "Padrão: muitos fatores (%1\$s ativos)",
     "Fallback: low trigger count (%1\$s active)" to "Padrão: poucos fatores (%1\$s ativos)",
     "Fallback: moderate trigger count (%1\$s active)" to "Padrão: fatores moderados (%1\$s ativos)",
@@ -1585,6 +1588,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Food and drink" to "Comida e bebida",
     "Food cravings" to "Desejos alimentares",
     "Food diary, MyFitnessPal, etc." to "Diário alimentar, MyFitnessPal, etc.",
+    "Food trigger flags: tyramine, histamine, additives and more" to "Alertas na comida: tiramina, histamina, aditivos e mais",
     "Food, drink, and nutrition triggers" to "Fatores de comida e bebida",
     "Foods" to "Alimentos",
     "Foods Added!" to "Adicionados!",
@@ -2201,6 +2205,8 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "MIGRAINE DAYS PER MONTH" to "DIAS COM ENXAQUECA POR MÊS",
     "MILD" to "LEVE",
     "MODERATE" to "MODERADO",
+    "MSG" to "MSG",
+    "MSG exposure high" to "Muito glutamato",
     "Magnesium" to "Magnésio",
     "Magnesium high" to "Magnésio alto",
     "Magnesium low" to "Magnésio baixo",
@@ -2468,6 +2474,8 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Niacin low" to "Niacina baixa",
     "Night" to "Noite",
     "Night out" to "Noite fora",
+    "Nitrates" to "Nitratos",
+    "Nitrates exposure high" to "Muitos nitratos",
     "No" to "Não",
     "No\nmigraine" to "Sem\nenxaqueca",
     "No\nwarning" to "Sem\naviso",
@@ -3012,6 +3020,9 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Reading" to "Ler",
     "Reading data from Health Connect..." to "A ler dados do Health Connect...",
     "Reading your file…" to "A ler o ficheiro…",
+)
+
+private fun ptStrings2(): Map<String, String> = mapOf(
     "Reading your history. This takes a minute for a big file." to "A ler o seu histórico. Um ficheiro grande demora um minuto.",
     "Rebound headache" to "Cefaleia de rebote",
     "Recalculate from logged periods" to "Recalcular pelas menstruações",
@@ -3020,9 +3031,6 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Recalibração",
     "Recalibration applied!" to "Recalibrado!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Os fatores recentes pesam mais. O valor desce ao longo de 7 dias.",
-)
-
-private fun ptStrings2(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Avisos de sugestões",
     "Recommendations" to "Sugestões",
     "Recommended" to "Recomendado",
@@ -3575,6 +3583,8 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Suggested for you" to "Sugeridas para ti",
     "Suggested · same name" to "Sugerido · mesmo nome",
     "Suggested: Low" to "Sugerido: baixo",
+    "Sulfites" to "Sulfitos",
+    "Sulfites exposure high" to "Muitos sulfitos",
     "Sumatriptan" to "Sumatriptano",
     "Summary" to "Resumo",
     "Summer" to "Verão",
@@ -4513,6 +4523,9 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your notes" to "As tuas notas",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "O teu resumo das crises registadas. O cartão mostra três coisas lado a lado: ",
     "Your own pool" to "O teu pool",
+)
+
+private fun ptStrings3(): Map<String, String> = mapOf(
     "Your password has been changed." to "A tua chave foi mudada.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "O teu assistente de IA pessoal, com acesso de leitura aos teus dados de saúde: sono, HRV, pulso em repouso, stress, passos, tempo, crises, fatores, pródromos, medicamentos, alívios e detalhe da aura. Pergunta-lhe o que quiseres por palavras tuas: responde a partir do que vê mesmo nos teus dados, não com conselhos genéricos.\n\nDúvidas sobre um tratamento ou um medicamento? Também podes perguntar aqui. Vemos os teus dados e damos-te algo em que pensar.\n\nBoas perguntas para experimentar: \"O que despoletou a minha última enxaqueca?\", \"Como tenho dormido ultimamente?\", \"A minha medicação de recurso resulta mesmo?\", \"Onde costuma aparecer a minha aura?\", \"Há tratamentos preventivos que deva perguntar?\"\n\nAtenção: o assistente vê padrões e sugere coisas a considerar, mas não é médico e não pode receitar. Para decisões a sério sobre tratamento, fala em neurologia ou com o teu médico de família.",
     "Your personalised model" to "O teu modelo pessoal",
@@ -4523,9 +4536,6 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Os teus últimos conselhos",
     "Your recommendations for today are ready. Tap to see them." to "As tuas sugestões de hoje estão prontas. Toca para veres.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "O teu pedido está a ser visto. Vamos ativar o WHOOP na tua conta em breve.",
-)
-
-private fun ptStrings3(): Map<String, String> = mapOf(
     "Your resting BPM" to "O teu pulso em repouso",
     "Your risk *today.*" to "O teu risco *hoje.*",
     "Your risk gauge is personal from day one instead of week five." to "O teu medidor de risco é pessoal desde o primeiro dia, não a partir da quinta semana.",

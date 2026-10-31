@@ -395,6 +395,10 @@ val AllMetricDefs = listOf(
     MetricDef("alcohol", "Alcohol", "risk", Color(0xFFEF5350), "Diet"),
     MetricDef("gluten", "Gluten", "risk", Color(0xFFFFD54F), "Diet"),
     MetricDef("histamine", "Histamine", "risk", Color(0xFFAB47BC), "Diet"),
+    MetricDef("aspartame", "Aspartame", "risk", Color(0xFF26A69A), "Diet"),
+    MetricDef("msg", "MSG", "risk", Color(0xFF8D6E63), "Diet"),
+    MetricDef("nitrates", "Nitrates", "risk", Color(0xFFD81B60), "Diet"),
+    MetricDef("sulfites", "Sulfites", "risk", Color(0xFF5C6BC0), "Diet"),
 )
 
 @Composable

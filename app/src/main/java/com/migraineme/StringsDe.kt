@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4940 entries.
+ * 4950 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -666,6 +666,8 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Fragt 2 Stunden nach dem Eintrag, wie die Gerätesitzung lief",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Frag ganz normal: War das Wetter ein Faktor, was hat letztes Mal geholfen. Die Antwort kommt aus deinen eigenen Einträgen.",
     "Ask questions about your health data" to "Frag etwas zu deinen Gesundheitsdaten",
+    "Aspartame" to "Aspartam",
+    "Aspartame exposure high" to "Viel Aspartam",
     "Aspirin" to "Aspirin",
     "Assistant" to "Assistent",
     "At attack start" to "Zu Attackenbeginn",
@@ -706,6 +708,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Auto-update" to "Auto-Update",
     "Auto-update Average" to "Schnitt auto.",
     "Auto-update average" to "Schnitt automatisch",
+    "Automated food trigger flags: tyramine, histamine, additives and more" to "Automatische Trigger-Flags: Tyramin, Histamin, Zusatzstoffe und mehr",
     "Automated tyramine, alcohol, gluten & histamine classification" to "Automatisch nach Tyramin, Alkohol, Gluten und Histamin sortiert",
     "Automatic Triggers" to "Auto-Auslöser",
     "Automatic triggers are checked daily at 9 AM your local time and will " to "Auto-Auslöser werden täglich um 9 Uhr deiner Zeit geprüft und ",
@@ -1514,12 +1517,12 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Failed to remove: %1\$s" to "Nicht entfernt: %1\$s",
     "Failed to save weights." to "Gewichte nicht gespeichert.",
     "Failed to save." to "Nicht gespeichert.",
-    "Failed to save. Please try again." to "Nicht gespeichert. Versuch es noch mal.",
-    "Fairly sure" to "Recht sicher",
-    "Fallback defaults" to "Standardwerte",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Failed to save. Please try again." to "Nicht gespeichert. Versuch es noch mal.",
+    "Fairly sure" to "Recht sicher",
+    "Fallback defaults" to "Standardwerte",
     "Fallback: high trigger count (%1\$s active)" to "Standard: viele Auslöser (%1\$s aktiv)",
     "Fallback: low trigger count (%1\$s active)" to "Standard: wenige Auslöser (%1\$s aktiv)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standard: mittlere Zahl an Auslösern (%1\$s aktiv)",
@@ -1585,6 +1588,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Food and drink" to "Essen & Trinken",
     "Food cravings" to "Heißhunger",
     "Food diary, MyFitnessPal, etc." to "Ernährungstagebuch, MyFitnessPal usw.",
+    "Food trigger flags: tyramine, histamine, additives and more" to "Trigger im Essen: Tyramin, Histamin, Zusatzstoffe und mehr",
     "Food, drink, and nutrition triggers" to "Auslöser aus Essen und Trinken",
     "Foods" to "Essen",
     "Foods Added!" to "Hinzugefügt!",
@@ -2201,6 +2205,8 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "MIGRAINE DAYS PER MONTH" to "MIGRÄNETAGE PRO MONAT",
     "MILD" to "LEICHT",
     "MODERATE" to "MITTEL",
+    "MSG" to "MSG",
+    "MSG exposure high" to "Viel Glutamat",
     "Magnesium" to "Magnesium",
     "Magnesium high" to "Magnesium hoch",
     "Magnesium low" to "Magnesium niedrig",
@@ -2468,6 +2474,8 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Niacin low" to "Niacin niedrig",
     "Night" to "Nacht",
     "Night out" to "Abends ausgehen",
+    "Nitrates" to "Nitrate",
+    "Nitrates exposure high" to "Viele Nitrate",
     "No" to "Nein",
     "No\nmigraine" to "Keine\nMigräne",
     "No\nwarning" to "Keine\nWarnung",
@@ -3012,6 +3020,9 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Reading" to "Lesen",
     "Reading data from Health Connect..." to "Lese Daten aus Health Connect...",
     "Reading your file…" to "Datei wird gelesen…",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Reading your history. This takes a minute for a big file." to "Dein Verlauf wird gelesen. Bei großen Dateien dauert das eine Minute.",
     "Rebound headache" to "Rebound-Kopfschmerz",
     "Recalculate from logged periods" to "Aus erfassten Perioden neu rechnen",
@@ -3020,9 +3031,6 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Neujustierung",
     "Recalibration applied!" to "Neu kalibriert!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Neue Auslöser wiegen schwerer als alte. Der Wert klingt über 7 Tage ab.",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Empfehlungshinweise",
     "Recommendations" to "Empfehlungen",
     "Recommended" to "Empfohlen",
@@ -3575,6 +3583,8 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Suggested for you" to "Vorschläge für dich",
     "Suggested · same name" to "Vorschlag · gleicher Name",
     "Suggested: Low" to "Tipp: Niedrig",
+    "Sulfites" to "Sulfite",
+    "Sulfites exposure high" to "Viele Sulfite",
     "Sumatriptan" to "Sumatriptan",
     "Summary" to "Übersicht",
     "Summer" to "Sommer",
@@ -4513,6 +4523,9 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your notes" to "Deine Notizen",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Deine Übersicht erfasster Attacken. Die Karte zeigt drei Dinge nebeneinander: ",
     "Your own pool" to "Dein eigener Pool",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Your password has been changed." to "Dein Passwort wurde geändert.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Dein persönlicher KI-Assistent mit Lesezugriff auf deine Gesundheitsdaten: Schlaf, HRV, Ruhepuls, Stress, Schritte, Wetter, Attacken, Auslöser, Prodrome, Medikamente, Linderung und Aura-Details. Frag ihn alles in normaler Sprache, er antwortet aus dem, was er wirklich in deinen Daten sieht, nicht mit allgemeinen Ratschlägen.\n\nFragen zu einer Therapie oder einem Medikament? Auch die kannst du hier stellen. Wir sehen in deine Daten und geben dir etwas zum Nachdenken mit.\n\nGute Fragen zum Ausprobieren: \"Was hat meine letzte Migräne ausgelöst?\", \"Wie war mein Schlaf zuletzt?\", \"Wirkt mein Notfallmedikament wirklich?\", \"Wo taucht meine Aura meistens auf?\", \"Gibt es vorbeugende Therapien, nach denen ich fragen sollte?\"\n\nZur Sicherheit: Der Assistent erkennt Muster und nennt Dinge zum Überlegen, aber er ist keine Ärztin und kein Arzt und kann nichts verordnen. Für echte Entscheidungen zur Behandlung sprich mit der Neurologie oder deiner Hausarztpraxis.",
     "Your personalised model" to "Dein eigenes Modell",
@@ -4523,9 +4536,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Dein letzter persönlicher Rat",
     "Your recommendations for today are ready. Tap to see them." to "Deine Empfehlungen für heute sind da. Tippe zum Ansehen.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Deine Anfrage wird geprüft. Wir schalten WHOOP bald für dein Konto frei.",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Your resting BPM" to "Dein Ruhepuls",
     "Your risk *today.*" to "Dein Risiko *heute.*",
     "Your risk gauge is personal from day one instead of week five." to "Deine Risikoanzeige ist ab Tag eins persönlich, nicht erst ab Woche fünf.",

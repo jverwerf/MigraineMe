@@ -17,11 +17,37 @@ data class FoodRiskResult(
     val alcohol: String = "none",
     val gluten: String = "none",
     val histamine: String = "none",
+    val aspartame: String = "none",
+    val msg: String = "none",
+    val nitrates: String = "none",
+    val sulfites: String = "none",
+    val purine: String = "none",
+    val fructose: String = "none",
+    val protective: String = "none",
     val cached: Boolean = false
-)
+) {
+    /** Level by flag name, for the meters and the record writers. */
+    fun level(flag: String): String = when (flag) {
+        "tyramine" -> tyramine; "alcohol" -> alcohol; "gluten" -> gluten; "histamine" -> histamine
+        "aspartame" -> aspartame
+        "msg" -> msg
+        "nitrates" -> nitrates
+        "sulfites" -> sulfites
+        "purine" -> purine
+        "fructose" -> fructose
+        "protective" -> protective
+        else -> "none"
+    }
+
+    companion object {
+        /** Every flag the classifier returns, in server order. */
+        val ALL_FLAGS = listOf("tyramine", "alcohol", "gluten", "histamine", "aspartame", "msg", "nitrates", "sulfites", "purine", "fructose", "protective")
+    }
+}
 
 /**
- * Classifies food risks (tyramine, alcohol, gluten) via edge function.
+ * Classifies the eleven food flags (tyramine, alcohol, gluten, histamine,
+ * aspartame, MSG, nitrates, sulfites, purine, fructose, protective) via edge function.
  *
  * Calls classify-food-risks edge function, which:
  * 1. Checks a shared cache table first
@@ -83,10 +109,17 @@ class FoodRiskClassifierService {
                     alcohol = json.optString("alcohol", "none"),
                     gluten = json.optString("gluten", "none"),
                     histamine = json.optString("histamine", "none"),
+                    aspartame = json.optString("aspartame", "none"),
+                    msg = json.optString("msg", "none"),
+                    nitrates = json.optString("nitrates", "none"),
+                    sulfites = json.optString("sulfites", "none"),
+                    purine = json.optString("purine", "none"),
+                    fructose = json.optString("fructose", "none"),
+                    protective = json.optString("protective", "none"),
                     cached = json.optBoolean("cached", false)
                 )
 
-                Log.d(TAG, "✅ $foodName → T:${result.tyramine} A:${result.alcohol} G:${result.gluten} H:${result.histamine} (cached=${result.cached})")
+                Log.d(TAG, "✅ $foodName → T:${result.tyramine} A:${result.alcohol} G:${result.gluten} H:${result.histamine} As:${result.aspartame} M:${result.msg} N:${result.nitrates} S:${result.sulfites} P:${result.purine} F:${result.fructose} Pr:${result.protective} (cached=${result.cached})")
                 result
             }
         } catch (e: Exception) {

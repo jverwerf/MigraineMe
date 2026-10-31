@@ -28,6 +28,26 @@ object RiskColors {
     val HistamineMedium = Color(0xFFCE93D8)
     val HistamineLow = Color(0xFFE1BEE7)
 
+    // Aspartame
+    val AspartameHigh = Color(0xFF26A69A)
+    val AspartameMedium = Color(0xFF80CBC4)
+    val AspartameLow = Color(0xFFB2DFDB)
+
+    // MSG
+    val MSGHigh = Color(0xFF8D6E63)
+    val MSGMedium = Color(0xFFBCAAA4)
+    val MSGLow = Color(0xFFD7CCC8)
+
+    // Nitrates
+    val NitratesHigh = Color(0xFFD81B60)
+    val NitratesMedium = Color(0xFFF06292)
+    val NitratesLow = Color(0xFFF8BBD0)
+
+    // Sulfites
+    val SulfitesHigh = Color(0xFF5C6BC0)
+    val SulfitesMedium = Color(0xFF9FA8DA)
+    val SulfitesLow = Color(0xFFC5CAE9)
+
     /** Get the color for a risk metric at a given level (0-3) */
     fun colorFor(metric: String, level: Int): Color = when (metric) {
         MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> when (level) {
@@ -41,6 +61,18 @@ object RiskColors {
         }
         MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> when (level) {
             3 -> HistamineHigh; 2 -> HistamineMedium; 1 -> HistamineLow; else -> Color.Unspecified
+        }
+        MonitorCardConfig.METRIC_ASPARTAME_EXPOSURE -> when (level) {
+            3 -> AspartameHigh; 2 -> AspartameMedium; 1 -> AspartameLow; else -> Color.Unspecified
+        }
+        MonitorCardConfig.METRIC_MSG_EXPOSURE -> when (level) {
+            3 -> MSGHigh; 2 -> MSGMedium; 1 -> MSGLow; else -> Color.Unspecified
+        }
+        MonitorCardConfig.METRIC_NITRATES_EXPOSURE -> when (level) {
+            3 -> NitratesHigh; 2 -> NitratesMedium; 1 -> NitratesLow; else -> Color.Unspecified
+        }
+        MonitorCardConfig.METRIC_SULFITES_EXPOSURE -> when (level) {
+            3 -> SulfitesHigh; 2 -> SulfitesMedium; 1 -> SulfitesLow; else -> Color.Unspecified
         }
         else -> Color.Unspecified
     }

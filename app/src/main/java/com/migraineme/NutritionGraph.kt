@@ -109,6 +109,10 @@ private val nutritionMetricGroups = listOf(
         MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE,
         MonitorCardConfig.METRIC_GLUTEN_EXPOSURE,
         MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE,
+        MonitorCardConfig.METRIC_ASPARTAME_EXPOSURE,
+        MonitorCardConfig.METRIC_MSG_EXPOSURE,
+        MonitorCardConfig.METRIC_NITRATES_EXPOSURE,
+        MonitorCardConfig.METRIC_SULFITES_EXPOSURE,
         MonitorCardConfig.METRIC_CAFFEINE
     ),
     "Energy and macros" to listOf(

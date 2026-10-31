@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4940 entries.
+ * 4950 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -666,6 +666,8 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Demande 2 h après la saisie comment la séance s'est passée",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Demande simplement : la météo a-t-elle joué, qu'est-ce qui a aidé la dernière fois. Il répond à partir de tes propres entrées.",
     "Ask questions about your health data" to "Pose des questions sur tes données",
+    "Aspartame" to "Aspartame",
+    "Aspartame exposure high" to "Beaucoup d'aspartame",
     "Aspirin" to "Aspirine",
     "Assistant" to "Assistant",
     "At attack start" to "Au début",
@@ -706,6 +708,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Auto-update" to "Auto",
     "Auto-update Average" to "Moyenne auto",
     "Auto-update average" to "Moyenne auto",
+    "Automated food trigger flags: tyramine, histamine, additives and more" to "Alertes automatiques : tyramine, histamine, additifs et plus",
     "Automated tyramine, alcohol, gluten & histamine classification" to "Classement auto de la tyramine, l'alcool, le gluten et l'histamine",
     "Automatic Triggers" to "Facteurs auto",
     "Automatic triggers are checked daily at 9 AM your local time and will " to "Les facteurs auto sont vérifiés chaque jour à 9 h et ",
@@ -1514,12 +1517,12 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Failed to remove: %1\$s" to "Retrait impossible : %1\$s",
     "Failed to save weights." to "Poids non enregistrés.",
     "Failed to save." to "Non enregistré.",
-    "Failed to save. Please try again." to "Échec de l'enregistrement. Réessaie.",
-    "Fairly sure" to "Assez sûr",
-    "Fallback defaults" to "Valeurs par défaut",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Failed to save. Please try again." to "Échec de l'enregistrement. Réessaie.",
+    "Fairly sure" to "Assez sûr",
+    "Fallback defaults" to "Valeurs par défaut",
     "Fallback: high trigger count (%1\$s active)" to "Par défaut : beaucoup de facteurs (%1\$s actifs)",
     "Fallback: low trigger count (%1\$s active)" to "Par défaut : peu de facteurs (%1\$s actifs)",
     "Fallback: moderate trigger count (%1\$s active)" to "Par défaut : facteurs modérés (%1\$s actifs)",
@@ -1585,6 +1588,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Food and drink" to "Alimentation",
     "Food cravings" to "Fringales",
     "Food diary, MyFitnessPal, etc." to "Journal alimentaire, MyFitnessPal…",
+    "Food trigger flags: tyramine, histamine, additives and more" to "Alertes aliments : tyramine, histamine, additifs et plus",
     "Food, drink, and nutrition triggers" to "Facteurs alimentaires et boissons",
     "Foods" to "Aliments",
     "Foods Added!" to "Ajoutés !",
@@ -2028,7 +2032,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Last Period Start Date" to "Début des dernières règles",
     "Last Year" to "Dernière année",
     "Last looked %1\$s" to "Vu %1\$s",
-    "Last migraine" to "Dernière migraine",
+    "Last migraine" to "Dernière crise",
     "Last period" to "Dern. règles",
     "Last period: %s" to "Dernières : %s",
     "Last rewritten %1\$s by a weekly check-in" to "Réécrit %1\$s par le bilan hebdo",
@@ -2201,6 +2205,8 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "MIGRAINE DAYS PER MONTH" to "JOURS DE MIGRAINE PAR MOIS",
     "MILD" to "LÉGÈRE",
     "MODERATE" to "MODÉRÉ",
+    "MSG" to "MSG",
+    "MSG exposure high" to "Beaucoup de glutamate",
     "Magnesium" to "Magnésium",
     "Magnesium high" to "Magnésium élevé",
     "Magnesium low" to "Magnésium bas",
@@ -2468,6 +2474,8 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Niacin low" to "Niacine basse",
     "Night" to "Nuit",
     "Night out" to "Soirée",
+    "Nitrates" to "Nitrates",
+    "Nitrates exposure high" to "Beaucoup de nitrates",
     "No" to "Non",
     "No\nmigraine" to "Aucune\ncrise",
     "No\nwarning" to "Sans\nalerte",
@@ -3012,6 +3020,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Reading" to "Lecture",
     "Reading data from Health Connect..." to "Lecture des données Health Connect...",
     "Reading your file…" to "Lecture du fichier…",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Reading your history. This takes a minute for a big file." to "Lecture de votre historique. Un gros fichier prend une minute.",
     "Rebound headache" to "Céphalée de rebond",
     "Recalculate from logged periods" to "Recalculer d'après tes règles",
@@ -3020,9 +3031,6 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Recalibrage",
     "Recalibration applied!" to "Recalibré !",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Les facteurs récents pèsent plus. Le score retombe sur 7 jours.",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Alertes de conseils",
     "Recommendations" to "Conseils",
     "Recommended" to "Recommandé",
@@ -3575,6 +3583,8 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Suggested for you" to "Suggérés pour toi",
     "Suggested · same name" to "Suggéré · même nom",
     "Suggested: Low" to "Suggéré : faible",
+    "Sulfites" to "Sulfites",
+    "Sulfites exposure high" to "Beaucoup de sulfites",
     "Sumatriptan" to "Sumatriptan",
     "Summary" to "Résumé",
     "Summer" to "Été",
@@ -4513,6 +4523,9 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your notes" to "Tes notes",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Ton aperçu des crises notées. La carte montre trois choses côte à côte : ",
     "Your own pool" to "Ton propre pool",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Your password has been changed." to "Ton mot de passe a été changé.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Ton assistant IA personnel, avec accès en lecture à tes données de santé : sommeil, HRV, pouls au repos, stress, pas, météo, crises, facteurs, prodromes, médicaments, soulagements et détail de l'aura. Pose-lui n'importe quoi avec tes mots ; il répond à partir de ce qu'il voit vraiment dans tes données, pas avec des conseils tout faits.\n\nUne question sur un traitement ou un médicament ? Tu peux la poser ici aussi. Nous regardons tes données et te donnons de quoi réfléchir.\n\nDe bonnes questions à essayer : \"Qu'est-ce qui a déclenché ma dernière migraine ?\", \"Comment j'ai dormi ces derniers temps ?\", \"Mon traitement de crise marche-t-il vraiment ?\", \"Où mon aura apparaît-elle d'habitude ?\", \"Y a-t-il des traitements de fond à demander ?\"\n\nÀ savoir : l'assistant repère des tendances et propose des pistes, mais ce n'est pas un médecin et il ne peut rien prescrire. Pour les vraies décisions de traitement, parle à ton neurologue ou à ton médecin traitant.",
     "Your personalised model" to "Ton modèle perso",
@@ -4523,9 +4536,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Tes derniers conseils sur mesure",
     "Your recommendations for today are ready. Tap to see them." to "Tes recommandations du jour sont prêtes. Touche pour voir.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Ta demande est en cours d'examen. On activera WHOOP sur ton compte sous peu.",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Your resting BPM" to "Ton pouls au repos",
     "Your risk *today.*" to "Ton risque *aujourd'hui.*",
     "Your risk gauge is personal from day one instead of week five." to "Ta jauge de risque est personnelle dès le premier jour, pas à la cinquième semaine.",

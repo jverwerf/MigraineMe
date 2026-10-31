@@ -116,6 +116,13 @@ class SupabaseNutritionService(private val context: Context) {
             nutrition.alcoholExposure?.let { put("alcohol_exposure", it) }
             nutrition.glutenExposure?.let { put("gluten_exposure", it) }
             nutrition.histamineExposure?.let { put("histamine_exposure", it) }
+            nutrition.aspartameExposure?.let { put("aspartame_exposure", it) }
+            nutrition.msgExposure?.let { put("msg_exposure", it) }
+            nutrition.nitratesExposure?.let { put("nitrates_exposure", it) }
+            nutrition.sulfitesExposure?.let { put("sulfites_exposure", it) }
+            nutrition.purineExposure?.let { put("purine_exposure", it) }
+            nutrition.fructoseExposure?.let { put("fructose_exposure", it) }
+            nutrition.protectiveExposure?.let { put("protective_exposure", it) }
 
             // Metadata
             put("source", nutrition.source)
@@ -237,6 +244,13 @@ data class NutritionData(
     val alcoholExposure: String? = null,  // "none", "low", "medium", "high"
     val glutenExposure: String? = null,   // "none", "low", "medium", "high"
     val histamineExposure: String? = null, // "none", "low", "medium", "high"
+    val aspartameExposure: String? = null,
+    val msgExposure: String? = null,
+    val nitratesExposure: String? = null,
+    val sulfitesExposure: String? = null,
+    val purineExposure: String? = null,
+    val fructoseExposure: String? = null,
+    val protectiveExposure: String? = null,
 
     // Metadata
     val source: String,

@@ -530,10 +530,7 @@ fun MonitorNutritionScreen(
             onServingsChange = { selectedServings = it },
             isAdding = isAdding,
             monitorMetrics = displayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
-            tyramineRisk = selectedFoodRisks?.tyramine,
-            alcoholRisk = selectedFoodRisks?.alcohol,
-            glutenRisk = selectedFoodRisks?.gluten,
-            histamineRisk = selectedFoodRisks?.histamine,
+            risks = selectedFoodRisks,
             isClassifyingRisks = isClassifyingRisks,
             onDismiss = { selectedFood = null; selectedFoodDetails = null },
             onConfirm = {
@@ -593,10 +590,7 @@ fun MonitorNutritionScreen(
             onMealTypeChange = { scanMealType = it },
             isAdding = isAddingScan,
             monitorMetrics = displayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
-            tyramineRisk = scanRisks?.tyramine,
-            alcoholRisk = scanRisks?.alcohol,
-            glutenRisk = scanRisks?.gluten,
-            histamineRisk = scanRisks?.histamine,
+            risks = scanRisks,
             isClassifyingRisks = isClassifyingScanRisks,
             onDismiss = { scannedProduct = null; scanRisks = null },
             onConfirm = {
@@ -743,7 +737,7 @@ fun MonitorNutritionScreen(
                             tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(t("Automated tyramine, alcohol, gluten & histamine classification"),
+                            Text(t("Automated food trigger flags: tyramine, histamine, additives and more"),
                                 color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
@@ -781,7 +775,7 @@ fun MonitorNutritionScreen(
             // Food logging and today's log are premium: one gate over the lot.
             PremiumGate(
                 message = t("Unlock Food Risk Analysis"),
-                subtitle = t("Log meals and see tyramine, alcohol and gluten risk"),
+                subtitle = t("Food trigger flags: tyramine, histamine, additives and more"),
                 onUpgrade = { navController.navigate(Routes.PAYWALL) }
             ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

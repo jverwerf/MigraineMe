@@ -3244,6 +3244,10 @@ class SupabaseDbService(
             "nutrition_daily|max_alcohol_exposure" to "nutrition:alcohol_exposure",
             "nutrition_daily|max_gluten_exposure" to "nutrition:gluten_exposure",
             "nutrition_daily|max_histamine_exposure" to "nutrition:histamine_exposure",
+            "nutrition_daily|max_aspartame_exposure" to "nutrition:aspartame_exposure",
+            "nutrition_daily|max_msg_exposure" to "nutrition:msg_exposure",
+            "nutrition_daily|max_nitrates_exposure" to "nutrition:nitrates_exposure",
+            "nutrition_daily|max_sulfites_exposure" to "nutrition:sulfites_exposure",
         )
     }
 

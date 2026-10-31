@@ -53,10 +53,7 @@ fun BarcodeAddFoodDialog(
     onMealTypeChange: (String) -> Unit,
     isAdding: Boolean,
     monitorMetrics: List<String>,
-    tyramineRisk: String? = null,
-    alcoholRisk: String? = null,
-    glutenRisk: String? = null,
-    histamineRisk: String? = null,
+    risks: FoodRiskResult? = null,
     isClassifyingRisks: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -171,12 +168,7 @@ fun BarcodeAddFoodDialog(
 
                 Spacer(Modifier.height(4.dp))
                 RiskExposureMeters(
-                    risks = if (isClassifyingRisks) null else FoodRiskResult(
-                        tyramine = tyramineRisk ?: "none",
-                        alcohol = alcoholRisk ?: "none",
-                        gluten = glutenRisk ?: "none",
-                        histamine = histamineRisk ?: "none"
-                    ),
+                    risks = if (isClassifyingRisks) null else (risks ?: FoodRiskResult()),
                     isClassifying = isClassifyingRisks
                 )
 

@@ -72,20 +72,20 @@
     "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1273",
-    "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1429",
-    "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1278",
+    "line": "                        NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
   },
   {
     "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1436",
-    "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
+    "line": "                        \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2450",
-    "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1443",
+    "line": "                        subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2459",
+    "line": "                            (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
     "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:209",
@@ -272,7 +272,7 @@
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:324",
+    "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:316",
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {

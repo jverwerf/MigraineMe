@@ -231,6 +231,10 @@ object MetricDisplayStore {
         "alcohol_exposure" to "nutrition_daily::max_alcohol_exposure",
         "gluten_exposure" to "nutrition_daily::max_gluten_exposure",
         "histamine_exposure" to "nutrition_daily::max_histamine_exposure",
+        "aspartame_exposure" to "nutrition_daily::max_aspartame_exposure",
+        "msg_exposure" to "nutrition_daily::max_msg_exposure",
+        "nitrates_exposure" to "nutrition_daily::max_nitrates_exposure",
+        "sulfites_exposure" to "nutrition_daily::max_sulfites_exposure",
     )
 
     // ── Favorites migration ──────────────────────────────────────────────────

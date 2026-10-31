@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4940 entries.
+ * 4950 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -666,6 +666,8 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Vraagt 2 uur na je notitie hoe de sessie ging",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Vraag het gewoon: was het weer een factor, wat hielp de vorige keer. Het antwoordt uit je eigen logs.",
     "Ask questions about your health data" to "Stel vragen over je gezondheidsdata",
+    "Aspartame" to "Aspartaam",
+    "Aspartame exposure high" to "Veel aspartaam",
     "Aspirin" to "Aspirine",
     "Assistant" to "Assistent",
     "At attack start" to "Bij de start",
@@ -706,6 +708,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Auto-update" to "Auto",
     "Auto-update Average" to "Auto-gemiddelde",
     "Auto-update average" to "Auto-gemiddelde",
+    "Automated food trigger flags: tyramine, histamine, additives and more" to "Automatische trigger-flags: tyramine, histamine, additieven en meer",
     "Automated tyramine, alcohol, gluten & histamine classification" to "Automatisch ingedeeld op tyramine, alcohol, gluten en histamine",
     "Automatic Triggers" to "Auto-triggers",
     "Automatic triggers are checked daily at 9 AM your local time and will " to "Auto-triggers worden dagelijks om 9 uur bekeken en ",
@@ -1514,12 +1517,12 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Failed to remove: %1\$s" to "Verwijderen mislukt: %1\$s",
     "Failed to save weights." to "Gewichten niet opgeslagen.",
     "Failed to save." to "Opslaan mislukt.",
-    "Failed to save. Please try again." to "Opslaan mislukt. Probeer het opnieuw.",
-    "Fairly sure" to "Vrij zeker",
-    "Fallback defaults" to "Standaardwaarden",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Failed to save. Please try again." to "Opslaan mislukt. Probeer het opnieuw.",
+    "Fairly sure" to "Vrij zeker",
+    "Fallback defaults" to "Standaardwaarden",
     "Fallback: high trigger count (%1\$s active)" to "Standaard: veel triggers (%1\$s actief)",
     "Fallback: low trigger count (%1\$s active)" to "Standaard: weinig triggers (%1\$s actief)",
     "Fallback: moderate trigger count (%1\$s active)" to "Standaard: gemiddeld aantal triggers (%1\$s actief)",
@@ -1585,6 +1588,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Food and drink" to "Eten en drinken",
     "Food cravings" to "Sterke trek",
     "Food diary, MyFitnessPal, etc." to "Eetdagboek, MyFitnessPal, enz.",
+    "Food trigger flags: tyramine, histamine, additives and more" to "Triggers in eten: tyramine, histamine, additieven en meer",
     "Food, drink, and nutrition triggers" to "Triggers uit eten en drinken",
     "Foods" to "Voeding",
     "Foods Added!" to "Toegevoegd!",
@@ -2201,6 +2205,8 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "MIGRAINE DAYS PER MONTH" to "MIGRAINEDAGEN PER MAAND",
     "MILD" to "LICHT",
     "MODERATE" to "MATIG",
+    "MSG" to "MSG",
+    "MSG exposure high" to "Veel glutamaat",
     "Magnesium" to "Magnesium",
     "Magnesium high" to "Magnesium hoog",
     "Magnesium low" to "Magnesium laag",
@@ -2468,6 +2474,8 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Niacin low" to "Niacine laag",
     "Night" to "Nacht",
     "Night out" to "Avondje uit",
+    "Nitrates" to "Nitraten",
+    "Nitrates exposure high" to "Veel nitraten",
     "No" to "Nee",
     "No\nmigraine" to "Geen\nmigraine",
     "No\nwarning" to "Geen\nsignaal",
@@ -3012,6 +3020,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Reading" to "Lezen",
     "Reading data from Health Connect..." to "Data lezen uit Health Connect...",
     "Reading your file…" to "Bestand lezen…",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Reading your history. This takes a minute for a big file." to "Je geschiedenis wordt gelezen. Bij een groot bestand duurt dit een minuut.",
     "Rebound headache" to "Rebound-hoofdpijn",
     "Recalculate from logged periods" to "Herbereken uit je menstruaties",
@@ -3020,9 +3031,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Recalibration" to "Herijking",
     "Recalibration applied!" to "Opnieuw geijkt!",
     "Recent triggers weigh more than older ones. The score decays over 7 days." to "Recente triggers wegen zwaarder. De waarde zakt over 7 dagen.",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Recommendation alerts" to "Meldingen bij tips",
     "Recommendations" to "Tips",
     "Recommended" to "Aanbevolen",
@@ -3575,6 +3583,8 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Suggested for you" to "Voorgesteld voor jou",
     "Suggested · same name" to "Voorstel · zelfde naam",
     "Suggested: Low" to "Voorstel: laag",
+    "Sulfites" to "Sulfieten",
+    "Sulfites exposure high" to "Veel sulfieten",
     "Sumatriptan" to "Sumatriptan",
     "Summary" to "Overzicht",
     "Summer" to "Zomer",
@@ -4513,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your notes" to "Je notities",
     "Your overview of logged migraine attacks. The card shows three things side-by-side: " to "Je overzicht van genoteerde aanvallen. De kaart toont drie dingen naast elkaar: ",
     "Your own pool" to "Je eigen pool",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your password has been changed." to "Je wachtwoord is gewijzigd.",
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Je eigen AI-assistent met leestoegang tot je gezondheidsgegevens: slaap, HRV, rusthartslag, stress, stappen, weer, aanvallen, triggers, prodromen, medicijnen, verlichting en auradetails. Vraag hem alles in gewone taal; hij antwoordt vanuit wat hij echt in je gegevens ziet, niet met algemeen advies.\n\nVragen over een behandeling of medicijn? Die kun je hier ook stellen. Wij kijken in je gegevens en geven je iets om over na te denken.\n\nGoede vragen om te proberen: \"Wat lokte mijn laatste migraine uit?\", \"Hoe sliep ik de laatste tijd?\", \"Werkt mijn noodmedicatie echt?\", \"Waar zit mijn aura meestal?\", \"Zijn er preventieve behandelingen waar ik naar zou moeten vragen?\"\n\nLet op: de assistent ziet patronen en noemt dingen om te overwegen, maar hij is geen arts en kan niets voorschrijven. Voor echte keuzes over behandeling ga je naar je neuroloog of huisarts.",
     "Your personalised model" to "Je eigen model",
@@ -4523,9 +4536,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your recent personalised advice" to "Je laatste advies op maat",
     "Your recommendations for today are ready. Tap to see them." to "Je aanbevelingen voor vandaag staan klaar. Tik om te zien.",
     "Your request is being reviewed. We’ll enable WHOOP for your account shortly." to "Je aanvraag wordt bekeken. We zetten WHOOP binnenkort aan voor je account.",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your resting BPM" to "Je rusthartslag",
     "Your risk *today.*" to "Je risico *vandaag.*",
     "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",

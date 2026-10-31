@@ -158,7 +158,7 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
 
 
 /**
- * The four exposure verdicts for a day — tyramine, alcohol, gluten, histamine —
+ * The exposure verdicts for a day — tyramine, alcohol, gluten, histamine, additives —
  * as one compact block: geometric icon, name, severity word, vertical bar.
  *
  * These are the only nutrition numbers that mean anything on their own to
@@ -177,10 +177,5 @@ fun NutritionExposureRows(todayItems: List<NutritionLogItem>) {
     if (exposureKeys.isEmpty()) return
 
     fun rank(legacy: String) = exposureLevelFromRank(todayItems.metricTotal(legacy).toInt())
-    RiskExposureMeters(
-        tyramine = rank("tyramine_exposure"),
-        alcohol = rank("alcohol_exposure"),
-        gluten = rank("gluten_exposure"),
-        histamine = rank("histamine_exposure")
-    )
+    RiskExposureMeters(levels = { flag -> rank("${flag}_exposure") })
 }

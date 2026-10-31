@@ -310,21 +310,28 @@ fun riskLevelColor(level: String): Color = when (level) {
 
 
 // ---------------------------------------------------------------------------
-// Exposure meters: the one way the four trigger flags are shown on every Diet
+// Exposure meters: the one way the trigger flags are shown on every Diet
 // surface. Each flag is its object icon from brainy-icons, a word label, the
 // level in words, and the app's 4 dp track filled a third / two thirds / fully.
 // Colour is severity only (the Home screen's red / amber / green), so "high" is
-// the same red on every screen. All four are always drawn: "None" is dimmed,
+// the same red on every screen. All eight are always drawn: "None" is dimmed,
 // never hidden, so a clean food reads as checked rather than unchecked.
 // ---------------------------------------------------------------------------
 
-private data class ExposureSpec(val label: String, val drawable: Int)
+private data class ExposureSpec(val key: String, val label: String, val drawable: Int)
 
+// The migraine set: the four classic flags plus the four additive classes
+// (food flags v2, 2026-10-31). Purine, fructose and protective exist on the
+// same records for the gout app and are not drawn here.
 private val EXPOSURE_SPECS = listOf(
-    ExposureSpec("Tyramine", R.drawable.brainy_risk_tyramine),
-    ExposureSpec("Alcohol", R.drawable.brainy_risk_alcohol),
-    ExposureSpec("Gluten", R.drawable.brainy_risk_gluten),
-    ExposureSpec("Histamine", R.drawable.brainy_risk_histamine),
+    ExposureSpec("tyramine", "Tyramine", R.drawable.brainy_risk_tyramine),
+    ExposureSpec("alcohol", "Alcohol", R.drawable.brainy_risk_alcohol),
+    ExposureSpec("gluten", "Gluten", R.drawable.brainy_risk_gluten),
+    ExposureSpec("histamine", "Histamine", R.drawable.brainy_risk_histamine),
+    ExposureSpec("aspartame", "Aspartame", R.drawable.brainy_risk_aspartame),
+    ExposureSpec("msg", "MSG", R.drawable.brainy_risk_msg),
+    ExposureSpec("nitrates", "Nitrates", R.drawable.brainy_risk_nitrates),
+    ExposureSpec("sulfites", "Sulfites", R.drawable.brainy_risk_sulfites),
 )
 
 /** Rank 0..3 as stored on nutrition rows and rollups, back to its level word. */
@@ -348,25 +355,19 @@ fun RiskExposureMeters(
         }
         return
     }
-    RiskExposureMeters(risks.tyramine, risks.alcohol, risks.gluten, risks.histamine, modifier)
+    RiskExposureMeters(levels = { risks.level(it) }, modifier = modifier)
 }
 
+/** Meters from a level lookup by flag key ("tyramine", "msg", ...). */
 @Composable
 fun RiskExposureMeters(
-    tyramine: String,
-    alcohol: String,
-    gluten: String,
-    histamine: String,
+    levels: (String) -> String,
     modifier: Modifier = Modifier
 ) {
-    val levels = listOf(tyramine, alcohol, gluten, histamine)
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        for (rowIdx in 0 until 2) {
+        EXPOSURE_SPECS.chunked(2).forEach { pair ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                for (colIdx in 0 until 2) {
-                    val i = rowIdx * 2 + colIdx
-                    ExposureMeter(EXPOSURE_SPECS[i], levels[i], Modifier.weight(1f))
-                }
+                pair.forEach { spec -> ExposureMeter(spec, levels(spec.key), Modifier.weight(1f)) }
             }
         }
     }

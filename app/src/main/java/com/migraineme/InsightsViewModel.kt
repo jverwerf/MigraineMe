@@ -1072,6 +1072,10 @@ class InsightsViewModel : ViewModel() {
             "nutrition_records:alcohol_exposure" to "alcohol",
             "nutrition_records:gluten_exposure" to "gluten",
             "nutrition_records:histamine_exposure" to "histamine",
+            "nutrition_records:aspartame_exposure" to "aspartame",
+            "nutrition_records:msg_exposure" to "msg",
+            "nutrition_records:nitrates_exposure" to "nitrates",
+            "nutrition_records:sulfites_exposure" to "sulfites",
         )
     }
 
@@ -1694,7 +1698,8 @@ class InsightsViewModel : ViewModel() {
                 "potassium,calcium,iron,magnesium,zinc,selenium,phosphorus,copper,manganese," +
                 "vitamin_a,vitamin_c,vitamin_d,vitamin_e,vitamin_k,vitamin_b6,vitamin_b12," +
                 "thiamin,riboflavin,niacin,folate,biotin,pantothenic_acid," +
-                "tyramine_exposure,alcohol_exposure,gluten_exposure,histamine_exposure"
+                "tyramine_exposure,alcohol_exposure,gluten_exposure,histamine_exposure," +
+                "aspartame_exposure,msg_exposure,nitrates_exposure,sulfites_exposure"
             val url = "$base/rest/v1/nutrition_records?user_id=eq.$userId&timestamp=gte.${cutoff}T00:00:00Z&select=$cols&order=timestamp.desc&limit=5000"
             val req = Request.Builder().url(url).get()
                 .addHeader("apikey", key)
@@ -1750,12 +1755,16 @@ class InsightsViewModel : ViewModel() {
                 }
             }
 
-            // Risk metrics (tyramine, alcohol, gluten) – string "none"/"low"/"medium"/"high" -> 0/1/2/3
+            // Risk metrics (eight food flags) – string "none"/"low"/"medium"/"high" -> 0/1/2/3
             val riskKeys = listOf(
                 "tyramine" to "tyramine_exposure",
                 "alcohol" to "alcohol_exposure",
                 "gluten" to "gluten_exposure",
-                "histamine" to "histamine_exposure"
+                "histamine" to "histamine_exposure",
+                "aspartame" to "aspartame_exposure",
+                "msg" to "msg_exposure",
+                "nitrates" to "nitrates_exposure",
+                "sulfites" to "sulfites_exposure"
             )
             // ExposureScale also folds "MODERATE", which this when() dropped to
             // null — silently discarding the row from the correlation instead of

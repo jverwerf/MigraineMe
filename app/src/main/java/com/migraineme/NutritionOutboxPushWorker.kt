@@ -79,7 +79,7 @@ class NutritionOutboxPushWorker(
                         nutrition.copy(enriched = true)
                     }
 
-                    // Step 2: Classify food risks (tyramine, alcohol, gluten)
+                    // Step 2: Classify the eleven food flags
                     val risks = if (!enriched.foodName.isNullOrBlank()) {
                         riskClassifier.classify(accessToken, enriched.foodName)
                     } else FoodRiskResult()
@@ -87,7 +87,14 @@ class NutritionOutboxPushWorker(
                         tyramineExposure = risks.tyramine,
                         alcoholExposure = risks.alcohol,
                         glutenExposure = risks.gluten,
-                        histamineExposure = risks.histamine
+                        histamineExposure = risks.histamine,
+                        aspartameExposure = risks.aspartame,
+                        msgExposure = risks.msg,
+                        nitratesExposure = risks.nitrates,
+                        sulfitesExposure = risks.sulfites,
+                        purineExposure = risks.purine,
+                        fructoseExposure = risks.fructose,
+                        protectiveExposure = risks.protective
                     )
 
                     service.uploadNutritionRecord(accessToken, finalNutrition, item.healthConnectId)
@@ -189,6 +196,13 @@ class NutritionOutboxPushWorker(
             alcoholExposure = null,
             glutenExposure = null,
             histamineExposure = null,
+            aspartameExposure = null,
+            msgExposure = null,
+            nitratesExposure = null,
+            sulfitesExposure = null,
+            purineExposure = null,
+            fructoseExposure = null,
+            protectiveExposure = null,
 
             source = "health_connect",
             enriched = false // Will be set to true after enrichment

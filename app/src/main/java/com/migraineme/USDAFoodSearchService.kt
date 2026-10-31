@@ -69,6 +69,13 @@ class USDAFoodSearchService(private val context: Context) {
             alcoholExposure = if (!obj.has("alcohol_exposure") || obj.isNull("alcohol_exposure")) null else obj.optString("alcohol_exposure"),
             glutenExposure = if (!obj.has("gluten_exposure") || obj.isNull("gluten_exposure")) null else obj.optString("gluten_exposure"),
             histamineExposure = if (!obj.has("histamine_exposure") || obj.isNull("histamine_exposure")) null else obj.optString("histamine_exposure"),
+            aspartameExposure = if (!obj.has("aspartame_exposure") || obj.isNull("aspartame_exposure")) null else obj.optString("aspartame_exposure"),
+            msgExposure = if (!obj.has("msg_exposure") || obj.isNull("msg_exposure")) null else obj.optString("msg_exposure"),
+            nitratesExposure = if (!obj.has("nitrates_exposure") || obj.isNull("nitrates_exposure")) null else obj.optString("nitrates_exposure"),
+            sulfitesExposure = if (!obj.has("sulfites_exposure") || obj.isNull("sulfites_exposure")) null else obj.optString("sulfites_exposure"),
+            purineExposure = if (!obj.has("purine_exposure") || obj.isNull("purine_exposure")) null else obj.optString("purine_exposure"),
+            fructoseExposure = if (!obj.has("fructose_exposure") || obj.isNull("fructose_exposure")) null else obj.optString("fructose_exposure"),
+            protectiveExposure = if (!obj.has("protective_exposure") || obj.isNull("protective_exposure")) null else obj.optString("protective_exposure"),
             timestamp = obj.getString("timestamp"),
             source = obj.optString("source", "")
         )
@@ -468,6 +475,13 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                     if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
+                    if (risks.aspartame != "none") append("\"aspartame_exposure\":\"${risks.aspartame}\",")
+                    if (risks.msg != "none") append("\"msg_exposure\":\"${risks.msg}\",")
+                    if (risks.nitrates != "none") append("\"nitrates_exposure\":\"${risks.nitrates}\",")
+                    if (risks.sulfites != "none") append("\"sulfites_exposure\":\"${risks.sulfites}\",")
+                    if (risks.purine != "none") append("\"purine_exposure\":\"${risks.purine}\",")
+                    if (risks.fructose != "none") append("\"fructose_exposure\":\"${risks.fructose}\",")
+                    if (risks.protective != "none") append("\"protective_exposure\":\"${risks.protective}\",")
                 } catch (_: Exception) {}
 
                 // Remove trailing comma and close
@@ -569,6 +583,13 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                     if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
+                    if (risks.aspartame != "none") append("\"aspartame_exposure\":\"${risks.aspartame}\",")
+                    if (risks.msg != "none") append("\"msg_exposure\":\"${risks.msg}\",")
+                    if (risks.nitrates != "none") append("\"nitrates_exposure\":\"${risks.nitrates}\",")
+                    if (risks.sulfites != "none") append("\"sulfites_exposure\":\"${risks.sulfites}\",")
+                    if (risks.purine != "none") append("\"purine_exposure\":\"${risks.purine}\",")
+                    if (risks.fructose != "none") append("\"fructose_exposure\":\"${risks.fructose}\",")
+                    if (risks.protective != "none") append("\"protective_exposure\":\"${risks.protective}\",")
                 } catch (_: Exception) {}
 
                 if (endsWith(",")) deleteCharAt(length - 1)
@@ -637,6 +658,13 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                     if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
+                    if (risks.aspartame != "none") append("\"aspartame_exposure\":\"${risks.aspartame}\",")
+                    if (risks.msg != "none") append("\"msg_exposure\":\"${risks.msg}\",")
+                    if (risks.nitrates != "none") append("\"nitrates_exposure\":\"${risks.nitrates}\",")
+                    if (risks.sulfites != "none") append("\"sulfites_exposure\":\"${risks.sulfites}\",")
+                    if (risks.purine != "none") append("\"purine_exposure\":\"${risks.purine}\",")
+                    if (risks.fructose != "none") append("\"fructose_exposure\":\"${risks.fructose}\",")
+                    if (risks.protective != "none") append("\"protective_exposure\":\"${risks.protective}\",")
                 } catch (_: Exception) {}
 
                 if (endsWith(",")) deleteCharAt(length - 1)
@@ -767,6 +795,13 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                     if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
+                    if (risks.aspartame != "none") append("\"aspartame_exposure\":\"${risks.aspartame}\",")
+                    if (risks.msg != "none") append("\"msg_exposure\":\"${risks.msg}\",")
+                    if (risks.nitrates != "none") append("\"nitrates_exposure\":\"${risks.nitrates}\",")
+                    if (risks.sulfites != "none") append("\"sulfites_exposure\":\"${risks.sulfites}\",")
+                    if (risks.purine != "none") append("\"purine_exposure\":\"${risks.purine}\",")
+                    if (risks.fructose != "none") append("\"fructose_exposure\":\"${risks.fructose}\",")
+                    if (risks.protective != "none") append("\"protective_exposure\":\"${risks.protective}\",")
                 } catch (_: Exception) {}
 
                 // Remove trailing comma and close
@@ -1319,6 +1354,13 @@ data class NutritionLogItem(
     val alcoholExposure: String?,
     val glutenExposure: String?,
     val histamineExposure: String?,
+    val aspartameExposure: String? = null,
+    val msgExposure: String? = null,
+    val nitratesExposure: String? = null,
+    val sulfitesExposure: String? = null,
+    val purineExposure: String? = null,
+    val fructoseExposure: String? = null,
+    val protectiveExposure: String? = null,
     val timestamp: String,
     val source: String
 )
@@ -1414,6 +1456,13 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
     MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> ExposureScale.rank(alcoholExposure)
     MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> ExposureScale.rank(glutenExposure)
     MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> ExposureScale.rank(histamineExposure)
+    MonitorCardConfig.METRIC_ASPARTAME_EXPOSURE -> ExposureScale.rank(aspartameExposure)
+    MonitorCardConfig.METRIC_MSG_EXPOSURE -> ExposureScale.rank(msgExposure)
+    MonitorCardConfig.METRIC_NITRATES_EXPOSURE -> ExposureScale.rank(nitratesExposure)
+    MonitorCardConfig.METRIC_SULFITES_EXPOSURE -> ExposureScale.rank(sulfitesExposure)
+    MonitorCardConfig.METRIC_PURINE_EXPOSURE -> ExposureScale.rank(purineExposure)
+    MonitorCardConfig.METRIC_FRUCTOSE_EXPOSURE -> ExposureScale.rank(fructoseExposure)
+    MonitorCardConfig.METRIC_PROTECTIVE_EXPOSURE -> ExposureScale.rank(protectiveExposure)
     else -> null
 }
 
