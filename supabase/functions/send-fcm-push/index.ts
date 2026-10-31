@@ -167,10 +167,29 @@ async function sendFcmMessage(
   if (!response.ok) {
     const error = await response.text();
     console.error(`FCM send failed for token ${fcmToken.slice(0, 20)}...: ${error}`);
+    // UNREGISTERED = the app was uninstalled, so the token is dead for good.
+    // Clear it so the hourly broadcasts stop re-sending to a phone that is
+    // gone (a third of all sends by 2026-10-31). Nothing else on the profile
+    // changes; the app writes a fresh token on its next launch.
+    if (error.includes("UNREGISTERED")) await forgetDeadToken(fcmToken);
     return false;
   }
 
   return true;
+}
+
+async function forgetDeadToken(fcmToken: string): Promise<void> {
+  try {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error } = await admin
+      .from("profiles")
+      .update({ fcm_token: null })
+      .eq("fcm_token", fcmToken);
+    if (error) console.error(`forgetDeadToken failed: ${error.message}`);
+    else console.log(`Cleared dead FCM token ${fcmToken.slice(0, 20)}...`);
+  } catch (e) {
+    console.error(`forgetDeadToken threw: ${String(e)}`);
+  }
 }
 
 // ─── Evening check-in: get tokens for users at 8pm local ───────────
