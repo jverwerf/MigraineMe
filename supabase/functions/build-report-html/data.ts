@@ -677,7 +677,8 @@ export async function loadReportData(
   const lifestyle: ReportData["lifestyle"] = [];
   {
     const CURATED = ["sleep_dur", "sleep_score", "bedtime", "late_screen", "steps",
-      "hydration", "caffeine", "alcohol", "tyramine", "stress", "hrv", "rhr", "mindfulness"];
+      "hydration", "caffeine", "alcohol", "tyramine", "gluten", "histamine",
+      "aspartame", "msg", "nitrates", "sulfites", "stress", "hrv", "rhr", "mindfulness"];
     const keys = [...CURATED];
     for (const k of params.metricKeys ?? []) if (!keys.includes(k)) keys.push(k);
     const defs = keys.map((k) => METRICS.find((def) => def.key === k))

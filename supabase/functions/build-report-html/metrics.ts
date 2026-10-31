@@ -119,4 +119,9 @@ export const METRICS: MetricDef[] = [
   { key: "alcohol",     label: "Alcohol",       unit: "risk", color: "#EF5350", table: "nutrition_records", column: "alcohol_exposure",  group: "Diet", kind: "record_risk" },
   { key: "gluten",      label: "Gluten",        unit: "risk", color: "#FFD54F", table: "nutrition_records", column: "gluten_exposure",   group: "Diet", kind: "record_risk" },
   { key: "histamine",   label: "Histamine",     unit: "risk", color: "#AB47BC", table: "nutrition_records", column: "histamine_exposure", group: "Diet", kind: "record_risk" },
+  // Food flags v2 (2026-10-31): the four additive classes.
+  { key: "aspartame",   label: "Aspartame",     unit: "risk", color: "#26A69A", table: "nutrition_records", column: "aspartame_exposure", group: "Diet", kind: "record_risk" },
+  { key: "msg",         label: "MSG",           unit: "risk", color: "#8D6E63", table: "nutrition_records", column: "msg_exposure",       group: "Diet", kind: "record_risk" },
+  { key: "nitrates",    label: "Nitrates",      unit: "risk", color: "#EC407A", table: "nutrition_records", column: "nitrates_exposure",  group: "Diet", kind: "record_risk" },
+  { key: "sulfites",    label: "Sulfites",      unit: "risk", color: "#5C6BC0", table: "nutrition_records", column: "sulfites_exposure",  group: "Diet", kind: "record_risk" },
 ];

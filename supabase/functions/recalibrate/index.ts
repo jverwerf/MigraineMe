@@ -374,7 +374,7 @@ serve(async (req: Request) => {
       // filtered here — the tour cleanup drops the table wholesale instead.
       supabase.from("stress_index_daily").select("date, value").eq("user_id", userId).gte("date", last60CutoffIso),
       supabase.from("recovery_score_daily").select("date, value_pct").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
-      supabase.from("nutrition_daily").select("date, total_calories, total_protein_g, total_carbs_g, total_fat_g, total_fiber_g, total_sugar_g, total_sodium_mg, total_caffeine_mg, max_tyramine_exposure, max_alcohol_exposure, max_gluten_exposure, max_histamine_exposure").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("nutrition_daily").select("date, total_calories, total_protein_g, total_carbs_g, total_fat_g, total_fiber_g, total_sugar_g, total_sodium_mg, total_caffeine_mg, max_tyramine_exposure, max_alcohol_exposure, max_gluten_exposure, max_histamine_exposure, max_aspartame_exposure, max_msg_exposure, max_nitrates_exposure, max_sulfites_exposure").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
       supabase.from("hydration_daily").select("date, value_ml").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
       supabase.from("steps_daily").select("date, value_count").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
       supabase.from("resting_hr_daily").select("date, value_bpm").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
@@ -619,6 +619,10 @@ serve(async (req: Request) => {
       alcohol_n: riskNum(r.max_alcohol_exposure),
       gluten_n: riskNum(r.max_gluten_exposure),
       histamine_n: riskNum(r.max_histamine_exposure),
+      aspartame_n: riskNum(r.max_aspartame_exposure),
+      msg_n: riskNum(r.max_msg_exposure),
+      nitrates_n: riskNum(r.max_nitrates_exposure),
+      sulfites_n: riskNum(r.max_sulfites_exposure),
     }));
 
     const lifestyle = {
@@ -645,6 +649,10 @@ serve(async (req: Request) => {
       alcoholExposure: avgBy(nutritionRows, "alcohol_n"),
       glutenExposure: avgBy(nutritionRows, "gluten_n"),
       histamineExposure: avgBy(nutritionRows, "histamine_n"),
+      aspartameExposure: avgBy(nutritionRows, "aspartame_n"),
+      msgExposure: avgBy(nutritionRows, "msg_n"),
+      nitratesExposure: avgBy(nutritionRows, "nitrates_n"),
+      sulfitesExposure: avgBy(nutritionRows, "sulfites_n"),
     };
 
     // Bedtime: clock readings, so averages need the shift-past-noon trick and
@@ -1401,7 +1409,7 @@ Missed activities — what she's losing because of migraines. Frame this as disc
 Medicines (what she takes, frequency, what appears to be helping), reliefs (what she reaches for, effectiveness), and treatment courses: what she's on or has tried, for how long, side effects logged during them, and whether taking treatment early vs late changed peak severity (cite the timing numbers when present). How she manages attacks.
 
 === Lifestyle ===
-Sleep (including bedtime regularity), stress, nutrition (calories, macros), food-risk exposure (tyramine, alcohol, gluten, histamine), hydration, exercise, HRV, screen habits (total and late-night), mindfulness. Baseline patterns over the window. Flag extremes in either direction (too much/too little), independent of whether they linked to migraines.
+Sleep (including bedtime regularity), stress, nutrition (calories, macros), food-risk exposure (tyramine, alcohol, gluten, histamine, aspartame, MSG, nitrates, sulfites), hydration, exercise, HRV, screen habits (total and late-night), mindfulness. Baseline patterns over the window. Flag extremes in either direction (too much/too little), independent of whether they linked to migraines.
 
 === Trend ===
 Compare the LAST 30 DAYS against ALL PRIOR HISTORY across the 5 profiles above. State direction for each (improving / stable / worsening) with concrete numbers (e.g. "migraines went from 4.2/mo prior to 5.1 last 30d"). End with the single most important shift to watch.
@@ -1706,7 +1714,7 @@ function buildCall1Message(
   L.push(`- Steps: ${fmt(ls.steps, "")} | Resting HR: ${fmt(ls.restingHr, " bpm")} | HRV: ${fmt(ls.hrv, " ms")}`);
   L.push(`- Screen time: ${fmt(ls.screenTime, "h")} | Late-night screen (after bedtime hours): ${fmt(ls.lateScreen, "h")}`);
   L.push(`- Mindfulness: ${fmt(ls.mindfulness, " min")}`);
-  L.push(`- Food-risk exposure (0 none … 3 high, avg of daily max): tyramine ${fmt(ls.tyramine, "")} | alcohol ${fmt(ls.alcoholExposure, "")} | gluten ${fmt(ls.glutenExposure, "")} | histamine ${fmt(ls.histamineExposure, "")}`);
+  L.push(`- Food-risk exposure (0 none … 3 high, avg of daily max): tyramine ${fmt(ls.tyramine, "")} | alcohol ${fmt(ls.alcoholExposure, "")} | gluten ${fmt(ls.glutenExposure, "")} | histamine ${fmt(ls.histamineExposure, "")} | aspartame ${fmt(ls.aspartameExposure, "")} | MSG ${fmt(ls.msgExposure, "")} | nitrates ${fmt(ls.nitratesExposure, "")} | sulfites ${fmt(ls.sulfitesExposure, "")}`);
   if (bedtimeStats.n > 0 && bedtimeStats.meanHour != null && bedtimeStats.sdHours != null) {
     const hh = Math.floor(bedtimeStats.meanHour), mm = Math.round((bedtimeStats.meanHour - hh) * 60);
     L.push(`- Bedtime: around ${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")} UTC, varying by ±${bedtimeStats.sdHours.toFixed(1)}h night to night (n=${bedtimeStats.n}). Clock is UTC — use it for regularity, not the exact local hour.`);

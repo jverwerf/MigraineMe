@@ -107,6 +107,7 @@ export const ANSWER_FIELDS: AnswerField[] = [
   C("alcohol_triggers", "alcoholTriggers", "diet", "Does alcohol trigger {noun}?"),
   M("specific_drinks", "specificDrinks", "diet", "Are specific drinks worse?", ["Red wine", "Beer", "White wine", "Spirits", "Any alcohol"]),
   MAP("tyramine_foods", "tyramineFoods", "diet", "Do any of these foods trigger {noun}?", ["Aged cheese", "Chocolate", "Cured meats", "Fermented foods"]),
+  MAP("additive_foods", "additiveFoods", "diet", "Do any of these additives trigger {noun}?", ["Aspartame", "MSG", "Nitrates", "Sulfites"]),
   MAP("histamine_foods", "histamineFoods", "diet", "Any high-histamine foods trigger {noun}?", ["Aged cheese", "Fermented foods", "Processed meat", "Shellfish", "Tomatoes", "Spinach", "Citrus", "Vinegar"]),
   S("gluten_sensitivity", "glutenSensitivity", "diet", "Are you sensitive to gluten?", ["Yes, diagnosed", "I suspect so", "No", "Not sure"], false),
   C("gluten_triggers", "glutenTriggers", "diet", "Does eating gluten trigger {noun}?"),

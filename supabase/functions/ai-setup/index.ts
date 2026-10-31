@@ -427,6 +427,7 @@ Diet & substances:
 - alcohol_triggers: <certainty>
 - specific_drinks: array, subset of ["Red wine", "Beer", "White wine", "Spirits", "Any alcohol"]
 - tyramine_foods: map, keys from ["Aged cheese", "Chocolate", "Cured meats", "Fermented foods"] → <certainty>
+- additive_foods: map, keys from ["Aspartame", "MSG", "Nitrates", "Sulfites"] → <certainty> (Aspartame = diet drinks / sugar-free; MSG = takeaways, instant noodles, stock cubes; Nitrates = bacon, ham, cured meats; Sulfites = wine, dried fruit)
 - gluten_sensitivity: "Yes, diagnosed" | "I suspect so" | "No" | "Not sure"
 - gluten_triggers: <certainty>
 - eating_patterns: map, keys from ["Skipping meals", "Sugar", "Salty food", "Overeating", "Dehydration"] → <certainty>
@@ -475,6 +476,7 @@ Pool labels (use EXACT labels from the lists in user_message — be generous, in
 - "Skipping meals is bad for me" → eating_patterns={"Skipping meals":"OFTEN"}
 - "I'm on the pill and they got worse" → uses_contraception="Yes", contraception_effect="Worse — sometimes" (or "Worse — every time" if strongly stated)
 - "Aged cheese gives me one" → tyramine_foods={"Aged cheese":"EVERY_TIME"}
+- "Diet coke sets me off" → additive_foods={"Aspartame":"OFTEN"}; "bacon or ham and I'm done" → additive_foods={"Nitrates":"OFTEN"}
 - "I work night shifts" → daily_routine="Shift work / rotating", sleep_issues=["Irregular schedule"]
 
 === POOL INFERENCE (be GENEROUS — these are the most-missed) ===

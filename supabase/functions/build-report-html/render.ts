@@ -2496,7 +2496,8 @@ function lifestyleBlock(d: ReportData): string {
   const GOOD_UP = new Set(["sleep_dur", "sleep_score", "hydration", "steps",
     "hrv", "mindfulness", "recovery"]);
   const GOOD_DOWN = new Set(["stress", "rhr", "late_screen", "alcohol",
-    "tyramine", "screen_time"]);
+    "tyramine", "gluten", "histamine", "aspartame", "msg", "nitrates", "sulfites",
+    "screen_time"]);
 
   const clock = (v: number): string => {
     const h = ((v % 24) + 24) % 24;
