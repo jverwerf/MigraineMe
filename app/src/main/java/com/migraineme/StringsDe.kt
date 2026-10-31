@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4965 entries.
+ * 4984 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -133,6 +133,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%s (Premium)" to "%s (Premium)",
     "%s activities" to "%s Aktivitäten",
     "%s activities added" to "%s Aktivitäten erfasst",
+    "%s activities and places linked to your migraines" to "%s Aktivitäten und Orte bei deinen Migränen",
     "%s activity" to "%s Aktivität",
     "%s added" to "%s dazu",
     "%s areas selected" to "%s Bereiche gewählt",
@@ -156,6 +157,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%s foods" to "%s Speisen",
     "%s foods have been added to your nutrition log." to "%s Lebensmittel wurden zu deinem Ernährungsprotokoll hinzugefügt.",
     "%s free" to "%s frei",
+    "%s habits that help you" to "%s Gewohnheiten, die dir helfen",
     "%s has been added to your nutrition log." to "%s ist jetzt in deinem Ernährungslog.",
     "%s hidden · show" to "%s mehr · zeigen",
     "%s hours" to "%s Std.",
@@ -166,6 +168,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%s location" to "%s Ort",
     "%s locations" to "%s Orte",
     "%s locations added" to "%s Orte erfasst",
+    "%s logged items changed this month" to "%s Einträge haben sich diesen Monat verändert",
     "%s logged today · tap to add" to "%s heute erfasst · tippe zum Ergänzen",
     "%s longer" to "%s länger",
     "%s medicine" to "%s Medikament",
@@ -186,12 +189,14 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%s missed activity" to "%s verpasst",
     "%s open" to "%s offen",
     "%s pain" to "%s Schmerz",
+    "%s patterns found in your data" to "%s Muster in deinen Daten gefunden",
     "%s plan" to "%s-Plan",
     "%s prodrome" to "%s Prodrom",
     "%s prodromes" to "%s Prodrome",
     "%s prodromes selected" to "%s Prodrome gewählt",
     "%s product photo" to "Produktfoto: %s",
     "%s pts" to "%s Pkt.",
+    "%s recommendations for you" to "%s Empfehlungen für dich",
     "%s relief" to "%s Linderung",
     "%s reliefs" to "%s Linderung",
     "%s reliefs added" to "%s Linderung dazu",
@@ -203,11 +208,14 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%s times" to "%s-mal",
     "%s times a day" to "%s Mal am Tag",
     "%s total logged" to "%s insgesamt",
+    "%s treatments rated from your logs" to "%s Behandlungen bewertet",
     "%s trigger" to "%s Auslöser",
     "%s triggers" to "%s Auslöser",
+    "%s triggers driving your risk today" to "%s Auslöser treiben heute dein Risiko",
     "%s triggers left at None (no influence)" to "%s Auslöser auf Keine (ohne Einfluss)",
     "%s triggers selected" to "%s Auslöser gewählt",
     "%s uses" to "%s Anwendungen",
+    "%s ways migraines affected you" to "%s Arten, wie Migräne dich getroffen hat",
     "%s wks" to "%s Wo.",
     "%s zones" to "%s Zonen",
     "%s — tap to edit" to "%s — tippen: ändern",
@@ -249,6 +257,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "1 Year" to "1 Jahr",
     "1 activity" to "1 Aktivität",
     "1 activity added" to "1 Aktivität erfasst",
+    "1 activity or place linked to your migraines" to "1 Aktivität oder Ort bei deinen Migränen",
     "1 added" to "1 dazu",
     "1 area selected" to "1 Bereich gewählt",
     "1 attack" to "1 Attacke",
@@ -257,19 +266,26 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "1 day before onset" to "1 Tag vor Beginn",
     "1 entry" to "1 Eintrag",
     "1 event" to "1 Ereignis",
+    "1 habit that helps you" to "1 Gewohnheit, die dir hilft",
     "1 hour" to "1 Stunde",
     "1 location added" to "1 Ort erfasst",
+    "1 logged item changed this month" to "1 Eintrag hat sich diesen Monat verändert",
     "1 medicine added" to "1 Medikament dazu",
     "1 migraine ({0}%)" to "1 Migräne ({0}%)",
     "1 missed activity" to "1 Aktivität fehlt",
+    "1 pattern found in your data" to "1 Muster in deinen Daten gefunden",
     "1 prodrome selected" to "1 Prodrom gewählt",
+    "1 recommendation for you" to "1 Empfehlung für dich",
     "1 relief added" to "1 Linderung dazu",
     "1 reply" to "1 Antwort",
     "1 serving = %1\$s %2\$s" to "1 Portion = %1\$s %2\$s",
     "1 serving ≈ %s g" to "1 Portion ≈ %s g",
     "1 symptom selected" to "1 Symptom gewählt",
+    "1 treatment rated from your logs" to "1 Behandlung bewertet",
+    "1 trigger driving your risk today" to "1 Auslöser treibt heute dein Risiko",
     "1 trigger selected" to "1 Auslöser gewählt",
     "1 use" to "1 Anwendung",
+    "1 way migraines affected you" to "1 Art, wie Migräne dich getroffen hat",
     "1 zone" to "1 Zone",
     "1 · Usually starts" to "1 · Beginnt meist",
     "1-2 cups" to "1-2 Tassen",
@@ -1501,6 +1517,9 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Expired" to "Abgelaufen",
     "Expires in %1\$s:%2\$s" to "Läuft ab in %1\$s:%2\$s",
     "Explore Migraines" to "Migräne erkunden",
+)
+
+private fun deStrings1(): Map<String, String> = mapOf(
     "External" to "Extern",
     "External and physical triggers" to "Äußere und körperliche Auslöser",
     "Extra notes (optional)" to "Notizen (optional)",
@@ -1517,9 +1536,6 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Failed to change password." to "Passwortänderung fehlgeschlagen.",
     "Failed to delete account. Please try again." to "Konto konnte nicht gelöscht werden. Versuch es erneut.",
     "Failed to generate PDF" to "PDF-Erstellung fehlgeschlagen",
-)
-
-private fun deStrings1(): Map<String, String> = mapOf(
     "Failed to load proposals" to "Vorschläge nicht ladbar",
     "Failed to log period" to "Periode nicht erfasst",
     "Failed to remove: %1\$s" to "Nicht entfernt: %1\$s",
@@ -3004,6 +3020,9 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Quiet" to "Leise",
     "Quiet days" to "Ruhige Tage",
     "Quiet environment" to "Ruhige Umgebung",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "RECOMMENDED" to "EMPFOHLEN",
     "REM Sleep" to "REM-Schlaf",
     "REM sleep" to "REM-Schlaf",
@@ -3020,9 +3039,6 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Bewerte die Stärke und markiere, wo es wehtut. Einträge kommen zu dieser Migräne hinzu, ohne Geloggtes zu löschen.",
     "Re-assess my profile" to "Profil neu prüfen",
     "Re-authentication failed." to "Erneute Anmeldung fehlgeschlagen.",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Als wahrscheinlich gelesen, mit Grund",
     "Read full article" to "Ganzer Artikel",
     "Read full assessment" to "Ganze Bewertung",
@@ -4507,6 +4523,9 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your free trial just ended" to "Deine Testphase ist gerade abgelaufen",
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Deine volle Medikamentenliste. Alles, was du über den Assistenten, Quick Log oder den Tages-Check erfassen könntest, liegt hier, sortiert nach Kategorie (Schmerzmittel, Mittel gegen Übelkeit, CGRP, Vorbeugung, Präparat, Triptan, Sonstiges).\n\nFür jedes Medikament:\n• Tippe den Stern an, um es als Favorit anzuheften. Favoriten stehen in Quick Log oben, deine meistgenutzten sind so einen Tipp entfernt.\n• Tippe die Zeile an, um die Kategorie zu ändern. Die Kategorie nutzen die KI-Empfehlungen, um Übergebrauch zu erkennen (z. B. ein Triptan an mehr als 10 Tagen im Monat oder tägliche Schmerzmittel). Stimmt sie nicht, greift die Warnung nicht.\n• Tippe den Papierkorb an, um ein Medikament ganz zu entfernen. Frühere Einträge bleiben unberührt.\n\nMit dem +-Knopf fügst du hinzu, was zu dir gehört (ein Markenname, ein Präparat, ein Vitamin). Eigene Einträge landen sofort in deiner Liste und erscheinen im Assistenten und in Quick Log.\n\nMedikamente haben keine Gewichtung, weil sie deinen Eimer nicht füllen; die Erkenntnisse bewerten über die Karte 'Was half' getrennt, wie gut jedes bei dir wirkt.",
     "Your full migraine profile, AI-configured in under a minute." to "Dein komplettes Migräneprofil, per KI in unter einer Minute eingerichtet.",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Dein voller Prodrom-Pool. Prodrome sind die frühen Warnzeichen 6-48 Stunden vor einer Attacke: Gähnen, steifer Nacken, Heißhunger, Stimmungswechsel, Müdigkeit, verschwommenes Sehen, häufiges Wasserlassen, mehr Durst, Licht- oder Lärmempfindlichkeit.\n\nFür jedes Prodrom:\n• Tippe die Zeile zum Aufklappen. Setze die Stärke (HOCH / MITTEL / NIEDRIG / KEINE). Anders als Auslöser, die Attacken „verursachen“, heißen Prodrome, dass eine Attacke schon unterwegs ist, deshalb hebt ein erfasstes Prodrom deinen Eimer wie ein frischer Auslöser. HOCH gewichtete Prodrome heben deine Anzeige spürbar.\n• Setze einen Stern, um es oben im Schnell-Log zu halten.\n• Tippe den Papierkorb, um es aus dem Pool zu nehmen.\n\nMit + fügst du hinzu, was dir an eigenen Vorzeichen aufgefallen ist. Persönliche Prodrome (z. B. „um 3 Uhr hellwach“, „grundlos gereizt“) sind oft die verlässlichsten Vorboten.\n\nErfasse sie, sobald du eines bemerkst. Die Insights-Karte „Was ist passiert“ bewertet anhand deines Verlaufs, welche Zeichen deine Attacken zuverlässig vorhersagen, sodass die App mit der Zeit lernt, welche bei dir am stärksten zählen.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Dein voller Linderungs-Pool: alles ohne Medikament, was dir bei einer Attacke hilft. Hinlegen, Kühlpacks, dunkle Räume, heiße Duschen, Trinken, bestimmte Dehnungen, Atemübungen, sogar das Verlassen einer Auslöser-Umgebung. Neuromodulationsgeräte (CEFALY, Nerivio, gammaCore und ähnliche) gehören auch hierher: Erfasse jede Sitzung, dann bewertet Insights, wie gut jedes Gerät bei dir wirkt.\n\nFür jede Linderung:\n• Tippe den Stern, um sie als Favorit zu setzen. Favoriten stehen im Schnell-Log oben, deine üblichen sind also ein Tippen entfernt.\n• Tippe den Papierkorb, um sie ganz zu entfernen. Frühere Einträge damit bleiben unberührt.\n\nMit + fügst du hinzu, was zu dir passt (z. B. „draußen gehen“, „Duschstrahl im Nacken“, „Lavendelöl“). Je genauer, desto brauchbarer die Analysen.\n\nLinderungen haben kein Schweregewicht, weil sie die Anzeige nicht speisen. Insights bewertet, wie gut jede wirklich half, über Stärke und Dauer der Attacken, bei denen du sie genutzt hast (Karte „Was hat gewirkt“). Je öfter du sie an Migränen hängst, desto schärfer der Wert.",
     "Your goal reminder" to "Deine Ziel-Erinnerung",
@@ -4515,6 +4534,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test.",
     "Your history is still imported into the journal today." to "Dein Verlauf landet trotzdem heute im Tagebuch.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Deine importierten Medikamente und Linderungen sind jetzt Favoriten im Eintrags-Assistenten.",
+    "Your insight for today is ready" to "Deine Erkenntnis für heute ist bereit",
     "Your journal" to "Dein Journal",
     "Your labels next to ours" to "Deine Begriffe neben unseren",
     "Your labels, next to the ones MigraineMe uses." to "Deine Begriffe neben denen, die MigraineMe nutzt.",
@@ -4523,9 +4543,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Deine Medikamente der letzten 30 Tage. Jede Zeile zeigt den Namen und die ",
     "Your migraine data is not affected by this." to "Deine Migränedaten bleiben davon unberührt.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "Deine Migränewahrscheinlichkeit als eine Zahl. Wir summieren deine Auslöser und Prodrome der letzten 7 Tage und gewichten neuere Tage stärker als ältere (heute zählt am meisten). Das Gewicht jedes Eintrags kommt aus der Stärke, die du in den Einstellungen gesetzt hast; menstruation_predicted nutzt ein symmetrisches Fenster um dein erwartetes Periodendatum, und ovulation_predicted macht dasselbe um den erwarteten Eisprung, wenn dieser Schalter an ist.\n\nDie Karte zeigt: den Wert, deine Zone (NIEDRIG / LEICHT / HOCH — die Schwellen sind persönlich), die Zahl der heutigen Auslöser und die drei Lieblingsmetriken, die du gepinnt hast. Tippe für die beitragenden Auslöser in Reihenfolge und einen 14-Tage-Verlauf (Premium).\n\nNimm es als Tagescheck: Gelb oder Rot heißt, heute keine neuen Auslöser stapeln und über vorbeugende Linderung nachdenken.",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score." to "Deine Migränewahrscheinlichkeit für heute, nach der Eimer-Theorie: Jeder Auslöser und jedes Prodrom der letzten 7 Tage stapelt sich in deinem persönlichen Eimer, neuere Tage zählen mehr als ältere.\n\nDie Anzeige wird gelb, sobald du deine LEICHT-Schwelle überschreitest, und rot bei HOCH.\n\nÜber der Anzeige liegt der Schnell-Log für Einträge mit einem Tippen (Migräne, Prodrom, Auslöser, Medikament, Linderung, Symptom). Darunter: Frag MigraineMe (Chat mit deinen Daten) und die drei größten Beiträge zum heutigen Wert.",
     "Your migraine profile" to "Dein Migräneprofil",
     "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." to "Dein Migränerisiko für heute, berechnet aus jedem Auslöser und Prodrom, das du in den letzten 7 Tagen erfasst hast. Dahinter steht die Eimer-Theorie der Migräne: Auslöser sammeln sich in deinem persönlichen Eimer, und ist der Stand hoch genug, kippt es in eine Attacke.\n\nProdrome zählen mit. Steckst du in einem (Gähnen, steifer Nacken, Stimmungswechsel und der Rest), ist eine Attacke schon unterwegs, also hebt ein erfasstes Prodrom den Eimer genauso wie ein frischer Auslöser.\n\nDas Gewicht jedes Eintrags hängt an zwei Dingen: wie stark du ihn markiert hast (HOCH zählt mehr als LEICHT oder TIEF, KEINE zählt nicht) und wie frisch er ist. Die Beiträge klingen jeden Tag danach ab, ein Auslöser von heute Morgen zählt also viel mehr als einer von vor sechs Tagen.\n\nDie große Zahl ist dein Rohwert (dein aktueller Stand im Eimer). Die Farbe kommt aus deinen drei persönlichen Schwellen: über der Schwelle TIEF wird die Anzeige grün; über LEICHT wird sie gelb; über HOCH wird sie rot und der Eimer ist nah am Überlaufen. Die Schwellen starten mit sinnvollen Vorgaben und justieren sich mit der Zeit nach, damit die Farbe zeigt, wie ein riskanter Tag bei dir aussieht, nicht beim Durchschnitt.\n\nUnter der Anzeige zeigt die Karte mit den aktiven Auslösern die 3 Dinge, die gerade am meisten drücken. Tippe die Anzeige selbst an, um die Risiko-Ansicht zu öffnen, die alle Faktoren der Reihe nach auflistet und wie viel jeder beisteuert. Von dort tippst du oben an der Anzeige auf \"Verlauf →\", um die 14-Tage-Grafik zu öffnen und zu sehen, wie dein Stand über die letzten zwei Wochen Tag für Tag stieg und fiel (praktisch, um zu sehen, an welchen Tagen dein Wert vor einer Attacke am höchsten war).\n\nAlles ist einstellbar. Öffne das Menü und tippe Einträge, um zu ändern, welche Auslöser und Prodrome dir wichtig sind und wie stark jedes zählt. Tippe Risikomodell für die Schwellen und die Abklingkurve.",
@@ -4554,6 +4571,8 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "Your risk *today.*" to "Dein Risiko *heute.*",
     "Your risk gauge is personal from day one instead of week five." to "Deine Risikoanzeige ist ab Tag eins persönlich, nicht erst ab Woche fünf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Dein Risikomodell steht.\n\nWir laden ein paar Beispieldaten, damit du die App in Aktion siehst. Danach: eine kurze Tour durch alle Seiten.",
+    "Your risk score checked on %s days" to "Dein Risikowert, geprüft an %s Tagen",
+    "Your risk score checked on 1 day" to "Dein Risikowert, geprüft an 1 Tag",
     "Your subscription" to "Dein Abo",
     "Your summary" to "Zusammenfassung",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Deine Bilanz zu Therapien und Linderung, gemessen an dem, was deine Daten wirklich zeigen.\n• Einzelne Therapien: welche Medikamente und Linderungen verlässlich etwas bringen. Zwei Hauptsignale:\n  - Weniger Stärke: wie viel milder deine Migränen mit dieser Therapie verlaufen, verglichen mit deiner Stärke ohne Behandlung.\n  - Weniger Dauer: wie viel kürzer sie verlaufen als eine übliche Attacke gleicher Stärke bei dir.\n  - Auch deine eigene Bewertung der Linderung (der Regler beim Erfassen) fließt ein, vor allem solange du zu wenige unbehandelte Attacken zum Vergleich hast.\n• Kombinationen: welche Therapien im Paar gut wirken. Manchmal werden zwei allein schwache zusammen stark; manchmal bringt das Paar nichts dazu.\n• Nach Symptom: welche Therapie bei welchem Symptom am meisten hilft. Nützlich, wenn eine Attacke ein bestimmendes Symptom hat: ein Triptan wirkt vielleicht besser bei Übelkeit, ein NSAR passt eher, wenn der Schmerz im Vordergrund steht.\n\nDie Vorschau zeigt die 2 wichtigsten aus jeder Schicht. Tippe hinein für die ganze sortierte Liste.\n\nDie Funde werden schärfer, je mehr du erfasst, vor allem mit gleichmäßigen Bewertungen der Linderung, Angaben zur Dosis und Endzeiten pro Attacke. \"Etwas genommen, aber nicht notiert was\" kann hier nicht einfließen.",

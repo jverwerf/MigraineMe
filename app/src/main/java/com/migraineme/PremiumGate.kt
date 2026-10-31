@@ -115,6 +115,12 @@ fun PremiumGate(
      *  small controls such as a button, where the full card upsell would tower
      *  over the thing it covers. The whole area taps through to [onUpgrade]. */
     compact: Boolean = false,
+    /** How many results sit behind the lock, already worded ("3 patterns found
+     *  in your data"). When set it becomes the headline in place of [message],
+     *  so a free user sees that the card holds something of theirs. Pass null
+     *  for 0: a card with nothing behind it keeps the generic upsell, never
+     *  "0 found". Use [resultCountLine] to build it. */
+    resultHeadline: String? = null,
     onUpgrade: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -191,14 +197,25 @@ fun PremiumGate(
                     modifier = Modifier.size(32.dp)
                 )
 
-                Text(
-                    text = message,
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    textAlign = TextAlign.Center
-                )
+                if (resultHeadline != null) {
+                    Text(
+                        text = resultHeadline,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        text = message,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
 
                 if (subtitle != null) {
                     Text(
@@ -231,6 +248,18 @@ fun PremiumGate(
             }
         }
     }
+}
+
+/**
+ * Worded result count for [PremiumGate]'s resultHeadline: null for 0 (keep the
+ * generic upsell), [one] for 1, [many] for 2+. Callers pass both already
+ * wrapped in t(...) so the extractor picks the keys up, e.g.
+ * resultCountLine(n, t("1 pattern found"), t("%s patterns found", n)).
+ */
+fun resultCountLine(count: Int, one: String, many: String): String? = when {
+    count <= 0 -> null
+    count == 1 -> one
+    else -> many
 }
 
 /**

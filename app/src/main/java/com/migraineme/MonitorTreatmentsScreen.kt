@@ -512,6 +512,8 @@ fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
         PremiumGate(
             message = t("Unlock Treatments"),
             subtitle = t("See how well each drug, device, or lifestyle change reduces your migraine days"),
+            resultHeadline = resultCountLine(rows.size,
+                t("1 treatment rated from your logs"), t("%s treatments rated from your logs", rows.size)),
             onUpgrade = onUpgrade
         ) {
         Box(

@@ -223,6 +223,8 @@ fun MonitorRiskScreen(
                             PremiumGate(
                                 message = t("Unlock trigger breakdown"),
                                 subtitle = t("See what\u2019s driving your risk score"),
+                                resultHeadline = resultCountLine(parsedTriggers.size,
+                                    t("1 trigger driving your risk today"), t("%s triggers driving your risk today", parsedTriggers.size)),
                                 onUpgrade = { navController.navigate(Routes.PAYWALL) }
                             ) {
                             Column(Modifier.fillMaxWidth()) {

@@ -877,6 +877,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     PremiumGate(
                         message = t("Unlock AI Recommendations"),
                         subtitle = t("Per-category guidance from your data"),
+                        resultHeadline = buildRecommendationSections(aiRecs, dismissedRecKeys).sumOf { it.items.size }.let { n ->
+                            resultCountLine(n, t("1 recommendation for you"), t("%s recommendations for you", n))
+                        },
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -935,6 +938,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 PremiumGate(
                     message = t("Unlock Accuracy"),
                     subtitle = t("See how well your risk score lined up with your logged attacks"),
+                    resultHeadline = (gaugeAccuracy?.totalDays ?: 0).let { n ->
+                        resultCountLine(n, t("Your risk score checked on 1 day"), t("Your risk score checked on %s days", n))
+                    },
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -990,6 +996,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 PremiumGate(
                     message = t("Unlock Pattern Analysis"),
                     subtitle = t("See correlations, combinations & thresholds"),
+                    resultHeadline = (patternPool.size + interactionCorrelations.size).let { n ->
+                        resultCountLine(n, t("1 pattern found in your data"), t("%s patterns found in your data", n))
+                    },
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1045,6 +1054,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 PremiumGate(
                     message = t("Unlock Treatment Analysis"),
                     subtitle = t("See which medicines and reliefs work best"),
+                    resultHeadline = resultCountLine(whatWorkedRowsHub.size,
+                        t("1 treatment rated from your logs"), t("%s treatments rated from your logs", whatWorkedRowsHub.size)),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1103,6 +1114,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     message = t("Unlock What Strengthens You"),
                     subtitle = if (helpingPool.any { it.isChronic }) t("See the habits behind your calmer days")
                                else t("See the habits behind your migraine-free days"),
+                    resultHeadline = resultCountLine(helpingPool.size,
+                        t("1 habit that helps you"), t("%s habits that help you", helpingPool.size)),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1168,6 +1181,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     PremiumGate(
                         message = t("Unlock What Changed"),
                         subtitle = t("See which logged items moved over the last month"),
+                        resultHeadline = resultCountLine(changedTrends.size,
+                            t("1 logged item changed this month"), t("%s logged items changed this month", changedTrends.size)),
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -1219,6 +1234,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 PremiumGate(
                     message = t("Unlock Context Analysis"),
                     subtitle = t("See what you were doing when migraines hit"),
+                    resultHeadline = resultCountLine(contextPool.size,
+                        t("1 activity or place linked to your migraines"), t("%s activities and places linked to your migraines", contextPool.size)),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1282,6 +1299,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 PremiumGate(
                     message = t("Unlock Impact Analysis"),
                     subtitle = t("See severity, pain locations & missed activities"),
+                    resultHeadline = (painLocsHub.size + (if (auraAttacksHub > 0) 1 else 0) + impactPool.size).let { n ->
+                        resultCountLine(n, t("1 way migraines affected you"), t("%s ways migraines affected you", n))
+                    },
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {

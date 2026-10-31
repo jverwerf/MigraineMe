@@ -546,6 +546,7 @@ fun HomeScreenRoot(
                     PremiumGate(
                         message = t("Unlock Daily Insights"),
                         subtitle = t("Personalised advice based on your data"),
+                        resultHeadline = if (!state.dailyInsight.isNullOrBlank()) t("Your insight for today is ready") else null,
                         onUpgrade = onNavigateToPaywall
                     ) {
                         AiInsightCard(
@@ -566,6 +567,8 @@ fun HomeScreenRoot(
                     PremiumGate(
                         message = t("Unlock trigger breakdown"),
                         subtitle = t("See what\u2019s driving your risk score"),
+                        resultHeadline = resultCountLine(displayTriggers.size,
+                            t("1 trigger driving your risk today"), t("%s triggers driving your risk today", displayTriggers.size)),
                         onUpgrade = onNavigateToPaywall
                     ) {
                         ActiveTriggersCard(

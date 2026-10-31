@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4965 entries.
+ * 4984 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -133,6 +133,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%s (Premium)" to "%s (Premium)",
     "%s activities" to "%s activiteiten",
     "%s activities added" to "%s activiteiten erbij",
+    "%s activities and places linked to your migraines" to "%s activiteiten en plekken bij je migraines",
     "%s activity" to "%s activiteit",
     "%s added" to "%s erbij",
     "%s areas selected" to "%s zones gekozen",
@@ -156,6 +157,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%s foods" to "%s producten",
     "%s foods have been added to your nutrition log." to "%s producten zijn toegevoegd aan je voedingslogboek.",
     "%s free" to "%s vrij",
+    "%s habits that help you" to "%s gewoontes die je helpen",
     "%s has been added to your nutrition log." to "%s staat nu in je eetlog.",
     "%s hidden · show" to "%s meer · toon",
     "%s hours" to "%s u",
@@ -166,6 +168,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%s location" to "%s plek",
     "%s locations" to "%s plekken",
     "%s locations added" to "%s plekken erbij",
+    "%s logged items changed this month" to "%s gelogde items veranderden deze maand",
     "%s logged today · tap to add" to "%s vandaag gelogd · tik om toe te voegen",
     "%s longer" to "%s langer",
     "%s medicine" to "%s medicijn",
@@ -186,12 +189,14 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%s missed activity" to "%s gemist ding",
     "%s open" to "%s open",
     "%s pain" to "%s pijn",
+    "%s patterns found in your data" to "%s patronen gevonden in je gegevens",
     "%s plan" to "%s-plan",
     "%s prodrome" to "%s prodroom",
     "%s prodromes" to "%s prodromen",
     "%s prodromes selected" to "%s prodromen gekozen",
     "%s product photo" to "Productfoto van %s",
     "%s pts" to "%s pt",
+    "%s recommendations for you" to "%s aanbevelingen voor jou",
     "%s relief" to "%s verlichting",
     "%s reliefs" to "%s verlichting",
     "%s reliefs added" to "%s erbij",
@@ -203,11 +208,14 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%s times" to "%s keer",
     "%s times a day" to "%s keer per dag",
     "%s total logged" to "%s in totaal",
+    "%s treatments rated from your logs" to "%s behandelingen beoordeeld",
     "%s trigger" to "%s trigger",
     "%s triggers" to "%s triggers",
+    "%s triggers driving your risk today" to "%s triggers drijven vandaag je risico op",
     "%s triggers left at None (no influence)" to "%s triggers op Geen (geen invloed)",
     "%s triggers selected" to "%s triggers gekozen",
     "%s uses" to "%s keer",
+    "%s ways migraines affected you" to "%s manieren waarop migraine je raakte",
     "%s wks" to "%s wkn",
     "%s zones" to "%s zones",
     "%s — tap to edit" to "%s — tik: wijzig",
@@ -249,6 +257,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "1 Year" to "1 jaar",
     "1 activity" to "1 activiteit",
     "1 activity added" to "1 activiteit erbij",
+    "1 activity or place linked to your migraines" to "1 activiteit of plek bij je migraines",
     "1 added" to "1 erbij",
     "1 area selected" to "1 zone gekozen",
     "1 attack" to "1 aanval",
@@ -257,19 +266,26 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "1 day before onset" to "1 dag voor start",
     "1 entry" to "1 item",
     "1 event" to "1 moment",
+    "1 habit that helps you" to "1 gewoonte die je helpt",
     "1 hour" to "1 uur",
     "1 location added" to "1 plek erbij",
+    "1 logged item changed this month" to "1 gelogd item veranderde deze maand",
     "1 medicine added" to "1 medicijn erbij",
     "1 migraine ({0}%)" to "1 migraine ({0}%)",
     "1 missed activity" to "1 gemist ding",
+    "1 pattern found in your data" to "1 patroon gevonden in je gegevens",
     "1 prodrome selected" to "1 prodroom gekozen",
+    "1 recommendation for you" to "1 aanbeveling voor jou",
     "1 relief added" to "1 erbij",
     "1 reply" to "1 reactie",
     "1 serving = %1\$s %2\$s" to "1 portie = %1\$s %2\$s",
     "1 serving ≈ %s g" to "1 portie ≈ %s g",
     "1 symptom selected" to "1 klacht gekozen",
+    "1 treatment rated from your logs" to "1 behandeling beoordeeld",
+    "1 trigger driving your risk today" to "1 trigger drijft vandaag je risico op",
     "1 trigger selected" to "1 trigger gekozen",
     "1 use" to "1 keer",
+    "1 way migraines affected you" to "1 manier waarop migraine je raakte",
     "1 zone" to "1 zone",
     "1 · Usually starts" to "1 · Begint meestal",
     "1-2 cups" to "1-2 kopjes",
@@ -1501,6 +1517,9 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Expired" to "Verlopen",
     "Expires in %1\$s:%2\$s" to "Verloopt in %1\$s:%2\$s",
     "Explore Migraines" to "Verkennen",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "External" to "Extern",
     "External and physical triggers" to "Externe en lichamelijke triggers",
     "Extra notes (optional)" to "Notities (optioneel)",
@@ -1517,9 +1536,6 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Failed to change password." to "Wachtwoord wijzigen mislukt.",
     "Failed to delete account. Please try again." to "Account verwijderen mislukt. Probeer het opnieuw.",
     "Failed to generate PDF" to "PDF maken mislukt",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Failed to load proposals" to "Voorstellen laden mislukt",
     "Failed to log period" to "Periode niet gelogd",
     "Failed to remove: %1\$s" to "Verwijderen mislukt: %1\$s",
@@ -3004,6 +3020,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Quiet" to "Stil",
     "Quiet days" to "Rustige dagen",
     "Quiet environment" to "Rustige omgeving",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "RECOMMENDED" to "AANBEVOLEN",
     "REM Sleep" to "REM-slaap",
     "REM sleep" to "REM-slaap",
@@ -3020,9 +3039,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Geef de ernst aan en markeer waar je het voelt. Invoer komt bovenop wat al is gelogd bij deze migraine.",
     "Re-assess my profile" to "Profiel opnieuw",
     "Re-authentication failed." to "Opnieuw inloggen mislukt.",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Gelezen als waarschijnlijk, met reden",
     "Read full article" to "Lees verder",
     "Read full assessment" to "Lees het oordeel",
@@ -4507,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your free trial just ended" to "Je proefperiode is net afgelopen",
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "Je volledige lijst met medicijnen. Alles wat je via de wizard, Snel of de Dagcheck kunt noteren staat hier, geordend per categorie (pijnstiller, tegen misselijkheid, CGRP, preventief, supplement, triptaan, overig).\n\nPer medicijn:\n• Tik op de ster om het favoriet te maken. Favorieten staan vooraan bij Snel, zodat je meest gebruikte middelen één tik weg zijn.\n• Tik op de regel om de categorie te wijzigen. Die categorie gebruiken de AI-tips om overgebruik te signaleren (bijvoorbeeld meer dan 10 dagen per maand een triptaan, of dagelijks een pijnstiller). Klopt hij niet, dan gaat de waarschuwing niet af.\n• Tik op het prullenbakje om een medicijn helemaal weg te halen. Wat je er eerder mee noteerde blijft staan.\n\nMet de knop + voeg je toe wat bij jouw routine hoort (een merknaam, een middel, een vitamine). Eigen items komen direct in je lijst en staan meteen in de wizard en bij Snel.\n\nMedicijnen hebben geen zwaarte, want ze verhogen je risico niet; het scherm Inzichten scoort apart hoe goed elk middel voor je werkt via de kaart Wat hielp.",
     "Your full migraine profile, AI-configured in under a minute." to "Je volledige migraineprofiel, door AI ingesteld in nog geen minuut.",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Je volledige prodroompool. Prodromen zijn de vroege waarschuwingen die 6-48 uur voor een aanval afgaan: gapen, stijve nek, eetlust-drang, stemmingswissels, moeheid, wazig zien, vaak plassen, meer dorst, gevoeligheid voor licht of geluid.\n\nPer prodroom:\n• Tik de rij open. Zet de zwaarte (HOOG / MATIG / LAAG / GEEN). Anders dan triggers die aanvallen \"veroorzaken\", betekent een prodroom dat er al een aanval aankomt, dus noteren duwt je emmer omhoog als een verse trigger. Prodromen met gewicht HOOG tillen je meter merkbaar op.\n• Zet er een ster bij om hem bovenaan Snel noteren te pinnen.\n• Tik het prullenbakje om hem uit je pool te halen.\n\nGebruik de +-knop voor wat jij zelf aan waarschuwingen merkt. Persoonlijke prodromen (bijv. \"klaarwakker om 3 uur\", \"zonder reden prikkelbaar\") zijn vaak de betrouwbaarste voorspellers.\n\nNoteer ze zodra je er een ziet. De Inzichten-kaart \"Wat gebeurde er\" scoort met je historie welke signalen je aanvallen betrouwbaar voorspellen, zodat de app leert welke bij jou het zwaarst moeten wegen.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Je volledige verlichtingspool: alles zonder medicijn dat je helpt bij een aanval. Gaan liggen, koude packs, donkere kamers, hete douches, drinken, bepaalde rekoefeningen, ademhaling, zelfs weglopen uit een triggeromgeving. Neuromodulatie-apparaten (CEFALY, Nerivio, gammaCore en dergelijke) horen hier ook: noteer elke sessie, dan scoort Inzichten hoe goed elk apparaat bij jou werkt.\n\nPer verlichting:\n• Tik de ster om hem als favoriet vast te zetten. Favorieten staan bovenaan in Snel noteren, dus je vaste hulp is één tik weg.\n• Tik het prullenbakje om er een helemaal weg te halen. Eerdere invoer blijft intact.\n\nGebruik de +-knop voor wat bij jou past (bijv. \"buiten lopen\", \"douchestraal op de nek\", \"lavendelolie\"). Hoe specifieker, hoe bruikbaarder de inzichten.\n\nVerlichting heeft geen zwaartegewicht, want ze voedt de meter niet. Inzichten scoort hoe goed elk werkte door de zwaarte en duur te volgen van de aanvallen waarbij je het gebruikte (kaart \"Wat werkte\"). Hoe vaker je ze aan migraines koppelt, hoe scherper die score.",
     "Your goal reminder" to "Je doelherinnering",
@@ -4515,6 +4534,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode.",
     "Your history is still imported into the journal today." to "Je geschiedenis komt vandaag toch in je dagboek.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Je geïmporteerde medicijnen en verlichting zijn nu favorieten in de logwizard.",
+    "Your insight for today is ready" to "Je inzicht voor vandaag staat klaar",
     "Your journal" to "Je journal",
     "Your labels next to ours" to "Jouw labels naast de onze",
     "Your labels, next to the ones MigraineMe uses." to "Jouw labels, naast die van MigraineMe.",
@@ -4523,9 +4543,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Je medicijngebruik over 30 dagen. Elke rij toont de naam en de ",
     "Your migraine data is not affected by this." to "Dit verandert niets aan je migrainegegevens.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "Je migrainekans als één score. We tellen je triggers en prodromen van de laatste 7 dagen op, waarbij recente dagen zwaarder wegen dan oudere (vandaag telt het zwaarst). Het gewicht van elk item komt uit de zwaarte die je in je instellingen gaf; menstruation_predicted gebruikt een symmetrisch venster rond je voorspelde menstruatiedatum, en ovulation_predicted doet hetzelfde rond de voorspelde eisprong als die schakelaar aanstaat.\n\nDe kaart toont: de score, je zone (LAAG / LICHT / HOOG — drempels zijn persoonlijk), het aantal triggers van vandaag en de drie favoriete waarden die je vastzette. Tik voor de bijdragende triggers op volgorde en een scoregeschiedenis van 14 dagen (premium).\n\nGebruik het als dagelijkse check: amber of rood betekent vandaag geen nieuwe triggers stapelen en alvast verlichting overwegen.",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score." to "Je migrainekans voor vandaag, volgens de emmertheorie: elke trigger en prodroom van de laatste 7 dagen stapelt zich op in jouw emmer, recente dagen zwaarder dan oudere.\n\nDe meter wordt amber zodra je je LICHT-drempel passeert en rood bij HOOG.\n\nBoven de meter zit Snel noteren voor invoer met één tik (migraine, prodroom, trigger, medicijn, verlichting, klacht). Eronder: Vraag MigraineMe (chat met je data) en de top 3 bijdragen aan de score van vandaag.",
     "Your migraine profile" to "Je migraineprofiel",
     "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." to "Je migrainerisico voor vandaag, berekend uit elke trigger en elk prodroom dat je de laatste 7 dagen noteerde. Het gaat uit van de emmertheorie: triggers stapelen zich op in je eigen emmer, en als het peil hoog genoeg komt, kiept het om in een aanval.\n\nProdromen tellen ook mee. Zit je in een prodroom (gapen, stijve nek, stemmingswisselingen en de rest), dan is een aanval al onderweg, dus een genoteerd prodroom duwt de emmer net zo omhoog als een verse trigger.\n\nHet gewicht van elk item hangt van twee dingen af: hoe zwaar je het aanmerkte (HOOG telt zwaarder dan LICHT of LAAG, GEEN telt niet mee) en hoe recent het is. De bijdrage zakt elke dag erna, dus een trigger van vanochtend telt veel zwaarder dan een van zes dagen terug.\n\nHet grote getal is je ruwe waarde (je huidige peil in de emmer). De kleur komt uit je drie eigen drempels: boven de drempel LAAG wordt de meter groen; boven LICHT wordt hij oranje; boven HOOG wordt hij rood en zit de emmer dicht bij overlopen. De drempels beginnen op verstandige standaarden en worden na verloop van tijd bijgesteld, zodat de kleur laat zien hoe een risicovolle dag er voor jou uitziet, niet voor het gemiddelde.\n\nOnder de meter toont de kaart met actieve triggers de 3 dingen die nu het hardst duwen. Tik op de meter zelf om het scherm Risico te openen, dat alle factoren op volgorde toont met hoeveel elk toevoegt. Tik daar bovenaan de meter op \"Historie →\" om de grafiek van 14 dagen te openen en te zien hoe je peil de afgelopen twee weken dag na dag steeg en daalde (handig om te zien op welke dagen je waarde piekte vóór een aanval).\n\nAlles is in te stellen. Open het menu en tik Je lijsten om te wijzigen welke triggers en prodromen voor jou tellen en hoe zwaar elk meetelt. Tik Risicomodel voor de drempels en de afbouwcurve.",
@@ -4554,6 +4571,8 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "Your risk *today.*" to "Je risico *vandaag.*",
     "Your risk gauge is personal from day one instead of week five." to "Je risicometer is persoonlijk vanaf dag één, niet pas vanaf week vijf.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Je risicomodel staat klaar.\n\nWe laden wat voorbeeldgegevens zodat je de app in actie ziet. Daarna: een korte rondleiding langs elk scherm.",
+    "Your risk score checked on %s days" to "Je risicoscore getoetst op %s dagen",
+    "Your risk score checked on 1 day" to "Je risicoscore getoetst op 1 dag",
     "Your subscription" to "Je abonnement",
     "Your summary" to "Samenvatting",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Je staat van dienst met behandelingen en verlichting, afgemeten aan wat je gegevens echt laten zien.\n• Losse behandelingen: welke medicijnen en verlichting betrouwbaar hun werk doen. Twee hoofdsignalen:\n  - Minder zwaarte: hoeveel milder je migraines verlopen met deze behandeling, tegenover je zwaarte zonder behandeling.\n  - Minder duur: hoeveel korter ze duren dan een gewone aanval van dezelfde zwaarte bij jou.\n  - Je eigen cijfer voor verlichting (de schuif bij het noteren) telt ook mee, vooral zolang je te weinig onbehandelde aanvallen hebt om mee te vergelijken.\n• Combinaties: welke behandelingen samen goed werken. Soms worden twee losse zwakke samen sterk; soms voegt de combinatie niets toe.\n• Per klacht: welke behandeling bij welke klacht het meest helpt. Handig als één klacht een aanval bepaalt: een triptaan werkt misschien beter bij misselijkheid, een NSAID past eerder als de pijn overheerst.\n\nDe voorvertoning toont de 2 hoogste uit elke laag. Tik erop voor de hele gesorteerde lijst.\n\nBevindingen worden scherper naarmate je meer noteert, vooral met vaste cijfers voor verlichting, notities over de dosis en eindtijden per aanval. \"Iets genomen maar niet genoteerd wat\" kan hier niet in meetellen.",

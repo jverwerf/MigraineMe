@@ -232,43 +232,43 @@
     "line": "                            Text(t(routine.title) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
     "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:578",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:580",
     "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:579",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:581",
     "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:580",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:582",
     "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:581",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:583",
     "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:582",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:584",
     "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:583",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:585",
     "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:584",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:586",
     "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:585",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:587",
     "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:586",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:588",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {

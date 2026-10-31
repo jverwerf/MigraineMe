@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4965 entries.
+ * 4984 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -133,6 +133,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%s (Premium)" to "%s (Premium)",
     "%s activities" to "%s attività",
     "%s activities added" to "%s attività in più",
+    "%s activities and places linked to your migraines" to "%s attività e luoghi legati alle tue emicranie",
     "%s activity" to "%s attività",
     "%s added" to "%s aggiunti",
     "%s areas selected" to "%s zone scelte",
@@ -156,6 +157,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%s foods" to "%s alimenti",
     "%s foods have been added to your nutrition log." to "%s alimenti sono stati aggiunti al tuo registro nutrizionale.",
     "%s free" to "%s liberi",
+    "%s habits that help you" to "%s abitudini che ti aiutano",
     "%s has been added to your nutrition log." to "%s è ora nel tuo diario pasti.",
     "%s hidden · show" to "%s in più · mostra",
     "%s hours" to "%s h",
@@ -166,6 +168,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%s location" to "%s luogo",
     "%s locations" to "%s luoghi",
     "%s locations added" to "%s luoghi in più",
+    "%s logged items changed this month" to "%s voci registrate sono cambiate questo mese",
     "%s logged today · tap to add" to "%s registrati oggi · tocca e aggiungi",
     "%s longer" to "%s più lungo",
     "%s medicine" to "%s farmaco",
@@ -186,12 +189,14 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%s missed activity" to "%s attività persa",
     "%s open" to "%s aperti",
     "%s pain" to "%s dolore",
+    "%s patterns found in your data" to "%s schemi trovati nei tuoi dati",
     "%s plan" to "Piano %s",
     "%s prodrome" to "%s prodromo",
     "%s prodromes" to "%s prodromi",
     "%s prodromes selected" to "%s prodromi scelti",
     "%s product photo" to "Foto di %s",
     "%s pts" to "%s pt",
+    "%s recommendations for you" to "%s consigli per te",
     "%s relief" to "%s sollievo",
     "%s reliefs" to "%s sollievi",
     "%s reliefs added" to "%s sollievi",
@@ -203,11 +208,14 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%s times" to "%s volte",
     "%s times a day" to "%s volte al dì",
     "%s total logged" to "%s in totale",
+    "%s treatments rated from your logs" to "%s trattamenti valutati",
     "%s trigger" to "%s fattore",
     "%s triggers" to "%s fattori",
+    "%s triggers driving your risk today" to "%s fattori spingono il tuo rischio oggi",
     "%s triggers left at None (no influence)" to "%s fattori su Nessuno (senza peso)",
     "%s triggers selected" to "%s fattori scelti",
     "%s uses" to "%s utilizzi",
+    "%s ways migraines affected you" to "%s modi in cui l'emicrania ti ha colpito",
     "%s wks" to "%s sett",
     "%s zones" to "%s zone",
     "%s — tap to edit" to "%s — tocca: cambia",
@@ -249,6 +257,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "1 Year" to "1 anno",
     "1 activity" to "1 attività",
     "1 activity added" to "1 attività in più",
+    "1 activity or place linked to your migraines" to "1 attività o luogo legato alle tue emicranie",
     "1 added" to "1 aggiunto",
     "1 area selected" to "1 zona scelta",
     "1 attack" to "1 attacco",
@@ -257,19 +266,26 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "1 day before onset" to "1 giorno prima",
     "1 entry" to "1 voce",
     "1 event" to "1 evento",
+    "1 habit that helps you" to "1 abitudine che ti aiuta",
     "1 hour" to "1 ora",
     "1 location added" to "1 luogo in più",
+    "1 logged item changed this month" to "1 voce registrata è cambiata questo mese",
     "1 medicine added" to "1 farmaco in più",
     "1 migraine ({0}%)" to "1 emicrania ({0}%)",
     "1 missed activity" to "1 attività persa",
+    "1 pattern found in your data" to "1 schema trovato nei tuoi dati",
     "1 prodrome selected" to "1 prodromo scelto",
+    "1 recommendation for you" to "1 consiglio per te",
     "1 relief added" to "1 sollievo",
     "1 reply" to "1 risposta",
     "1 serving = %1\$s %2\$s" to "1 porzione = %1\$s %2\$s",
     "1 serving ≈ %s g" to "1 porzione ≈ %s g",
     "1 symptom selected" to "1 sintomo scelto",
+    "1 treatment rated from your logs" to "1 trattamento valutato",
+    "1 trigger driving your risk today" to "1 fattore spinge il tuo rischio oggi",
     "1 trigger selected" to "1 fattore scelto",
     "1 use" to "1 utilizzo",
+    "1 way migraines affected you" to "1 modo in cui l'emicrania ti ha colpito",
     "1 zone" to "1 zona",
     "1 · Usually starts" to "1 · Di solito inizia",
     "1-2 cups" to "1-2 tazze",
@@ -1501,6 +1517,9 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Expired" to "Scaduto",
     "Expires in %1\$s:%2\$s" to "Scade tra %1\$s:%2\$s",
     "Explore Migraines" to "Esplora",
+)
+
+private fun itStrings1(): Map<String, String> = mapOf(
     "External" to "Esterno",
     "External and physical triggers" to "Fattori esterni e fisici",
     "Extra notes (optional)" to "Note (facoltativo)",
@@ -1517,9 +1536,6 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Failed to change password." to "Cambio password non riuscito.",
     "Failed to delete account. Please try again." to "Impossibile eliminare l'account. Riprova.",
     "Failed to generate PDF" to "Generazione PDF non riuscita",
-)
-
-private fun itStrings1(): Map<String, String> = mapOf(
     "Failed to load proposals" to "Proposte non caricate",
     "Failed to log period" to "Ciclo non segnato",
     "Failed to remove: %1\$s" to "Rimozione fallita: %1\$s",
@@ -3004,6 +3020,9 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Quiet" to "Silenzioso",
     "Quiet days" to "Giorni calmi",
     "Quiet environment" to "Ambiente tranquillo",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "RECOMMENDED" to "CONSIGLIATO",
     "REM Sleep" to "Sonno REM",
     "REM sleep" to "Sonno REM",
@@ -3020,9 +3039,6 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Valuta l'intensità e segna dove la senti. Le voci si aggiungono a questa emicrania senza cancellare quanto già registrato.",
     "Re-assess my profile" to "Rivedi il profilo",
     "Re-authentication failed." to "Riautenticazione fallita.",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Read as likely, with the reason" to "Letto come probabile, con il motivo",
     "Read full article" to "Leggi tutto",
     "Read full assessment" to "Leggi tutto",
@@ -4507,6 +4523,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your free trial just ended" to "La tua prova gratuita è appena finita",
     "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\nFor each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\nThere's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card." to "La tua lista completa dei farmaci. Tutto ciò che puoi segnare con la procedura, con Rapido o col Punto del giorno sta qui, diviso per categoria (Analgesico, Antinausea, CGRP, Preventivo, Integratore, Triptano, Altro).\n\nPer ogni farmaco:\n• Tocca la stella per metterlo fra i preferiti. I preferiti compaiono per primi in Rapido, così i farmaci che usi di più sono a un tocco.\n• Tocca la riga per cambiarne la categoria. La categoria è ciò che i Consigli IA usano per segnalare il rischio di uso eccessivo (per esempio un triptano più di 10 giorni al mese, o un analgesico ogni giorno). Se è sbagliata, l'avviso non scatta.\n• Tocca il cestino per togliere del tutto un farmaco. Le voci già segnate con quello restano intatte.\n\nUsa il + per aggiungere ciò che è tipico per te (un nome commerciale, un preparato, una vitamina). Le voci tue entrano subito nella lista e compaiono nella procedura e in Rapido.\n\nSui farmaci non c'è un peso di intensità, perché non alzano il tuo rischio; la schermata Analisi valuta a parte quanto funziona ognuno con la scheda Cosa ha aiutato.",
     "Your full migraine profile, AI-configured in under a minute." to "Il tuo profilo emicrania completo, configurato dall'IA in meno di un minuto.",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\nFor each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\nUse the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\nLog these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically." to "Il tuo elenco completo di prodromi. I prodromi sono i segnali precoci che scattano 6-48 ore prima di un attacco: sbadigli, collo rigido, voglie di cibo, sbalzi d'umore, stanchezza, vista annebbiata, urinare spesso, più sete, sensibilità a luce o suoni.\n\nPer ogni prodromo:\n• Tocca la riga per aprirla. Imposta la gravità (ALTA / MEDIA / BASSA / NESSUNA). A differenza dei fattori che «causano» gli attacchi, un prodromo vuol dire che l'attacco è già in arrivo, quindi inserirlo alza il secchio come un fattore fresco. I prodromi con peso ALTO fanno salire l'indicatore in modo netto.\n• Metti la stella per fissarlo in cima all'inserimento rapido.\n• Tocca il cestino per toglierlo dall'elenco.\n\nUsa il + per aggiungere ciò che hai notato nei tuoi segnali. I prodromi personali (es. «sveglissimo alle 3», «irritabile senza motivo») sono spesso i più affidabili.\n\nInseriscili appena ne noti uno. La scheda Analisi «Cosa è successo» usa la tua cronologia per valutare quali segnali prevedono davvero i tuoi attacchi, così col tempo l'app impara quali pesare di più per te.",
     "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\nFor each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\nUse the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\nNo severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets." to "Il tuo elenco completo di sollievi: tutto ciò che non è farmaco e ti aiuta durante un attacco. Sdraiarti, impacchi freddi, stanze buie, docce calde, bere, allungamenti precisi, respirazione, perfino allontanarti da un ambiente che scatena. Anche i dispositivi di neuromodulazione (CEFALY, Nerivio, gammaCore e simili) stanno qui: inserisci una sessione ogni volta che li usi e Analisi valuterà quanto funziona ciascuno per te.\n\nPer ogni sollievo:\n• Tocca la stella per metterlo tra i preferiti. I preferiti compaiono per primi nell'inserimento rapido, così i tuoi soliti sono a un tocco.\n• Tocca il cestino per toglierlo del tutto. Le voci già inserite restano intatte.\n\nUsa il + per aggiungere ciò che vale per te (es. «camminare fuori», «getto della doccia sul collo», «olio di lavanda»). Più sei preciso, più le analisi sono utili.\n\nI sollievi non hanno peso di gravità perché non alimentano l'indicatore. Le Analisi valutano quanto ha funzionato ognuno seguendo intensità e durata degli attacchi in cui l'hai usato (scheda «Cosa ha funzionato»). Più li leghi alle emicranie, più quel punteggio si affina.",
     "Your goal reminder" to "Promemoria del tuo obiettivo",
@@ -4515,6 +4534,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Il tuo storico va nel diario. Conta nelle analisi solo con un abbonamento a pagamento, non con la prova gratuita.",
     "Your history is still imported into the journal today." to "Il tuo storico viene comunque importato nel diario oggi.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "I farmaci e i sollievi importati ora sono preferiti nella procedura di registrazione.",
+    "Your insight for today is ready" to "Il tuo consiglio di oggi è pronto",
     "Your journal" to "Il tuo diario",
     "Your labels next to ours" to "Le tue etichette e le nostre",
     "Your labels, next to the ones MigraineMe uses." to "Le tue etichette, accanto a quelle usate da MigraineMe.",
@@ -4523,9 +4543,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Your medicine usage over the last 30 days. Each row shows a medicine name + the " to "Il tuo uso di farmaci in 30 giorni. Ogni riga mostra il nome e la ",
     "Your migraine data is not affected by this." to "Questo non tocca i tuoi dati sull'emicrania.",
     "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date, and ovulation_predicted does the same around predicted ovulation when that switch is on.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief." to "La tua probabilità di emicrania in un solo punteggio. Sommiamo fattori e prodromi degli ultimi 7 giorni, pesando i giorni recenti più di quelli vecchi (oggi conta di più). Il peso di ogni voce viene dalla gravità che le hai dato nelle impostazioni; menstruation_predicted usa una finestra simmetrica attorno alla data prevista del ciclo, e ovulation_predicted fa lo stesso attorno all'ovulazione prevista quando quell'interruttore è attivo.\n\nLa scheda mostra: il punteggio, la tua zona (BASSO / LIEVE / ALTO, con soglie personali), il numero di fattori di oggi e le tre misure preferite che hai fissato. Tocca per vedere i fattori che pesano, in ordine, e uno storico di 14 giorni (premium).\n\nUsalo come controllo quotidiano: ambra o rosso vuol dire non impilare nuovi fattori oggi e valutare un sollievo preventivo.",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "Your migraine likelihood for today, based on the bucket theory: every trigger and prodrome from the last 7 days stacks up in your personal bucket, recent days weighted more than older ones.\n\nThe gauge turns amber when you cross your MILD threshold, red when you cross HIGH.\n\nAbove the gauge is Quick Log for one-tap entries (migraine, prodrome, trigger, medicine, relief, symptom). Below it: Ask MigraineMe (chat with your data) and the top 3 contributors to today's score." to "La tua probabilità di emicrania oggi, secondo la teoria del secchio: ogni fattore e prodromo degli ultimi 7 giorni si accumula nel tuo secchio, con i giorni recenti che pesano più di quelli vecchi.\n\nL'indicatore diventa ambra quando superi la soglia LIEVE, rosso quando superi ALTO.\n\nSopra l'indicatore c'è l'inserimento rapido per voci con un tocco (emicrania, prodromo, fattore, farmaco, sollievo, sintomo). Sotto: Chiedi a MigraineMe (chat con i tuoi dati) e i primi 3 contributi al punteggio di oggi.",
     "Your migraine profile" to "Il tuo profilo",
     "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." to "Il tuo rischio di emicrania per oggi, calcolato da ogni fattore e prodromo inserito negli ultimi 7 giorni. Si basa sulla teoria del secchio: i fattori si accumulano dentro il tuo secchio personale e, quando il livello sale abbastanza, si trabocca in un attacco.\n\nAnche i prodromi contano. Quando sei dentro un prodromo (sbadigli, collo rigido, sbalzi d'umore e il resto), l'attacco è già in arrivo, quindi inserirlo alza il secchio come un fattore appena preso.\n\nIl peso di ogni voce dipende da due cose: l'intensità che le hai dato (ALTO conta più di LIEVE o BASSO, NESSUNA non conta) e quanto è recente. Il contributo cala ogni giorno dopo, così un fattore di stamattina conta molto più di uno di sei giorni fa.\n\nIl numero grande è il tuo punteggio grezzo (il livello attuale del secchio). Il colore viene dalle tue tre soglie personali: superata la soglia BASSO l'indice diventa verde; superata LIEVE diventa ambra; superata ALTO diventa rosso e il secchio è vicino a traboccare. Le soglie partono da valori sensati e si ritarano nel tempo, così il colore riflette com'è una giornata a rischio per te, non per la media.\n\nSotto l'indice, la scheda dei fattori attivi mostra le 3 cose che spingono di più adesso. Tocca l'indice per aprire la schermata Rischio, che elenca tutti i fattori in ordine con quanto aggiunge ognuno. Da lì tocca \"Cronologia →\" in cima all'indice per aprire il grafico di 14 giorni e vedere come il tuo livello è salito e sceso giorno per giorno nelle ultime due settimane (comodo per capire in quali giorni il punteggio è stato al massimo prima di un attacco).\n\nÈ tutto regolabile. Apri il menu e tocca Le tue liste per cambiare quali fattori e prodromi ti interessano e con quanta intensità. Tocca Modello di rischio per le soglie e la curva giorno per giorno.",
@@ -4554,6 +4571,8 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "Your risk *today.*" to "Il tuo rischio *oggi.*",
     "Your risk gauge is personal from day one instead of week five." to "Il tuo indicatore di rischio è personale dal primo giorno, non dalla quinta settimana.",
     "Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen." to "Il tuo modello di rischio è pronto.\n\nCarichiamo dei dati di esempio per mostrarti l'app all'opera. Poi: un giro veloce su ogni schermata.",
+    "Your risk score checked on %s days" to "Il tuo rischio, verificato su %s giorni",
+    "Your risk score checked on 1 day" to "Il tuo rischio, verificato su 1 giorno",
     "Your subscription" to "Il tuo abbonamento",
     "Your summary" to "Riepilogo",
     "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." to "Il bilancio delle tue terapie e dei tuoi sollievi, giudicato su ciò che i dati mostrano davvero.\n• Terapie singole: quali farmaci e sollievi fanno la loro parte in modo affidabile. Due segnali principali:\n  - Meno intensità: quanto più leggere vanno le tue emicranie con questa terapia, rispetto alla tua intensità senza cure.\n  - Meno durata: quanto più corte vanno rispetto a un attacco tipico della stessa intensità per te.\n  - Conta anche il tuo voto sul sollievo (il cursore quando inserisci), soprattutto finché non hai abbastanza attacchi non curati da confrontare.\n• Combinazioni: quali terapie funzionano bene in coppia. A volte due deboli da sole diventano forti insieme; a volte metterle insieme non aggiunge nulla.\n• Per sintomo: quale terapia aiuta di più con quale sintomo. Utile quando un attacco ha un sintomo dominante: un triptano può andare meglio con la nausea, un FANS può adattarsi agli attacchi in cui domina il dolore.\n\nL'anteprima mostra i 2 principali di ogni livello. Entra per l'elenco completo in ordine.\n\nI risultati si affinano man mano che inserisci, soprattutto con voti di sollievo costanti, note sulla dose e orari di fine su ogni attacco. \"Ho preso qualcosa ma non ho segnato cosa\" qui non può entrare.",
