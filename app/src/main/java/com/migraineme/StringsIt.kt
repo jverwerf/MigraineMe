@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4997 entries.
+ * 4998 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -4642,6 +4642,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "attacks" to "attacchi",
     "auto" to "auto",
     "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · min {1}m · max {2}m",
+    "avg %s" to "media %s",
     "avg %shrs" to "media %s h",
     "avg /10" to "media /10",
     "avg duration ~%sh" to "durata media ~%sh",

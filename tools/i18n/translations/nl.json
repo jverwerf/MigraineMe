@@ -4995,5 +4995,6 @@
   "My %s graph, last %s days": "Mijn %s-grafiek, laatste %s dagen",
   "Compare mine": "Vergelijk mijn",
   "No data of yours for these dates": "Geen eigen gegevens voor deze dagen",
-  "Mine": "Mijn"
+  "Mine": "Mijn",
+  "avg %s": "gem. %s"
 }

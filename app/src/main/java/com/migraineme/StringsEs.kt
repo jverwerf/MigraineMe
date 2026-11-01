@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4997 entries.
+ * 4998 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -4642,6 +4642,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "attacks" to "ataques",
     "auto" to "auto",
     "average (n = {0}) · shortest {1}m · longest {2}m" to "media (n = {0}) · mín {1}m · máx {2}m",
+    "avg %s" to "media %s",
     "avg %shrs" to "med %s h",
     "avg /10" to "med /10",
     "avg duration ~%sh" to "duración med ~%sh",

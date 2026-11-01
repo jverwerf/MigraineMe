@@ -4995,5 +4995,6 @@
   "My %s graph, last %s days": "Il mio grafico %s, ultimi %s giorni",
   "Compare mine": "Con i miei",
   "No data of yours for these dates": "Nessun tuo dato per queste date",
-  "Mine": "Miei"
+  "Mine": "Miei",
+  "avg %s": "media %s"
 }

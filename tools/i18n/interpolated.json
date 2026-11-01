@@ -8,8 +8,16 @@
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:637",
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:643",
     "line": "            if (premium) t(\"Compare mine\") else t(\"Compare mine\") + \" \\uD83D\\uDD12\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:883",
+    "line": "                    Text(t(\"Risk Score\") + \" \\u00b7 \" + t(\"avg %s\", fmt1(avg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:892",
+    "line": "                        Text(t(\"Mine\") + \" \\u00b7 \" + t(\"avg %s\", fmt1(mineAvg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
   },
   {
     "site": "app/src/main/java/com/migraineme/AutoTriggersTab.kt:98",

@@ -28,6 +28,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.Canvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -753,8 +759,6 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPad
 @Composable
 private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp, compare: GraphCompareContext? = null) {
     val riskDays by graphVm.riskDays.collectAsState()
-    val metricSeries by graphVm.metricSeries.collectAsState()
-
     if (riskDays.isEmpty()) return
 
     // "Compare mine": the reader's own risk on the same dates.
@@ -772,11 +776,19 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
             compareLoading = false
         }
     }
+    val mineShown = if (compareOn) mine else emptyList()
 
     val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
-    val from = LocalDate.parse(riskDays.first().date).format(fmt)
-    val to = LocalDate.parse(riskDays.last().date).format(fmt)
+    val days = riskDays.sortedBy { it.date }
+    val from = LocalDate.parse(days.first().date).format(fmt)
+    val to = LocalDate.parse(days.last().date).format(fmt)
+    val avg = days.map { it.score }.average().toFloat()
+    val mineAvg = mineShown.takeIf { it.isNotEmpty() }?.map { it.score }?.average()?.toFloat()
+    fun fmt1(v: Float) = if (v >= 10f || v == v.toInt().toFloat()) v.toInt().toString() else "%.1f".format(v)
+    val mineColor = Color.White.copy(alpha = 0.85f)
 
+    // Same card as the Monitor Risk History graph: reading first, y values at
+    // the side, the house curve, and one key line under the plot.
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -785,41 +797,110 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0628).copy(alpha = 0.85f)),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
-                Spacer(Modifier.width(6.dp))
-                Text(t("Risk Score"), color = Color(0xFFEF5350), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                Spacer(Modifier.width(8.dp))
-                Text("$from \u2013 $to", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            }
-            Spacer(Modifier.height(4.dp))
-
-            RiskGraphCanvas(
-                days = riskDays,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp),
-                mine = if (compareOn) mine else emptyList()
+        Column(modifier = Modifier.padding(12.dp)) {
+            GraphCardHeader(
+                title = t("Risk History"),
+                subtitle = "$from \u2013 $to",
+                readout = fmt1(avg),
+                readoutUnit = "",
+                readoutColor = riskZoneColor(avg),
+                readoutCaption = t("%s-day average", days.size)
             )
+            Spacer(Modifier.height(10.dp))
 
-            // Metric legend
-            if (metricSeries.isNotEmpty()) {
-                Spacer(Modifier.height(6.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(horizontal = 4.dp)
+            val maxVal = maxOf(days.maxOf { it.score }, mineShown.maxOfOrNull { it.score } ?: 0f)
+            val axisMax = (maxOf(RISK_GRAPH_HIGH_T, maxVal) * 1.15f).coerceAtLeast(12f)
+            Row(Modifier.fillMaxWidth().height(150.dp)) {
+                Column(
+                    Modifier.width(34.dp).fillMaxHeight().padding(vertical = 2.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End
                 ) {
-                    for (series in metricSeries) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(series.color))
-                            Spacer(Modifier.width(4.dp))
-                            Text(t(series.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(fmt1(axisMax), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(fmt1(axisMax / 2f), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text("0", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                Spacer(Modifier.width(8.dp))
+                Canvas(Modifier.weight(1f).fillMaxHeight().clipToBounds()) {
+                    val w = size.width; val h = size.height
+                    val n = days.size
+                    val chartH = h - 8f
+                    fun yZ(v: Float) = 4f + chartH * (1f - v / axisMax)
+                    fun xFor(i: Int) = if (n <= 1) w / 2f else (i.toFloat() / (n - 1)) * w
+
+                    // Zone bands + thresholds, as on the Monitor graph
+                    drawRect(Color(0xFF81C784).copy(alpha = 0.07f), Offset(0f, yZ(RISK_GRAPH_MILD_T)), Size(w, yZ(RISK_GRAPH_LOW_T) - yZ(RISK_GRAPH_MILD_T)))
+                    drawRect(Color(0xFFFFB74D).copy(alpha = 0.07f), Offset(0f, yZ(RISK_GRAPH_HIGH_T)), Size(w, yZ(RISK_GRAPH_MILD_T) - yZ(RISK_GRAPH_HIGH_T)))
+                    drawRect(Color(0xFFEF5350).copy(alpha = 0.07f), Offset(0f, 0f), Size(w, yZ(RISK_GRAPH_HIGH_T)))
+                    val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 4f), 0f)
+                    for ((thr, c) in listOf(RISK_GRAPH_LOW_T to Color(0xFF81C784), RISK_GRAPH_MILD_T to Color(0xFFFFB74D), RISK_GRAPH_HIGH_T to Color(0xFFEF5350))) {
+                        drawLine(c.copy(alpha = 0.25f), Offset(0f, yZ(thr)), Offset(w, yZ(thr)), strokeWidth = 1f, pathEffect = dash)
+                    }
+                    // Gridlines at the three y labels
+                    for (f in listOf(0f, 0.5f, 1f)) {
+                        val y = 4f + chartH * f
+                        drawLine(Color.White.copy(alpha = 0.07f), Offset(0f, y), Offset(w, y), strokeWidth = 1f)
+                    }
+
+                    // Poster's line: the house curve, coloured by zone per segment
+                    val pts = days.mapIndexed { i, d -> Triple(xFor(i), yZ(d.score), d.score) }
+                    val offsets = pts.map { Offset(it.first, it.second) }
+                    if (pts.size >= 2) {
+                        for (i in 0 until pts.size - 1) {
+                            val c = riskZoneColor((pts[i].third + pts[i + 1].third) / 2f).copy(alpha = 0.9f)
+                            val seg = smoothSegment(offsets, i)
+                            drawPath(seg, c.copy(alpha = 0.12f), style = androidx.compose.ui.graphics.drawscope.Stroke(7f, cap = StrokeCap.Round))
+                            drawPath(seg, c, style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f, cap = StrokeCap.Round))
+                        }
+                    }
+                    for ((x, y, v) in pts) drawCircle(riskZoneColor(v), radius = 3.5f, center = Offset(x, y))
+
+                    // Reader's line, dashed white
+                    if (mineShown.size >= 2) {
+                        val byDate = mineShown.associateBy { it.date }
+                        val mp = days.mapIndexedNotNull { i, d -> byDate[d.date]?.let { Offset(xFor(i), yZ(it.score)) } }
+                        if (mp.size >= 2) {
+                            drawPath(smoothPath(mp), mineColor, style = androidx.compose.ui.graphics.drawscope.Stroke(2f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 7f))))
                         }
                     }
                 }
             }
+            // Dates under the plot
+            Row(Modifier.fillMaxWidth().padding(start = 42.dp, top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(from, color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                if (days.size > 2) Text(LocalDate.parse(days[days.size / 2].date).format(fmt), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Text(to, color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+            }
+
+            // One key line under the plot
+            Spacer(Modifier.height(9.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+            Spacer(Modifier.height(9.dp))
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
+                    Spacer(Modifier.width(5.dp))
+                    Text(t("Risk Score") + " \u00b7 " + t("avg %s", fmt1(avg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                if (mineAvg != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Canvas(Modifier.size(width = 14.dp, height = 8.dp)) {
+                            drawLine(mineColor, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = 2f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
+                        }
+                        Spacer(Modifier.width(5.dp))
+                        Text(t("Mine") + " \u00b7 " + t("avg %s", fmt1(mineAvg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                for (thr in listOf(RISK_GRAPH_MILD_T to t("Mild"), RISK_GRAPH_HIGH_T to t("High"))) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(riskZoneColor(thr.first).copy(alpha = 0.5f)))
+                        Spacer(Modifier.width(5.dp))
+                        Text(thr.second + " \u2265 " + fmt1(thr.first), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+
             if (compare != null) {
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

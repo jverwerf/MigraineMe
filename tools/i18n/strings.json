@@ -60,7 +60,7 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/AppDateTimePickers.kt:276",
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:194",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:200",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:174",
       "app/src/main/java/com/migraineme/ChangePasswordScreen.kt:136",
       "app/src/main/java/com/migraineme/ChatAssistantScreen.kt:733",
@@ -229,7 +229,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/AdjustMigrainesScreen.kt:148",
       "app/src/main/java/com/migraineme/AdjustTriggersScreen.kt:148",
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:558",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:564",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:535",
       "app/src/main/java/com/migraineme/ForumScreen.kt:110",
       "... 11 more"
@@ -546,6 +546,20 @@
     "count": 9
   },
   {
+    "en": "High",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:318",
+      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:357",
+      "app/src/main/java/com/migraineme/RiskColors.kt:82",
+      "app/src/main/java/com/migraineme/RiskIcons.kt:232",
+      "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:171",
+      "... 4 more"
+    ],
+    "max_len": 14,
+    "count": 9
+  },
+  {
     "en": "How much relief?",
     "class": "hard",
     "sites": [
@@ -568,6 +582,20 @@
       "app/src/main/java/com/migraineme/LogHomeScreen.kt:231",
       "app/src/main/java/com/migraineme/MedicinesScreen.kt:280",
       "app/src/main/java/com/migraineme/MissedActivitiesScreen.kt:222",
+      "... 4 more"
+    ],
+    "max_len": 14,
+    "count": 9
+  },
+  {
+    "en": "Mild",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:317",
+      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:355",
+      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:380",
+      "app/src/main/java/com/migraineme/PainLocationScreen.kt:290",
+      "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:846",
       "... 4 more"
     ],
     "max_len": 14,
@@ -616,20 +644,6 @@
     "count": 8
   },
   {
-    "en": "High",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:318",
-      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:357",
-      "app/src/main/java/com/migraineme/RiskColors.kt:82",
-      "app/src/main/java/com/migraineme/RiskIcons.kt:232",
-      "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:171",
-      "... 3 more"
-    ],
-    "max_len": 14,
-    "count": 8
-  },
-  {
     "en": "Loading...",
     "class": "hard",
     "sites": [
@@ -652,20 +666,6 @@
       "app/src/main/java/com/migraineme/RiskColors.kt:82",
       "app/src/main/java/com/migraineme/RiskIcons.kt:230",
       "app/src/main/java/com/migraineme/RiskWeightsScreen.kt:169",
-      "... 3 more"
-    ],
-    "max_len": 14,
-    "count": 8
-  },
-  {
-    "en": "Mild",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/AiSetupResultsScreen.kt:317",
-      "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:355",
-      "app/src/main/java/com/migraineme/JournalQuickAdd.kt:380",
-      "app/src/main/java/com/migraineme/PainLocationScreen.kt:290",
-      "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:846",
       "... 3 more"
     ],
     "max_len": 14,
@@ -728,6 +728,20 @@
     "count": 7
   },
   {
+    "en": "%s-day average",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:807",
+      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:147",
+      "app/src/main/java/com/migraineme/NutritionGraph.kt:234",
+      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:153",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:259",
+      "... 2 more"
+    ],
+    "max_len": 17,
+    "count": 7
+  },
+  {
     "en": "Skip for now",
     "class": "hard",
     "sites": [
@@ -768,20 +782,6 @@
     ],
     "max_len": 14,
     "count": 7
-  },
-  {
-    "en": "%s-day average",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:147",
-      "app/src/main/java/com/migraineme/NutritionGraph.kt:234",
-      "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:153",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:259",
-      "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:149",
-      "... 1 more"
-    ],
-    "max_len": 17,
-    "count": 6
   },
   {
     "en": "About %s",
@@ -913,7 +913,7 @@
     "en": "Report",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:567",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:573",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:544",
       "app/src/main/java/com/migraineme/ForumScreen.kt:116",
       "app/src/main/java/com/migraineme/ForumScreen.kt:263",
@@ -1092,7 +1092,7 @@
     "en": "Anonymous",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:528",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:534",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:505",
       "app/src/main/java/com/migraineme/ForumScreen.kt:89",
       "app/src/main/java/com/migraineme/ForumScreen.kt:576",
@@ -1422,7 +1422,7 @@
     "en": "Attach graph",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:374",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:380",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:352",
       "app/src/main/java/com/migraineme/ForumScreen.kt:730",
       "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:80"
@@ -1818,7 +1818,7 @@
     "en": "Post",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:469",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:475",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:447",
       "app/src/main/java/com/migraineme/ForumScreen.kt:396",
       "app/src/main/java/com/migraineme/ForumScreen.kt:768"
@@ -1970,7 +1970,7 @@
     "en": "%sd##forumage",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:847",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:928",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:729",
       "app/src/main/java/com/migraineme/ForumScreen.kt:859"
     ],
@@ -1981,7 +1981,7 @@
     "en": "%sh##forumage",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:846",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:927",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:728",
       "app/src/main/java/com/migraineme/ForumScreen.kt:858"
     ],
@@ -1992,7 +1992,7 @@
     "en": "%sm##forumage",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:845",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:926",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:727",
       "app/src/main/java/com/migraineme/ForumScreen.kt:857"
     ],
@@ -2311,7 +2311,7 @@
     "en": "Graph attached",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:342",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:348",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:320",
       "app/src/main/java/com/migraineme/ForumScreen.kt:702"
     ],
@@ -2663,7 +2663,7 @@
     "en": "Reply",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:548",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:554",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:525",
       "app/src/main/java/com/migraineme/ForumScreen.kt:797"
     ],
@@ -2674,7 +2674,7 @@
     "en": "Replying to %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:311",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:317",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:289",
       "app/src/main/java/com/migraineme/ForumScreen.kt:668"
     ],
@@ -2685,7 +2685,7 @@
     "en": "Report comment",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:179",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:185",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:159",
       "app/src/main/java/com/migraineme/ForumScreen.kt:458"
     ],
@@ -2704,12 +2704,23 @@
     "count": 3
   },
   {
+    "en": "Risk History",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:802",
+      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:96",
+      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:273"
+    ],
+    "max_len": 15,
+    "count": 3
+  },
+  {
     "en": "Risk Score",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:792",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:684",
-      "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:216"
+      "app/src/main/java/com/migraineme/RiskDataHistoryScreen.kt:216",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:883"
     ],
     "max_len": 14,
     "count": 3
@@ -3026,7 +3037,7 @@
     "en": "Write a reply...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:385",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:391",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:363",
       "app/src/main/java/com/migraineme/ForumScreen.kt:738"
     ],
@@ -3070,7 +3081,7 @@
     "en": "just now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:844",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:925",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:726",
       "app/src/main/java/com/migraineme/ForumScreen.kt:856"
     ],
@@ -3103,7 +3114,7 @@
     "en": "user",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:311",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:317",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:289",
       "app/src/main/java/com/migraineme/ForumScreen.kt:668"
     ],
@@ -4064,7 +4075,7 @@
     "en": "Comment under review",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:198",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:204",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:178"
     ],
     "max_len": 23,
@@ -4074,7 +4085,7 @@
     "en": "Comments (%s)",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:208",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:214",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:188"
     ],
     "max_len": 16,
@@ -4741,6 +4752,16 @@
     "count": 2
   },
   {
+    "en": "Mine",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:655",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:892"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
     "en": "Minimal setup for the app to work",
     "class": "soft",
     "sites": [
@@ -4844,7 +4865,7 @@
     "en": "No comments yet - be the first!",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:220",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:226",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:200"
     ],
     "max_len": 44,
@@ -4864,8 +4885,8 @@
     "en": "No data of yours for these dates",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:745",
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:829"
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:751",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:910"
     ],
     "max_len": 46,
     "count": 2
@@ -5248,16 +5269,6 @@
       "app/src/main/java/com/migraineme/ReviewLogScreen.kt:61"
     ],
     "max_len": 14,
-    "count": 2
-  },
-  {
-    "en": "Risk History",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:96",
-      "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:273"
-    ],
-    "max_len": 15,
     "count": 2
   },
   {
@@ -5954,7 +5965,7 @@
     "en": "Write a comment...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:385",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:391",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:363"
     ],
     "max_len": 21,
@@ -5994,7 +6005,7 @@
     "en": "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly.",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:199",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:205",
       "app/src/main/java/com/migraineme/BlogCommentsSection.kt:179"
     ],
     "max_len": 150,
@@ -6018,6 +6029,16 @@
       "app/src/main/java/com/migraineme/PractitionerScreen.kt:748"
     ],
     "max_len": 16,
+    "count": 2
+  },
+  {
+    "en": "avg %s",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:883",
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:892"
+    ],
+    "max_len": 14,
     "count": 2
   },
   {
@@ -12539,7 +12560,7 @@
     "en": "Compare mine",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:637"
+      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:643"
     ],
     "max_len": 15,
     "count": 1
@@ -21009,15 +21030,6 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
-    "en": "Mine",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:649"
     ],
     "max_len": 14,
     "count": 1
