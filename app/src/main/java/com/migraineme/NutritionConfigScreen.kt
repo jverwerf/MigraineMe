@@ -52,6 +52,11 @@ fun NutritionConfigScreen(
     val scrollState = rememberScrollState()
 
     var config by remember { mutableStateOf(MonitorCardConfigStore.load(context)) }
+    // The Monitor Diet card reads MetricDisplayStore("nutrition") (registry keys); this screen
+    // works in legacy keys. Start from what the card really shows, and write both stores.
+    var selected by remember {
+        mutableStateOf(MetricDisplayStore.getDisplayMetrics(context, "nutrition").map { MetricRegistry.nutritionLegacyKey(it) })
+    }
 
     var metricSettings by remember {
         mutableStateOf<Map<String, EdgeFunctionsService.MetricSettingResponse>>(emptyMap())
@@ -75,9 +80,13 @@ fun NutritionConfigScreen(
     // Only hide all metrics if nutrition is explicitly disabled
     val hideNutrition = settingsLoaded && nutritionSetting != null && !nutritionSetting.enabled
 
-    fun updateConfig(newConfig: MonitorCardConfig) {
-        config = newConfig
-        MonitorCardConfigStore.save(context, newConfig)
+    fun toggle(metric: String) {
+        val cur = selected.toMutableList()
+        if (metric in cur) cur.remove(metric) else if (cur.size < 3) cur.add(metric)
+        selected = cur
+        MetricDisplayStore.setDisplayMetrics(context, "nutrition", cur.map { MetricRegistry.nutritionRegistryKey(it) })
+        config = config.copy(nutritionDisplayMetrics = cur)
+        MonitorCardConfigStore.save(context, config)
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -127,16 +136,16 @@ fun NutritionConfigScreen(
                     ) {
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                         for (metric in MonitorCardConfig.ALL_NUTRITION_METRICS) {
-                            val isSelected = metric in config.nutritionDisplayMetrics
-                            val canSelect = isSelected || config.nutritionDisplayMetrics.size < 3
-                            val slotIndex = if (isSelected) config.nutritionDisplayMetrics.indexOf(metric) else -1
+                            val isSelected = metric in selected
+                            val canSelect = isSelected || selected.size < 3
+                            val slotIndex = if (isSelected) selected.indexOf(metric) else -1
                             val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = {
                                     if (canSelect || isSelected) {
-                                        updateConfig(config.toggleNutritionMetric(metric))
+                                        toggle(metric)
                                     }
                                 },
                                 label = {
@@ -197,8 +206,8 @@ fun NutritionConfigScreen(
                     Spacer(Modifier.height(12.dp))
 
                     Text(
-                        text = t("%s/3 selected", config.nutritionDisplayMetrics.size),
-                        color = if (config.nutritionDisplayMetrics.size == 3)
+                        text = t("%s/3 selected", selected.size),
+                        color = if (selected.size == 3)
                             AppTheme.AccentPurple
                         else
                             AppTheme.SubtleTextColor,

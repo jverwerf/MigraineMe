@@ -70,8 +70,8 @@ fun buildFavoritesPool(context: Context): List<FavPoolEntry> {
     addGroup("physical", "Physical", PhysicalCardConfigStore.load(context).physicalDisplayMetrics) { PhysicalCardConfig.labelFor(it) }
     addGroup("mental", "Cognitive", MentalCardConfigStore.load(context).mentalDisplayMetrics) { MentalCardConfig.labelFor(it) }
 
-    // Nutrition stays on old system
-    MonitorCardConfigStore.load(context).nutritionDisplayMetrics.forEach {
+    // Nutrition: what the Monitor Diet card shows (MetricDisplayStore), in legacy keys
+    MetricDisplayStore.getDisplayMetrics(context, "nutrition").map { MetricRegistry.nutritionLegacyKey(it) }.forEach {
         pool.add(FavPoolEntry("nutrition:$it", tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[it] ?: it), "Diet"))
     }
     return pool
