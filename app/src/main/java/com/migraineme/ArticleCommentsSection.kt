@@ -652,7 +652,7 @@ private fun readerSeriesFor(shared: List<MetricSeries>, mine: Map<String, List<I
     shared.mapNotNull { s ->
         val def = AllMetricDefs.firstOrNull { it.key == s.key || it.label == s.label } ?: return@mapNotNull null
         val pts = mine[def.key]?.filter { it.date in dates }?.sortedBy { it.date }?.map { DailyMetricPoint(it.date, it.value) } ?: return@mapNotNull null
-        if (pts.size < 2) null else MetricSeries(def.key, tSync("Mine") + " · " + tSync(def.label), def.unit, def.color.copy(alpha = 0.9f), pts, dashed = true)
+        if (pts.size < 2) null else MetricSeries(def.key, tSync("Mine") + " · " + tSync(def.label), def.unit, AppTheme.AccentPurple, pts)
     }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -785,7 +785,7 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
     val avg = days.map { it.score }.average().toFloat()
     val mineAvg = mineShown.takeIf { it.isNotEmpty() }?.map { it.score }?.average()?.toFloat()
     fun fmt1(v: Float) = if (v >= 10f || v == v.toInt().toFloat()) v.toInt().toString() else "%.1f".format(v)
-    val mineColor = Color.White.copy(alpha = 0.85f)
+    val mineColor = AppTheme.AccentPurple
 
     // Same card as the Monitor Risk History graph: reading first, y values at
     // the side, the house curve, and one key line under the plot.
@@ -855,12 +855,13 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
                     }
                     for ((x, y, v) in pts) drawCircle(riskZoneColor(v), radius = 3.5f, center = Offset(x, y))
 
-                    // Reader's line, dashed white
+                    // Reader's line: the same house curve in the accent colour, with dots
                     if (mineShown.size >= 2) {
                         val byDate = mineShown.associateBy { it.date }
                         val mp = days.mapIndexedNotNull { i, d -> byDate[d.date]?.let { Offset(xFor(i), yZ(it.score)) } }
                         if (mp.size >= 2) {
-                            drawPath(smoothPath(mp), mineColor, style = androidx.compose.ui.graphics.drawscope.Stroke(2f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 7f))))
+                            drawSeriesCurve(mp, mineColor, widthPx = 2.5f, glowPx = 7f)
+                            for (o in mp) drawCircle(mineColor, radius = 3.5f, center = o)
                         }
                     }
                 }
@@ -884,10 +885,7 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
                 }
                 if (mineAvg != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(width = 14.dp, height = 8.dp)) {
-                            drawLine(mineColor, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = 2f,
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
-                        }
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(mineColor))
                         Spacer(Modifier.width(5.dp))
                         Text(t("Mine") + " \u00b7 " + t("avg %s", fmt1(mineAvg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
