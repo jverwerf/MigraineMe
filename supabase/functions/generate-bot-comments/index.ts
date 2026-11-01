@@ -103,14 +103,6 @@ async function notifySubscribers(sb, companionId, companionSlug, article, errs, 
     if (subErr || !subs?.length) return;
     const companionName = companionSlug.charAt(0).toUpperCase() + companionSlug.slice(1);
     const shortTitle = article.title.length > 60 ? article.title.substring(0, 57) + "..." : article.title;
-    const favoriteRows = subs.map((s)=>({
-        user_id: s.user_id,
-        article_id: article.id
-      }));
-    const meTooRows = subs.map((s)=>({
-        user_id: s.user_id,
-        post_id: article.id
-      }));
     // Stored in ENGLISH on purpose. These rows are read back by the app, so the
     // app translates them at render through Strings — which means they follow
     // the user when they switch language, where a row translated at insert time
@@ -125,16 +117,8 @@ async function notifySubscribers(sb, companionId, companionSlug, article, errs, 
         body: shortTitle,
         read: false
       }));
-    const { error: favErr } = await sb.from("article_favorites").upsert(favoriteRows, {
-      onConflict: "user_id,article_id",
-      ignoreDuplicates: true
-    });
-    if (favErr) errs.push(`fav/${companionSlug}: ${favErr.message}`);
-    const { error: mtErr } = await sb.from("forum_me_too").upsert(meTooRows, {
-      onConflict: "user_id,post_id",
-      ignoreDuplicates: true
-    });
-    if (mtErr) errs.push(`metoo/${companionSlug}: ${mtErr.message}`);
+    // No hearts or favourites on behalf of subscribers: they never tapped
+    // anything, and auto-hearting every subscriber faked like counts (fixed 2026-11-01).
     const { error: notifErr } = await sb.from("community_notifications").insert(notificationRows);
     if (notifErr) errs.push(`notif/${companionSlug}: ${notifErr.message}`);
 
