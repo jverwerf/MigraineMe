@@ -4986,5 +4986,11 @@
   "Air Quality": "Luftqualität",
   "Coarse Dust": "Grobstaub",
   "Blood Glucose": "Blutzucker",
-  "Blood Pressure": "Blutdruck"
+  "Blood Pressure": "Blutdruck",
+  "Add a graph": "Grafik anfügen",
+  "Attach": "Anhängen",
+  "Share to forum": "Im Forum teilen",
+  "No data for this range yet": "Noch keine Daten für diesen Zeitraum",
+  "Timeline": "Verlauf",
+  "My %s graph, last %s days": "Meine %s-Grafik, letzte %s Tage"
 }

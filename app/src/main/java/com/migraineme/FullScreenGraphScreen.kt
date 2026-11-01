@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -36,6 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.LocalDate
@@ -47,7 +52,9 @@ import java.time.format.DateTimeFormatter
 fun FullScreenGraphScreen(
     graphType: String,
     onBack: () -> Unit,
-    highlightContributors: List<String> = emptyList()
+    highlightContributors: List<String> = emptyList(),
+    /** (picker tile, days) -> open the forum composer with this graph attached. */
+    onShareToForum: ((graph: String, days: Int) -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -211,6 +218,22 @@ fun FullScreenGraphScreen(
             "physical" -> PhysicalHistoryGraph(days = activeDays, endDate = endDate)
             "mental" -> MentalHistoryGraph(days = activeDays, endDate = endDate)
             "medicines" -> MedicineHistoryGraph(days = activeDays, endDate = endDate)
+        }
+
+        // Share this graph to the forum. The route is premium already, so no gate here.
+        val shareTile = pickerTileForGraphType(graphType)
+        if (onShareToForum != null && shareTile != null) {
+            val shareDays = when { activeDays <= 7 -> 7; activeDays <= 14 -> 14; else -> 30 }
+            OutlinedButton(
+                onClick = { onShareToForum(shareTile, shareDays) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+            ) {
+                Icon(Icons.Outlined.Forum, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(t("Share to forum"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium)
+            }
         }
 
         Spacer(Modifier.height(16.dp))

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4988 entries.
+ * 4994 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -481,6 +481,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Add Scanned Food" to "Digitalizado",
     "Add Treatment" to "Tratamento",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Junta um medicamento, aparelho ou mudança de hábito para ver o efeito.",
+    "Add a graph" to "Juntar gráfico",
     "Add any additional notes about this migraine" to "Junta mais notas sobre esta crise",
     "Add any notes about this migraine…" to "Adiciona notas sobre esta enxaqueca…",
     "Add as a treatment" to "Como tratamento",
@@ -701,6 +702,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "At the first sign of an attack, and whenever the pain is at its worst. Dark room, eyes closed, sound low." to "Ao primeiro sinal de uma crise, e sempre que a dor estiver no seu pior. Quarto escuro, olhos fechados, som baixo.",
     "Atmospheric pressure" to "Pressão atmosférica",
     "Atogepant (Qulipta)" to "Atogepant (Qulipta)",
+    "Attach" to "Anexar",
     "Attach detailed graphs to community posts" to "Junta gráficos às publicações",
     "Attach graph" to "Juntar gráfico",
     "Attach to comment" to "Juntar",
@@ -1515,11 +1517,11 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Exercise & Hormones" to "Exercício e hormonas",
     "Exercise & cycle" to "Exercício e ciclo",
     "Exercise sets one off" to "O exercício desencadeia",
-    "Exercises" to "Exercícios",
-    "Exercising" to "Fazer exercício",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Exercises" to "Exercícios",
+    "Exercising" to "Fazer exercício",
     "Exertional headache" to "Cefaleia de esforço",
     "Exit tour" to "Sair da visita",
     "Expand" to "Abrir",
@@ -2432,6 +2434,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Muscle tension" to "Tensão muscular",
     "Muscle weakness" to "Fraqueza muscular",
     "Muscles that stay a little tense all day stop feeling tense. You only notice them when the ache arrives. Squeezing a muscle hard and then letting it go teaches you what the difference feels like, and it is easier to release something once you can feel it." to "Os músculos que ficam um pouco tensos o dia todo deixam de parecer tensos. Só dás por eles quando a dor chega. Apertar um músculo com força e depois soltá-lo ensina-te como é a diferença, e é mais fácil soltar uma coisa quando a consegues sentir.",
+    "My %s graph, last %s days" to "O meu gráfico de %s, últimos %s dias",
     "NONE" to "NENHUM",
     "Name" to "Nome",
     "Name *" to "Nome *",
@@ -2532,6 +2535,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "No data" to "Sem dados",
     "No data available" to "Sem dados",
     "No data for this metric yet. Connect a source in Data settings." to "Ainda não há dados desta medida. Liga uma fonte nas definições de Dados.",
+    "No data for this range yet" to "Ainda sem dados neste período",
     "No data yet for the metrics you picked." to "Ainda sem dados para as medidas que escolheste.",
     "No data yet today" to "Ainda sem dados hoje",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Ainda nada: regista coisas ligadas a uma crise.",
@@ -3016,13 +3020,13 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Quell" to "Quell",
     "Questions, feedback or something not working? Email us and a real person will reply." to "Dúvidas, feedback ou algo não funciona? Envie-nos um e-mail e uma pessoa real irá responder.",
     "Queued changes:" to "Em espera:",
+)
+
+private fun ptStrings2(): Map<String, String> = mapOf(
     "Quick %s" to "%s já",
     "Quick Log" to "Registo já",
     "Quick Log Medicine" to "Já: medicamento",
     "Quick Log Relief" to "Já: alívio",
-)
-
-private fun ptStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Já: fator",
     "Quick Migraine" to "Crise já",
     "Quick log" to "Registo já",
@@ -3363,6 +3367,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Share all of it" to "Partilhar tudo",
     "Share nothing" to "Não partilhar",
     "Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines." to "Partilha os tratamentos, hábitos ou mudanças que fizeram mesmo diferença nas tuas crises.",
+    "Share to forum" to "Enviar ao fórum",
     "Share your data" to "Partilhar dados",
     "Share your diary?" to "Partilhar o diário?",
     "Share your migraine graphs" to "Partilha os teus gráficos",
@@ -3841,6 +3846,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Time for {0}. Today's goal: {1} times." to "Hora de {0}. Meta de hoje: {1} vezes.",
     "Time: %s" to "Hora: %s",
     "Timeframe" to "Período",
+    "Timeline" to "Cronologia",
     "Timeline, breakdowns & detailed charts" to "Cronologia, detalhes e gráficos",
     "Timely notifications" to "Avisos a horas",
     "Times a day" to "Vezes por dia",
@@ -4517,15 +4523,15 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your answers when you first set the app up." to "As tuas respostas ao configurar a app.",
     "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "As tuas respostas. A revisão semanal nunca lhes toca: só tu, com o botão editar de cada secção ou refazendo a configuração.",
     "Your assessment" to "A tua avaliação",
+)
+
+private fun ptStrings3(): Map<String, String> = mapOf(
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "A moderação marcou o teu comentário e está a vê-lo. Se foi engano, volta em breve.",
     "Your data is ready to talk" to "Os teus dados têm o que dizer",
     "Your data is still being processed.\nThis will complete in the background." to "Os teus dados ainda estão a ser processados.\nIsto continua em segundo plano.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Os teus dados ficam seguros e servem só para ver os teus padrões. Nunca os damos a terceiros.",
     "Your data is yours, and it stays that way." to "Os teus dados são teus, e vão continuar a ser.",
     "Your data suggests adjusting these triggers" to "Os teus dados pedem para ajustar estes fatores",
-)
-
-private fun ptStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Os teus dados, presos à tua conta. Privados de ponta a ponta.",
     "Your exercises" to "Exercícios",
     "Your free trial ends tomorrow" to "O teste acaba amanhã",

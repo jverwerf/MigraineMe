@@ -4986,5 +4986,11 @@
   "Air Quality": "Calidad del aire",
   "Coarse Dust": "Polvo grueso",
   "Blood Glucose": "Glucemia",
-  "Blood Pressure": "Presión arterial"
+  "Blood Pressure": "Presión arterial",
+  "Add a graph": "Añadir gráfico",
+  "Attach": "Adjuntar",
+  "Share to forum": "Compartir en foro",
+  "No data for this range yet": "Aún no hay datos para este periodo",
+  "Timeline": "Cronología",
+  "My %s graph, last %s days": "Mi gráfico de %s, últimos %s días"
 }

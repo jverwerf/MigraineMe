@@ -37,6 +37,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.outlined.ShowChart
+import kotlinx.serialization.json.JsonObject
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -269,11 +272,21 @@ fun ReportDialog(
 
 @Composable
 fun CreateForumPostDialog(
+    accessToken: String?,
+    insightsVm: InsightsViewModel,
     onDismiss: () -> Unit,
-    onPost: (title: String, body: String) -> Unit
+    onPost: (title: String, body: String, attachment: JsonObject?) -> Unit,
+    onUpgrade: () -> Unit = {},
+    initialTitle: String = "",
+    /** Picker tile to open on (from "Share to forum"); null = picker closed. */
+    initialGraph: String? = null,
+    initialDays: Int = 14
 ) {
-    var title by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle) }
     var body by remember { mutableStateOf("") }
+    var attachment by remember { mutableStateOf<JsonObject?>(null) }
+    var showPicker by remember { mutableStateOf(initialGraph != null) }
+    val premiumState by PremiumManager.state.collectAsState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -282,7 +295,7 @@ fun CreateForumPostDialog(
         textContentColor = AppTheme.BodyTextColor,
         title = { Text(t("New Discussion"), fontWeight = FontWeight.Bold) },
         text = {
-            Column {
+            Column(Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { if (it.length <= 200) title = it },
@@ -314,11 +327,70 @@ fun CreateForumPostDialog(
                     shape = RoundedCornerShape(12.dp),
                     maxLines = 8
                 )
+
+                // ── Add a graph (premium to attach, free to read) ──
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        t("Add a graph"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (premiumState.access != PremiumAccess.LOADING && !premiumState.isPremium) {
+                        Text(
+                            "\uD83D\uDD12 " + t("Premium"),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                val att = attachment
+                when {
+                    att != null -> {
+                        AttachedGraphCard(att, startPadding = 0.dp)
+                        Text(
+                            t("Remove"),
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(top = 4.dp).clickable { attachment = null }
+                        )
+                    }
+                    showPicker && accessToken != null -> {
+                        GraphAttachmentPicker(
+                            accessToken = accessToken,
+                            insightsVm = insightsVm,
+                            onAttach = { json -> attachment = json; showPicker = false },
+                            onDismiss = { showPicker = false },
+                            initialGraph = initialGraph,
+                            initialDays = initialDays,
+                            onUpgrade = onUpgrade,
+                            attachLabel = t("Attach")
+                        )
+                    }
+                    else -> {
+                        OutlinedButton(
+                            onClick = { showPicker = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Outlined.ShowChart, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(t("Add a graph"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onPost(title.trim(), body.trim()) },
+                onClick = { onPost(title.trim(), body.trim(), attachment) },
                 enabled = title.isNotBlank() && body.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
             ) { Text(t("Post")) }
@@ -338,7 +410,8 @@ fun ForumPostDetailScreen(
     accessToken: String?,
     currentUserId: String?,
     insightsVm: InsightsViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onUpgrade: () -> Unit = {}
 ) {
     val state by vm.state.collectAsState()
     val pinnedTopic = PinnedTopics.find(postId)
@@ -364,6 +437,8 @@ fun ForumPostDetailScreen(
     var posting by remember { mutableStateOf(false) }
     var reportingPost by remember { mutableStateOf(false) }
     var reportingComment by remember { mutableStateOf<ForumCommentRow?>(null) }
+    var pendingAttachment by remember { mutableStateOf<JsonObject?>(null) }
+    var showGraphPicker by remember { mutableStateOf(false) }
 
     val isMeToo = postId in state.myMeTooIds
     val meTooCount = state.meTooCountMap[postId] ?: 0
@@ -511,6 +586,10 @@ fun ForumPostDetailScreen(
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(post.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp))
+                            post.attachment?.let { att ->
+                                Spacer(Modifier.height(10.dp))
+                                AttachedGraphCard(att, startPadding = 0.dp)
+                            }
                         }
                     }
                 }
@@ -598,6 +677,44 @@ fun ForumPostDetailScreen(
 
         // ── Comment input ──
         if (accessToken != null) {
+            // Pending graph + picker sit above the input, scrolling on their own.
+            if (pendingAttachment != null || showGraphPicker) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AppTheme.FadeColor)
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                ) {
+                    pendingAttachment?.let {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF1A0628).copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Outlined.ShowChart, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(t("Graph attached"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { pendingAttachment = null }, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Outlined.Close, contentDescription = t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                    }
+                    if (showGraphPicker) {
+                        GraphAttachmentPicker(
+                            accessToken = accessToken,
+                            insightsVm = insightsVm,
+                            onAttach = { json -> pendingAttachment = json; showGraphPicker = false },
+                            onDismiss = { showGraphPicker = false },
+                            onUpgrade = onUpgrade,
+                            attachLabel = t("Attach")
+                        )
+                    }
+                }
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -605,6 +722,14 @@ fun ForumPostDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { showGraphPicker = !showGraphPicker }, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Outlined.ShowChart,
+                        contentDescription = t("Attach graph"),
+                        tint = if (showGraphPicker || pendingAttachment != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
                 OutlinedTextField(
                     value = commentText,
                     onValueChange = { if (it.length <= 2000) commentText = it },
@@ -626,9 +751,11 @@ fun ForumPostDetailScreen(
                         val text = commentText.trim()
                         if (text.isEmpty() || posting) return@IconButton
                         posting = true
-                        vm.postForumComment(accessToken, postId, text, replyingTo?.id)
+                        vm.postForumComment(accessToken, postId, text, replyingTo?.id, pendingAttachment)
                         commentText = ""
                         replyingTo = null
+                        pendingAttachment = null
+                        showGraphPicker = false
                         posting = false
                     },
                     enabled = commentText.isNotBlank() && !posting
@@ -678,6 +805,10 @@ private fun ForumCommentBubble(
             }
         }
         Text(comment.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp), modifier = Modifier.padding(start = 36.dp, top = 2.dp, end = 8.dp))
+        comment.attachment?.let { att ->
+            Spacer(Modifier.height(6.dp))
+            AttachedGraphCard(att)
+        }
     }
 }
 

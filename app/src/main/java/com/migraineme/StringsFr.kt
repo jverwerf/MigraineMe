@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4988 entries.
+ * 4994 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -481,6 +481,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Add Scanned Food" to "Scanné",
     "Add Treatment" to "Traitement",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Ajoute un médicament, appareil ou changement pour suivre son effet.",
+    "Add a graph" to "Ajouter courbe",
     "Add any additional notes about this migraine" to "Ajoute d'autres notes sur cette migraine",
     "Add any notes about this migraine…" to "Ajoute des notes sur cette migraine…",
     "Add as a treatment" to "Comme traitement",
@@ -701,6 +702,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "At the first sign of an attack, and whenever the pain is at its worst. Dark room, eyes closed, sound low." to "Au premier signe d'une crise, et chaque fois que la douleur est à son pire. Pièce sombre, yeux fermés, son bas.",
     "Atmospheric pressure" to "Pression atmosphérique",
     "Atogepant (Qulipta)" to "Atogépant (Qulipta)",
+    "Attach" to "Joindre",
     "Attach detailed graphs to community posts" to "Joins des graphiques à tes messages",
     "Attach graph" to "Joindre",
     "Attach to comment" to "Joindre",
@@ -1515,11 +1517,11 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Exercise & Hormones" to "Sport et hormones",
     "Exercise & cycle" to "Sport et cycle",
     "Exercise sets one off" to "Le sport déclenche",
-    "Exercises" to "Exercices",
-    "Exercising" to "Faire de l'exercice",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Exercises" to "Exercices",
+    "Exercising" to "Faire de l'exercice",
     "Exertional headache" to "Céphalée d'effort",
     "Exit tour" to "Quitter la visite",
     "Expand" to "Déplier",
@@ -2432,6 +2434,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Muscle tension" to "Tension musculaire",
     "Muscle weakness" to "Faiblesse musculaire",
     "Muscles that stay a little tense all day stop feeling tense. You only notice them when the ache arrives. Squeezing a muscle hard and then letting it go teaches you what the difference feels like, and it is easier to release something once you can feel it." to "Des muscles qui restent un peu tendus toute la journée finissent par ne plus sembler tendus. Tu ne les remarques que quand la douleur arrive. Serrer fort un muscle puis le lâcher t'apprend à sentir la différence, et c'est plus facile de relâcher quelque chose une fois que tu le sens.",
+    "My %s graph, last %s days" to "Mon graphique %s, %s derniers jours",
     "NONE" to "AUCUN",
     "Name" to "Nom",
     "Name *" to "Nom *",
@@ -2532,6 +2535,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "No data" to "Aucune donnée",
     "No data available" to "Aucune donnée",
     "No data for this metric yet. Connect a source in Data settings." to "Pas encore de données pour cette mesure. Connecte une source dans Réglages des données.",
+    "No data for this range yet" to "Aucune donnée sur cette période",
     "No data yet for the metrics you picked." to "Pas encore de données pour ces mesures.",
     "No data yet today" to "Rien aujourd'hui",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Rien encore : note des éléments liés à une migraine.",
@@ -3016,13 +3020,13 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Quell" to "Quell",
     "Questions, feedback or something not working? Email us and a real person will reply." to "Des questions, des retours ou quelque chose ne fonctionne pas ? Écrivez-nous, une vraie personne vous répondra.",
     "Queued changes:" to "En attente :",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Quick %s" to "%s rapide",
     "Quick Log" to "Rapide",
     "Quick Log Medicine" to "Rapide : médicament",
     "Quick Log Relief" to "Rapide : soulag.",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Rapide : facteur",
     "Quick Migraine" to "Migraine rapide",
     "Quick log" to "Rapide",
@@ -3363,6 +3367,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Share all of it" to "Tout partager",
     "Share nothing" to "Ne rien partager",
     "Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines." to "Partage les traitements, habitudes ou changements qui ont vraiment fait la différence pour tes migraines.",
+    "Share to forum" to "Partager au forum",
     "Share your data" to "Partager données",
     "Share your diary?" to "Ton journal ?",
     "Share your migraine graphs" to "Partage tes graphiques",
@@ -3841,6 +3846,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Time for {0}. Today's goal: {1} times." to "C'est l'heure : {0}. Objectif du jour : {1} fois.",
     "Time: %s" to "Heure : %s",
     "Timeframe" to "Période",
+    "Timeline" to "Historique",
     "Timeline, breakdowns & detailed charts" to "Chronologie, détails et graphiques",
     "Timely notifications" to "Alertes à l'heure",
     "Times a day" to "Fois par jour",
@@ -4517,15 +4523,15 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your answers when you first set the app up." to "Tes réponses lors de la configuration de l'app.",
     "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
     "Your assessment" to "Ton évaluation",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Notre modération a signalé ton commentaire et l'examine. Si c'est une erreur, il reviendra vite.",
     "Your data is ready to talk" to "Tes données ont des choses à dire",
     "Your data is still being processed.\nThis will complete in the background." to "Tes données sont encore en traitement.\nÇa se termine en arrière-plan.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Tes données sont stockées en sécurité et servent seulement à analyser tes tendances. Nous ne les partageons jamais.",
     "Your data is yours, and it stays that way." to "Tes données t'appartiennent, et ça ne changera pas.",
     "Your data suggests adjusting these triggers" to "Tes données invitent à ajuster ces facteurs",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Tes données, liées à ton compte. Privées de bout en bout.",
     "Your exercises" to "Tes exercices",
     "Your free trial ends tomorrow" to "Ton essai se termine demain",

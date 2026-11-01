@@ -1483,18 +1483,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_PHYSICAL) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) }) }
                     }
                     composable(Routes.MONITOR_SLEEP) { MonitorSleepScreen(navController = nav, authVm = authVm) }
                     composable(Routes.SLEEP_CONFIG) { SleepConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.FULL_GRAPH_SLEEP) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) }) }
                     }
                     composable(Routes.FULL_GRAPH_WEATHER) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) }) }
                     }
                     composable(Routes.FULL_GRAPH_NUTRITION) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) }) }
                     }
                     composable(Routes.FULL_GRAPH_MEDICINES) {
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "medicines", onBack = { nav.popBackStack() }) }
@@ -1514,7 +1514,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 backStackEntry.arguments?.getString("contributors") ?: "", "UTF-8"
                             )
                             val contributors = if (contribArg.isNotBlank()) contribArg.split("|") else emptyList()
-                            FullScreenGraphScreen(graphType = "risk", onBack = { nav.popBackStack() }, highlightContributors = contributors)
+                            FullScreenGraphScreen(graphType = "risk", onBack = { nav.popBackStack() }, highlightContributors = contributors, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) })
                         }
                     }
                     composable(Routes.MENTAL_CONFIG) { MentalConfigScreen(onBack = { nav.popBackStack() }) }
@@ -1522,7 +1522,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_MENTAL) {
-                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }, onShareToForum = { g, d -> ForumShareDraft.set(g, d); nav.navigate(Routes.COMMUNITY) }) }
                     }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
                     
@@ -1679,7 +1679,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         )
                     }
                     composable(Routes.COMMUNITY) {
-                        CommunityScreen(authVm = authVm, navController = nav, vm = communityVm)
+                        CommunityScreen(authVm = authVm, navController = nav, vm = communityVm, insightsVm = androidx.lifecycle.viewmodel.compose.viewModel(androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner))
                     }
                     composable("${Routes.ARTICLE_DETAIL}/{articleId}") { backStack ->
                         val articleId = backStack.arguments?.getString("articleId") ?: return@composable
@@ -1721,6 +1721,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             currentUserId = authState.userId,
                             insightsVm = insightsVm,
                             onBack = { nav.popBackStack() }
+                            , onUpgrade = { nav.navigate(Routes.PAYWALL) }
                         )
                     }
                     composable(Routes.JOURNAL) { JournalScreen(navController = nav, authVm = authVm, vm = logVm) }

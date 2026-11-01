@@ -92,6 +92,10 @@
     "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
+    "site": "app/src/main/java/com/migraineme/ForumScreen.kt:342",
+    "line": "                            \"\\uD83D\\uDD12 \" + t(\"Premium\"),"
+  },
+  {
     "site": "app/src/main/java/com/migraineme/GoalEditorScreen.kt:169",
     "line": "                                label = t(r.title) + \" · \" + t(\"%s min\", r.minutes),"
   },

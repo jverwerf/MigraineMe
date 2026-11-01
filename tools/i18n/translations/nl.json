@@ -4986,5 +4986,11 @@
   "Air Quality": "Luchtkwaliteit",
   "Coarse Dust": "Grof stof",
   "Blood Glucose": "Bloedsuiker",
-  "Blood Pressure": "Bloeddruk"
+  "Blood Pressure": "Bloeddruk",
+  "Add a graph": "Grafiek erbij",
+  "Attach": "Toevoegen",
+  "Share to forum": "Delen in forum",
+  "No data for this range yet": "Nog geen gegevens voor deze periode",
+  "Timeline": "Tijdlijn",
+  "My %s graph, last %s days": "Mijn %s-grafiek, laatste %s dagen"
 }

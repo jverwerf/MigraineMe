@@ -4,6 +4,7 @@ package com.migraineme
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -47,13 +48,19 @@ fun GraphAttachmentPicker(
     accessToken: String,
     insightsVm: InsightsViewModel,
     onAttach: (JsonObject) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** Tile to open on: timeline, risk, sleep, weather, physical, mind, diet. */
+    initialGraph: String? = null,
+    initialDays: Int = 14,
+    /** Where the premium upsell goes; the picker just closes when null. */
+    onUpgrade: (() -> Unit)? = null,
+    attachLabel: String = t("Attach to comment")
 ) {
     // ── Premium check ──
     val premiumState by PremiumManager.state.collectAsState()
 
-    // ── Tab state: 0 = Insights, 1 = Risk ──
-    var selectedTab by remember { mutableStateOf(0) }
+    // ── Tile state ──
+    var selectedTile by remember { mutableStateOf(PickerGraphTiles.firstOrNull { it.id == initialGraph } ?: PickerGraphTiles[0]) }
 
     // ── UI ──
     Card(
@@ -95,42 +102,44 @@ fun GraphAttachmentPicker(
                 PremiumGate(
                     message = t("Share your migraine graphs"),
                     subtitle = t("Attach detailed graphs to community posts"),
-                    onUpgrade = onDismiss
+                    onUpgrade = onUpgrade ?: onDismiss
                 ) {}
             } else {
-                // ── Graph type toggle ──
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    listOf("Insights", "Risk").forEachIndexed { idx, label ->
-                        val isSel = selectedTab == idx
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSel) AppTheme.AccentPurple.copy(alpha = 0.25f) else Color.Transparent)
-                                .clickable { selectedTab = idx }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(t(label),
-                                color = if (isSel) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium)
-                            )
+                // ── Graph tiles: one per graph the app draws ──
+                PickerGraphTiles.chunked(4).forEach { rowTiles ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        rowTiles.forEach { tile ->
+                            val isSel = selectedTile.id == tile.id
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSel) AppTheme.AccentPurple.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
+                                    .then(if (isSel) Modifier.border(1.dp, AppTheme.AccentPurple, RoundedCornerShape(10.dp)) else Modifier)
+                                    .clickable { selectedTile = tile }
+                                    .padding(vertical = 9.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(t(tile.label),
+                                    color = if (isSel) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium),
+                                    maxLines = 1
+                                )
+                            }
                         }
+                        repeat(4 - rowTiles.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(6.dp))
 
-                when (selectedTab) {
-                    0 -> InsightsGraphTab(accessToken, insightsVm, onAttach)
-                    1 -> RiskGraphTab(accessToken, onAttach)
+                when (selectedTile.id) {
+                    "timeline" -> InsightsGraphTab(accessToken, insightsVm, onAttach, attachLabel)
+                    "risk" -> RiskGraphTab(accessToken, onAttach, attachLabel)
+                    else -> HistoryGraphTab(accessToken, insightsVm, selectedTile, initialDays, onAttach, attachLabel)
                 }
             }
         }
@@ -145,7 +154,8 @@ fun GraphAttachmentPicker(
 private fun InsightsGraphTab(
     accessToken: String,
     insightsVm: InsightsViewModel,
-    onAttach: (JsonObject) -> Unit
+    onAttach: (JsonObject) -> Unit,
+    attachLabel: String
 ) {
     val ctx: Context = LocalContext.current.applicationContext
     LaunchedEffect(accessToken) {
@@ -337,8 +347,162 @@ private fun InsightsGraphTab(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
-            Text(t("Attach to comment"), style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Text(attachLabel, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
         }
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// GRAPH TILES + HISTORY TAB (the six Monitor graphs over a date range)
+// ═══════════════════════════════════════════════════════════════════
+
+data class PickerGraphTile(val id: String, val label: String, val groups: Set<String>, val primary: List<String>)
+
+/** One tile per graph the app draws. groups = AllMetricDefs.group values; primary = keys ticked by default. */
+val PickerGraphTiles = listOf(
+    PickerGraphTile("timeline", "Timeline", emptySet(), emptyList()),
+    PickerGraphTile("risk", "Risk", emptySet(), emptyList()),
+    PickerGraphTile("sleep", "Sleep", setOf("Sleep"), listOf("sleep_dur")),
+    PickerGraphTile("weather", "Weather", setOf("Environment"), listOf("pressure")),
+    PickerGraphTile("physical", "Physical", setOf("Physical"), listOf("hrv", "rhr")),
+    PickerGraphTile("mind", "Mind", setOf("Cognitive"), listOf("stress", "screen_time")),
+    PickerGraphTile("diet", "Diet", setOf("Diet"), listOf("sodium", "caffeine")),
+)
+
+/** Full-screen graph type (FullScreenGraphScreen) -> picker tile id. */
+fun pickerTileForGraphType(graphType: String): String? = when (graphType) {
+    "sleep" -> "sleep"
+    "weather" -> "weather"
+    "nutrition" -> "diet"
+    "physical" -> "physical"
+    "mental" -> "mind"
+    "risk" -> "risk"
+    else -> null
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HistoryGraphTab(
+    accessToken: String,
+    insightsVm: InsightsViewModel,
+    tile: PickerGraphTile,
+    initialDays: Int,
+    onAttach: (JsonObject) -> Unit,
+    attachLabel: String
+) {
+    val ctx: Context = LocalContext.current.applicationContext
+    LaunchedEffect(accessToken) {
+        if (accessToken.isNotBlank()) insightsVm.load(ctx, accessToken)
+    }
+    val migraines by insightsVm.migraines.collectAsState()
+    val allDailyMetrics by insightsVm.allDailyMetrics.collectAsState()
+
+    var days by remember { mutableStateOf(if (initialDays in listOf(7, 14, 30)) initialDays else 14) }
+    val zone = ZoneId.systemDefault()
+    val endDate = remember { LocalDate.now() }
+    val startDate = endDate.minusDays(days.toLong() - 1)
+    val dateSet = remember(days) {
+        generateSequence(startDate) { it.plusDays(1) }.takeWhile { !it.isAfter(endDate) }.map { it.toString() }.toSet()
+    }
+
+    val available = remember(allDailyMetrics, dateSet, tile.id) {
+        AllMetricDefs.filter { d -> d.group in tile.groups && allDailyMetrics[d.key]?.any { it.date in dateSet } == true }
+    }
+    // null = not touched yet, so the tile's own default metrics are ticked
+    var picked by remember(tile.id) { mutableStateOf<Set<String>?>(null) }
+    val enabled = picked ?: run {
+        val p = tile.primary.filter { k -> available.any { it.key == k } }
+        if (p.isNotEmpty()) p.toSet() else available.take(1).map { it.key }.toSet()
+    }
+    val series = remember(available, enabled, allDailyMetrics, dateSet) {
+        available.filter { it.key in enabled }.map { d ->
+            MetricSeries(d.key, d.label, d.unit, d.color,
+                allDailyMetrics[d.key]!!.filter { it.date in dateSet }.sortedBy { it.date }
+                    .map { DailyMetricPoint(it.date, it.value) })
+        }
+    }
+    val wStart = remember(startDate) { startDate.atStartOfDay(zone).toInstant() }
+    val wEnd = remember(endDate) { endDate.plusDays(1).atStartOfDay(zone).toInstant() }
+    val migs = remember(migraines, wStart, wEnd) {
+        migraines.filter { m -> val e = m.end ?: m.start; !m.start.isAfter(wEnd) && !e.isBefore(wStart) }
+    }
+
+    // ── Day range selector ──
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(t("Range:"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        listOf(7, 14, 30).forEach { d ->
+            val isSel = days == d
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSel) AppTheme.AccentPurple.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.04f))
+                    .clickable { days = d }
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text("${d}d", color = if (isSel) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium))
+            }
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    if (available.isEmpty()) {
+        Text(t("No data for this range yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        return
+    }
+
+    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
+    Text("${startDate.format(fmt)} \u2013 ${endDate.format(fmt)}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    Spacer(Modifier.height(4.dp))
+
+    // Same canvas the shared card renders, so the preview is what readers get.
+    InsightsTimelineGraph(
+        migraines = migs,
+        events = emptyList(),
+        metricSeries = series,
+        windowStart = wStart,
+        windowEnd = wEnd,
+        modifier = Modifier.fillMaxWidth().height(180.dp)
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    Text(t("Metrics"), color = AppTheme.TitleColor,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+    Spacer(Modifier.height(6.dp))
+    FlowRow(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        available.forEach { d ->
+            val on = d.key in enabled
+            PickerMetricToggle(
+                label = d.label,
+                color = d.color,
+                active = on,
+                isAutoSelected = false,
+                onClick = { picked = if (on) enabled - d.key else enabled + d.key }
+            )
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Button(
+        onClick = { onAttach(serializeInsightsGraphToJson(wStart, wEnd, migs, emptyList(), series, graph = tile.id)) },
+        enabled = series.isNotEmpty() || migs.isNotEmpty(),
+        modifier = Modifier.fillMaxWidth().height(44.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+    ) {
+        Text(attachLabel, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
     }
 }
 
@@ -359,7 +523,8 @@ private fun pickerCatColor(category: String): Color = when (category) {
 @Composable
 private fun RiskGraphTab(
     accessToken: String,
-    onAttach: (JsonObject) -> Unit
+    onAttach: (JsonObject) -> Unit,
+    attachLabel: String
 ) {
     val ctx = LocalContext.current.applicationContext
     var riskDays by remember { mutableStateOf<List<RiskPickerDay>>(emptyList()) }
@@ -555,7 +720,7 @@ private fun RiskGraphTab(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
-            Text(t("Attach to comment"), style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Text(attachLabel, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -709,10 +874,12 @@ private fun serializeInsightsGraphToJson(
     windowEnd: java.time.Instant,
     migraines: List<MigraineSpan>,
     events: List<EventMarker>,
-    metricSeries: List<MetricSeries>
+    metricSeries: List<MetricSeries>,
+    graph: String? = null
 ): JsonObject = buildJsonObject {
     put("start", windowStart.toString())
     put("end", windowEnd.toString())
+    graph?.let { put("graph", it) }
 
     put("migraines", buildJsonArray {
         for (m in migraines) {

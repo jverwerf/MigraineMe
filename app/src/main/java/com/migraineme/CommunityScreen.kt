@@ -56,10 +56,25 @@ import java.time.temporal.ChronoUnit
 fun CommunityScreen(
     authVm: AuthViewModel,
     navController: androidx.navigation.NavController,
-    vm: CommunityViewModel = viewModel()
+    vm: CommunityViewModel = viewModel(),
+    insightsVm: InsightsViewModel = viewModel()
 ) {
     val authState by authVm.state.collectAsState()
     val state by vm.state.collectAsState()
+    // "Share to forum" from a Monitor graph lands here with the graph preselected.
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var draftGraph by remember { mutableStateOf<String?>(null) }
+    var draftDays by remember { mutableStateOf(14) }
+    var draftTitle by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        ForumShareDraft.take()?.let { (graph, days) ->
+            draftGraph = graph
+            draftDays = days
+            draftTitle = suggestedForumTitle(graph, days)
+            vm.selectTab(1)
+            showCreateDialog = true
+        }
+    }
     val listState = rememberLazyListState()
     val density = LocalDensity.current
 
@@ -174,8 +189,6 @@ fun CommunityScreen(
 
         // Forum FAB — only when Forum tab active
         if (!guidance && state.topTab == 1 && authState.accessToken != null) {
-            var showCreateDialog by remember { mutableStateOf(false) }
-
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
                 containerColor = AppTheme.AccentPurple,
@@ -187,15 +200,24 @@ fun CommunityScreen(
                 Icon(Icons.Outlined.Add, contentDescription = t("New discussion"))
             }
 
-            if (showCreateDialog) {
-                CreateForumPostDialog(
-                    onDismiss = { showCreateDialog = false },
-                    onPost = { title, body ->
-                        vm.createForumPost(authState.accessToken!!, title, body)
-                        showCreateDialog = false
-                    }
-                )
-            }
+        }
+
+        if (showCreateDialog && authState.accessToken != null) {
+            CreateForumPostDialog(
+                accessToken = authState.accessToken,
+                insightsVm = insightsVm,
+                onDismiss = { showCreateDialog = false; draftGraph = null; draftTitle = "" },
+                onPost = { title, body, attachment ->
+                    vm.createForumPost(authState.accessToken!!, title, body, attachment)
+                    showCreateDialog = false
+                    draftGraph = null
+                    draftTitle = ""
+                },
+                onUpgrade = { showCreateDialog = false; navController.navigate(Routes.PAYWALL) },
+                initialTitle = draftTitle,
+                initialGraph = draftGraph,
+                initialDays = draftDays
+            )
         }
     }
 }
@@ -956,4 +978,11 @@ private fun formatRelativeDate(isoDate: String): String {
                 .withZone(ZoneId.systemDefault()).format(instant)
         }
     } catch (e: Exception) { "" }
+}
+
+
+/** Title the composer suggests when a graph is shared from Monitor. */
+private fun suggestedForumTitle(graph: String, days: Int): String {
+    val label = PickerGraphTiles.firstOrNull { it.id == graph }?.label ?: "Graph"
+    return Strings.tSync("My %s graph, last %s days", tSync(label), days)
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4988 entries.
+ * 4994 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -481,6 +481,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Add Scanned Food" to "Gescand",
     "Add Treatment" to "Behandeling",
     "Add a drug, device, or lifestyle change to track effectiveness." to "Voeg een middel, apparaat of gewoonte toe om het effect te volgen.",
+    "Add a graph" to "Grafiek erbij",
     "Add any additional notes about this migraine" to "Voeg extra notities toe over deze migraine",
     "Add any notes about this migraine…" to "Voeg notities over deze migraine toe…",
     "Add as a treatment" to "Als behandeling",
@@ -701,6 +702,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "At the first sign of an attack, and whenever the pain is at its worst. Dark room, eyes closed, sound low." to "Bij het eerste teken van een aanval, en telkens als de pijn op zijn ergst is. Donkere kamer, ogen dicht, geluid zacht.",
     "Atmospheric pressure" to "Luchtdruk",
     "Atogepant (Qulipta)" to "Atogepant (Qulipta)",
+    "Attach" to "Toevoegen",
     "Attach detailed graphs to community posts" to "Hang grafieken aan je berichten",
     "Attach graph" to "Grafiek erbij",
     "Attach to comment" to "Toevoegen",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Exercise & Hormones" to "Sport & hormonen",
     "Exercise & cycle" to "Sport & cyclus",
     "Exercise sets one off" to "Sporten triggert",
-    "Exercises" to "Oefeningen",
-    "Exercising" to "Sporten",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Exercises" to "Oefeningen",
+    "Exercising" to "Sporten",
     "Exertional headache" to "Inspanningshoofdpijn",
     "Exit tour" to "Tour sluiten",
     "Expand" to "Uitklappen",
@@ -2432,6 +2434,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Muscle tension" to "Spierspanning",
     "Muscle weakness" to "Spierzwakte",
     "Muscles that stay a little tense all day stop feeling tense. You only notice them when the ache arrives. Squeezing a muscle hard and then letting it go teaches you what the difference feels like, and it is easier to release something once you can feel it." to "Spieren die de hele dag een beetje gespannen blijven, voelen op den duur niet meer gespannen. Je merkt ze pas als de pijn komt. Een spier hard aanspannen en dan loslaten leert je hoe het verschil voelt, en iets loslaten is makkelijker als je het kunt voelen.",
+    "My %s graph, last %s days" to "Mijn %s-grafiek, laatste %s dagen",
     "NONE" to "GEEN",
     "Name" to "Naam",
     "Name *" to "Naam *",
@@ -2532,6 +2535,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "No data" to "Geen data",
     "No data available" to "Geen gegevens",
     "No data for this metric yet. Connect a source in Data settings." to "Nog geen data voor deze waarde. Koppel een bron in Gegevensinstellingen.",
+    "No data for this range yet" to "Nog geen gegevens voor deze periode",
     "No data yet for the metrics you picked." to "Nog geen data voor de waarden die je koos.",
     "No data yet today" to "Nog geen data",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Nog niets: noteer dingen bij een migraine voor de verdeling.",
@@ -3016,13 +3020,13 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Quell" to "Quell",
     "Questions, feedback or something not working? Email us and a real person will reply." to "Vragen, feedback of werkt er iets niet? Stuur ons een e-mail, een echt persoon antwoordt.",
     "Queued changes:" to "In de wachtrij:",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Quick %s" to "Snel %s",
     "Quick Log" to "Snel",
     "Quick Log Medicine" to "Snel: medicijn",
     "Quick Log Relief" to "Snel: verlichting",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Quick Log Trigger" to "Snel: trigger",
     "Quick Migraine" to "Snelle migraine",
     "Quick log" to "Snel",
@@ -3363,6 +3367,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Share all of it" to "Alles delen",
     "Share nothing" to "Niets delen",
     "Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines." to "Deel de behandelingen, gewoonten of veranderingen die echt verschil maakten voor je migraine.",
+    "Share to forum" to "Delen in forum",
     "Share your data" to "Data delen",
     "Share your diary?" to "Dagboek delen?",
     "Share your migraine graphs" to "Deel je migrainegrafieken",
@@ -3841,6 +3846,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Time for {0}. Today's goal: {1} times." to "Tijd voor {0}. Doel vandaag: {1} keer.",
     "Time: %s" to "Tijd: %s",
     "Timeframe" to "Periode",
+    "Timeline" to "Tijdlijn",
     "Timeline, breakdowns & detailed charts" to "Tijdlijn, verdelingen en grafieken",
     "Timely notifications" to "Meldingen op tijd",
     "Times a day" to "Keer per dag",
@@ -4517,15 +4523,15 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your answers when you first set the app up." to "Je antwoorden bij het instellen van de app.",
     "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Je antwoorden. De weekcheck raakt ze nooit aan — alleen jij, met de wijzigknop per onderdeel of door de setup opnieuw te doen.",
     "Your assessment" to "Jouw inschatting",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Onze moderatie heeft je reactie gemarkeerd en bekijkt hem nu. Was dit een vergissing, dan komt hij snel terug.",
     "Your data is ready to talk" to "Je gegevens kunnen praten",
     "Your data is still being processed.\nThis will complete in the background." to "Je data wordt nog verwerkt.\nDit loopt op de achtergrond door.",
     "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties." to "Je gegevens staan veilig en dienen alleen om je patronen te bekijken. We delen ze nooit met anderen.",
     "Your data is yours, and it stays that way." to "Je gegevens zijn van jou, en dat blijft zo.",
     "Your data suggests adjusting these triggers" to "Je gegevens vragen om deze aanpassingen",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your data, locked to your account. End-to-end private." to "Jouw data, gekoppeld aan je account. Volledig privé.",
     "Your exercises" to "Je oefeningen",
     "Your free trial ends tomorrow" to "Je proefperiode stopt morgen",

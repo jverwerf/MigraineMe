@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -585,7 +586,7 @@ private fun CommentBubble(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AttachedGraphCard(attachment: JsonObject) {
+fun AttachedGraphCard(attachment: JsonObject, startPadding: Dp = 36.dp) {
     Log.d("GraphCard", "attachment keys: ${attachment.keys}")
     val graphVm = remember(attachment) {
         CommunityGraphViewModel().apply { loadFromJson(attachment) }
@@ -594,15 +595,15 @@ private fun AttachedGraphCard(attachment: JsonObject) {
     val isRisk by graphVm.isRiskGraph.collectAsState()
 
     if (isRisk) {
-        AttachedRiskGraphCard(graphVm)
+        AttachedRiskGraphCard(graphVm, startPadding)
     } else {
-        AttachedInsightsGraphCard(graphVm)
+        AttachedInsightsGraphCard(graphVm, startPadding)
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
+private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp) {
     val migraines by graphVm.migraines.collectAsState()
     val events by graphVm.events.collectAsState()
     val metricSeries by graphVm.metricSeries.collectAsState()
@@ -618,7 +619,7 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 36.dp, end = 8.dp),
+            .padding(start = startPadding, end = if (startPadding > 0.dp) 8.dp else 0.dp),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0628).copy(alpha = 0.85f)),
         elevation = CardDefaults.cardElevation(0.dp)
@@ -674,7 +675,7 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
+private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp) {
     val riskDays by graphVm.riskDays.collectAsState()
     val metricSeries by graphVm.metricSeries.collectAsState()
 
@@ -687,7 +688,7 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 36.dp, end = 8.dp),
+            .padding(start = startPadding, end = if (startPadding > 0.dp) 8.dp else 0.dp),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0628).copy(alpha = 0.85f)),
         elevation = CardDefaults.cardElevation(0.dp)

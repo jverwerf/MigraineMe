@@ -514,6 +514,14 @@
       "max_len": 16
     },
     {
+      "en": "Bacon, ham, cured meats",
+      "class": "soft",
+      "sites": [
+        "AiSetupQuestions.kt:additive-items"
+      ],
+      "max_len": 50
+    },
+    {
       "en": "Bar / pub",
       "class": "hard",
       "sites": [
@@ -1545,6 +1553,14 @@
         "ManagePoolScreen.kt:variable-render"
       ],
       "max_len": 40
+    },
+    {
+      "en": "Diet drinks, sugar-free sweets",
+      "class": "soft",
+      "sites": [
+        "AiSetupQuestions.kt:additive-items"
+      ],
+      "max_len": 60
     },
     {
       "en": "Difficulty concentrating",
@@ -3388,6 +3404,14 @@
         "ExerciseCatalogue.kt:routine-table"
       ],
       "max_len": 369
+    },
+    {
+      "en": "My %s graph, last %s days",
+      "class": "soft",
+      "sites": [
+        "CommunityScreen.kt:suggestedForumTitle"
+      ],
+      "max_len": 60
     },
     {
       "en": "NONE",
@@ -5345,6 +5369,14 @@
       "max_len": 32
     },
     {
+      "en": "Takeaways, instant noodles, stock cubes",
+      "class": "soft",
+      "sites": [
+        "AiSetupQuestions.kt:additive-items"
+      ],
+      "max_len": 70
+    },
+    {
       "en": "Tap Connect on the Health Connect card above.",
       "class": "soft",
       "sites": [
@@ -5543,6 +5575,14 @@
         "DataSettingsSections.kt:table"
       ],
       "max_len": 40
+    },
+    {
+      "en": "Timeline",
+      "class": "hard",
+      "sites": [
+        "GraphAttachmentPicker.kt:PickerGraphTiles label"
+      ],
+      "max_len": 10
     },
     {
       "en": "Tingling",
@@ -5759,6 +5799,15 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Tyramine, histamine, gluten, alcohol and additive flags",
+      "class": "soft",
+      "sites": [
+        "OnboardingPaywallScreen.kt:features-table",
+        "PaywallScreen.kt:features-table"
+      ],
+      "max_len": 90
     },
     {
       "en": "Tyramine, histamine, gluten, alcohol and additives get flagged as you add a food.",
@@ -6335,6 +6384,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Wine, dried fruit",
+      "class": "soft",
+      "sites": [
+        "AiSetupQuestions.kt:additive-items"
+      ],
+      "max_len": 40
     },
     {
       "en": "Woke up time",
@@ -7591,47 +7648,6 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 80
-    },
-    {
-      "en": "Tyramine, histamine, gluten, alcohol and additive flags",
-      "class": "soft",
-      "sites": [
-        "OnboardingPaywallScreen.kt:features-table",
-        "PaywallScreen.kt:features-table"
-      ],
-      "max_len": 90
-    },
-    {
-      "en": "Diet drinks, sugar-free sweets",
-      "class": "soft",
-      "sites": [
-        "AiSetupQuestions.kt:additive-items"
-      ],
-      "max_len": 60
-    },
-    {
-      "en": "Takeaways, instant noodles, stock cubes",
-      "class": "soft",
-      "sites": [
-        "AiSetupQuestions.kt:additive-items"
-      ],
-      "max_len": 70
-    },
-    {
-      "en": "Bacon, ham, cured meats",
-      "class": "soft",
-      "sites": [
-        "AiSetupQuestions.kt:additive-items"
-      ],
-      "max_len": 50
-    },
-    {
-      "en": "Wine, dried fruit",
-      "class": "soft",
-      "sites": [
-        "AiSetupQuestions.kt:additive-items"
-      ],
-      "max_len": 40
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
