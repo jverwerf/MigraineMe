@@ -4992,5 +4992,8 @@
   "Share to forum": "Enviar ao fórum",
   "No data for this range yet": "Ainda sem dados neste período",
   "Timeline": "Cronologia",
-  "My %s graph, last %s days": "O meu gráfico de %s, últimos %s dias"
+  "My %s graph, last %s days": "O meu gráfico de %s, últimos %s dias",
+  "Compare mine": "Com os meus",
+  "No data of yours for these dates": "Sem dados teus para estas datas",
+  "Mine": "Meus"
 }

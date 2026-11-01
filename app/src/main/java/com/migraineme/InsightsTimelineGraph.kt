@@ -250,8 +250,13 @@ private fun CoreCanvas(
                         }
                     } else {
                         val path = Path(); sorted.forEachIndexed { i, pt -> if (i == 0) path.moveTo(dateX(pt.date), valY(pt.value)) else path.lineTo(dateX(pt.date), valY(pt.value)) }
-                        drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
-                        sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
+                        if (series.dashed) {
+                            // "Compare mine": the reader's own line, dashed so it never passes for the poster's.
+                            drawPath(path, series.color.copy(alpha = 0.85f), style = Stroke(width = 2f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 7f))))
+                        } else {
+                            drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+                            sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
+                        }
                     }
                     plans += SeriesPlan(tSync(series.label), series.unit, series.color,
                         sorted.map { Offset(dateX(it.date), valY(it.value)) }, sorted.first().value, sorted.last().value)

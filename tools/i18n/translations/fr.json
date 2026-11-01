@@ -4992,5 +4992,8 @@
   "Share to forum": "Partager au forum",
   "No data for this range yet": "Aucune donnée sur cette période",
   "Timeline": "Historique",
-  "My %s graph, last %s days": "Mon graphique %s, %s derniers jours"
+  "My %s graph, last %s days": "Mon graphique %s, %s derniers jours",
+  "Compare mine": "Avec les miens",
+  "No data of yours for these dates": "Aucune donnée à vous pour ces dates",
+  "Mine": "Moi"
 }

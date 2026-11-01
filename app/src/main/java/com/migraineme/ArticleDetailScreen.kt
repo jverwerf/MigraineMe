@@ -41,7 +41,8 @@ fun ArticleDetailScreen(
     accessToken: String?,
     currentUserId: String?,
     insightsVm: InsightsViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onUpgrade: () -> Unit = {}
 ) {
     val state by vm.state.collectAsState()
     val article = state.articles.find { it.id == articleId }
@@ -261,7 +262,8 @@ fun ArticleDetailScreen(
                 accessToken = accessToken,
                 currentUserId = currentUserId,
                 insightsVm = insightsVm,
-                communityVm = vm
+                communityVm = vm,
+                onUpgrade = onUpgrade
             )
         }
 

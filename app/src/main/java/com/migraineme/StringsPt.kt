@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4994 entries.
+ * 4997 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -1038,6 +1038,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Community — Articles & Forum" to "Comunidade — artigos e fórum",
     "Community — Guidance, Articles & Forum" to "Comunidade — orientação, artigos e fórum",
     "Commuting" to "Trajeto casa-trabalho",
+    "Compare mine" to "Com os meus",
     "Compared to other treatments" to "Face a outros tratamentos",
     "Compared with your pain entries in the 3 hours before each log." to "Comparado com a tua dor nas 3 horas antes de cada registo.",
     "Complete the previous sections to get personalised suggestions." to "Completa o anterior para receberes sugestões tuas.",
@@ -1516,10 +1517,10 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Exercise" to "Exercício",
     "Exercise & Hormones" to "Exercício e hormonas",
     "Exercise & cycle" to "Exercício e ciclo",
-    "Exercise sets one off" to "O exercício desencadeia",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Exercise sets one off" to "O exercício desencadeia",
     "Exercises" to "Exercícios",
     "Exercising" to "Fazer exercício",
     "Exertional headache" to "Cefaleia de esforço",
@@ -2369,6 +2370,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Min: %s" to "Mín: %s",
     "Mind" to "Mente",
     "Mindfulness" to "Atenção plena",
+    "Mine" to "Meus",
     "Minerals" to "Minerais",
     "Minimal setup for the app to work" to "Configuração mínima para a app funcionar",
     "Minimize" to "Reduzir",
@@ -2536,6 +2538,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "No data available" to "Sem dados",
     "No data for this metric yet. Connect a source in Data settings." to "Ainda não há dados desta medida. Liga uma fonte nas definições de Dados.",
     "No data for this range yet" to "Ainda sem dados neste período",
+    "No data of yours for these dates" to "Sem dados teus para estas datas",
     "No data yet for the metrics you picked." to "Ainda sem dados para as medidas que escolheste.",
     "No data yet today" to "Ainda sem dados hoje",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Ainda nada: regista coisas ligadas a uma crise.",
@@ -3017,12 +3020,12 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Traz sono, passos e nutrição das apps já no teu telemóvel. Fitbit ou Samsung? Também entram por aqui.",
     "Put it back" to "Repor",
     "Quality" to "Qualidade",
-    "Quell" to "Quell",
-    "Questions, feedback or something not working? Email us and a real person will reply." to "Dúvidas, feedback ou algo não funciona? Envie-nos um e-mail e uma pessoa real irá responder.",
-    "Queued changes:" to "Em espera:",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Dúvidas, feedback ou algo não funciona? Envie-nos um e-mail e uma pessoa real irá responder.",
+    "Queued changes:" to "Em espera:",
     "Quick %s" to "%s já",
     "Quick Log" to "Registo já",
     "Quick Log Medicine" to "Já: medicamento",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "As tuas respostas estão guardadas. Rever o teu perfil com a IA faz parte do Premium, por isso no plano gratuito a próxima revisão semanal não corre.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "As tuas respostas estão guardadas. A IA reviu o teu perfil e não encontrou nada que valha a pena mudar.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "As tuas respostas de %1\$s. A revisão semanal nunca lhes toca: só tu, com o botão editar de cada secção ou refazendo a configuração.",
-    "Your answers when you first set the app up." to "As tuas respostas ao configurar a app.",
-    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "As tuas respostas. A revisão semanal nunca lhes toca: só tu, com o botão editar de cada secção ou refazendo a configuração.",
-    "Your assessment" to "A tua avaliação",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Your answers when you first set the app up." to "As tuas respostas ao configurar a app.",
+    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "As tuas respostas. A revisão semanal nunca lhes toca: só tu, com o botão editar de cada secção ou refazendo a configuração.",
+    "Your assessment" to "A tua avaliação",
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "A moderação marcou o teu comentário e está a vê-lo. Se foi engano, volta em breve.",
     "Your data is ready to talk" to "Os teus dados têm o que dizer",
     "Your data is still being processed.\nThis will complete in the background." to "Os teus dados ainda estão a ser processados.\nIsto continua em segundo plano.",

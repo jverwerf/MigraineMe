@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4994 entries.
+ * 4997 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -1038,6 +1038,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Community — Articles & Forum" to "Community — Artikel & Forum",
     "Community — Guidance, Articles & Forum" to "Community — Begleitung, Artikel & Forum",
     "Commuting" to "Pendeln",
+    "Compare mine" to "Mit meinen",
     "Compared to other treatments" to "Im Vergleich zu anderen Therapien",
     "Compared with your pain entries in the 3 hours before each log." to "Verglichen mit deinen Schmerzeinträgen in den 3 Stunden vor jedem Eintrag.",
     "Complete the previous sections to get personalised suggestions." to "Fülle die vorherigen Abschnitte aus für passende Vorschläge.",
@@ -1516,10 +1517,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Exercise" to "Bewegung",
     "Exercise & Hormones" to "Sport & Hormone",
     "Exercise & cycle" to "Sport & Zyklus",
-    "Exercise sets one off" to "Sport löst aus",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Exercise sets one off" to "Sport löst aus",
     "Exercises" to "Übungen",
     "Exercising" to "Training",
     "Exertional headache" to "Anstrengungskopfschmerz",
@@ -2369,6 +2370,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Min: %s" to "Min: %s",
     "Mind" to "Psyche",
     "Mindfulness" to "Achtsamkeit",
+    "Mine" to "Meine",
     "Minerals" to "Mineralien",
     "Minimal setup for the app to work" to "Minimale Einrichtung, damit die App läuft",
     "Minimize" to "Verkleinern",
@@ -2536,6 +2538,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "No data available" to "Keine Daten",
     "No data for this metric yet. Connect a source in Data settings." to "Noch keine Daten für diesen Wert. Verbinde eine Quelle in den Daten-Einstellungen.",
     "No data for this range yet" to "Noch keine Daten für diesen Zeitraum",
+    "No data of yours for these dates" to "Keine eigenen Daten für diese Tage",
     "No data yet for the metrics you picked." to "Noch keine Daten für die gewählten Werte.",
     "No data yet today" to "Noch keine Daten",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Noch nichts — erfasse Einträge zu einer Migräne für Aufteilungen.",
@@ -3017,12 +3020,12 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Holt Schlaf, Schritte und Ernährung aus den Apps auf deinem Handy. Fitbit oder Samsung? Kommen auch hier durch.",
     "Put it back" to "Zurückholen",
     "Quality" to "Qualität",
-    "Quell" to "Quell",
-    "Questions, feedback or something not working? Email us and a real person will reply." to "Fragen, Feedback oder etwas funktioniert nicht? Schreib uns eine E-Mail, ein echter Mensch antwortet.",
-    "Queued changes:" to "In Warteschlange:",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Fragen, Feedback oder etwas funktioniert nicht? Schreib uns eine E-Mail, ein echter Mensch antwortet.",
+    "Queued changes:" to "In Warteschlange:",
     "Quick %s" to "Schnell %s",
     "Quick Log" to "Schnell",
     "Quick Log Medicine" to "Schnell: Medikament",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "Deine Antworten sind gespeichert. Die KI-Prüfung deines Profils gehört zu Premium, im kostenlosen Plan läuft die nächste wöchentliche Prüfung also nicht.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "Deine Antworten sind gespeichert. Die KI hat dein Profil erneut geprüft und nichts gefunden, das sich zu ändern lohnt.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Deine Antworten vom %1\$s. Der Wochen-Check ändert sie nie — nur du, mit dem Bearbeiten-Knopf jedes Abschnitts oder durch neue Einrichtung.",
-    "Your answers when you first set the app up." to "Deine Antworten beim Einrichten der App.",
-    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Deine Antworten. Der Wochen-Check ändert sie nie — nur du, mit dem Bearbeiten-Knopf jedes Abschnitts oder durch neue Einrichtung.",
-    "Your assessment" to "Deine Einschätzung",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Your answers when you first set the app up." to "Deine Antworten beim Einrichten der App.",
+    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Deine Antworten. Der Wochen-Check ändert sie nie — nur du, mit dem Bearbeiten-Knopf jedes Abschnitts oder durch neue Einrichtung.",
+    "Your assessment" to "Deine Einschätzung",
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Dein Kommentar wurde von unserer Moderation markiert und wird gerade geprüft. War das ein Fehler, stellen wir ihn bald wieder her.",
     "Your data is ready to talk" to "Deine Daten sind bereit",
     "Your data is still being processed.\nThis will complete in the background." to "Deine Daten werden noch verarbeitet.\nDas läuft im Hintergrund weiter.",

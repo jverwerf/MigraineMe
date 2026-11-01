@@ -289,7 +289,7 @@ data class TriggerPoint(val at: Instant, val name: String)
 data class MedicinePoint(val at: Instant, val name: String, val amount: String?, val sideEffectScale: String? = null)
 enum class TimeSpan(val days: Long, val label: String) { DAY(1, "Day"), WEEK(7, "Week"), MONTH(30, "Month"), YEAR(365, "Year"); val millis: Long get() = days * 24L * 60L * 60L * 1000L }
 data class DailyMetricPoint(val date: String, val value: Double)
-data class MetricSeries(val key: String, val label: String, val unit: String, val color: Color, val points: List<DailyMetricPoint>)
+data class MetricSeries(val key: String, val label: String, val unit: String, val color: Color, val points: List<DailyMetricPoint>, val dashed: Boolean = false)
 data class EventMarker(val at: Instant, val endAt: Instant? = null, val name: String, val category: String, val detail: String? = null, val color: Color, val isAutomated: Boolean = false)
 
 val EventCategoryColors = mapOf(

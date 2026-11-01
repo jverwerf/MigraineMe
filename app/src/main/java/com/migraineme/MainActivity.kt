@@ -1693,6 +1693,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             currentUserId = authState.userId,
                             insightsVm = insightsVm,
                             onBack = { nav.popBackStack() }
+                            , onUpgrade = { nav.navigate(Routes.PAYWALL) }
                         )
                     }
                     composable("${Routes.BLOG_DETAIL}/{blogId}") { backStack ->

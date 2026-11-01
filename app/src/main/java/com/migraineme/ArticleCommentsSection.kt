@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,8 +126,10 @@ fun ArticleCommentsSection(
     accessToken: String?,
     currentUserId: String?,
     insightsVm: InsightsViewModel,
-    communityVm: CommunityViewModel? = null
+    communityVm: CommunityViewModel? = null,
+    onUpgrade: () -> Unit = {}
 ) {
+    val compareCtx = accessToken?.let { GraphCompareContext(it, insightsVm, onUpgrade) }
     val scope = rememberCoroutineScope()
     var comments by remember { mutableStateOf<List<CommentRow>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
@@ -221,6 +225,7 @@ fun ArticleCommentsSection(
         } else {
             for (comment in topLevel) {
                 CommentBubble(
+                    compare = compareCtx,
                     comment = comment,
                     isOwn = comment.userId == currentUserId,
                     onReply = { replyingTo = comment },
@@ -260,6 +265,7 @@ fun ArticleCommentsSection(
                         )
                         Spacer(Modifier.width(8.dp))
                         CommentBubble(
+                            compare = compareCtx,
                             comment = reply,
                             isOwn = reply.userId == currentUserId,
                             onReply = null,
@@ -478,7 +484,8 @@ private fun CommentBubble(
     isOwn: Boolean,
     onReply: (() -> Unit)?,
     onDelete: () -> Unit,
-    onReport: () -> Unit = {}
+    onReport: () -> Unit = {},
+    compare: GraphCompareContext? = null
 ) {
     Column(
         modifier = Modifier
@@ -576,7 +583,7 @@ private fun CommentBubble(
         //  Graph attachment 
         if (comment.attachment != null) {
             Spacer(Modifier.height(8.dp))
-            AttachedGraphCard(comment.attachment)
+            AttachedGraphCard(comment.attachment, compare = compare)
         }
     }
 }
@@ -586,7 +593,7 @@ private fun CommentBubble(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AttachedGraphCard(attachment: JsonObject, startPadding: Dp = 36.dp) {
+fun AttachedGraphCard(attachment: JsonObject, startPadding: Dp = 36.dp, compare: GraphCompareContext? = null) {
     Log.d("GraphCard", "attachment keys: ${attachment.keys}")
     val graphVm = remember(attachment) {
         CommunityGraphViewModel().apply { loadFromJson(attachment) }
@@ -595,18 +602,59 @@ fun AttachedGraphCard(attachment: JsonObject, startPadding: Dp = 36.dp) {
     val isRisk by graphVm.isRiskGraph.collectAsState()
 
     if (isRisk) {
-        AttachedRiskGraphCard(graphVm, startPadding)
+        AttachedRiskGraphCard(graphVm, startPadding, compare)
     } else {
-        AttachedInsightsGraphCard(graphVm, startPadding)
+        AttachedInsightsGraphCard(graphVm, startPadding, compare)
     }
 }
 
+/** What "Compare mine" needs: the reader's own data + where the upsell goes. */
+data class GraphCompareContext(
+    val accessToken: String,
+    val insightsVm: InsightsViewModel,
+    val onUpgrade: () -> Unit
+)
+
+/** Small chip under a shared graph. Premium toggles the reader's own line; free taps go to the paywall. */
+@Composable
+private fun CompareMineChip(on: Boolean, loading: Boolean, onToggle: () -> Unit, onUpgrade: () -> Unit) {
+    val premiumState by PremiumManager.state.collectAsState()
+    if (premiumState.access == PremiumAccess.LOADING) return
+    val premium = premiumState.isPremium
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (on) AppTheme.AccentPurple.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.06f))
+            .clickable { if (premium) onToggle() else onUpgrade() }
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        if (loading) {
+            CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 1.5.dp, modifier = Modifier.size(10.dp))
+            Spacer(Modifier.width(6.dp))
+        }
+        Text(
+            if (premium) t("Compare mine") else t("Compare mine") + " \uD83D\uDD12",
+            color = if (on) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+        )
+    }
+}
+
+/** The reader's own series for the metrics in a shared graph, over the shared dates. Matched by label (AllMetricDefs labels are unique). */
+private fun readerSeriesFor(shared: List<MetricSeries>, mine: Map<String, List<InsightsViewModel.DailyValue>>, dates: Set<String>): List<MetricSeries> =
+    shared.mapNotNull { s ->
+        val def = AllMetricDefs.firstOrNull { it.key == s.key || it.label == s.label } ?: return@mapNotNull null
+        val pts = mine[def.key]?.filter { it.date in dates }?.sortedBy { it.date }?.map { DailyMetricPoint(it.date, it.value) } ?: return@mapNotNull null
+        if (pts.size < 2) null else MetricSeries(def.key, tSync("Mine") + " · " + tSync(def.label), def.unit, def.color.copy(alpha = 0.9f), pts, dashed = true)
+    }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp) {
+private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp, compare: GraphCompareContext? = null) {
     val migraines by graphVm.migraines.collectAsState()
     val events by graphVm.events.collectAsState()
-    val metricSeries by graphVm.metricSeries.collectAsState()
+    val sharedSeries by graphVm.metricSeries.collectAsState()
     val windowStart by graphVm.windowStart.collectAsState()
     val windowEnd by graphVm.windowEnd.collectAsState()
 
@@ -615,6 +663,25 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPad
     val zone = ZoneId.systemDefault()
     val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(zone)
     val rangeLabel = "${fmt.format(windowStart)} - ${fmt.format(windowEnd)}"
+
+    // "Compare mine": overlay the reader's own line for the same metrics and dates.
+    var compareOn by remember { mutableStateOf(false) }
+    var compareLoading by remember { mutableStateOf(false) }
+    val ctx = LocalContext.current.applicationContext
+    val emptyMine = remember { kotlinx.coroutines.flow.MutableStateFlow(emptyMap<String, List<InsightsViewModel.DailyValue>>()) }
+    val mineMetrics by (compare?.insightsVm?.allDailyMetrics ?: emptyMine).collectAsState()
+    LaunchedEffect(compareOn) {
+        if (compareOn && compare != null && mineMetrics.isEmpty()) {
+            compareLoading = true
+            compare.insightsVm.load(ctx, compare.accessToken)
+        }
+    }
+    LaunchedEffect(mineMetrics) { if (mineMetrics.isNotEmpty()) compareLoading = false }
+    val dates = remember(windowStart, windowEnd) {
+        val f = java.time.LocalDate.ofInstant(windowStart, zone); val t = java.time.LocalDate.ofInstant(windowEnd, zone)
+        generateSequence(f) { it.plusDays(1) }.takeWhile { !it.isAfter(t) }.map { it.toString() }.toSet()
+    }
+    val metricSeries = if (compareOn && compare != null) sharedSeries + readerSeriesFor(sharedSeries, mineMetrics, dates) else sharedSeries
 
     Card(
         modifier = Modifier
@@ -669,17 +736,42 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPad
                     }
                 }
             }
+            if (compare != null && sharedSeries.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    CompareMineChip(on = compareOn, loading = compareOn && compareLoading, onToggle = { compareOn = !compareOn }, onUpgrade = compare.onUpgrade)
+                }
+                if (compareOn && !compareLoading && metricSeries.size == sharedSeries.size) {
+                    Text(t("No data of yours for these dates"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp) {
+private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding: Dp, compare: GraphCompareContext? = null) {
     val riskDays by graphVm.riskDays.collectAsState()
     val metricSeries by graphVm.metricSeries.collectAsState()
 
     if (riskDays.isEmpty()) return
+
+    // "Compare mine": the reader's own risk on the same dates.
+    var compareOn by remember { mutableStateOf(false) }
+    var compareLoading by remember { mutableStateOf(false) }
+    var mine by remember { mutableStateOf<List<RiskDayPoint>>(emptyList()) }
+    LaunchedEffect(compareOn) {
+        if (compareOn && compare != null && mine.isEmpty()) {
+            compareLoading = true
+            val wanted = riskDays.map { it.date }.toSet()
+            val rows = withContext(Dispatchers.IO) {
+                try { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY).getRiskScoreDaily(compare.accessToken, 400) } catch (_: Exception) { emptyList() }
+            }
+            mine = rows.filter { it.date in wanted }.map { RiskDayPoint(it.date, it.score.toFloat(), it.zone) }
+            compareLoading = false
+        }
+    }
 
     val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
     val from = LocalDate.parse(riskDays.first().date).format(fmt)
@@ -707,7 +799,8 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
                 days = riskDays,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(140.dp),
+                mine = if (compareOn) mine else emptyList()
             )
 
             // Metric legend
@@ -725,6 +818,15 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
                             Text(t(series.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
+                }
+            }
+            if (compare != null) {
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    CompareMineChip(on = compareOn, loading = compareOn && compareLoading, onToggle = { compareOn = !compareOn }, onUpgrade = compare.onUpgrade)
+                }
+                if (compareOn && !compareLoading && mine.size < 2) {
+                    Text(t("No data of yours for these dates"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
                 }
             }
         }

@@ -81,7 +81,7 @@ fun ForumPostCard(
                 AvatarCircle(
                     avatarUrl = post.profiles?.avatarUrl,
                     displayName = post.profiles?.displayName,
-                    size = 64
+                    size = 44
                 )
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -569,7 +569,7 @@ fun ForumPostDetailScreen(
             } else if (post != null) {
                 HeroCard {
                     Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
-                        AvatarCircle(post.profiles?.avatarUrl, post.profiles?.displayName, 72)
+                        AvatarCircle(post.profiles?.avatarUrl, post.profiles?.displayName, 44)
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -588,7 +588,7 @@ fun ForumPostDetailScreen(
                             Text(post.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp))
                             post.attachment?.let { att ->
                                 Spacer(Modifier.height(10.dp))
-                                AttachedGraphCard(att, startPadding = 0.dp)
+                                AttachedGraphCard(att, startPadding = 0.dp, compare = accessToken?.let { GraphCompareContext(it, insightsVm, onUpgrade) })
                             }
                         }
                     }
@@ -618,6 +618,7 @@ fun ForumPostDetailScreen(
                 } else {
                     topLevel.forEach { comment ->
                         ForumCommentBubble(
+                            compare = accessToken?.let { GraphCompareContext(it, insightsVm, onUpgrade) },
                             comment = comment,
                             isOwn = comment.userId == currentUserId,
                             onReply = { replyingTo = comment },
@@ -636,6 +637,7 @@ fun ForumPostDetailScreen(
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 ForumCommentBubble(
+                                    compare = accessToken?.let { GraphCompareContext(it, insightsVm, onUpgrade) },
                                     comment = reply,
                                     isOwn = reply.userId == currentUserId,
                                     onReply = null,
@@ -779,11 +781,12 @@ private fun ForumCommentBubble(
     isOwn: Boolean,
     onReply: (() -> Unit)?,
     onDelete: () -> Unit,
-    onReport: () -> Unit
+    onReport: () -> Unit,
+    compare: GraphCompareContext? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AvatarCircle(comment.profiles?.avatarUrl, comment.profiles?.displayName, 72)
+            AvatarCircle(comment.profiles?.avatarUrl, comment.profiles?.displayName, 32)
             Spacer(Modifier.width(8.dp))
             Text(comment.profiles?.displayName ?: t("Anonymous"), color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.width(8.dp))
@@ -804,10 +807,10 @@ private fun ForumCommentBubble(
                 }
             }
         }
-        Text(comment.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp), modifier = Modifier.padding(start = 36.dp, top = 2.dp, end = 8.dp))
+        Text(comment.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp), modifier = Modifier.padding(start = 40.dp, top = 2.dp, end = 8.dp))
         comment.attachment?.let { att ->
             Spacer(Modifier.height(6.dp))
-            AttachedGraphCard(att)
+            AttachedGraphCard(att, compare = compare)
         }
     }
 }

@@ -8,6 +8,10 @@
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:637",
+    "line": "            if (premium) t(\"Compare mine\") else t(\"Compare mine\") + \" \\uD83D\\uDD12\","
+  },
+  {
     "site": "app/src/main/java/com/migraineme/AutoTriggersTab.kt:98",
     "line": "                    t(\"Configure which health patterns should automatically create triggers. \") +"
   },

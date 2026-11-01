@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4994 entries.
+ * 4997 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1038,6 +1038,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Community — Articles & Forum" to "Community — artikelen & forum",
     "Community — Guidance, Articles & Forum" to "Community — begeleiding, artikelen, forum",
     "Commuting" to "Woon-werkverkeer",
+    "Compare mine" to "Vergelijk mijn",
     "Compared to other treatments" to "Vergeleken met andere",
     "Compared with your pain entries in the 3 hours before each log." to "Vergeleken met je pijnpunten in de 3 uur vóór elke notitie.",
     "Complete the previous sections to get personalised suggestions." to "Vul het vorige in voor tips op maat.",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Exercise" to "Beweging",
     "Exercise & Hormones" to "Sport & hormonen",
     "Exercise & cycle" to "Sport & cyclus",
-    "Exercise sets one off" to "Sporten triggert",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Exercise sets one off" to "Sporten triggert",
     "Exercises" to "Oefeningen",
     "Exercising" to "Sporten",
     "Exertional headache" to "Inspanningshoofdpijn",
@@ -2369,6 +2370,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Min: %s" to "Min: %s",
     "Mind" to "Geest",
     "Mindfulness" to "Mindfulness",
+    "Mine" to "Mijn",
     "Minerals" to "Mineralen",
     "Minimal setup for the app to work" to "Minimale setup zodat de app werkt",
     "Minimize" to "Verkleinen",
@@ -2536,6 +2538,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "No data available" to "Geen gegevens",
     "No data for this metric yet. Connect a source in Data settings." to "Nog geen data voor deze waarde. Koppel een bron in Gegevensinstellingen.",
     "No data for this range yet" to "Nog geen gegevens voor deze periode",
+    "No data of yours for these dates" to "Geen eigen gegevens voor deze dagen",
     "No data yet for the metrics you picked." to "Nog geen data voor de waarden die je koos.",
     "No data yet today" to "Nog geen data",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Nog niets: noteer dingen bij een migraine voor de verdeling.",
@@ -3017,12 +3020,12 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Haalt slaap, stappen en voeding uit de apps op je telefoon. Fitbit of Samsung? Die komen hier ook door.",
     "Put it back" to "Terugzetten",
     "Quality" to "Kwaliteit",
-    "Quell" to "Quell",
-    "Questions, feedback or something not working? Email us and a real person will reply." to "Vragen, feedback of werkt er iets niet? Stuur ons een e-mail, een echt persoon antwoordt.",
-    "Queued changes:" to "In de wachtrij:",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Vragen, feedback of werkt er iets niet? Stuur ons een e-mail, een echt persoon antwoordt.",
+    "Queued changes:" to "In de wachtrij:",
     "Quick %s" to "Snel %s",
     "Quick Log" to "Snel",
     "Quick Log Medicine" to "Snel: medicijn",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "Je antwoorden zijn bewaard. Je profiel opnieuw laten nakijken door de AI hoort bij Premium, dus met het gratis plan loopt de volgende wekelijkse check niet.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "Je antwoorden zijn bewaard. De AI heeft je profiel opnieuw nagekeken en niets gevonden om te veranderen.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Je antwoorden van %1\$s. De weekcheck raakt ze nooit aan — alleen jij, met de wijzigknop per onderdeel of door de setup opnieuw te doen.",
-    "Your answers when you first set the app up." to "Je antwoorden bij het instellen van de app.",
-    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Je antwoorden. De weekcheck raakt ze nooit aan — alleen jij, met de wijzigknop per onderdeel of door de setup opnieuw te doen.",
-    "Your assessment" to "Jouw inschatting",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Your answers when you first set the app up." to "Je antwoorden bij het instellen van de app.",
+    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Je antwoorden. De weekcheck raakt ze nooit aan — alleen jij, met de wijzigknop per onderdeel of door de setup opnieuw te doen.",
+    "Your assessment" to "Jouw inschatting",
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Onze moderatie heeft je reactie gemarkeerd en bekijkt hem nu. Was dit een vergissing, dan komt hij snel terug.",
     "Your data is ready to talk" to "Je gegevens kunnen praten",
     "Your data is still being processed.\nThis will complete in the background." to "Je data wordt nog verwerkt.\nDit loopt op de achtergrond door.",

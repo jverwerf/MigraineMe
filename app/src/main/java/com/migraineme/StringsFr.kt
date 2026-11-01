@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4994 entries.
+ * 4997 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -1038,6 +1038,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Community — Articles & Forum" to "Communauté — articles et forum",
     "Community — Guidance, Articles & Forum" to "Communauté — suivi, articles et forum",
     "Commuting" to "Trajet domicile-travail",
+    "Compare mine" to "Avec les miens",
     "Compared to other treatments" to "Face aux autres traitements",
     "Compared with your pain entries in the 3 hours before each log." to "Comparé à tes entrées de douleur dans les 3 heures avant chaque saisie.",
     "Complete the previous sections to get personalised suggestions." to "Remplis ce qui précède pour des conseils sur mesure.",
@@ -1516,10 +1517,10 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Exercise" to "Exercice",
     "Exercise & Hormones" to "Sport et hormones",
     "Exercise & cycle" to "Sport et cycle",
-    "Exercise sets one off" to "Le sport déclenche",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Exercise sets one off" to "Le sport déclenche",
     "Exercises" to "Exercices",
     "Exercising" to "Faire de l'exercice",
     "Exertional headache" to "Céphalée d'effort",
@@ -2369,6 +2370,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Min: %s" to "Min : %s",
     "Mind" to "Mental",
     "Mindfulness" to "Méditation",
+    "Mine" to "Moi",
     "Minerals" to "Minéraux",
     "Minimal setup for the app to work" to "Réglage minimal pour que l'appli marche",
     "Minimize" to "Réduire",
@@ -2536,6 +2538,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "No data available" to "Aucune donnée",
     "No data for this metric yet. Connect a source in Data settings." to "Pas encore de données pour cette mesure. Connecte une source dans Réglages des données.",
     "No data for this range yet" to "Aucune donnée sur cette période",
+    "No data of yours for these dates" to "Aucune donnée à vous pour ces dates",
     "No data yet for the metrics you picked." to "Pas encore de données pour ces mesures.",
     "No data yet today" to "Rien aujourd'hui",
     "No data yet — log items linked to a migraine to see breakdowns here." to "Rien encore : note des éléments liés à une migraine.",
@@ -3017,12 +3020,12 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Récupère sommeil, pas et nutrition depuis les apps déjà sur ton téléphone. Fitbit ou Samsung ? Ça passe aussi par ici.",
     "Put it back" to "Remettre",
     "Quality" to "Qualité",
-    "Quell" to "Quell",
-    "Questions, feedback or something not working? Email us and a real person will reply." to "Des questions, des retours ou quelque chose ne fonctionne pas ? Écrivez-nous, une vraie personne vous répondra.",
-    "Queued changes:" to "En attente :",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Quell" to "Quell",
+    "Questions, feedback or something not working? Email us and a real person will reply." to "Des questions, des retours ou quelque chose ne fonctionne pas ? Écrivez-nous, une vraie personne vous répondra.",
+    "Queued changes:" to "En attente :",
     "Quick %s" to "%s rapide",
     "Quick Log" to "Rapide",
     "Quick Log Medicine" to "Rapide : médicament",
@@ -4520,12 +4523,12 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "Tes réponses sont enregistrées. La revérification de ton profil par l'IA fait partie de Premium : avec le plan gratuit, le prochain contrôle hebdo ne tournera pas.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "Tes réponses sont enregistrées. L'IA a revérifié ton profil et n'a rien trouvé à changer.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses du %1\$s. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
-    "Your answers when you first set the app up." to "Tes réponses lors de la configuration de l'app.",
-    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
-    "Your assessment" to "Ton évaluation",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Your answers when you first set the app up." to "Tes réponses lors de la configuration de l'app.",
+    "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
+    "Your assessment" to "Ton évaluation",
     "Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Notre modération a signalé ton commentaire et l'examine. Si c'est une erreur, il reviendra vite.",
     "Your data is ready to talk" to "Tes données ont des choses à dire",
     "Your data is still being processed.\nThis will complete in the background." to "Tes données sont encore en traitement.\nÇa se termine en arrière-plan.",

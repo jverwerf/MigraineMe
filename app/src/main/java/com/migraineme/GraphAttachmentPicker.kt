@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
@@ -820,9 +821,9 @@ private fun RiskGraphCanvasMulti(
 
 /** Simple risk-only graph canvas for rendering attachments in comments. */
 @Composable
-fun RiskGraphCanvas(days: List<RiskDayPoint>, modifier: Modifier = Modifier) {
+fun RiskGraphCanvas(days: List<RiskDayPoint>, modifier: Modifier = Modifier, mine: List<RiskDayPoint> = emptyList()) {
     if (days.isEmpty()) return
-    val actualMax = days.maxOf { it.score }
+    val actualMax = maxOf(days.maxOf { it.score }, mine.maxOfOrNull { it.score } ?: 0f)
     val maxR = maxOf(RISK_GRAPH_HIGH_T * 1.2f, actualMax * 1.1f, 12f)
 
     Canvas(modifier.clipToBounds()) {
@@ -855,6 +856,16 @@ fun RiskGraphCanvas(days: List<RiskDayPoint>, modifier: Modifier = Modifier) {
         // Dots
         for ((x, y, v) in points) {
             drawCircle(riskZoneColor(v), radius = 3.5f, center = Offset(x, y))
+        }
+
+        // "Compare mine": the reader's own risk on the same dates, dashed white.
+        if (mine.isNotEmpty()) {
+            val byDate = mine.associateBy { it.date }
+            val mp = days.mapIndexedNotNull { i, d -> byDate[d.date]?.let { Offset(xFor(i), yZ(it.score)) } }
+            if (mp.size >= 2) {
+                val path = Path(); mp.forEachIndexed { i, o -> if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y) }
+                drawPath(path, Color.White.copy(alpha = 0.85f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 7f))))
+            }
         }
     }
 }

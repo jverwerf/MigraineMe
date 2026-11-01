@@ -4992,5 +4992,8 @@
   "Share to forum": "Delen in forum",
   "No data for this range yet": "Nog geen gegevens voor deze periode",
   "Timeline": "Tijdlijn",
-  "My %s graph, last %s days": "Mijn %s-grafiek, laatste %s dagen"
+  "My %s graph, last %s days": "Mijn %s-grafiek, laatste %s dagen",
+  "Compare mine": "Vergelijk mijn",
+  "No data of yours for these dates": "Geen eigen gegevens voor deze dagen",
+  "Mine": "Mijn"
 }
