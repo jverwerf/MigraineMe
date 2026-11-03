@@ -2369,6 +2369,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migrañas",
     "Migraleve" to "Migraleve",
     "Mild" to "Leve",
+    "No pain" to "Sin dolor",
     "Mild risk" to "Riesgo leve",
     "Mild — can push through" to "Leve, puedo seguir",
     "Min" to "Mín",

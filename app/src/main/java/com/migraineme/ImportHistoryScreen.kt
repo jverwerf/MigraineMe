@@ -743,9 +743,9 @@ private fun AttackScreen(a: ImpAttack, editing: Boolean, setEditing: (Boolean) -
             Spacer(Modifier.height(10.dp))
             SectionLabel(t("Pain"))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (editing) StepBtn("−") { a.severity = ((a.severity ?: 5) - 1).coerceIn(1, 10); mark() }
+                if (editing) StepBtn("−") { a.severity = ((a.severity ?: 5) - 1).coerceIn(0, 10); mark() }
                 SevBadge(a.severity, 34)
-                if (editing) StepBtn("+") { a.severity = ((a.severity ?: 5) + 1).coerceIn(1, 10); mark() }
+                if (editing) StepBtn("+") { a.severity = ((a.severity ?: 5) + 1).coerceIn(0, 10); mark() }
                 Text(t("out of 10"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             if (a.types.isNotEmpty()) ChipGroup(t("Type"), a.types.map { it to "" }, editing, { a.types.removeAt(it); mark() }, { a.types.add(it); mark() })

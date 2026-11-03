@@ -186,7 +186,7 @@ fun EditMigraineScreen(
     LaunchedEffect(row?.id) {
         row?.let {
             selectedLabel = it.type ?: "Migraine"
-            severity = (it.severity ?: 5).coerceIn(1, 10).toFloat()
+            severity = (it.severity ?: 5).coerceIn(0, 10).toFloat()
             beganAt = it.startAt
             endedAt = it.endAt
             notes = TextFieldValue(it.notes ?: "")
@@ -346,7 +346,7 @@ fun EditMigraineScreen(
                 typeMenuOpen = typeMenuOpen,
                 setTypeMenuOpen = { typeMenuOpen = it },
                 severity = severity,
-                setSeverity = { severity = it.coerceIn(1f, 10f) },
+                setSeverity = { severity = it.coerceIn(0f, 10f) },
                 beganAt = beganAt,
                 setBeganAt = { beganAt = it },
                 endedAt = endedAt,
@@ -570,8 +570,8 @@ private fun CorePage(
                 Slider(
                     value = severity,
                     onValueChange = setSeverity,
-                    valueRange = 1f..10f,
-                    steps = 8,
+                    valueRange = 0f..10f,
+                    steps = 9,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

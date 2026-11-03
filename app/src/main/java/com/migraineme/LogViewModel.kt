@@ -470,7 +470,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         // across entries, so a stale default entry would clobber it.
         val entries = if (severity != null) {
             val cur = _draft.value.painEntries.ifEmpty { listOf(PainEntryDraft()) }
-            listOf(cur.first().copy(severity = severity.coerceIn(1, 10))) + cur.drop(1)
+            listOf(cur.first().copy(severity = severity.coerceIn(0, 10))) + cur.drop(1)
         } else _draft.value.painEntries
         _draft.value = _draft.value.copy(
             migraine = existing.copy(
@@ -542,7 +542,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setPainEntrySeverity(entryId: String, severity: Int) {
-        updatePainEntry(entryId) { it.copy(severity = severity.coerceIn(1, 10)) }
+        updatePainEntry(entryId) { it.copy(severity = severity.coerceIn(0, 10)) }
         syncSeverityFromEntries()
     }
 

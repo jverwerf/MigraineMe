@@ -157,11 +157,11 @@ private fun parseSeverity(text: String): AiParsedField<Int>? {
     // Explicit number: "severity 7", "pain 8/10", "like a 6"
     val numPattern = Regex("""(?:severity|pain|level|rating|it'?s?\s+(?:a|an)?)\s*(\d{1,2})\s*(?:/\s*10|out\s*of\s*10)?""")
     numPattern.find(text)?.groupValues?.get(1)?.toIntOrNull()?.let { n ->
-        if (n in 1..10) return AiParsedField(n, inferred = false)
+        if (n in 0..10) return AiParsedField(n, inferred = false)
     }
     // Also match standalone "N/10" pattern
     Regex("""(\d{1,2})\s*/\s*10""").find(text)?.groupValues?.get(1)?.toIntOrNull()?.let { n ->
-        if (n in 1..10) return AiParsedField(n, inferred = false)
+        if (n in 0..10) return AiParsedField(n, inferred = false)
     }
 
     // Keyword mapping — ordered from highest to lowest
@@ -618,7 +618,7 @@ Extract everything you can. JSON object only.
     val severity = if (obj.has("severity") && !obj.isNull("severity")) {
         val v = obj.optInt("severity", -1)
         val inf = obj.optBoolean("severity_inferred", true)
-        if (v in 1..10) AiParsedField(v, inf) else null
+        if (v in 0..10) AiParsedField(v, inf) else null
     } else null
 
     // Parse began_at
@@ -660,7 +660,7 @@ Extract everything you can. JSON object only.
                 }
             }
             if (locs.isEmpty()) continue
-            val sev = e.optInt("severity", 5).coerceIn(1, 10)
+            val sev = e.optInt("severity", 5).coerceIn(0, 10)
             val start = e.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" }
             painEntries.add(AiPainEntry(start, sev, locs))
         }
@@ -1363,7 +1363,7 @@ Extract everything. JSON only.
             if (locs.isNotEmpty()) {
                 resPainNow = CheckInPainNow(
                     locations = locs,
-                    severity = p.optInt("severity", 5).coerceIn(1, 10),
+                    severity = p.optInt("severity", 5).coerceIn(0, 10),
                     startAtIso = p.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" },
                 )
             }

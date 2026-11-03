@@ -2369,6 +2369,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migränen",
     "Migraleve" to "Migraleve",
     "Mild" to "Leicht",
+    "No pain" to "Kein Schmerz",
     "Mild risk" to "Mildes Risiko",
     "Mild — can push through" to "Leicht — geht noch",
     "Min" to "Min",

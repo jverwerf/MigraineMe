@@ -2369,6 +2369,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Emicranie",
     "Migraleve" to "Migraleve",
     "Mild" to "Lieve",
+    "No pain" to "Nessun dolore",
     "Mild risk" to "Rischio lieve",
     "Mild — can push through" to "Lieve, vado avanti",
     "Min" to "Min",

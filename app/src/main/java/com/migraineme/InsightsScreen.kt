@@ -3114,11 +3114,11 @@ internal fun SeverityMiniChart(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
-        (1..10).forEach { sev ->
+        (0..10).forEach { sev ->
             val count = countsMap[sev] ?: 0
             val fraction = if (maxCount > 0) count.toFloat() / maxCount else 0f
             val barColor = androidx.compose.ui.graphics.lerp(
-                AppTheme.AccentPurple, Color(0xFFE57373), ((sev - 1) / 9f)
+                AppTheme.AccentPurple, Color(0xFFE57373), (sev / 10f)
             )
 
             Column(

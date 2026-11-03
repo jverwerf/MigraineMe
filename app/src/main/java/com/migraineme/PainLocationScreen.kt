@@ -264,7 +264,7 @@ private fun PainEntryCard(
 
         // Severity
         val sev = entry.severity
-        val sevColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, (sev - 1) / 9f)
+        val sevColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, sev / 10f)
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(t("Severity"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -276,8 +276,8 @@ private fun PainEntryCard(
         Slider(
             value = sev.toFloat(),
             onValueChange = { v -> vm.setPainEntrySeverity(entry.id, v.toInt()) },
-            valueRange = 1f..10f,
-            steps = 8,
+            valueRange = 0f..10f,
+            steps = 9,
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
                 thumbColor = AppTheme.AccentPurple,
@@ -287,7 +287,7 @@ private fun PainEntryCard(
         )
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(t("Mild"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("No pain"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             Text(t("Severe"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
 

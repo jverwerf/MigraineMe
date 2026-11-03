@@ -833,8 +833,8 @@ private fun SeverityEditorPill(
         Slider(
             value = sliderValue,
             onValueChange = { sliderValue = it },
-            valueRange = 1f..10f,
-            steps = 8,
+            valueRange = 0f..10f,
+            steps = 9,
             colors = SliderDefaults.colors(
                 thumbColor = Color(0xFFEF5350),
                 activeTrackColor = Color(0xFFEF5350),
@@ -843,7 +843,7 @@ private fun SeverityEditorPill(
             modifier = Modifier.fillMaxWidth()
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(t("Mild"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("No pain"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Text(t("Severe"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
     }

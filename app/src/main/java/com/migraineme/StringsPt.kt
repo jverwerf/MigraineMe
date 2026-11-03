@@ -2369,6 +2369,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Enxaquecas",
     "Migraleve" to "Migraleve",
     "Mild" to "Leve",
+    "No pain" to "Sem dor",
     "Mild risk" to "Risco leve",
     "Mild — can push through" to "Leve, consigo seguir",
     "Min" to "Mín",

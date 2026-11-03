@@ -2374,7 +2374,7 @@ private fun MigraineNowStep(
                     Slider(
                         value = painSeverity.toFloat(),
                         onValueChange = { onPainSeverityChange(it.toInt()) },
-                        valueRange = 1f..10f, steps = 8,
+                        valueRange = 0f..10f, steps = 9,
                         colors = SliderDefaults.colors(thumbColor = AppTheme.AccentPink, activeTrackColor = AppTheme.AccentPink, inactiveTrackColor = AppTheme.TrackColor)
                     )
                     if (painLocations.isNotEmpty()) {

@@ -2369,6 +2369,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migraine",
     "Migraleve" to "Migraleve",
     "Mild" to "Licht",
+    "No pain" to "Geen pijn",
     "Mild risk" to "Licht risico",
     "Mild — can push through" to "Licht, gaat nog",
     "Min" to "Min",
