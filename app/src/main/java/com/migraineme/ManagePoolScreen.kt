@@ -752,7 +752,7 @@ fun ManagePoolScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text(t("Remove \"%s\"?", item.label)) },
+            title = { Text(t("Remove \"%s\"?", t(poolDisplayLabel(item.label)))) },
             text = { Text(t("This will remove it from your pool. Past logged entries won't be affected.")) },
             confirmButton = {
                 TextButton(onClick = { config.onDelete(item.id); showDeleteDialog = null }) { Text(t("Delete"), color = AppTheme.AccentPink) }
@@ -831,7 +831,7 @@ private fun LibraryItemRow(
             }
         }
 
-        Text(t(item.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t(poolDisplayLabel(item.label)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
         Spacer(Modifier.weight(1f))
 
@@ -889,7 +889,7 @@ private fun PoolItemRow(
             }
 
             // Label
-            Text(t(item.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t(poolDisplayLabel(item.label)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
             // (i) for noise rows — explains Quiet/Moderate/Loud/Very loud
             if (item.label == "Noise high" || item.label == "Noise low") {
@@ -1244,4 +1244,11 @@ private fun NoiseBandRow(name: String, note: String) {
         Text(name, color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.width(92.dp))
         Text(note, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
+}
+
+/** System rows carry code labels; show them as words. */
+internal fun poolDisplayLabel(label: String): String = when (label.lowercase()) {
+    "menstruation_predicted" -> "Menstruation predicted"
+    "ovulation_predicted" -> "Ovulation predicted"
+    else -> label
 }
