@@ -285,6 +285,7 @@ object Routes {
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
 
     const val CHANGE_PASSWORD = "change_password"
+    const val BLOCKED_USERS = "blocked_users"
     
     const val TRIGGERS_SETTINGS = "triggers_settings"
     const val RISK_WEIGHTS = "risk_weights"
@@ -2809,6 +2810,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             authVm = authVm,
                             onBack = { nav.popBackStack() },
                             onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
+                            onNavigateBlockedUsers = { nav.navigate(Routes.BLOCKED_USERS) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateProfileBasis = { nav.navigate(Routes.PROFILE_BASIS) },
@@ -2834,6 +2836,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.CHANGE_PASSWORD) {
                         ChangePasswordScreen(authVm = authVm, onDone = { nav.popBackStack() })
+                    }
+                    composable(Routes.BLOCKED_USERS) {
+                        val auth by authVm.state.collectAsState()
+                        BlockedUsersScreen(accessToken = auth.accessToken, onBack = { nav.popBackStack() })
                     }
 
                     composable(Routes.PROFILE_BASIS) {

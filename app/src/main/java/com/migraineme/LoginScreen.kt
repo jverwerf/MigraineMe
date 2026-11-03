@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -431,6 +432,33 @@ fun LoginScreen(
                             },
                             text = t("Continue with Google")
                         )
+
+                        // Google and Facebook create the account right here, so
+                        // the terms are shown before any of them runs (App Store
+                        // guideline 1.2, kept identical on Android).
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            t("By continuing you agree to our Terms of Use and Privacy Policy."),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            Text(
+                                t("Terms of Use"),
+                                color = AppTheme.AccentPurple,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.clickable { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.migraineme.app/terms"))) }
+                            )
+                            Text("  ·  ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                t("Privacy Policy"),
+                                color = AppTheme.AccentPurple,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.clickable { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.migraineme.app/privacy"))) }
+                            )
+                        }
 
                         if (busy) {
                             Spacer(Modifier.height(4.dp))

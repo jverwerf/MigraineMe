@@ -4996,5 +4996,18 @@
   "Compare mine": "Vergelijk mijn",
   "No data of yours for these dates": "Geen eigen gegevens voor deze dagen",
   "Mine": "Mijn",
-  "avg %s": "gem. %s"
+  "avg %s": "gem. %s",
+  "Blocked users": "Geblokkeerd",
+  "Block this user": "Blokkeer gebruiker",
+  "By continuing you agree to our Terms of Use and Privacy Policy.": "Door verder te gaan ga je akkoord met de Gebruiksvoorwaarden en het Privacybeleid.",
+  "Hides everything they post, right away.": "Verbergt meteen alles wat deze persoon plaatst.",
+  "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community.": "Ik ga akkoord met de voorwaarden en het privacybeleid. Misbruik en aanstootgevende inhoud zijn in de community niet toegestaan.",
+  "People you block disappear from the community for you. Unblock them here any time.": "Wie je blokkeert, verdwijnt voor jou uit de community. Hier kun je ze altijd weer deblokkeren.",
+  "People you have blocked in the community": "Door jou geblokkeerd in de community",
+  "Their posts and replies are now hidden for you. We have been notified.": "Hun berichten zijn nu voor jou verborgen. Wij zijn op de hoogte gebracht.",
+  "Unblock": "Deblokkeren",
+  "User blocked": "Geblokkeerd",
+  "You have not blocked anyone.": "Je hebt niemand geblokkeerd.",
+  "Please agree to the Terms of Use and Privacy Policy first.": "Ga eerst akkoord met de voorwaarden en het privacybeleid.",
+  "Terms of Use": "Voorwaarden"
 }

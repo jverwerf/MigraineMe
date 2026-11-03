@@ -4996,5 +4996,18 @@
   "Compare mine": "Comparar míos",
   "No data of yours for these dates": "No tienes datos para estas fechas",
   "Mine": "Míos",
-  "avg %s": "media %s"
+  "avg %s": "media %s",
+  "Blocked users": "Bloqueados",
+  "Block this user": "Bloquear usuario",
+  "By continuing you agree to our Terms of Use and Privacy Policy.": "Al continuar aceptas los Términos de uso y la Política de privacidad.",
+  "Hides everything they post, right away.": "Oculta todo lo que publique, al instante.",
+  "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community.": "Acepto los Términos de uso y la Política de privacidad. En la comunidad no se toleran los usuarios abusivos ni el contenido ofensivo.",
+  "People you block disappear from the community for you. Unblock them here any time.": "Las personas que bloqueas desaparecen de la comunidad para ti. Desbloquéalas aquí cuando quieras.",
+  "People you have blocked in the community": "Personas que has bloqueado en la comunidad",
+  "Their posts and replies are now hidden for you. We have been notified.": "Sus publicaciones y respuestas ya no se te muestran. Hemos sido avisados.",
+  "Unblock": "Desbloquear",
+  "User blocked": "Bloqueado",
+  "You have not blocked anyone.": "No has bloqueado a nadie.",
+  "Please agree to the Terms of Use and Privacy Policy first.": "Primero acepta los Términos de uso y la Política de privacidad.",
+  "Terms of Use": "Términos de uso"
 }

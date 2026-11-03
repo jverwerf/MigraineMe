@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4998 entries.
+ * 5011 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -829,6 +829,8 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Biotin high" to "Biotin hoch",
     "Biotin low" to "Biotin niedrig",
     "Blind spot" to "Blinder Fleck",
+    "Block this user" to "Nutzer blockieren",
+    "Blocked users" to "Blockierungen",
     "Blog" to "Blog",
     "Blog not found" to "Blog fehlt",
     "Blogs" to "Blogs",
@@ -889,6 +891,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Butterbur" to "Pestwurz",
     "Buy %s" to "%s kaufen",
     "By category" to "Nach Kategorie",
+    "By continuing you agree to our Terms of Use and Privacy Policy." to "Mit dem Fortfahren akzeptierst du Nutzungsbedingungen und Datenschutzerklärung.",
     "By day of week" to "Nach Wochentag",
     "By season" to "Nach Jahreszeit",
     "CBT" to "KVT",
@@ -1514,12 +1517,12 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Excess coffee, tea, energy drinks" to "Zu viel Kaffee, Tee, Energydrinks",
     "Excess screen time" to "Viel Bildschirmzeit",
     "Excessive yawning" to "Häufiges Gähnen",
-    "Exercise" to "Bewegung",
-    "Exercise & Hormones" to "Sport & Hormone",
-    "Exercise & cycle" to "Sport & Zyklus",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Exercise" to "Bewegung",
+    "Exercise & Hormones" to "Sport & Hormone",
+    "Exercise & cycle" to "Sport & Zyklus",
     "Exercise sets one off" to "Sport löst aus",
     "Exercises" to "Übungen",
     "Exercising" to "Training",
@@ -1836,6 +1839,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Hide Settings" to "Weniger anzeigen",
     "Hide pages you don't need and choose their order. Review always comes last." to "Blende Seiten aus, die du nicht brauchst, und wähle ihre Reihenfolge. Prüfen kommt immer zuletzt.",
     "Hide promo code" to "Code ausblenden",
+    "Hides everything they post, right away." to "Blendet alles von dieser Person sofort aus.",
     "High" to "Hoch",
     "High HR" to "Hoher Puls",
     "High HR Zones" to "Hohe Pulszonen",
@@ -1948,6 +1952,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luftfeuchte hoch",
     "Humidity low" to "Luftfeuchte niedrig",
     "Hydration" to "Flüssigkeit",
+    "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ich akzeptiere die Nutzungsbedingungen und Datenschutzerklärung. Missbrauch und anstößige Inhalte sind in der Community tabu.",
     "I am 18 or over" to "Ich bin 18+",
     "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Ich helfe dir, deine Muster zu verstehen, mit den Daten der letzten 7 Tage — Schlaf, HRV, Erholung, Auslöser und mehr.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Mir ist aufgefallen, dass dein MigraineMe-Test vor einer Weile ausgelaufen ist und du nicht weitergemacht hast, was völlig okay ist. Ich wollte mich nur melden, bevor wir uns aus den Augen verlieren.",
@@ -2856,6 +2861,8 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pending medicines" to "Offene Medik.",
     "Pending reliefs" to "Offene Linderung",
     "Pending triggers" to "Offene Auslöser",
+    "People you block disappear from the community for you. Unblock them here any time." to "Wer blockiert ist, verschwindet für dich aus der Community. Hier kannst du die Blockierung jederzeit aufheben.",
+    "People you have blocked in the community" to "Von dir blockierte Nutzer in der Community",
     "Peppermint oil" to "Pfefferminzöl",
     "Per Month" to "Pro Monat",
     "Per month" to "Pro Monat",
@@ -2914,6 +2921,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Places" to "Orte",
     "Plain painkillers" to "Schmerzmittel",
     "Plane" to "Flugzeug",
+    "Please agree to the Terms of Use and Privacy Policy first." to "Bitte zuerst AGB und Datenschutzerklärung akzeptieren.",
     "Please enable these metrics first, then you can enable Stress Index." to "Aktiviere zuerst diese Werte, dann kannst du den Stress-Index einschalten.",
     "Please enter a promo code." to "Bitte gib einen Promo-Code ein.",
     "Please enter your current password." to "Gib dein aktuelles Passwort ein.",
@@ -3012,6 +3020,9 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Profil — Konto, Abo & KI-Setup",
     "Progressive relaxation" to "Progressive Muskelentspannung",
     "Propranolol" to "Propranolol",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Protein" to "Protein",
     "Protein dense" to "Proteinreich",
     "Protein high" to "Protein hoch",
@@ -3020,9 +3031,6 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Holt Schlaf, Schritte und Ernährung aus den Apps auf deinem Handy. Fitbit oder Samsung? Kommen auch hier durch.",
     "Put it back" to "Zurückholen",
     "Quality" to "Qualität",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Quell" to "Quell",
     "Questions, feedback or something not working? Email us and a real person will reply." to "Fragen, Feedback oder etwas funktioniert nicht? Schreib uns eine E-Mail, ein echter Mensch antwortet.",
     "Queued changes:" to "In Warteschlange:",
@@ -3738,6 +3746,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Tension" to "Spannung",
     "Tension headache" to "Spannungskopfschmerz",
     "Terms of Service" to "Nutzungsbeding.",
+    "Terms of Use" to "AGB",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "Teste den Knopf \"Es passiert gerade\" im ersten Wizard-Schritt; er erfasst sofort, Details kannst du später ergänzen.",
     "Thanks for letting us know. We'll review this content shortly." to "Danke für den Hinweis. Wir sehen uns das bald an.",
     "That didn't work" to "Hat nicht geklappt",
@@ -3778,6 +3787,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "The wall part opens the chest and gives you something honest to measure against. If your elbows and wrists cannot stay near it, that is the tightness. The bed part trains the small front muscles: lifting your head a finger's width with the chin tucked works them without letting the big ones cheat. Of everything in these routines, that lift has the best trial results behind it." to "Der Teil an der Wand öffnet die Brust und gibt dir einen ehrlichen Maßstab. Können deine Ellbogen und Handgelenke nicht nah an der Wand bleiben, ist genau das die Enge. Der Teil auf dem Bett trainiert die kleinen vorderen Muskeln: Den Kopf mit eingezogenem Kinn eine Fingerbreite anzuheben fordert sie, ohne dass die großen Muskeln schummeln können. Von allem in diesen Routinen hat dieses Anheben die besten Studienergebnisse hinter sich.",
     "The written summary of how treatment has gone." to "Die schriftliche Zusammenfassung des Verlaufs.",
     "Their own site" to "Eigene Website",
+    "Their posts and replies are now hidden for you. We have been notified." to "Ihre Beiträge sind für dich jetzt ausgeblendet. Wir wurden informiert.",
     "Then" to "Dann",
     "TheraSpecs" to "TheraSpecs",
     "Therapy" to "Therapie",
@@ -4017,6 +4027,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "UV index low" to "UV-Index niedrig",
     "UV radiation level" to "UV-Strahlung",
     "Ubrogepant (Ubrelvy)" to "Ubrogepant (Ubrelvy)",
+    "Unblock" to "Entblocken",
     "Under 50 dB: library, quiet home" to "Unter 50 dB: Bibliothek, ruhige Wohnung",
     "Undereating, fasting, missed meals" to "Zu wenig essen, Fasten, Mahlzeiten aus",
     "Undo" to "Zurück",
@@ -4106,6 +4117,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Used to track screen time which may correlate with migraines." to "Um die Bildschirmzeit zu erfassen, die mit Migräne zusammenhängen kann.",
     "Used together in %1\$s of your %2\$s attacks" to "Zusammen bei %1\$s von %2\$s Anfällen",
     "Used together in %1\$s of your %2\$s flare days" to "Zusammen bei %1\$s von %2\$s Schubtagen",
+    "User blocked" to "Blockiert",
     "Usually over by" to "Meist vorbei bis",
     "Usually peaks at" to "Erreicht meist",
     "Usually starts: %1\$s (%2\$s of %3\$s)" to "Beginnt meist: %1\$s (%2\$s von %3\$s)",
@@ -4490,6 +4502,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "You have %1\$s migraines, %2\$s triggers, and %3\$s treatments logged." to "Du hast %1\$s Migränen, %2\$s Auslöser und %3\$s Therapien erfasst.",
     "You have a migraine that's still open. " to "Du hast eine Migräne, die noch offen ist. ",
     "You have not been through the setup questions" to "Du hast die Einrichtungsfragen noch nicht beantwortet",
+    "You have not blocked anyone." to "Du hast niemanden blockiert.",
     "You have unsaved changes to prediction values or thresholds. Discard them?" to "Du hast ungesicherte Änderungen an Werten oder Schwellen. Verwerfen?",
     "You log your\n*attacks.*" to "Du trägst deine\n*Anfälle* ein.",
     "You logged a migraine %s days ago and it's still open. " to "Du hast vor %s Tagen eine Migräne erfasst, sie ist noch offen. ",
@@ -4510,6 +4523,9 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Deine Aura",
     "Your Free Trial is Active!" to "Deine Testphase läuft!",
     "Your Health Insights Assistant" to "Dein Gesundheits-Assistent",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Deine Mittel",
     "Your Migraine Profile" to "Dein Migräneprofil",
     "Your Personalised Setup" to "Deine Einrichtung",
@@ -4523,9 +4539,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "Deine Antworten sind gespeichert. Die KI-Prüfung deines Profils gehört zu Premium, im kostenlosen Plan läuft die nächste wöchentliche Prüfung also nicht.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "Deine Antworten sind gespeichert. Die KI hat dein Profil erneut geprüft und nichts gefunden, das sich zu ändern lohnt.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Deine Antworten vom %1\$s. Der Wochen-Check ändert sie nie — nur du, mit dem Bearbeiten-Knopf jedes Abschnitts oder durch neue Einrichtung.",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Your answers when you first set the app up." to "Deine Antworten beim Einrichten der App.",
     "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Deine Antworten. Der Wochen-Check ändert sie nie — nur du, mit dem Bearbeiten-Knopf jedes Abschnitts oder durch neue Einrichtung.",
     "Your assessment" to "Deine Einschätzung",

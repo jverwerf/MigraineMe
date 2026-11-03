@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +49,9 @@ fun SignupScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmVisible by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    // App Store guideline 1.2 (kept identical on Android): the terms are agreed
+    // to before an account exists.
+    var agreed by remember { mutableStateOf(false) }
     var confirmationSent by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
 
@@ -216,6 +220,39 @@ fun SignupScreen(
                         colors = themedTextFieldColors()
                     )
 
+                    Row(
+                        Modifier.fillMaxWidth().clickable { agreed = !agreed },
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Checkbox(
+                            checked = agreed,
+                            onCheckedChange = { agreed = it },
+                            colors = CheckboxDefaults.colors(checkedColor = AppTheme.AccentPurple, uncheckedColor = AppTheme.SubtleTextColor)
+                        )
+                        Text(
+                            t("I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community."),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f).padding(top = 12.dp)
+                        )
+                    }
+                    Row(Modifier.padding(start = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            t("Terms of Use"),
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { appCtx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.migraineme.app/terms")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        )
+                        Text("·", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            t("Privacy Policy"),
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { appCtx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.migraineme.app/privacy")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        )
+                    }
+
                     error?.let {
                         Text(
                             it,
@@ -228,6 +265,7 @@ fun SignupScreen(
                     Button(
                         onClick = {
                             error = null
+                            if (!agreed) { error = tSync("Please agree to the Terms of Use and Privacy Policy first."); return@Button }
                             if (!passwordStrong) { error = tSync("Password must be at least 6 characters."); return@Button }
                             if (password != confirm) { error = tSync("Passwords do not match."); return@Button }
                             busy = true

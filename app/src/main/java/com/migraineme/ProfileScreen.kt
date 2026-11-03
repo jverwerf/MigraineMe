@@ -57,6 +57,7 @@ fun ProfileScreen(
     authVm: AuthViewModel = viewModel(),
     onBack: () -> Unit = {},
     onNavigateChangePassword: () -> Unit,
+    onNavigateBlockedUsers: () -> Unit = {},
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateProfileBasis: () -> Unit = {},
@@ -417,6 +418,22 @@ fun ProfileScreen(
                     }
                     Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                 }
+            }
+        }
+
+        // ── Blocked users (community, App Store guideline 1.2) ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable { onNavigateBlockedUsers() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.Block, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(t("Blocked users"), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("People you have blocked in the community"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
             }
         }
 

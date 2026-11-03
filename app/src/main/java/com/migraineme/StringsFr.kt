@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 4998 entries.
+ * 5011 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -829,6 +829,8 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Biotin high" to "Biotine élevée",
     "Biotin low" to "Biotine basse",
     "Blind spot" to "Tache aveugle",
+    "Block this user" to "Bloquer ce profil",
+    "Blocked users" to "Bloqués",
     "Blog" to "Blog",
     "Blog not found" to "Introuvable",
     "Blogs" to "Blogs",
@@ -889,6 +891,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Butterbur" to "Pétasite",
     "Buy %s" to "Acheter %s",
     "By category" to "Par catégorie",
+    "By continuing you agree to our Terms of Use and Privacy Policy." to "En continuant, tu acceptes les Conditions d'utilisation et la Politique de confidentialité.",
     "By day of week" to "Par jour de semaine",
     "By season" to "Par saison",
     "CBT" to "TCC",
@@ -1514,12 +1517,12 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Excess coffee, tea, energy drinks" to "Excès de café, thé, boissons énergisantes",
     "Excess screen time" to "Trop d'écran",
     "Excessive yawning" to "Bâillements",
-    "Exercise" to "Exercice",
-    "Exercise & Hormones" to "Sport et hormones",
-    "Exercise & cycle" to "Sport et cycle",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Exercise" to "Exercice",
+    "Exercise & Hormones" to "Sport et hormones",
+    "Exercise & cycle" to "Sport et cycle",
     "Exercise sets one off" to "Le sport déclenche",
     "Exercises" to "Exercices",
     "Exercising" to "Faire de l'exercice",
@@ -1836,6 +1839,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Hide Settings" to "Masquer",
     "Hide pages you don't need and choose their order. Review always comes last." to "Masque les pages inutiles et choisis leur ordre. Revoir vient toujours en dernier.",
     "Hide promo code" to "Masquer le code",
+    "Hides everything they post, right away." to "Masque tout ce qu'il publie, immédiatement.",
     "High" to "Élevé",
     "High HR" to "FC haute",
     "High HR Zones" to "Zones FC hautes",
@@ -1948,6 +1952,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Humidité élevée",
     "Humidity low" to "Humidité faible",
     "Hydration" to "Hydratation",
+    "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "J'accepte les conditions d'utilisation et la confidentialité. Abus et contenus répréhensibles sont interdits dans la communauté.",
     "I am 18 or over" to "J'ai 18 ans+",
     "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Je peux t'aider à comprendre tes tendances avec tes 7 derniers jours : sommeil, VFC, récupération, facteurs et plus.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "J'ai vu que ton essai MigraineMe s'est terminé il y a quelque temps et que tu n'as pas continué, ce qui est tout à fait normal. Je voulais juste te faire signe avant qu'on se perde de vue.",
@@ -2856,6 +2861,8 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pending medicines" to "Médicaments",
     "Pending reliefs" to "Soulagements",
     "Pending triggers" to "Facteurs",
+    "People you block disappear from the community for you. Unblock them here any time." to "Les personnes bloquées disparaissent de la communauté pour toi. Tu peux les débloquer ici à tout moment.",
+    "People you have blocked in the community" to "Les personnes que tu as bloquées",
     "Peppermint oil" to "Huile de menthe poivrée",
     "Per Month" to "Par mois",
     "Per month" to "Par mois",
@@ -2914,6 +2921,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Places" to "Lieux",
     "Plain painkillers" to "Antalgiques",
     "Plane" to "Avion",
+    "Please agree to the Terms of Use and Privacy Policy first." to "Accepte d'abord les conditions et la confidentialité.",
     "Please enable these metrics first, then you can enable Stress Index." to "Active d'abord ces mesures, ensuite tu pourras activer l'indice de stress.",
     "Please enter a promo code." to "Saisis un code promo.",
     "Please enter your current password." to "Saisis ton mot de passe actuel.",
@@ -3012,6 +3020,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Profil — compte, abonnement et config IA",
     "Progressive relaxation" to "Relaxation progressive",
     "Propranolol" to "Propranolol",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Protein" to "Protéines",
     "Protein dense" to "Riche en protéines",
     "Protein high" to "Protéines élevées",
@@ -3020,9 +3031,6 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pulls sleep, steps and nutrition from the apps already on your phone. Fitbit or Samsung? They come through here too." to "Récupère sommeil, pas et nutrition depuis les apps déjà sur ton téléphone. Fitbit ou Samsung ? Ça passe aussi par ici.",
     "Put it back" to "Remettre",
     "Quality" to "Qualité",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Quell" to "Quell",
     "Questions, feedback or something not working? Email us and a real person will reply." to "Des questions, des retours ou quelque chose ne fonctionne pas ? Écrivez-nous, une vraie personne vous répondra.",
     "Queued changes:" to "En attente :",
@@ -3738,6 +3746,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Tension" to "Tension",
     "Tension headache" to "Céphalée de tension",
     "Terms of Service" to "Conditions",
+    "Terms of Use" to "Conditions",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "Teste le bouton « C'est en train d'arriver » à la première étape ; il enregistre tout de suite, tu complètes après.",
     "Thanks for letting us know. We'll review this content shortly." to "Merci de nous l'avoir signalé. Nous regardons vite.",
     "That didn't work" to "Ça n'a pas marché",
@@ -3778,6 +3787,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "The wall part opens the chest and gives you something honest to measure against. If your elbows and wrists cannot stay near it, that is the tightness. The bed part trains the small front muscles: lifting your head a finger's width with the chin tucked works them without letting the big ones cheat. Of everything in these routines, that lift has the best trial results behind it." to "La partie au mur ouvre la poitrine et te donne un repère honnête pour te mesurer. Si tes coudes et tes poignets ne peuvent pas rester près du mur, c'est ça, la raideur. La partie sur le lit entraîne les petits muscles de l'avant : décoller la tête de l'épaisseur d'un doigt, menton rentré, les fait travailler sans laisser les gros tricher. De tout ce qu'il y a dans ces routines, c'est ce mouvement qui a les meilleurs résultats d'essais derrière lui.",
     "The written summary of how treatment has gone." to "Le résumé écrit du déroulement du traitement.",
     "Their own site" to "Leur site",
+    "Their posts and replies are now hidden for you. We have been notified." to "Ses publications sont masquées pour toi. Nous avons été prévenus.",
     "Then" to "Puis",
     "TheraSpecs" to "TheraSpecs",
     "Therapy" to "Thérapie",
@@ -4017,6 +4027,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "UV index low" to "Indice UV bas",
     "UV radiation level" to "Niveau de rayons UV",
     "Ubrogepant (Ubrelvy)" to "Ubrogépant (Ubrelvy)",
+    "Unblock" to "Débloquer",
     "Under 50 dB: library, quiet home" to "Moins de 50 dB : bibliothèque, maison calme",
     "Undereating, fasting, missed meals" to "Manger trop peu, jeûne, repas sautés",
     "Undo" to "Annuler",
@@ -4106,6 +4117,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Used to track screen time which may correlate with migraines." to "Pour suivre le temps d'écran, qui peut être lié aux migraines.",
     "Used together in %1\$s of your %2\$s attacks" to "Ensemble dans %1\$s de tes %2\$s crises",
     "Used together in %1\$s of your %2\$s flare days" to "Ensemble dans %1\$s de tes %2\$s jours de poussée",
+    "User blocked" to "Profil bloqué",
     "Usually over by" to "Finit souvent vers",
     "Usually peaks at" to "Pic souvent à",
     "Usually starts: %1\$s (%2\$s of %3\$s)" to "Commence souvent : %1\$s (%2\$s sur %3\$s)",
@@ -4490,6 +4502,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "You have %1\$s migraines, %2\$s triggers, and %3\$s treatments logged." to "Tu as noté %1\$s migraines, %2\$s facteurs et %3\$s traitements.",
     "You have a migraine that's still open. " to "Tu as une migraine encore ouverte. ",
     "You have not been through the setup questions" to "Tu n'as pas encore répondu aux questions du réglage",
+    "You have not blocked anyone." to "Tu n'as bloqué personne.",
     "You have unsaved changes to prediction values or thresholds. Discard them?" to "Des valeurs ou seuils ne sont pas enregistrés. Abandonner ?",
     "You log your\n*attacks.*" to "Tu notes tes\n*crises.*",
     "You logged a migraine %s days ago and it's still open. " to "Tu as noté une migraine il y a %s jours, elle est encore ouverte. ",
@@ -4510,6 +4523,9 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Ton aura",
     "Your Free Trial is Active!" to "Ton essai gratuit est actif !",
     "Your Health Insights Assistant" to "Ton assistant santé",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Tes médicaments",
     "Your Migraine Profile" to "Ton profil migraine",
     "Your Personalised Setup" to "Ta configuration",
@@ -4523,9 +4539,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your answers are saved. Re-checking your profile with the AI is part of Premium, so the next weekly check will not run on the free plan." to "Tes réponses sont enregistrées. La revérification de ton profil par l'IA fait partie de Premium : avec le plan gratuit, le prochain contrôle hebdo ne tournera pas.",
     "Your answers are saved. The AI re-checked your profile and found nothing worth changing." to "Tes réponses sont enregistrées. L'IA a revérifié ton profil et n'a rien trouvé à changer.",
     "Your answers from %1\$s. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses du %1\$s. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Your answers when you first set the app up." to "Tes réponses lors de la configuration de l'app.",
     "Your answers. Weekly check-ins never touch them — only you do, with the edit button on each section, or by redoing setup." to "Tes réponses. Le bilan hebdo n'y touche jamais — toi seul·e, avec le bouton modifier de chaque section ou en refaisant le réglage.",
     "Your assessment" to "Ton évaluation",

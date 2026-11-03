@@ -623,8 +623,9 @@ class CommunityViewModel : ViewModel() {
             } else {
                 val bodyText = response.bodyAsText()
                 Log.d(TAG, "fetchForumPosts raw: ${bodyText.take(500)}")
-                Json { ignoreUnknownKeys = true; explicitNulls = false }
+                val decoded = Json { ignoreUnknownKeys = true; explicitNulls = false }
                     .decodeFromString<List<ForumPostRow>>(bodyText)
+                BlockedUsers.hide(accessToken, decoded) { it.userId }
                     .map { post ->
                         val tr = post.translations.one()
                         post.copy(
@@ -734,7 +735,7 @@ class CommunityViewModel : ViewModel() {
                     parameter("order", "created_at.asc")
                 }
                 if (response.status.value in 200..299) {
-                    val comments: List<ForumCommentRow> = response.body<List<ForumCommentRow>>().map { c ->
+                    val comments: List<ForumCommentRow> = BlockedUsers.hide(accessToken, response.body<List<ForumCommentRow>>()) { it.userId }.map { c ->
                         c.copy(body = c.translations.one()?.body.orEnglish(c.body), translations = null)
                     }
                     _state.value = _state.value.copy(forumComments = comments, forumCommentsLoading = false)
@@ -1195,6 +1196,20 @@ class CommunityViewModel : ViewModel() {
     // =====================
     // REPORT CONTENT
     // =====================
+
+    /**
+     * Block a community member (App Store guideline 1.2): write the block, file
+     * a report so help@ hears about it, then reload so their content is gone
+     * at once.
+     */
+    fun blockUser(accessToken: String, userId: String, postId: String? = null, commentId: String? = null, articleCommentId: String? = null) {
+        viewModelScope.launch {
+            BlockedUsers.block(accessToken, userId)
+            reportContent(accessToken, postId = postId, commentId = commentId, reason = "User blocked ($userId)", articleCommentId = articleCommentId)
+            refreshForumPosts(accessToken)
+            if (postId != null) loadForumComments(accessToken, postId)
+        }
+    }
 
     fun reportContent(accessToken: String, postId: String?, commentId: String?, reason: String, articleCommentId: String? = null) {
         viewModelScope.launch {

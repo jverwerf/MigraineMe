@@ -410,6 +410,9 @@ private fun ForumContent(
             onDismiss = { reportingPost = null },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = post.id, commentId = null, reason = reason) }
+            },
+            onBlock = if (post.userId == null || post.userId == currentUserId) null else {
+                { accessToken?.let { vm.blockUser(it, post.userId, postId = post.id) } }
             }
         )
     }

@@ -8,15 +8,15 @@
     "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:643",
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:649",
     "line": "            if (premium) t(\"Compare mine\") else t(\"Compare mine\") + \" \\uD83D\\uDD12\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:883",
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:890",
     "line": "                    Text(t(\"Risk Score\") + \" \\u00b7 \" + t(\"avg %s\", fmt1(avg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:892",
+    "site": "app/src/main/java/com/migraineme/ArticleCommentsSection.kt:896",
     "line": "                        Text(t(\"Mine\") + \" \\u00b7 \" + t(\"avg %s\", fmt1(mineAvg)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
   },
   {
@@ -104,7 +104,7 @@
     "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ForumScreen.kt:342",
+    "site": "app/src/main/java/com/migraineme/ForumScreen.kt:376",
     "line": "                            \"\\uD83D\\uDD12 \" + t(\"Premium\"),"
   },
   {
@@ -304,27 +304,27 @@
     "line": "                (if (latest != null) t(\"Latest %1\\$s. \", latest) else \"\") + t(\"Everything here is a change you accepted — nothing moves without you.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:783",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:800",
     "line": "                    t(\"What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:784",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:801",
     "line": "                    t(\"Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:785",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:802",
     "line": "                    t(\"The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The weekly AI Calibration card in Insights nudges those values over time as the app learns from your data.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:960",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:977",
     "line": "                    t(\"Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:961",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:978",
     "line": "                    t(\"Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and weekly AI Calibration of your gauge.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:962",
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:979",
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {

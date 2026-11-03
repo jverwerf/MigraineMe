@@ -186,7 +186,10 @@ fun ForumPostCard(
 fun ReportDialog(
     title: String = "Report content",
     onDismiss: () -> Unit,
-    onSubmit: (reason: String) -> Unit
+    onSubmit: (reason: String) -> Unit,
+    /** Block the author of the reported content (App Store guideline 1.2).
+     *  null when the author is unknown or is the current user. */
+    onBlock: (() -> Unit)? = null
 ) {
     val reasons = listOf(
         "Spam or self-promotion",
@@ -197,6 +200,25 @@ fun ReportDialog(
     )
     var selected by remember { mutableStateOf("") }
     var submitted by remember { mutableStateOf(false) }
+    var blocked by remember { mutableStateOf(false) }
+
+    if (blocked) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            containerColor = Color(0xFF1A0628),
+            titleContentColor = Color.White,
+            textContentColor = AppTheme.BodyTextColor,
+            title = { Text(t("User blocked"), fontWeight = FontWeight.Bold) },
+            text = { Text(t("Their posts and replies are now hidden for you. We have been notified."), style = MaterialTheme.typography.bodySmall) },
+            confirmButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                ) { Text(t("Done")) }
+            }
+        )
+        return
+    }
 
     if (submitted) {
         AlertDialog(
@@ -248,6 +270,18 @@ fun ReportDialog(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(reason, color = Color.White, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (onBlock != null) {
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onBlock(); blocked = true }
+                            .padding(vertical = 6.dp)
+                    ) {
+                        Text(t("Block this user"), color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Hides everything they post, right away."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -450,6 +484,9 @@ fun ForumPostDetailScreen(
             onDismiss = { reportingPost = false },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = post.id, commentId = null, reason = reason) }
+            },
+            onBlock = if (post.userId == null || post.userId == currentUserId) null else {
+                { accessToken?.let { vm.blockUser(it, post.userId, postId = post.id) } }
             }
         )
     }
@@ -459,6 +496,9 @@ fun ForumPostDetailScreen(
             onDismiss = { reportingComment = null },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = null, commentId = comment.id, reason = reason) }
+            },
+            onBlock = if (comment.userId == currentUserId) null else {
+                { accessToken?.let { vm.blockUser(it, comment.userId, postId = postId, commentId = comment.id) } }
             }
         )
     }

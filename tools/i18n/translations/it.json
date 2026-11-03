@@ -4996,5 +4996,18 @@
   "Compare mine": "Con i miei",
   "No data of yours for these dates": "Nessun tuo dato per queste date",
   "Mine": "Miei",
-  "avg %s": "media %s"
+  "avg %s": "media %s",
+  "Blocked users": "Utenti bloccati",
+  "Block this user": "Blocca utente",
+  "By continuing you agree to our Terms of Use and Privacy Policy.": "Continuando accetti i Termini d'uso e l'Informativa sulla privacy.",
+  "Hides everything they post, right away.": "Nasconde subito tutto ciò che pubblica.",
+  "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community.": "Accetto i Termini d'uso e l'Informativa sulla privacy. Abusi e contenuti offensivi non sono tollerati nella community.",
+  "People you block disappear from the community for you. Unblock them here any time.": "Chi blocchi scompare dalla community per te. Qui puoi sbloccarlo quando vuoi.",
+  "People you have blocked in the community": "Persone che hai bloccato nella community",
+  "Their posts and replies are now hidden for you. We have been notified.": "I suoi post sono ora nascosti per te. Siamo stati avvisati.",
+  "Unblock": "Sblocca",
+  "User blocked": "Bloccato",
+  "You have not blocked anyone.": "Non hai bloccato nessuno.",
+  "Please agree to the Terms of Use and Privacy Policy first.": "Accetta prima i Termini d'uso e l'Informativa sulla privacy.",
+  "Terms of Use": "Termini d'uso"
 }

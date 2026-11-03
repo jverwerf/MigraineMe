@@ -119,7 +119,7 @@ private suspend fun fetchArticleComments(
         parameter("order", "created_at.asc")
     }
     if (response.status.value !in 200..299) return null
-    return response.body<List<CommentRow>>().map { c ->
+    return BlockedUsers.hide(accessToken, response.body<List<CommentRow>>()) { it.userId }.map { c ->
         c.copy(body = c.translations.one()?.body.orEnglish(c.body), translations = null)
     }
 }
@@ -187,6 +187,12 @@ fun ArticleCommentsSection(
             onSubmit = { reason ->
                 accessToken?.let { communityVm?.reportContent(it, postId = null, commentId = null, reason = reason, articleCommentId = comment.id) }
                 reportingComment = null
+            },
+            onBlock = if (comment.userId == currentUserId) null else {
+                {
+                    accessToken?.let { communityVm?.blockUser(it, comment.userId, articleCommentId = comment.id) }
+                    comments = comments.filter { it.userId != comment.userId }
+                }
             }
         )
     }
