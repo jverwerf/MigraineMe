@@ -523,6 +523,32 @@ object SupabasePractitionerService {
     }
 
     /** Every goal that is still on the client's plate: active and paused, never ended. */
+    /** A practitioner's own exercise film (practitioner_exercises), readable by their linked clients. */
+    @Serializable
+    data class PractitionerExerciseRow(
+        val id: String,
+        val title: String = "",
+        val description: String? = null,
+        val minutes: Double? = null,
+        val video_path: String,
+        val poster_path: String? = null,
+        val lang: String? = null,
+    )
+
+    fun practitionerFilmUrl(path: String): String =
+        "$baseUrl/storage/v1/object/public/practitioner-exercises/$path"
+
+    suspend fun practitionerExercises(accessToken: String, ids: List<String>): List<PractitionerExerciseRow> {
+        if (ids.isEmpty()) return emptyList()
+        val list = ids.joinToString(",") { it.filter { c -> c.isLetterOrDigit() || c == '-' } }
+        val url = "$baseUrl/rest/v1/practitioner_exercises?id=in.($list)" +
+            "&select=id,title,description,minutes,video_path,poster_path,lang"
+        return client.get(url) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.body()
+    }
+
     suspend fun myGoals(accessToken: String): List<GoalRow> {
         // Own goals only: a practitioner using the app also reads the goals she set.
         val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()

@@ -33,7 +33,10 @@ class ExerciseRoutine(
     val poster: String,
     val sections: List<ExerciseSection>,
     /** Reachable only through a practitioner goal: never listed on the Exercises screen, never premium gated. */
-    val practitionerOnly: Boolean = false
+    val practitionerOnly: Boolean = false,
+    /** A practitioner's own film (practitioner_exercises): full URLs, no language folders. */
+    val filmUrlAbs: String? = null,
+    val posterUrlAbs: String? = null
 )
 
 object ExerciseCatalogue {
@@ -42,13 +45,23 @@ object ExerciseCatalogue {
 
     /** "{base}/{lang}/{film}" */
     fun filmUrl(routine: ExerciseRoutine, langCode: String): String =
-        "$BASE_URL/${langCode.lowercase()}/${routine.film}"
+        routine.filmUrlAbs ?: "$BASE_URL/${langCode.lowercase()}/${routine.film}"
 
     /** "{base}/posters/{poster}" */
     fun posterUrl(routine: ExerciseRoutine): String =
-        "$BASE_URL/posters/${routine.poster}"
+        routine.posterUrlAbs ?: "$BASE_URL/posters/${routine.poster}"
 
-    fun byId(id: String?): ExerciseRoutine? = ROUTINES.firstOrNull { it.id == id }
+    /** The practitioner's own films, keyed "pr:<practitioner_exercises.id>". Filled by
+     *  PractitionerGoalsStore from the goals that name them; never listed in the library. */
+    private val dynamic = java.util.concurrent.ConcurrentHashMap<String, ExerciseRoutine>()
+    const val PRACTITIONER_PREFIX = "pr:"
+    fun register(routines: List<ExerciseRoutine>) { for (r in routines) dynamic[r.id] = r }
+
+    fun byId(id: String?): ExerciseRoutine? {
+        if (id == null) return null
+        if (id.startsWith(PRACTITIONER_PREFIX)) return dynamic[id]
+        return ROUTINES.firstOrNull { it.id == id }
+    }
 
     fun forWhen(whenToUse: ExerciseWhen): List<ExerciseRoutine> =
         ROUTINES.filter { it.whenToUse == whenToUse && !it.practitionerOnly }

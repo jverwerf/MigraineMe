@@ -167,12 +167,40 @@ object PractitionerGoalsStore {
             .onFailure { Log.w(TAG, "myGoals failed: ${it.message}") }
             .getOrNull() ?: return@withContext
         _goals.value = rows
+        registerPractitionerFilms(token, rows)
         loadMetrics(token)
         val today = LocalDate.now()
         val from = today.minusDays(PROGRESS_DAYS - 1).toString()
         val map = LinkedHashMap<String, List<SupabasePractitionerService.GoalProgressRow>>()
         for (g in rows) map[g.id] = fetchProgress(token, g.id, from, today.toString())
         _progress.value = map
+    }
+
+    /** Goals that name a practitioner's own film ("pr:<id>") need that film in the
+     *  catalogue before the Exercises screen, the Goals card or the player look it up. */
+    private suspend fun registerPractitionerFilms(token: String, rows: List<SupabasePractitionerService.GoalRow>) {
+        val ids = rows.mapNotNull { it.exercise_id?.takeIf { id -> id.startsWith(ExerciseCatalogue.PRACTITIONER_PREFIX) } }
+            .map { it.removePrefix(ExerciseCatalogue.PRACTITIONER_PREFIX) }.distinct()
+        if (ids.isEmpty()) return
+        val films = runCatching { svc.practitionerExercises(token, ids) }
+            .onFailure { Log.w(TAG, "practitionerExercises failed: ${it.message}") }
+            .getOrNull() ?: return
+        ExerciseCatalogue.register(films.map { f ->
+            ExerciseRoutine(
+                ExerciseCatalogue.PRACTITIONER_PREFIX + f.id,
+                f.title,
+                "",
+                f.minutes?.toInt() ?: 0,
+                ExerciseWhen.PREVENT,
+                "",
+                "",
+                "",
+                f.description?.takeIf { it.isNotBlank() }?.let { listOf(ExerciseSection("How to do it", listOf(it))) } ?: emptyList(),
+                practitionerOnly = true,
+                filmUrlAbs = svc.practitionerFilmUrl(f.video_path),
+                posterUrlAbs = f.poster_path?.let { svc.practitionerFilmUrl(it) },
+            )
+        })
     }
 
     private suspend fun fetchProgress(token: String, goalId: String, from: String, to: String) =
