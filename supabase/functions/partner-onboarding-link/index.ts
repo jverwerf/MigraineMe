@@ -22,7 +22,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 
-const SITE = "https://migraineme.app";
+// Since 2026-11-04 practitioners have one address; /payouts/<token> there and on migraineme.app both land here.
+const SITE = "https://me-practitioner.com";
 
 // Same guard as partner-payout: a test key would make Stripe return success
 // while nothing real is created, and the partner would onboard into a
