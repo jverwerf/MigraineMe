@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5011 entries.
+ * 5030 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -444,9 +444,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Across %1\$s aura attack%2\$s, as seen through your own eyes" to "Over je aura-aanvallen (%1\$s), zoals jij het ziet",
     "Across %s attacks where you logged more than one pain entry" to "Over %s aanvallen waarin je meer dan één pijnpunt noteerde",
     "Across %s aura attacks, as seen through your own eyes" to "Over %s aura-aanvallen, zoals jij het ziet",
+    "Across %s flare days and %s calmer days" to "Uit %1\$s aanvalsdagen en %2\$s rustige dagen",
     "Across 1 aura attack, as seen through your own eyes" to "Over 1 aura-aanval, zoals jij het ziet",
     "Across {0} attacks with aura, from the patient's own point of view" to "Uit {0} aanvallen met aura, gezien door de ogen van de patiënt zelf",
     "Across {0} attacks with more than one timed pain entry, from your full logging history" to "Uit {0} aanvallen met meer dan één pijnregistratie met tijd, uit je hele logboek",
+    "Across {0} flare days and {1} calmer days" to "Uit {0} aanvalsdagen en {1} rustige dagen",
     "Active" to "Actief",
     "Active Trigger Breakdown" to "Verdeling actieve triggers",
     "Active Triggers" to "Actieve triggers",
@@ -715,6 +717,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Attacks logged" to "Gelogde aanvallen",
     "Attacks ran about %1\$s longer, over %2\$s" to "Aanvallen duurden ongeveer %1\$s langer, over %2\$s",
     "Attacks ran about as long as usual, over %s" to "Aanvallen duurden ongeveer even lang als anders, over %s",
+    "Attacks rated" to "Beoordeelde aanvallen",
     "Attacks starting at %s" to "Aanvallen vanaf %s",
     "Attacks with aura" to "Aanvallen met aura",
     "Attacks, symptoms, warning signs, pain, aura, your notes" to "Aanvallen, symptomen, signalen, pijn, aura, je notities",
@@ -740,6 +743,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Available without a prescription" to "Zonder recept verkrijgbaar",
     "Avatar" to "Avatar",
     "Average" to "Gemiddeld",
+    "Average /10" to "Gemiddeld /10",
     "Average Cycle" to "Cyclus gem.",
     "Average Cycle (days)" to "Cyclus gem. (dagen)",
     "Average Cycle Length" to "Gemiddelde lengte",
@@ -1513,13 +1517,13 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Everything you logged as a possible trigger" to "Alles wat je als mogelijke trigger logde",
     "Everything you logged as a possible trigger." to "Alles wat je als mogelijke trigger logde.",
     "Everything's still there, right where you left it." to "Alles staat er nog, precies waar je het achterliet.",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Te veel koffie, thee, energiedrank",
     "Excess screen time" to "Te veel schermtijd",
     "Excessive yawning" to "Veel gapen",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Exercise" to "Beweging",
     "Exercise & Hormones" to "Sport & hormonen",
     "Exercise & cycle" to "Sport & cyclus",
@@ -1889,6 +1893,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "How do you\nwant to *start?*" to "Hoe wil je\n*beginnen?*",
     "How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home." to "Hoe ga je op werk om met migraine? Tips over het gesprek met je werkgever, doorwerken tijdens een dienst of thuiswerken.",
     "How each regimen has changed your migraine days" to "Hoe elke behandeling je migrainedagen veranderde",
+    "How hard attacks hit, across the 1–10 scale" to "Hoe hard de aanvallen aankwamen, op de schaal van 1–10",
     "How hard your migraines hit, across all of them" to "Hoe hard je migraine aankomt, over alle heen",
     "How it affected you" to "Hoe het je raakte",
     "How it works" to "Zo werkt het",
@@ -2369,9 +2374,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migraine",
     "Migraleve" to "Migraleve",
     "Mild" to "Licht",
-    "No pain" to "Geen pijn",
     "Mild risk" to "Licht risico",
     "Mild — can push through" to "Licht, gaat nog",
+    "Mildest" to "Mildst",
     "Min" to "Min",
     "Min: %s" to "Min: %s",
     "Mind" to "Geest",
@@ -2588,6 +2593,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "No nutrition source enabled" to "Geen bron voor voeding",
     "No other migraines in the last 30 days" to "Geen andere migraine in 30 dagen",
     "No other treatments to link to." to "Geen andere behandelingen om te koppelen.",
+    "No pain" to "Geen pijn",
     "No pattern" to "Geen patroon",
     "No pattern / varies" to "Geen patroon / wisselt",
     "No patterns yet" to "Geen patronen",
@@ -2724,6 +2730,8 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "On %s%% of your calmer days." to "Op %s%% van je rustigere dagen.",
     "On %s%% of your migraine-free days." to "Op %s%% van je migrainevrije dagen.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Op Android: open MigraineMe, ga naar het upgradescherm en voer de code %1\$s in.",
+    "On calmer days" to "Op rustige dagen",
+    "On flare days" to "Op aanvalsdagen",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Alleen op goede dagen. Je hebt een vrij stuk muur nodig, een bed of een mat, en een tennisbal voor het loslaten aan het eind.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "Op goede dagen, of als je nek strak aanvoelt na lang aan je bureau zitten. Niet tijdens een aanval als je hoofd bewegen de pijn erger maakt.",
     "On track" to "Op schema",
@@ -2820,6 +2828,8 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pain locations" to "Pijnlocaties",
     "Pain positions" to "Pijnplekken",
     "Pain response" to "Effect op pijn",
+    "Pain response — what brought it down" to "Effect op pijn — wat hem omlaag bracht",
+    "Pain response — what pushed it up" to "Effect op pijn — wat hem omhoog duwde",
     "Pain rose about %1\$s points within 2 hours, over %2\$s" to "Pijn steeg ongeveer %1\$s punten binnen 2 uur, over %2\$s",
     "Pain update" to "Pijnupdate",
     "Paint the Picture" to "Teken het beeld",
@@ -3010,6 +3020,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Prochlorperazine" to "Prochloorperazine",
     "Prodrome" to "Prodroom",
     "Prodrome adjustments" to "Prodroom-aanpassingen",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Prodromen",
     "Prodromes" to "Prodromen",
     "Product not found" to "Niet gevonden",
@@ -3021,9 +3034,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Profiel — account, abonnement & AI-setup",
     "Progressive relaxation" to "Progressieve relaxatie",
     "Propranolol" to "Propranolol",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Protein" to "Eiwit",
     "Protein dense" to "Eiwitrijk",
     "Protein high" to "Eiwit hoog",
@@ -3366,6 +3376,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Severity" to "Zwaarte",
     "Severity Distribution" to "Verdeling",
     "Severity colour: green mild, amber medium, rose severe." to "Kleur: groen licht, geel midden, rood zwaar.",
+    "Severity spread" to "Verdeling van de zwaarte",
     "Severity {0}" to "Zwaarte {0}",
     "Severity —" to "Zwaarte —",
     "Severity, pain locations, symptoms & missed activities" to "Zwaarte, pijnplekken, klachten en wat je miste",
@@ -3559,7 +3570,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Begon %s",
-    "When: %s" to "Wanneer: %s",
     "Started a treatment?" to "Een behandeling gestart?",
     "Starting elsewhere" to "Vanaf elders",
     "Starts" to "Begint",
@@ -3796,6 +3806,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "ThermaZone" to "ThermaZone",
     "These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile." to "Deze AI-gidsen markeren artikelen die bij je profiel passen en zetten ze vanzelf in je feed. We kozen alvast de best passende.",
     "These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away." to "Deze antwoorden zijn het startpunt. Wat de app elke dag echt doet, komt uit Je lijsten en het Risicomodel, en de weekcheck stelt die bij terwijl hij leert van wat je noteert. Pas je hier een onderdeel aan, dan loopt die setuppagina opnieuw en checkt de AI meteen je profiel.",
+    "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them." to "Deze worden opnieuw geschreven in jouw taal en waren nog niet klaar toen dit rapport werd gemaakt. Maak het rapport over een paar minuten opnieuw om ze op te nemen.",
     "These are estimates. Tap a food to change it, untick anything we got wrong, and correct the portions before adding." to "Dit zijn schattingen. Tik op een voedingsmiddel om het te wijzigen, vink af wat niet klopt en corrigeer de porties voordat je toevoegt.",
     "These are the two stretches a physiotherapist gives for exactly that. The hand is there to add a little weight, never to pull. Held long enough, the muscle lets go rather than fighting back." to "Dit zijn de twee rekoefeningen die een fysiotherapeut precies daarvoor geeft. De hand is er om een beetje gewicht toe te voegen, nooit om te trekken. Lang genoeg vastgehouden laat de spier los in plaats van terug te vechten.",
     "These migraines: %s." to "Deze migraines: %s.",
@@ -4104,6 +4115,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Usage access permission" to "Toegang tot gebruik",
     "Usage access permission needed for phone sleep." to "Telefoonslaap heeft toegang tot gebruik nodig.",
     "Usage vs Effectiveness" to "Gebruik vs. effect",
+    "Usage vs effectiveness" to "Gebruik versus effect",
     "Use any relief methods?" to "Verlichting gebruikt?",
     "Use for insights" to "Voor inzichten",
     "Use search at the top to jump to a specific metric." to "Gebruik de zoekbalk bovenaan om naar een waarde te springen.",
@@ -4391,6 +4403,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "When you fell asleep" to "Wanneer je in slaap viel",
     "When you woke up" to "Wanneer je wakker werd",
     "When your migraines hit most" to "Wanneer je migraine het vaakst komt",
+    "When: %s" to "Wanneer: %s",
     "When?" to "Wanneer?",
     "Where" to "Waar",
     "Where *HIGH* starts." to "Waar *HOOG* begint.",
@@ -4468,6 +4481,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Worse — every time" to "Erger — elke keer",
     "Worse — sometimes" to "Erger — soms",
     "Worsening — up {0}%" to "Verslechtert — {0}% omhoog",
+    "Worst" to "Ergst",
     "Worst day" to "Ergste dag",
     "Worst of them hit" to "Ergste kwam op",
     "Worst season" to "Ergste seizoen",
@@ -4509,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Jij logt je\n*aanvallen.*",
     "You logged a migraine %s days ago and it's still open. " to "Je noteerde %s dagen terug een migraine en die staat nog open. ",
     "You logged a migraine 1 day ago and it's still open. " to "Je noteerde 1 dag terug een migraine en die staat nog open. ",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "Je mist niets.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Je mist: de tour, de AI-voorsprong en je wearable, tot je Instellingen opent.",
     "You miss: the tour. Rerun it anytime from Profile." to "Je mist: de tour. Doe hem later opnieuw via Profiel.",
@@ -4525,9 +4542,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Je aura",
     "Your Free Trial is Active!" to "Je gratis proef loopt!",
     "Your Health Insights Assistant" to "Je gezondheidsassistent",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Je medicijnen",
     "Your Migraine Profile" to "Je migraineprofiel",
     "Your Personalised Setup" to "Jouw instellingen",
@@ -4827,6 +4841,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "no comparison" to "geen vergelijk",
     "no meaningful difference across your symptoms" to "geen noemenswaardig verschil tussen je symptomen",
     "no relief in %s tries" to "geen verlichting in %s pogingen",
+    "no relief ratings" to "geen verlichtingsbeoordelingen",
     "none" to "geen",
     "normalised scale" to "genormaliseerd",
     "not enough data" to "te weinig data",
@@ -4934,6 +4949,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "this practitioner" to "deze behandelaar",
     "this week (vs %1\$s)" to "week (vs %1\$s)",
     "time" to "tijd",
+    "times used" to "keer gebruikt",
     "today" to "vandaag",
     "today only" to "alleen vandaag",
     "tomorrow" to "morgen",
@@ -4948,6 +4964,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "trigger" to "trigger",
     "trigger detection based on your health data." to "triggerdetectie op basis van je gezondheidsdata.",
     "triptans" to "triptanen",
+    "units" to "eenheden",
     "up" to "omhoog",
     "up %s ranks" to "%s omhoog",
     "up 1 rank" to "1 omhoog",

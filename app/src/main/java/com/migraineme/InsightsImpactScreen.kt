@@ -633,11 +633,15 @@ fun PainMigrationCard(
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
-                Text(
-                    t("Across %s attacks where you logged more than one pain entry", stat.attacksAnalysed),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                // 0 means only the flare-vs-calm half cleared; its own count
+                // line below is then the only count on the card.
+                if (stat.attacksAnalysed > 0) {
+                    Text(
+                        t("Across %s attacks where you logged more than one pain entry", stat.attacksAnalysed),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -669,6 +673,37 @@ fun PainMigrationCard(
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        // Chronic users: where the pain sits on flare days vs calmer logged
+        // days inside a long attack. Independent of the movement half above,
+        // so it can be the only thing on the card.
+        val flare = stat.flareLocations
+        val calm = stat.calmLocations
+        if (flare.isNotEmpty() || calm.isNotEmpty()) {
+            val hasMovement = onset.isNotEmpty() || spread.isNotEmpty() || stat.medianMinutesToPeak != null
+            if (hasMovement) {
+                Spacer(Modifier.height(10.dp))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+            }
+            Spacer(Modifier.height(10.dp))
+            if (flare.isNotEmpty()) {
+                PainStageLegend(t("On flare days"), flare, AppTheme.AccentPink)
+            }
+            if (calm.isNotEmpty()) {
+                if (flare.isNotEmpty()) Spacer(Modifier.height(8.dp))
+                PainStageLegend(t("On calmer days"), calm, AppTheme.AccentPurple)
+            }
+            val fd = stat.flareDays
+            val cd = stat.calmDays
+            if (fd != null && cd != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    t("Across %s flare days and %s calmer days", fd, cd),
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }

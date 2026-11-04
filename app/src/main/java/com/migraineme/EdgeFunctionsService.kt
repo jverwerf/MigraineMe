@@ -2542,10 +2542,23 @@ class EdgeFunctionsService {
      */
     @Serializable
     data class PainMigrationStat(
-        @SerialName("attacks_analysed") val attacksAnalysed: Int,
+        /**
+         * 0 when only the flare-vs-calm half cleared: the movement fields are
+         * then empty and the "Across N attacks" subtitle must not render.
+         */
+        @SerialName("attacks_analysed") val attacksAnalysed: Int = 0,
         @SerialName("onset_locations") val onsetLocations: List<String> = emptyList(),
         @SerialName("spread_locations") val spreadLocations: List<String> = emptyList(),
         @SerialName("median_minutes_to_peak") val medianMinutesToPeak: Int? = null,
+        /**
+         * Chronic users only: where the pain sits on FLARE days vs the calmer
+         * logged days inside a long attack. Older rows lack these columns, so
+         * every one defaults rather than failing the row.
+         */
+        @SerialName("flare_locations") val flareLocations: List<String> = emptyList(),
+        @SerialName("calm_locations") val calmLocations: List<String> = emptyList(),
+        @SerialName("flare_days") val flareDays: Int? = null,
+        @SerialName("calm_days") val calmDays: Int? = null,
     )
 
     /**
@@ -2558,7 +2571,7 @@ class EdgeFunctionsService {
         val client = buildClient()
         return try {
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/pain_migration_stats" +
-                "?select=attacks_analysed,onset_locations,spread_locations,median_minutes_to_peak&limit=1"
+                "?select=attacks_analysed,onset_locations,spread_locations,median_minutes_to_peak,flare_locations,calm_locations,flare_days,calm_days&limit=1"
             val r = client.get(url) {
                 header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)

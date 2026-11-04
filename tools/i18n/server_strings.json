@@ -2348,6 +2348,134 @@
    "sites": [
     "supabase/functions/goal-suggestions/index.ts (push body, review only)"
    ]
+  },
+  {
+   "en": "On flare days",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "On calmer days",
+   "class": "soft",
+   "max_len": 24,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Across {0} flare days and {1} calmer days",
+   "class": "soft",
+   "max_len": 59,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Attacks rated",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Average /10",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "How hard attacks hit, across the 1–10 scale",
+   "class": "soft",
+   "max_len": 62,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Mildest",
+   "class": "soft",
+   "max_len": 17,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Pain response — what brought it down",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Pain response — what pushed it up",
+   "class": "soft",
+   "max_len": 47,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Severity spread",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them.",
+   "class": "soft",
+   "max_len": 214,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Usage vs effectiveness",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "Worst",
+   "class": "soft",
+   "max_len": 15,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "no relief ratings",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "times used",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
+  },
+  {
+   "en": "units",
+   "class": "soft",
+   "max_len": 15,
+   "sites": [
+    "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
+   ]
   }
  ]
 }

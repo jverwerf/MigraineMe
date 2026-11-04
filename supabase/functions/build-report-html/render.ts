@@ -2261,6 +2261,16 @@ function impact(d: ReportData, pageNo: number): string {
   const peak = pm?.median_minutes_to_peak;
   const peakText = peak == null ? null
     : peak < 90 ? rt("{0} minutes", peak) : rt("{0} hours", (peak / 60).toFixed(1).replace(/\.0$/, ""));
+  // Two halves share the row: onset/spread/peak come from attacks with more
+  // than one timed pain entry; flare/calm from a chronic user's long attack,
+  // day by day. Either half may be empty, and the section only prints the
+  // half that cleared. attacks_analysed 0 means the onset half never ran.
+  const pmOnset = !!pm && pm.attacks_analysed > 0;
+  const pmFlare = pm?.flare_locations ?? [];
+  const pmCalm = pm?.calm_locations ?? [];
+  const pmFlareCalm = !!pm && (pmFlare.length > 0 || pmCalm.length > 0);
+  const showPm = pmOnset || pmFlareCalm;
+  const locList = (ids: string[]) => ids.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", ") || "—";
 
   // Triggers the engine tied to where the pain started: one static line per
   // location (best p first, at most three locations, at most three triggers
@@ -2303,12 +2313,12 @@ function impact(d: ReportData, pageNo: number): string {
       ${linkedTriggers}
     </div>
 
-    ${pm ? sub(C.purple, rt("How the pain moves")) : ""}
-    ${pm ? `<p class="meta" style="margin:-4px 0 8px">
-        ${rt("Across {0} attacks with more than one timed pain entry, from your full logging history", pm.attacks_analysed)}</p>
+    ${showPm ? sub(C.purple, rt("How the pain moves")) : ""}
+    ${showPm && pm ? `${pmOnset ? `<p class="meta" style="margin:-4px 0 8px">
+        ${rt("Across {0} attacks with more than one timed pain entry, from your full logging history", pm.attacks_analysed)}</p>` : ""}
       <div class="card">
         <div class="heads">
-          ${(["front", "back"] as const).map((view) => {
+          ${!pmOnset ? "" : (["front", "back"] as const).map((view) => {
             const img = view === "front" ? HEAD_FRONT_PNG : HEAD_BACK_PNG;
             const show = (ids: string[]) => ids.filter((id) => {
               const pt = PAIN_POINTS[id];
@@ -2332,13 +2342,19 @@ function impact(d: ReportData, pageNo: number): string {
             </figure>`;
           }).join("")}
           <table class="log" style="align-self:center">
-            <tr><td class="k" style="color:${rgba(C.pink, .7)}">1 · ${rt("Starts")}</td><td class="v">
-              ${esc(pm.onset_locations.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", ") || "—")}</td></tr>
+            ${pmOnset ? `<tr><td class="k" style="color:${rgba(C.pink, .7)}">1 · ${rt("Starts")}</td><td class="v">
+              ${esc(locList(pm.onset_locations))}</td></tr>
             <tr><td class="k" style="color:${C.pink}">2 · ${rt("Spreads")}</td><td class="v">
-              ${esc(pm.spread_locations.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", ") || "—")}</td></tr>
-            ${peakText ? `<tr><td class="k">${rt("Peaks after")}</td><td class="v">${esc(rt("about {0}", peakText))}</td></tr>` : ""}
+              ${esc(locList(pm.spread_locations))}</td></tr>
+            ${peakText ? `<tr><td class="k">${rt("Peaks after")}</td><td class="v">${esc(rt("about {0}", peakText))}</td></tr>` : ""}` : ""}
+            ${pmFlareCalm ? `<tr><td class="k" style="color:${C.pink}">${rt("On flare days")}</td><td class="v">
+              ${esc(locList(pmFlare))}</td></tr>
+            <tr><td class="k" style="color:${rgba(C.pink, .7)}">${rt("On calmer days")}</td><td class="v">
+              ${esc(locList(pmCalm))}</td></tr>` : ""}
           </table>
         </div>
+        ${pmFlareCalm && pm.flare_days != null && pm.calm_days != null
+          ? `<p class="meta">${esc(rt("Across {0} flare days and {1} calmer days", pm.flare_days, pm.calm_days))}</p>` : ""}
       </div>` : ""}
 
     ${auraAttacks.length ? sub(C.purple, rt("Aura")) : ""}

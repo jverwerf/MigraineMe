@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5011 entries.
+ * 5030 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -444,9 +444,11 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Across %1\$s aura attack%2\$s, as seen through your own eyes" to "Aus %1\$s Aura-Attacke%2\$s, mit deinen eigenen Augen gesehen",
     "Across %s attacks where you logged more than one pain entry" to "Aus %s Attacken mit mehr als einem Schmerzeintrag",
     "Across %s aura attacks, as seen through your own eyes" to "Aus %s Aura-Attacken, mit deinen eigenen Augen gesehen",
+    "Across %s flare days and %s calmer days" to "Aus %1\$s Anfallstagen und %2\$s ruhigeren Tagen",
     "Across 1 aura attack, as seen through your own eyes" to "Aus 1 Aura-Attacke, mit deinen eigenen Augen gesehen",
     "Across {0} attacks with aura, from the patient's own point of view" to "Aus {0} Aura-Attacken, aus eigener Sicht geschildert",
     "Across {0} attacks with more than one timed pain entry, from your full logging history" to "Aus {0} Attacken mit mehr als einem zeitgestempelten Schmerzeintrag, aus deiner gesamten Log-Historie",
+    "Across {0} flare days and {1} calmer days" to "Aus {0} Anfallstagen und {1} ruhigeren Tagen",
     "Active" to "Aktiv",
     "Active Trigger Breakdown" to "Aktive Auslöser im Detail",
     "Active Triggers" to "Aktive Auslöser",
@@ -715,6 +717,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Attacks logged" to "Erfasste Attacken",
     "Attacks ran about %1\$s longer, over %2\$s" to "Anfälle dauerten etwa %1\$s länger, über %2\$s",
     "Attacks ran about as long as usual, over %s" to "Anfälle dauerten etwa so lang wie sonst, über %s",
+    "Attacks rated" to "Bewertete Attacken",
     "Attacks starting at %s" to "Attacken ab %s",
     "Attacks with aura" to "Attacken mit Aura",
     "Attacks, symptoms, warning signs, pain, aura, your notes" to "Attacken, Symptome, Warnzeichen, Schmerz, Aura, deine Notizen",
@@ -740,6 +743,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Available without a prescription" to "Ohne Rezept erhältlich",
     "Avatar" to "Avatar",
     "Average" to "Schnitt",
+    "Average /10" to "Schnitt /10",
     "Average Cycle" to "Zyklus Ø",
     "Average Cycle (days)" to "Zyklus Ø (Tage)",
     "Average Cycle Length" to "Mittlere Zykluslänge",
@@ -1513,13 +1517,13 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Everything you logged as a possible trigger" to "Alles, was du als möglichen Auslöser erfasst hast",
     "Everything you logged as a possible trigger." to "Alles, was du als möglichen Auslöser erfasst hast.",
     "Everything's still there, right where you left it." to "Alles ist noch da, genau da, wo du es gelassen hast.",
+)
+
+private fun deStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Zu viel Kaffee, Tee, Energydrinks",
     "Excess screen time" to "Viel Bildschirmzeit",
     "Excessive yawning" to "Häufiges Gähnen",
-)
-
-private fun deStrings1(): Map<String, String> = mapOf(
     "Exercise" to "Bewegung",
     "Exercise & Hormones" to "Sport & Hormone",
     "Exercise & cycle" to "Sport & Zyklus",
@@ -1889,6 +1893,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "How do you\nwant to *start?*" to "Wie möchtest du\n*starten?*",
     "How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home." to "Wie gehst du im Job mit Migräne um? Tipps zum Gespräch mit Arbeitgebern, zur Schicht und zum Homeoffice.",
     "How each regimen has changed your migraine days" to "Wie jede Therapie deine Migränetage verändert hat",
+    "How hard attacks hit, across the 1–10 scale" to "Wie stark die Attacken ausfielen, auf der Skala von 1–10",
     "How hard your migraines hit, across all of them" to "Wie hart deine Migränen zuschlagen, über alle hinweg",
     "How it affected you" to "Wie es dich getroffen hat",
     "How it works" to "So geht's",
@@ -2369,9 +2374,9 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migränen",
     "Migraleve" to "Migraleve",
     "Mild" to "Leicht",
-    "No pain" to "Kein Schmerz",
     "Mild risk" to "Mildes Risiko",
     "Mild — can push through" to "Leicht — geht noch",
+    "Mildest" to "Am mildesten",
     "Min" to "Min",
     "Min: %s" to "Min: %s",
     "Mind" to "Psyche",
@@ -2588,6 +2593,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "No nutrition source enabled" to "Keine Ernährungsquelle aktiv",
     "No other migraines in the last 30 days" to "Keine weitere Migräne in 30 Tagen",
     "No other treatments to link to." to "Keine weiteren Therapien vorhanden.",
+    "No pain" to "Kein Schmerz",
     "No pattern" to "Kein Muster",
     "No pattern / varies" to "Kein Muster / wechselt",
     "No patterns yet" to "Keine Muster",
@@ -2724,6 +2730,8 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "On %s%% of your calmer days." to "An %s%% deiner ruhigeren Tage.",
     "On %s%% of your migraine-free days." to "An %s%% deiner migränefreien Tage.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Auf Android: Öffne MigraineMe, geh zum Upgrade-Bildschirm und gib den Code %1\$s ein.",
+    "On calmer days" to "An ruhigen Tagen",
+    "On flare days" to "An Anfallstagen",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Nur an guten Tagen. Du brauchst ein freies Stück Wand, ein Bett oder eine Matte und einen Tennisball für das Lösen am Ende.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "An guten Tagen, oder wenn sich der Nacken nach langer Zeit am Schreibtisch verspannt anfühlt. Nicht während einer Attacke, wenn Kopfbewegungen den Schmerz verschlimmern.",
     "On track" to "Im Plan",
@@ -2820,6 +2828,8 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pain locations" to "Schmerzorte",
     "Pain positions" to "Schmerzstellen",
     "Pain response" to "Schmerzantwort",
+    "Pain response — what brought it down" to "Schmerzantwort — was ihn senkte",
+    "Pain response — what pushed it up" to "Schmerzantwort — was ihn hob",
     "Pain rose about %1\$s points within 2 hours, over %2\$s" to "Schmerz stieg in 2 Stunden um etwa %1\$s Punkte, über %2\$s",
     "Pain update" to "Schmerz-Update",
     "Paint the Picture" to "Beschreib es",
@@ -3010,6 +3020,9 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Prochlorperazine" to "Prochlorperazin",
     "Prodrome" to "Prodrom",
     "Prodrome adjustments" to "Prodrom-Anpassungen",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Prodrome",
     "Prodromes" to "Prodrome",
     "Product not found" to "Nicht gefunden",
@@ -3021,9 +3034,6 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Profil — Konto, Abo & KI-Setup",
     "Progressive relaxation" to "Progressive Muskelentspannung",
     "Propranolol" to "Propranolol",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Protein" to "Protein",
     "Protein dense" to "Proteinreich",
     "Protein high" to "Protein hoch",
@@ -3366,6 +3376,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Severity" to "Stärke",
     "Severity Distribution" to "Verteilung",
     "Severity colour: green mild, amber medium, rose severe." to "Farbe: grün leicht, gelb mittel, rot schwer.",
+    "Severity spread" to "Verteilung der Stärke",
     "Severity {0}" to "Stärke {0}",
     "Severity —" to "Stärke —",
     "Severity, pain locations, symptoms & missed activities" to "Stärke, Schmerzorte, Symptome und Verpasstes",
@@ -3559,7 +3570,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Start %s",
-    "When: %s" to "Wann: %s",
     "Started a treatment?" to "Behandlung begonnen?",
     "Starting elsewhere" to "Ab anderer Stelle",
     "Starts" to "Beginnt",
@@ -3796,6 +3806,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "ThermaZone" to "ThermaZone",
     "These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile." to "Diese KI-Kuratoren markieren passende Artikel für dein Profil und legen sie automatisch in deinen Feed. Wir haben die passendsten vorausgewählt.",
     "These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away." to "Diese Antworten sind der Startpunkt. Was die App jeden Tag tatsächlich macht, kommt aus Einträge und Risikomodell, und der Wochen-Check passt beides an, während er aus deinen Einträgen lernt. Wenn du hier einen Abschnitt änderst, läuft die Einrichtung für diese Seite neu und die KI prüft dein Profil sofort.",
+    "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them." to "Diese werden gerade in deiner Sprache neu geschrieben und waren bei Erstellung dieses Berichts noch nicht fertig. Erstelle den Bericht in ein paar Minuten erneut, um sie aufzunehmen.",
     "These are estimates. Tap a food to change it, untick anything we got wrong, and correct the portions before adding." to "Das sind Schätzungen. Tippe auf ein Lebensmittel, um es zu ändern, hake Falsches ab und korrigiere die Portionen, bevor du hinzufügst.",
     "These are the two stretches a physiotherapist gives for exactly that. The hand is there to add a little weight, never to pull. Held long enough, the muscle lets go rather than fighting back." to "Das sind die zwei Dehnungen, die man in der Physiotherapie genau dafür bekommt. Die Hand ist dazu da, ein wenig Gewicht zu geben, nie um zu ziehen. Lange genug gehalten, lässt der Muskel los, statt gegenzuhalten.",
     "These migraines: %s." to "Diese Migränen: %s.",
@@ -4104,6 +4115,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Usage access permission" to "Nutzungszugriff",
     "Usage access permission needed for phone sleep." to "Nutzungszugriff nötig für Handy-Schlaf.",
     "Usage vs Effectiveness" to "Nutzung vs. Wirkung",
+    "Usage vs effectiveness" to "Einsatz vs. Wirkung",
     "Use any relief methods?" to "Etwas zur Linderung?",
     "Use for insights" to "Für Insights nutzen",
     "Use search at the top to jump to a specific metric." to "Nutze die Suche oben, um zu einer Metrik zu springen.",
@@ -4391,6 +4403,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "When you fell asleep" to "Wann du eingeschlafen bist",
     "When you woke up" to "Wann du aufgewacht bist",
     "When your migraines hit most" to "Wann Migräne am ehesten kommt",
+    "When: %s" to "Wann: %s",
     "When?" to "Wann?",
     "Where" to "Ort",
     "Where *HIGH* starts." to "Wo *HOCH* beginnt.",
@@ -4468,6 +4481,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Worse — every time" to "Schlimmer — jedes Mal",
     "Worse — sometimes" to "Schlimmer — manchmal",
     "Worsening — up {0}%" to "Schlechter — plus {0}%",
+    "Worst" to "Am schlimmsten",
     "Worst day" to "Schlimmster Tag",
     "Worst of them hit" to "Schlimmste erreichte",
     "Worst season" to "Schlimmste Jahreszeit",
@@ -4509,6 +4523,9 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Du trägst deine\n*Anfälle* ein.",
     "You logged a migraine %s days ago and it's still open. " to "Du hast vor %s Tagen eine Migräne erfasst, sie ist noch offen. ",
     "You logged a migraine 1 day ago and it's still open. " to "Du hast gestern eine Migräne erfasst, sie ist noch offen. ",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "Du verpasst nichts.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Du verpasst: Tour, KI-Vorsprung und Wearable, bis du die Einstellungen öffnest.",
     "You miss: the tour. Rerun it anytime from Profile." to "Du verpasst: die Tour. Jederzeit im Profil nachholbar.",
@@ -4525,9 +4542,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Deine Aura",
     "Your Free Trial is Active!" to "Deine Testphase läuft!",
     "Your Health Insights Assistant" to "Dein Gesundheits-Assistent",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Deine Mittel",
     "Your Migraine Profile" to "Dein Migräneprofil",
     "Your Personalised Setup" to "Deine Einrichtung",
@@ -4827,6 +4841,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "no comparison" to "kein Vergleich",
     "no meaningful difference across your symptoms" to "kein nennenswerter Unterschied zwischen deinen Symptomen",
     "no relief in %s tries" to "keine Linderung, %s Versuche",
+    "no relief ratings" to "keine Linderungsbewertungen",
     "none" to "keine",
     "normalised scale" to "normierte Skala",
     "not enough data" to "zu wenige Daten",
@@ -4934,6 +4949,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "this practitioner" to "diese Fachperson",
     "this week (vs %1\$s)" to "Woche (vs %1\$s)",
     "time" to "Zeit",
+    "times used" to "Einsätze",
     "today" to "heute",
     "today only" to "nur heute",
     "tomorrow" to "morgen",
@@ -4948,6 +4964,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "trigger" to "Auslöser",
     "trigger detection based on your health data." to "Auslöser-Erkennung aus deinen Gesundheitsdaten.",
     "triptans" to "Triptane",
+    "units" to "Einheiten",
     "up" to "hoch",
     "up %s ranks" to "%s Plätze hoch",
     "up 1 rank" to "1 Platz hoch",

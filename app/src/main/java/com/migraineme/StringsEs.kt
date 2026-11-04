@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5011 entries.
+ * 5030 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -444,9 +444,11 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Across %1\$s aura attack%2\$s, as seen through your own eyes" to "En %1\$s ataque%2\$s con aura, tal como tú los ves",
     "Across %s attacks where you logged more than one pain entry" to "En %s ataques donde anotaste más de un punto de dolor",
     "Across %s aura attacks, as seen through your own eyes" to "En %s ataques con aura, tal como tú los ves",
+    "Across %s flare days and %s calmer days" to "De %1\$s días de ataque y %2\$s días más calmados",
     "Across 1 aura attack, as seen through your own eyes" to "En 1 ataque con aura, tal como tú lo ves",
     "Across {0} attacks with aura, from the patient's own point of view" to "De {0} ataques con aura, desde el punto de vista del propio paciente",
     "Across {0} attacks with more than one timed pain entry, from your full logging history" to "De {0} ataques con más de un registro de dolor con hora, de todo tu historial",
+    "Across {0} flare days and {1} calmer days" to "De {0} días de ataque y {1} días más calmados",
     "Active" to "Activo",
     "Active Trigger Breakdown" to "Detalle de factores",
     "Active Triggers" to "Factores activos",
@@ -715,6 +717,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Attacks logged" to "Ataques registrados",
     "Attacks ran about %1\$s longer, over %2\$s" to "Los ataques duraron unas %1\$s más, en %2\$s",
     "Attacks ran about as long as usual, over %s" to "Los ataques duraron lo de siempre, en %s",
+    "Attacks rated" to "Ataques valorados",
     "Attacks starting at %s" to "Ataques desde %s",
     "Attacks with aura" to "Ataques con aura",
     "Attacks, symptoms, warning signs, pain, aura, your notes" to "Ataques, síntomas, señales, dolor, aura, tus notas",
@@ -740,6 +743,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Available without a prescription" to "Disponible sin receta",
     "Avatar" to "Avatar",
     "Average" to "Media",
+    "Average /10" to "Media /10",
     "Average Cycle" to "Ciclo medio",
     "Average Cycle (days)" to "Ciclo medio (días)",
     "Average Cycle Length" to "Duración media",
@@ -1513,13 +1517,13 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Everything you logged as a possible trigger" to "Todo lo que registraste como posible desencadenante",
     "Everything you logged as a possible trigger." to "Todo lo que registraste como posible desencadenante.",
     "Everything's still there, right where you left it." to "Todo sigue ahí, justo donde lo dejaste.",
+)
+
+private fun esStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Exceso de café, té o bebidas energéticas",
     "Excess screen time" to "Mucha pantalla",
     "Excessive yawning" to "Bostezar mucho",
-)
-
-private fun esStrings1(): Map<String, String> = mapOf(
     "Exercise" to "Ejercicio",
     "Exercise & Hormones" to "Ejercicio y hormonas",
     "Exercise & cycle" to "Ejercicio y ciclo",
@@ -1889,6 +1893,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "How do you\nwant to *start?*" to "¿Cómo quieres\n*empezar?*",
     "How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home." to "¿Cómo llevas la migraña en el trabajo? Ideas para hablar con jefes, aguantar el turno o trabajar en casa.",
     "How each regimen has changed your migraine days" to "Cómo cambió cada tratamiento tus días con migraña",
+    "How hard attacks hit, across the 1–10 scale" to "Con qué fuerza golpearon los ataques, en la escala de 1–10",
     "How hard your migraines hit, across all of them" to "Con qué fuerza pegan tus migrañas, en conjunto",
     "How it affected you" to "Cómo te afectó",
     "How it works" to "Cómo funciona",
@@ -2369,9 +2374,9 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migrañas",
     "Migraleve" to "Migraleve",
     "Mild" to "Leve",
-    "No pain" to "Sin dolor",
     "Mild risk" to "Riesgo leve",
     "Mild — can push through" to "Leve, puedo seguir",
+    "Mildest" to "Más leve",
     "Min" to "Mín",
     "Min: %s" to "Mín: %s",
     "Mind" to "Mente",
@@ -2588,6 +2593,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "No nutrition source enabled" to "Sin fuente para la alimentación",
     "No other migraines in the last 30 days" to "Sin más migrañas en 30 días",
     "No other treatments to link to." to "No hay más tratamientos que unir.",
+    "No pain" to "Sin dolor",
     "No pattern" to "Sin patrón",
     "No pattern / varies" to "Sin patrón / varía",
     "No patterns yet" to "Sin patrones",
@@ -2724,6 +2730,8 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "On %s%% of your calmer days." to "En el %s%% de tus días más tranquilos.",
     "On %s%% of your migraine-free days." to "En el %s%% de tus días sin migraña.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "En Android: abre MigraineMe, ve a la pantalla de mejora e introduce el código %1\$s.",
+    "On calmer days" to "Días más calmados",
+    "On flare days" to "Días de ataque",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Solo en los días buenos. Necesitas un trozo de pared despejada, una cama o una esterilla, y una pelota de tenis para soltar al final.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "En los días buenos, o cuando notes el cuello tenso tras un rato largo en el escritorio. No durante un ataque si mover la cabeza empeora el dolor.",
     "On track" to "Vas bien",
@@ -2820,6 +2828,8 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Pain locations" to "Zonas de dolor",
     "Pain positions" to "Zonas de dolor",
     "Pain response" to "Dolor después",
+    "Pain response — what brought it down" to "Dolor después — qué lo bajó",
+    "Pain response — what pushed it up" to "Dolor después — qué lo subió",
     "Pain rose about %1\$s points within 2 hours, over %2\$s" to "El dolor subió unos %1\$s puntos en 2 horas, en %2\$s",
     "Pain update" to "Cambio",
     "Paint the Picture" to "Pinta el cuadro",
@@ -3010,6 +3020,9 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Prochlorperazine" to "Proclorperazina",
     "Prodrome" to "Pródromo",
     "Prodrome adjustments" to "Ajustes de pródromos",
+)
+
+private fun esStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Pródromos",
     "Prodromes" to "Pródromos",
     "Product not found" to "Sin producto",
@@ -3021,9 +3034,6 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Perfil: cuenta, suscripción e IA",
     "Progressive relaxation" to "Relajación progresiva",
     "Propranolol" to "Propranolol",
-)
-
-private fun esStrings2(): Map<String, String> = mapOf(
     "Protein" to "Proteína",
     "Protein dense" to "Rico en proteínas",
     "Protein high" to "Proteína alta",
@@ -3366,6 +3376,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Severity" to "Fuerza",
     "Severity Distribution" to "Reparto",
     "Severity colour: green mild, amber medium, rose severe." to "Color: verde leve, ámbar medio, rojo fuerte.",
+    "Severity spread" to "Distribución de la fuerza",
     "Severity {0}" to "Fuerza {0}",
     "Severity —" to "Fuerza —",
     "Severity, pain locations, symptoms & missed activities" to "Fuerza, zonas, síntomas y lo que perdiste",
@@ -3559,7 +3570,6 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Inicio: %s",
     "Started" to "Empezó",
     "Started %s" to "Inicio %s",
-    "When: %s" to "Cuándo: %s",
     "Started a treatment?" to "¿Empezaste un tratamiento?",
     "Starting elsewhere" to "Desde otro punto",
     "Starts" to "Empieza",
@@ -3796,6 +3806,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "ThermaZone" to "ThermaZone",
     "These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile." to "Estos guías con IA marcan artículos que encajan con tu perfil y los llevan solos a tu muro. Hemos elegido los que mejor te van.",
     "These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away." to "Estas respuestas son el punto de partida. Lo que la app hace cada día sale de Tus listas y el Modelo de riesgo, y la revisión semanal los ajusta al aprender de lo que registras. Editar una sección aquí repite esa página de la configuración y pide a la IA que revise tu perfil al momento.",
+    "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them." to "Se están reescribiendo en tu idioma y no estaban listas cuando se generó este informe. Vuelve a generar el informe en unos minutos para incluirlas.",
     "These are estimates. Tap a food to change it, untick anything we got wrong, and correct the portions before adding." to "Son estimaciones. Toca un alimento para cambiarlo, desmarca lo que no acertamos y corrige las porciones antes de añadir.",
     "These are the two stretches a physiotherapist gives for exactly that. The hand is there to add a little weight, never to pull. Held long enough, the muscle lets go rather than fighting back." to "Son los dos estiramientos que da un fisioterapeuta justo para eso. La mano está para añadir un poco de peso, nunca para tirar. Si se mantiene lo suficiente, el músculo se suelta en vez de resistirse.",
     "These migraines: %s." to "Estas migrañas: %s.",
@@ -4104,6 +4115,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Usage access permission" to "Permiso de uso",
     "Usage access permission needed for phone sleep." to "El sueño del móvil necesita el permiso de uso.",
     "Usage vs Effectiveness" to "Uso frente a eficacia",
+    "Usage vs effectiveness" to "Uso frente a eficacia",
     "Use any relief methods?" to "¿Usaste algún alivio?",
     "Use for insights" to "Usar en Insights",
     "Use search at the top to jump to a specific metric." to "Usa la búsqueda de arriba para ir a una medida.",
@@ -4391,6 +4403,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "When you fell asleep" to "Cuándo te dormiste",
     "When you woke up" to "Cuándo despertaste",
     "When your migraines hit most" to "Cuándo llegan más tus migrañas",
+    "When: %s" to "Cuándo: %s",
     "When?" to "¿Cuándo?",
     "Where" to "Dónde",
     "Where *HIGH* starts." to "Dónde empieza *ALTO.*",
@@ -4468,6 +4481,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Worse — every time" to "Peor, siempre",
     "Worse — sometimes" to "Peor a veces",
     "Worsening — up {0}%" to "Empeorando: sube un {0}%",
+    "Worst" to "Lo peor",
     "Worst day" to "Peor día",
     "Worst of them hit" to "El peor llegó a",
     "Worst season" to "Peor estación",
@@ -4509,6 +4523,9 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Registras tus\n*ataques.*",
     "You logged a migraine %s days ago and it's still open. " to "Anotaste una migraña hace %s días y sigue abierta. ",
     "You logged a migraine 1 day ago and it's still open. " to "Anotaste una migraña hace 1 día y sigue abierta. ",
+)
+
+private fun esStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "No te pierdes nada.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Te pierdes: el recorrido, la ventaja de la IA y tu wearable, hasta que abras Ajustes.",
     "You miss: the tour. Rerun it anytime from Profile." to "Te pierdes: el recorrido. Repítelo cuando quieras desde Perfil.",
@@ -4525,9 +4542,6 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Tu aura",
     "Your Free Trial is Active!" to "¡Tu prueba gratis está activa!",
     "Your Health Insights Assistant" to "Tu asistente de salud",
-)
-
-private fun esStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Tus medicinas",
     "Your Migraine Profile" to "Tu perfil de migraña",
     "Your Personalised Setup" to "Tu configuración",
@@ -4827,6 +4841,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "no comparison" to "sin comparación",
     "no meaningful difference across your symptoms" to "sin diferencia relevante entre tus síntomas",
     "no relief in %s tries" to "sin alivio en %s intentos",
+    "no relief ratings" to "sin valoraciones de alivio",
     "none" to "ninguno",
     "normalised scale" to "escala normaliz.",
     "not enough data" to "faltan datos",
@@ -4934,6 +4949,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "this practitioner" to "este profesional",
     "this week (vs %1\$s)" to "semana (vs %1\$s)",
     "time" to "hora",
+    "times used" to "usos",
     "today" to "hoy",
     "today only" to "solo hoy",
     "tomorrow" to "mañana",
@@ -4948,6 +4964,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "trigger" to "factor",
     "trigger detection based on your health data." to "detección de factores a partir de tus datos de salud.",
     "triptans" to "triptanes",
+    "units" to "unidades",
     "up" to "arriba",
     "up %s ranks" to "%s más arriba",
     "up 1 rank" to "1 más arriba",

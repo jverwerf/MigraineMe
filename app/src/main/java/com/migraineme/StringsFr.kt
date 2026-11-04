@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5011 entries.
+ * 5030 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -444,9 +444,11 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Across %1\$s aura attack%2\$s, as seen through your own eyes" to "Sur %1\$s crise%2\$s avec aura, vue%2\$s par tes yeux",
     "Across %s attacks where you logged more than one pain entry" to "Sur %s crises où tu as noté plus d'un point de douleur",
     "Across %s aura attacks, as seen through your own eyes" to "Sur %s crises avec aura, vues par tes yeux",
+    "Across %s flare days and %s calmer days" to "Sur %1\$s jours de crise et %2\$s jours plus calmes",
     "Across 1 aura attack, as seen through your own eyes" to "Sur 1 crise avec aura, vue par tes yeux",
     "Across {0} attacks with aura, from the patient's own point of view" to "Sur {0} crises avec aura, du point de vue du patient lui-même",
     "Across {0} attacks with more than one timed pain entry, from your full logging history" to "Sur {0} crises avec plus d'une entrée de douleur horodatée, sur tout ton historique",
+    "Across {0} flare days and {1} calmer days" to "Sur {0} jours de crise et {1} jours plus calmes",
     "Active" to "Actif",
     "Active Trigger Breakdown" to "Détail des facteurs actifs",
     "Active Triggers" to "Facteurs actifs",
@@ -715,6 +717,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Attacks logged" to "Crises notées",
     "Attacks ran about %1\$s longer, over %2\$s" to "Les crises ont duré environ %1\$s de plus, sur %2\$s",
     "Attacks ran about as long as usual, over %s" to "Les crises ont duré à peu près comme d'habitude, sur %s",
+    "Attacks rated" to "Crises notées",
     "Attacks starting at %s" to "Crises depuis %s",
     "Attacks with aura" to "Crises avec aura",
     "Attacks, symptoms, warning signs, pain, aura, your notes" to "Crises, symptômes, signes, douleur, aura, tes notes",
@@ -740,6 +743,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Available without a prescription" to "Disponible sans ordonnance",
     "Avatar" to "Avatar",
     "Average" to "Moyenne",
+    "Average /10" to "Moyenne /10",
     "Average Cycle" to "Cycle moyen",
     "Average Cycle (days)" to "Cycle moyen (jours)",
     "Average Cycle Length" to "Durée moyenne",
@@ -1513,13 +1517,13 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Everything you logged as a possible trigger" to "Tout ce que tu as noté comme déclencheur possible",
     "Everything you logged as a possible trigger." to "Tout ce que tu as noté comme déclencheur possible.",
     "Everything's still there, right where you left it." to "Tout est encore là, exactement où tu l'as laissé.",
+)
+
+private fun frStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Excès de café, thé, boissons énergisantes",
     "Excess screen time" to "Trop d'écran",
     "Excessive yawning" to "Bâillements",
-)
-
-private fun frStrings1(): Map<String, String> = mapOf(
     "Exercise" to "Exercice",
     "Exercise & Hormones" to "Sport et hormones",
     "Exercise & cycle" to "Sport et cycle",
@@ -1889,6 +1893,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "How do you\nwant to *start?*" to "Comment veux-tu\n*commencer ?*",
     "How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home." to "Comment gères-tu la migraine au travail ? Conseils pour en parler à l'employeur, tenir pendant un poste ou travailler chez soi.",
     "How each regimen has changed your migraine days" to "Ce que chaque traitement a changé à tes jours",
+    "How hard attacks hit, across the 1–10 scale" to "L'intensité des crises, sur l'échelle de 1 à 10",
     "How hard your migraines hit, across all of them" to "La force de tes migraines, toutes confondues",
     "How it affected you" to "Comment ça t'a touché",
     "How it works" to "Fonctionnement",
@@ -2369,9 +2374,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Migraines" to "Migraines",
     "Migraleve" to "Migraleve",
     "Mild" to "Légère",
-    "No pain" to "Pas de douleur",
     "Mild risk" to "Risque léger",
     "Mild — can push through" to "Légère, ça passe",
+    "Mildest" to "La plus légère",
     "Min" to "Min",
     "Min: %s" to "Min : %s",
     "Mind" to "Mental",
@@ -2588,6 +2593,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "No nutrition source enabled" to "Aucune source pour l'alimentation",
     "No other migraines in the last 30 days" to "Aucune autre migraine sur 30 jours",
     "No other treatments to link to." to "Aucun autre traitement à lier.",
+    "No pain" to "Pas de douleur",
     "No pattern" to "Aucun schéma",
     "No pattern / varies" to "Aucun schéma / varie",
     "No patterns yet" to "Aucune tendance",
@@ -2724,6 +2730,8 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "On %s%% of your calmer days." to "Sur %s%% de tes jours plus calmes.",
     "On %s%% of your migraine-free days." to "Sur %s%% de tes jours sans migraine.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Sur Android : ouvre MigraineMe, va sur l'écran d'abonnement et saisis le code %1\$s.",
+    "On calmer days" to "Jours plus calmes",
+    "On flare days" to "Jours de crise",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Seulement les bons jours. Il te faut un bout de mur dégagé, un lit ou un tapis, et une balle de tennis pour le relâchement à la fin.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "Les bons jours, ou quand la nuque est tendue après un long moment au bureau. Pas pendant une crise si bouger la tête aggrave la douleur.",
     "On track" to "En bonne voie",
@@ -2820,6 +2828,8 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pain locations" to "Zones de douleur",
     "Pain positions" to "Zones de douleur",
     "Pain response" to "Réponse douleur",
+    "Pain response — what brought it down" to "Réponse douleur — ce qui l'a fait baisser",
+    "Pain response — what pushed it up" to "Réponse douleur — ce qui l'a fait monter",
     "Pain rose about %1\$s points within 2 hours, over %2\$s" to "La douleur a monté d'environ %1\$s points en 2 heures, sur %2\$s",
     "Pain update" to "Évolution",
     "Paint the Picture" to "Dessine la scène",
@@ -3010,6 +3020,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Prochlorperazine" to "Prochlorpérazine",
     "Prodrome" to "Prodrome",
     "Prodrome adjustments" to "Ajustements des prodromes",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Prodromes",
     "Prodromes" to "Prodromes",
     "Product not found" to "Introuvable",
@@ -3021,9 +3034,6 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Profile — Account, Subscription & AI Setup" to "Profil — compte, abonnement et config IA",
     "Progressive relaxation" to "Relaxation progressive",
     "Propranolol" to "Propranolol",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Protein" to "Protéines",
     "Protein dense" to "Riche en protéines",
     "Protein high" to "Protéines élevées",
@@ -3366,6 +3376,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Severity" to "Intensité",
     "Severity Distribution" to "Répartition",
     "Severity colour: green mild, amber medium, rose severe." to "Couleur : vert léger, orange moyen, rouge fort.",
+    "Severity spread" to "Répartition de l'intensité",
     "Severity {0}" to "Intensité {0}",
     "Severity —" to "Intensité —",
     "Severity, pain locations, symptoms & missed activities" to "Intensité, zones, symptômes et activités manquées",
@@ -3559,7 +3570,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Début : %s",
     "Started" to "Commencée",
     "Started %s" to "Début %s",
-    "When: %s" to "Quand : %s",
     "Started a treatment?" to "Un traitement commencé ?",
     "Starting elsewhere" to "Depuis ailleurs",
     "Starts" to "Commence",
@@ -3796,6 +3806,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "ThermaZone" to "ThermaZone",
     "These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile." to "Ces guides IA repèrent les articles qui collent à ton profil et les ajoutent seuls à ton fil. Nous avons présélectionné les plus adaptés.",
     "These answers are the starting point. What the app actually does each day comes from Manage Items and Risk Model, and the weekly check-in nudges those as it learns from what you log. Editing a section here re-runs the setup for that page and asks the AI to re-check your profile straight away." to "Ces réponses sont le point de départ. Ce que l'appli fait chaque jour vient de Tes listes et du Modèle, et le bilan hebdo les ajuste en apprenant de ce que tu notes. Modifier une section ici relance cette page du réglage et demande à l'IA de revoir ton profil tout de suite.",
+    "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them." to "Elles sont en cours de réécriture dans ta langue et n'étaient pas prêtes lors de la création de ce rapport. Génère le rapport à nouveau dans quelques minutes pour les inclure.",
     "These are estimates. Tap a food to change it, untick anything we got wrong, and correct the portions before adding." to "Ce sont des estimations. Touchez un aliment pour le changer, décochez ce qui est faux et corrigez les portions avant d'ajouter.",
     "These are the two stretches a physiotherapist gives for exactly that. The hand is there to add a little weight, never to pull. Held long enough, the muscle lets go rather than fighting back." to "Ce sont les deux étirements qu'un kinésithérapeute donne exactement pour ça. La main est là pour ajouter un peu de poids, jamais pour tirer. Tenu assez longtemps, le muscle lâche au lieu de résister.",
     "These migraines: %s." to "Ces migraines : %s.",
@@ -4104,6 +4115,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Usage access permission" to "Accès à l'usage",
     "Usage access permission needed for phone sleep." to "Le sommeil du téléphone exige l'accès à l'usage.",
     "Usage vs Effectiveness" to "Usage vs efficacité",
+    "Usage vs effectiveness" to "Usage et efficacité",
     "Use any relief methods?" to "Des soulagements ?",
     "Use for insights" to "Pour les analyses",
     "Use search at the top to jump to a specific metric." to "Utilise la recherche en haut pour aller à une mesure.",
@@ -4391,6 +4403,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "When you fell asleep" to "Quand tu t'es endormi",
     "When you woke up" to "Quand tu t'es réveillé",
     "When your migraines hit most" to "Quand tes migraines frappent le plus",
+    "When: %s" to "Quand : %s",
     "When?" to "Quand ?",
     "Where" to "Où",
     "Where *HIGH* starts." to "Où commence *ÉLEVÉ.*",
@@ -4468,6 +4481,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Worse — every time" to "Pire — à chaque fois",
     "Worse — sometimes" to "Pire parfois",
     "Worsening — up {0}%" to "Pire — en hausse de {0}%",
+    "Worst" to "Le pire",
     "Worst day" to "Pire jour",
     "Worst of them hit" to "La pire a atteint",
     "Worst season" to "Pire saison",
@@ -4509,6 +4523,9 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Tu notes tes\n*crises.*",
     "You logged a migraine %s days ago and it's still open. " to "Tu as noté une migraine il y a %s jours, elle est encore ouverte. ",
     "You logged a migraine 1 day ago and it's still open. " to "Tu as noté une migraine il y a 1 jour, elle est encore ouverte. ",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "Tu ne rates rien.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Tu rates : la visite, l'avance de l'IA et ta montre, jusqu'à ouvrir les Réglages.",
     "You miss: the tour. Rerun it anytime from Profile." to "Tu rates : la visite. Relance-la quand tu veux depuis Profil.",
@@ -4525,9 +4542,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Your Aura" to "Ton aura",
     "Your Free Trial is Active!" to "Ton essai gratuit est actif !",
     "Your Health Insights Assistant" to "Ton assistant santé",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Your Medicines" to "Tes médicaments",
     "Your Migraine Profile" to "Ton profil migraine",
     "Your Personalised Setup" to "Ta configuration",
@@ -4827,6 +4841,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "no comparison" to "sans comparaison",
     "no meaningful difference across your symptoms" to "pas de différence notable selon tes symptômes",
     "no relief in %s tries" to "aucun soulagement en %s essais",
+    "no relief ratings" to "aucune évaluation du soulagement",
     "none" to "aucun",
     "normalised scale" to "échelle normalisée",
     "not enough data" to "données insuff.",
@@ -4934,6 +4949,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "this practitioner" to "ce praticien",
     "this week (vs %1\$s)" to "semaine (vs %1\$s)",
     "time" to "heure",
+    "times used" to "utilisations",
     "today" to "aujourd'hui",
     "today only" to "aujourd'hui",
     "tomorrow" to "demain",
@@ -4948,6 +4964,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "trigger" to "facteur",
     "trigger detection based on your health data." to "détection de facteurs à partir de tes données santé.",
     "triptans" to "triptans",
+    "units" to "unités",
     "up" to "haut",
     "up %s ranks" to "hausse de %s",
     "up 1 rank" to "hausse de 1",

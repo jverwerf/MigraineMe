@@ -174,6 +174,12 @@ export type ReportData = {
   painMigration: {
     attacks_analysed: number; onset_locations: string[];
     spread_locations: string[]; median_minutes_to_peak: number | null;
+    /** Chronic half: inside a long attack, where the pain sat on flare days
+     *  vs the calmer logged days (>= 3 of each). attacks_analysed may be 0
+     *  when only this half cleared, and the onset/spread arrays are then
+     *  empty. Older rows predate the columns, hence optional. */
+    flare_locations?: string[] | null; calm_locations?: string[] | null;
+    flare_days?: number | null; calm_days?: number | null;
   } | null;
   /** Pain-response engine output (intraday_response_stats). Every row already
    *  passed the engine's honesty gates, so the report renders what it gets and
