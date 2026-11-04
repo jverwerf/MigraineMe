@@ -243,6 +243,24 @@ serve(async (req) => {
         return json({ patient: patientOut(patient, integ, matched_by) });
       }
 
+      // The button inside Cliniko lands on me-practitioner.com/cliniko/?patient_id=…
+      // which asks every backend: is this Cliniko patient one of my clients?
+      case "find_link": {
+        const pid = String(body.patient_id || "").replace(/\D/g, "");
+        if (!pid) throw new UserError("patient_id missing");
+        const { data: links } = await db.from("practitioner_clients").select("id,practitioner_id,status")
+          .in("practitioner_id", myIds).eq("status", "active");
+        const ids = (links || []).map((l: any) => l.id);
+        if (!ids.length) return json({ link: null });
+        const { data: hits } = await db.from("practitioner_integration_patients").select("link_id,external_name")
+          .eq("provider", PROVIDER).eq("external_id", pid).in("link_id", ids).limit(1);
+        const hit = hits?.[0];
+        if (!hit) return json({ link: null });
+        const link = (links || []).find((l: any) => l.id === hit.link_id);
+        const row = rows.find((r) => r.id === link?.practitioner_id);
+        return json({ link: { id: hit.link_id, app: APP_SCOPED ? (row?.app_id || "vertigo") : "migraine", name: hit.external_name } });
+      }
+
       case "unmatch": {
         const link = await needLink();
         await db.from("practitioner_integration_patients").delete().eq("link_id", link.id).eq("provider", PROVIDER);
