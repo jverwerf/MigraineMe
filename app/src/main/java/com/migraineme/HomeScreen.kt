@@ -313,7 +313,11 @@ fun HomeScreenRoot(
                         ending = endingMigraine,
                         onUpgrade = onNavigateToPaywall,
                         onAdd = { row, kind ->
-                            val start = java.net.URLEncoder.encode(row.startAt, "UTF-8")
+                            // The card only shows OPEN migraines: what gets added
+                            // is happening now (day 5 of a long attack is day 5,
+                            // not the onset day, or Insights never sees the flare
+                            // days), so every entry defaults to now.
+                            val start = java.net.URLEncoder.encode(java.time.Instant.now().toString(), "UTF-8")
                             when (kind) {
                                 QuickAddKind.AURA -> onNavigateRoute("${Routes.JOURNAL_ADD_AURA}/${row.id}/$start")
                                 QuickAddKind.PAIN -> onNavigateRoute("${Routes.JOURNAL_ADD_PAIN}/${row.id}/$start")

@@ -317,8 +317,11 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     var auraAddFor by remember { mutableStateOf<JournalEvent.Migraine?>(null) }
     val doQuickAdd: (JournalEvent.Migraine, QuickAddKind) -> Unit = { ev, kind ->
         val id = ev.row.id
+        // Still open = still happening: the entry defaults to now so a long
+        // attack gets its day-by-day entries. An ended one keeps its start.
         val start = java.net.URLEncoder.encode(
-            ev.row.startAt ?: java.time.Instant.now().toString(), "UTF-8"
+            if (ev.row.endAt.isNullOrBlank()) java.time.Instant.now().toString()
+            else (ev.row.startAt ?: java.time.Instant.now().toString()), "UTF-8"
         )
         when (kind) {
             QuickAddKind.AURA -> auraAddFor = ev
@@ -331,7 +334,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     auraAddFor?.let { m ->
         JournalAuraAddSheet(
             authVm = authVm, logVm = vm,
-            migraineId = m.row.id, migraineStartAtIso = m.row.startAt,
+            migraineId = m.row.id, migraineStartAtIso = if (m.row.endAt.isNullOrBlank()) java.time.Instant.now().toString() else m.row.startAt,
             onClose = { auraAddFor = null }
         )
     }
