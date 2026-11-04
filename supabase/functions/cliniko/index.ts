@@ -117,11 +117,16 @@ serve(async (req) => {
     const { data: { user }, error: uerr } = await asUser.auth.getUser();
     if (uerr || !user) throw new UserError("Sign in first.", 401);
     const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-    let pq = db.from("practitioners").select("id,display_name,practice_name").eq("user_id", user.id);
-    if (APP_SCOPED) pq = pq.eq("app_id", appId!);
-    const { data: prs } = await pq.limit(1);
-    const me = prs?.[0];
-    if (!me) throw new UserError("That account is not set up as a practitioner.", 403);
+    // Every practitioner row this person has (MeSeries: one per app). The
+    // Cliniko connection is theirs as a PERSON (Jordy 2026-11-04: one key,
+    // entered once, every board); client links are checked against all
+    // their rows, so the same key serves every app board.
+    const { data: prs } = await db.from("practitioners")
+      .select("id,display_name,practice_name" + (APP_SCOPED ? ",app_id" : "")).eq("user_id", user.id);
+    const rows: any[] = prs || [];
+    if (!rows.length) throw new UserError("That account is not set up as a practitioner.", 403);
+    const me = (APP_SCOPED && rows.find((r) => r.app_id === appId)) || rows[0];
+    const myIds: string[] = rows.map((r) => r.id);
 
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "");
@@ -129,7 +134,7 @@ serve(async (req) => {
 
     const loadInteg = async (): Promise<Integration | null> => {
       const { data } = await db.from("practitioner_integrations").select("*")
-        .eq("practitioner_id", me.id).eq("provider", PROVIDER).limit(1);
+        .eq("user_id", user.id).eq("provider", PROVIDER).limit(1);
       return (data?.[0] as Integration) || null;
     };
     const publicInteg = (i: Integration | null) => i ? {
@@ -145,7 +150,7 @@ serve(async (req) => {
       const linkId = String(body.link_id || "");
       if (!linkId) throw new UserError("link_id missing");
       const { data } = await db.from("practitioner_clients").select("id,user_id,status,scopes")
-        .eq("id", linkId).eq("practitioner_id", me.id).limit(1);
+        .eq("id", linkId).in("practitioner_id", myIds).limit(1);
       const link = data?.[0];
       if (!link || link.status !== "active") throw new UserError("That client is not connected to you.", 403);
       return link as { id: string; user_id: string; scopes: string[] };
@@ -186,19 +191,20 @@ serve(async (req) => {
         let account: string | null = null;
         try { const b = await ck(probe, "/businesses?per_page=1"); account = b?.businesses?.[0]?.business_name || null; } catch (_) { /* optional */ }
         const row = {
-          ...stamp, practitioner_id: me.id, provider: PROVIDER, api_key: key, shard,
+          ...stamp, practitioner_id: me.id, user_id: user.id, login_email: (user.email || "").toLowerCase() || null,
+          provider: PROVIDER, api_key: key, shard,
           account_name: account, user_name: [u.first_name, u.last_name].filter(Boolean).join(" "), user_email: u.email || null,
           connected_at: new Date().toISOString(), last_used_at: new Date().toISOString(), last_error: null,
         };
-        const { error } = await db.from("practitioner_integrations").upsert(row as any, { onConflict: "practitioner_id,provider" });
+        const { error } = await db.from("practitioner_integrations").upsert(row as any, { onConflict: "user_id,provider" });
         if (error) throw new Error(error.message);
         return json(publicInteg(await loadInteg()));
       }
 
       case "disconnect": {
-        await db.from("practitioner_integrations").delete().eq("practitioner_id", me.id).eq("provider", PROVIDER);
-        // the patient matches belong to the connection
-        const { data: links } = await db.from("practitioner_clients").select("id").eq("practitioner_id", me.id);
+        await db.from("practitioner_integrations").delete().eq("user_id", user.id).eq("provider", PROVIDER);
+        // the patient matches belong to the connection, across all their app rows
+        const { data: links } = await db.from("practitioner_clients").select("id").in("practitioner_id", myIds);
         const ids = (links || []).map((l: any) => l.id);
         if (ids.length) await db.from("practitioner_integration_patients").delete().in("link_id", ids).eq("provider", PROVIDER);
         return json({ connected: false });
