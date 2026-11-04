@@ -3559,6 +3559,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Inizio: %s",
     "Started" to "Iniziata",
     "Started %s" to "Inizio %s",
+    "When: %s" to "Quando: %s",
     "Started a treatment?" to "Iniziato un trattamento?",
     "Starting elsewhere" to "Da un altro punto",
     "Starts" to "Inizia",

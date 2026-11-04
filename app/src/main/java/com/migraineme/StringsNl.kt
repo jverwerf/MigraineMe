@@ -3559,6 +3559,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Begon %s",
+    "When: %s" to "Wanneer: %s",
     "Started a treatment?" to "Een behandeling gestart?",
     "Starting elsewhere" to "Vanaf elders",
     "Starts" to "Begint",

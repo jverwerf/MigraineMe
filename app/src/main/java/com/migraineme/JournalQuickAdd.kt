@@ -350,7 +350,7 @@ private fun QuickPainEntryCard(
         }
 
         AppDateTimePicker(
-            label = entry.startAtIso?.let { "When: ${formatQuickAddIso(it)}" } ?: t("Set time")
+            label = entry.startAtIso?.let { t("When: %s", formatQuickAddIso(it)) } ?: t("Set time")
         ) { entry.startAtIso = it }
         Spacer(Modifier.height(8.dp))
 

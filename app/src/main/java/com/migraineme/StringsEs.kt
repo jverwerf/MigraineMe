@@ -3559,6 +3559,7 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Inicio: %s",
     "Started" to "Empezó",
     "Started %s" to "Inicio %s",
+    "When: %s" to "Cuándo: %s",
     "Started a treatment?" to "¿Empezaste un tratamiento?",
     "Starting elsewhere" to "Desde otro punto",
     "Starts" to "Empieza",

@@ -3559,6 +3559,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Début : %s",
     "Started" to "Commencée",
     "Started %s" to "Début %s",
+    "When: %s" to "Quand : %s",
     "Started a treatment?" to "Un traitement commencé ?",
     "Starting elsewhere" to "Depuis ailleurs",
     "Starts" to "Commence",

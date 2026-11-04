@@ -3559,6 +3559,7 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Início: %s",
     "Started" to "Começou",
     "Started %s" to "Início %s",
+    "When: %s" to "Quando: %s",
     "Started a treatment?" to "Começaste um tratamento?",
     "Starting elsewhere" to "Desde outro ponto",
     "Starts" to "Começa",

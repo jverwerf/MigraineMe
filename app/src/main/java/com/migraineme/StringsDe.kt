@@ -3559,6 +3559,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Start %s",
+    "When: %s" to "Wann: %s",
     "Started a treatment?" to "Behandlung begonnen?",
     "Starting elsewhere" to "Ab anderer Stelle",
     "Starts" to "Beginnt",

@@ -257,7 +257,7 @@ private fun PainEntryCard(
 
         if (index > 0) {
             AppDateTimePicker(
-                label = entry.startAtIso?.let { "When: ${formatIsoDdMmYyHm(it)}" } ?: t("Set time")
+                label = entry.startAtIso?.let { t("When: %s", formatIsoDdMmYyHm(it)) } ?: t("Set time")
             ) { vm.setPainEntryTime(entry.id, it) }
             Spacer(Modifier.height(8.dp))
         }

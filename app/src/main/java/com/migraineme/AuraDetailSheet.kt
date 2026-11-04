@@ -251,7 +251,7 @@ fun AuraDetailSheet(
                 )
                 Spacer(Modifier.height(8.dp))
                 AppDateTimePicker(
-                    label = momentAtIso?.let { "When: ${formatAuraMomentIso(it)}" } ?: t("Now (tap to change)")
+                    label = momentAtIso?.let { t("When: %s", formatAuraMomentIso(it)) } ?: t("Now (tap to change)")
                 ) { momentAtIso = it }
             }
 
