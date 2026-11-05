@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5030 entries.
+ * 5031 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -4977,6 +4977,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "usually over by %1\$s %2\$s" to "meestal voorbij %1\$s %2\$s",
     "usually over by %1\$s, around %2\$s" to "meestal voorbij %1\$s rond %2\$s",
     "verify" to "nakijken",
+    "vs %s last" to "vs %s vorige",
     "vs %s last week" to "vs %s vorige wk",
     "warm-up protocols" to "warming-uproutines",
     "was %s" to "was %s",

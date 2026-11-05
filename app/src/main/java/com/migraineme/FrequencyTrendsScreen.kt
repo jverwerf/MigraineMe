@@ -90,12 +90,12 @@ fun FrequencyHeroSection(vm: InsightsViewModel) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 val perMonth = if (byMonth.isNotEmpty()) migraines.size.toFloat() / byMonth.size else 0f
                 StatColumn("${ws.thisWeekCount}", "This Week",
-                    sub = "vs ${ws.lastWeekCount} last",
+                    sub = t("vs %s last", ws.lastWeekCount),
                     color = Color.White)
                 StatColumn(String.format("%.1f", perMonth), "Per Month",
                     color = AppTheme.AccentPurple)
                 StatColumn("${ws.totalLogged}", "Total",
-                    sub = "all time",
+                    sub = t("all time"),
                     color = AppTheme.AccentPurple)
             }
         }

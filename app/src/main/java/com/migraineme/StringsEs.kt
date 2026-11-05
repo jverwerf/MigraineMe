@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5030 entries.
+ * 5031 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -4977,6 +4977,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "usually over by %1\$s %2\$s" to "suele acabar %1\$s %2\$s",
     "usually over by %1\$s, around %2\$s" to "suele acabar %1\$s hacia las %2\$s",
     "verify" to "revisar",
+    "vs %s last" to "vs %s antes",
     "vs %s last week" to "vs %s la pasada",
     "warm-up protocols" to "rutinas de calentamiento",
     "was %s" to "era %s",

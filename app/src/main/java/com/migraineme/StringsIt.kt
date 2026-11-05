@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5030 entries.
+ * 5031 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -4977,6 +4977,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "usually over by %1\$s %2\$s" to "di solito finisce %1\$s %2\$s",
     "usually over by %1\$s, around %2\$s" to "di solito finisce %1\$s verso le %2\$s",
     "verify" to "verifica",
+    "vs %s last" to "vs %s prima",
     "vs %s last week" to "vs %s sett. scorsa",
     "warm-up protocols" to "protocolli di riscaldamento",
     "was %s" to "era %s",

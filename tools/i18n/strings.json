@@ -6077,6 +6077,16 @@
     "count": 2
   },
   {
+    "en": "all time",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:3320",
+      "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:98"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
     "en": "avg %s",
     "class": "hard",
     "sites": [
@@ -36101,15 +36111,6 @@
     "count": 1
   },
   {
-    "en": "all time",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/InsightsScreen.kt:3320"
-    ],
-    "max_len": 14,
-    "count": 1
-  },
-  {
     "en": "and %1$s more",
     "class": "hard",
     "sites": [
@@ -38409,6 +38410,15 @@
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:293"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "vs %s last",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:93"
     ],
     "max_len": 14,
     "count": 1

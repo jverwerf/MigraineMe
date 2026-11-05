@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5030 entries.
+ * 5031 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -4977,6 +4977,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "usually over by %1\$s %2\$s" to "meist vorbei %1\$s %2\$s",
     "usually over by %1\$s, around %2\$s" to "meist vorbei %1\$s gegen %2\$s",
     "verify" to "prüfen",
+    "vs %s last" to "vs %s zuvor",
     "vs %s last week" to "vs %s letzte Wo",
     "warm-up protocols" to "Aufwärmroutinen",
     "was %s" to "war %s",
