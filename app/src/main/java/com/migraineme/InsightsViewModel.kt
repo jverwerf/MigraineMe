@@ -2865,7 +2865,7 @@ class InsightsViewModel : ViewModel() {
                 }
 
                 val zone = ZoneId.systemDefault()
-                val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                val dayNames = (1..7).map { java.time.DayOfWeek.of(it).getDisplayName(java.time.format.TextStyle.SHORT, appLocale()) }
                 val counts = IntArray(7)
 
                 for (m in migs) {
