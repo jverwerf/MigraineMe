@@ -237,7 +237,7 @@ fun MonitorRiskScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(t(trigger.name), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(prettyLabel(trigger.name), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text("${trigger.score}", color = sevColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
                                         Text(t(trigger.severity), color = sevColor, style = MaterialTheme.typography.labelSmall)

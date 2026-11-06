@@ -370,7 +370,7 @@ private fun DetailTriggersCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            t.name,
+                            prettyLabel(t.name),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             maxLines = 1,

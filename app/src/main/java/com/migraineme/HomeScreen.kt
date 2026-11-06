@@ -1008,7 +1008,7 @@ private fun ActiveTriggersCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            tSync(t.name),
+                            prettyLabel(t.name),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             maxLines = 1,
