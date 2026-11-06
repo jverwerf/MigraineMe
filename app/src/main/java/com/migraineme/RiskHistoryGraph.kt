@@ -493,7 +493,7 @@ fun RiskHistoryGraph(
                                 drawIntoCanvas { canvas ->
                                     val maxTextLen = segH - 4f
                                     val truncated = run {
-                                        val txt = t.name
+                                        val txt = prettyLabel(t.name)
                                         if (labelPaint.measureText(txt) <= maxTextLen) txt
                                         else {
                                             var end = txt.length
