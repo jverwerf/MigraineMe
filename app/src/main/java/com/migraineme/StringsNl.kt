@@ -341,7 +341,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "7 days" to "7 dagen",
     "7-Day Forecast" to "7-daagse weer",
     "7-Day Risk Outlook" to "Risico 7 dagen",
-    "7-day forecast" to "7-daagse weer",
+    "7-day forecast" to "7-daagse voorspelling",
     "7-day outlook" to "Blik op 7 dagen",
     "7-day risk forecast" to "7-daagse risicovoorspelling",
     "7-day risk outlook" to "Risico 7 dagen",

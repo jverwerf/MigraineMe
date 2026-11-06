@@ -341,7 +341,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "7 days" to "7 giorni",
     "7-Day Forecast" to "Meteo 7 giorni",
     "7-Day Risk Outlook" to "Rischio a 7 giorni",
-    "7-day forecast" to "Meteo 7 giorni",
+    "7-day forecast" to "Previsioni 7 giorni",
     "7-day outlook" to "Sguardo 7 giorni",
     "7-day risk forecast" to "Previsione rischio 7 giorni",
     "7-day risk outlook" to "Rischio a 7 giorni",
