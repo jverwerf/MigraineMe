@@ -389,7 +389,7 @@ private fun DetailTriggersCard(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                t.severity,
+                                tSync(t.severity),
                                 color = sevColor,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                             )

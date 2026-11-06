@@ -715,7 +715,7 @@ fun RiskHistoryGraph(
                         Column {
                             Text(dateLabel, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                             Text(prettyLabel(bar.trigger.name), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("%1\$s · %2\$s pts", bar.trigger.severity.uppercase(), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s · %2\$s pts", tSync(bar.trigger.severity.uppercase()), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
