@@ -40,6 +40,11 @@ LANGS = {
     "fr": ("Fr", "FR", "French"),
     "it": ("It", "IT", "Italian"),
     "pt": ("Pt", "PT", "Portuguese"),
+    "ja": ("Ja", "JA", "Japanese"),
+    "ko": ("Ko", "KO", "Korean"),
+    "tr": ("Tr", "TR", "Turkish"),
+    "pl": ("Pl", "PL", "Polish"),
+    "zh": ("Zh", "ZH", "Traditional Chinese"),
 }
 
 HEADER = '''package com.migraineme
@@ -134,9 +139,9 @@ TS_HEADER = '''// Backend translation tables, keyed by the English source text.
 // English that was passed in, so a half-translated language is safe to ship
 // and canonical data stays English everywhere. See LangPrefs.kt.
 
-export type Lang = "en" | "de" | "es" | "nl" | "fr" | "it" | "pt";
+export type Lang = "en" | "de" | "es" | "nl" | "fr" | "it" | "pt" | "ja" | "ko" | "tr" | "pl" | "zh";
 
-export const LANGS: readonly Lang[] = ["en", "de", "es", "nl", "fr", "it", "pt"];
+export const LANGS: readonly Lang[] = ["en", "de", "es", "nl", "fr", "it", "pt", "ja", "ko", "tr", "pl", "zh"];
 
 export const TABLES: Record<string, Record<string, string>> = {
 '''

@@ -27,14 +27,25 @@ import kotlinx.coroutines.flow.asStateFlow
  * Android's own per-app locale, the StateFlow means a language change recomposes
  * live — no activity recreate, no relaunch.
  */
-enum class Lang(val code: String, val endonym: String, val flag: String) {
+enum class Lang(val code: String, val endonym: String, val flag: String, val localeTag: String = code) {
     EN("en", "English", "\uD83C\uDDEC\uD83C\uDDE7"),
     DE("de", "Deutsch", "\uD83C\uDDE9\uD83C\uDDEA"),
     ES("es", "Español", "\uD83C\uDDEA\uD83C\uDDF8"),
     NL("nl", "Nederlands", "\uD83C\uDDF3\uD83C\uDDF1"),
     FR("fr", "Français", "\uD83C\uDDEB\uD83C\uDDF7"),
     IT("it", "Italiano", "\uD83C\uDDEE\uD83C\uDDF9"),
-    PT("pt", "Português", "\uD83C\uDDF5\uD83C\uDDF9");
+    PT("pt", "Português", "\uD83C\uDDF5\uD83C\uDDF9"),
+    JA("ja", "日本語", "\uD83C\uDDEF\uD83C\uDDF5"),
+    KO("ko", "한국어", "\uD83C\uDDF0\uD83C\uDDF7"),
+    TR("tr", "Türkçe", "\uD83C\uDDF9\uD83C\uDDF7"),
+    PL("pl", "Polski", "\uD83C\uDDF5\uD83C\uDDF1"),
+
+    // One Chinese table, written as Traditional for Taiwan. The code stays bare
+    // so it fits every language list, but the locale must name the region:
+    // a bare "zh" makes Android draw shared characters in their mainland shapes
+    // and format dates for the mainland. A globe, not a flag, because some
+    // regions blank out the flag emoji.
+    ZH("zh", "繁體中文", "\uD83C\uDF0F", "zh-TW");
 
     companion object {
         fun fromCode(code: String?): Lang? =

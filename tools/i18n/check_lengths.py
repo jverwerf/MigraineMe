@@ -18,11 +18,21 @@ otherwise look like a translation that simply reads oddly.
 
 import json
 import os
+import re
 import sys
 
 STRINGS = "tools/i18n/strings.json"
 TRANS = "tools/i18n/translations"
-LANGS = ["de", "es", "nl", "fr", "it", "pt"]
+LANGS = ["de", "es", "nl", "fr", "it", "pt", "ja", "ko", "tr", "pl", "zh"]
+
+# Hanzi, kana and hangul take about 1.8x the width of a Latin letter, so counting
+# characters would wave through a label that clips on screen.
+WIDE = re.compile(r"[\u1100-\u11ff\u2e80-\u9fff\uac00-\ud7a3\uf900-\ufaff\uff00-\uffef]")
+
+
+def width(s):
+    wide = len(WIDE.findall(s))
+    return round(wide * 1.8 + (len(s) - wide))
 
 # Rendered width is not character count: German and Portuguese carry more wide
 # glyphs and more capitals than English. A hard-class string that merely equals
@@ -54,17 +64,18 @@ def main():
 
         over, tight, unknown = [], [], []
         for en, translated in table.items():
-            e = spec.get(en)
+            # "<key>|few" and friends are plural forms of <key>, same budget.
+            e = spec.get(en.split("|")[0])
             if e is None:
                 unknown.append(en)
                 continue
-            n = len(translated)
+            n = width(translated)
             if n > e["max_len"]:
                 over.append((en, translated, n, e["max_len"], e["class"]))
             elif e["class"] == "hard" and n > e["max_len"] * TIGHT:
                 tight.append((en, translated, n, e["max_len"]))
 
-        done = sum(1 for k in table if k in spec)
+        done = sum(1 for k in table if k in spec)  # plural variants do not count
         pct = 100.0 * done / total if total else 0.0
         status = "FAIL" if over else "ok"
         print(f"\n{lang}: {done}/{total} translated ({pct:.1f}%)  overflow={len(over)}  tight={len(tight)}  [{status}]")

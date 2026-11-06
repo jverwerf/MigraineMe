@@ -31,6 +31,11 @@ object Strings {
         Lang.FR to FR_STRINGS,
         Lang.IT to IT_STRINGS,
         Lang.PT to PT_STRINGS,
+        Lang.JA to JA_STRINGS,
+        Lang.KO to KO_STRINGS,
+        Lang.TR to TR_STRINGS,
+        Lang.PL to PL_STRINGS,
+        Lang.ZH to ZH_STRINGS,
     )
 
     /**
@@ -58,7 +63,38 @@ object Strings {
         val hit = TABLES[lang]?.get(en)
         if (hit != null) return hit
         missing.add("${lang.code} $en")
+        if (BuildConfig.DEBUG) android.util.Log.d("I18N_MISS", "${lang.code} $en")
         return englishOf(en)
+    }
+
+    /**
+     * Plural forms, for languages where "add an s" is not the rule. The plain key
+     * holds the language's general form and a table may add "<key>|one",
+     * "<key>|few" and so on; the count is the first numeric argument. Doing it
+     * here keeps every call site as plain English, and any key without a variant
+     * simply uses the plain form. Only Polish has variants today.
+     */
+    private fun resolveWithCount(lang: Lang, en: String, args: Array<out Any?>): String {
+        val form = pluralForm(lang, args) ?: return resolve(lang, en)
+        return TABLES[lang]?.get("$en|$form") ?: resolve(lang, en)
+    }
+
+    private fun pluralForm(lang: Lang, args: Array<out Any?>): String? {
+        if (lang != Lang.PL) return null
+        val n = args.firstNotNullOfOrNull { arg ->
+            when (arg) {
+                is Int -> arg.toLong()
+                is Long -> arg
+                is String -> arg.trim().toLongOrNull()
+                else -> null
+            }
+        } ?: return null
+        val tens = n % 100
+        return when {
+            n == 1L -> "one"
+            n % 10 in 2..4 && tens !in 12..14 -> "few"
+            else -> null
+        }
     }
 
     /**
@@ -127,7 +163,7 @@ object Strings {
     @Composable
     fun t(en: String, vararg args: Any?): String {
         val lang by LangPrefs.lang.collectAsState()
-        return format(resolve(lang, en), args)
+        return format(resolveWithCount(lang, en, args), args)
     }
 
     /** Non-composable equivalent of t(). */
@@ -135,7 +171,7 @@ object Strings {
 
     /** Non-composable equivalent of t() with arguments. */
     fun tSync(en: String, vararg args: Any?): String =
-        format(resolve(LangPrefs.get(), en), args)
+        format(resolveWithCount(LangPrefs.get(), en, args), args)
 
     /**
      * A malformed placeholder in a translation must never take down a screen, so
@@ -170,11 +206,11 @@ fun tSync(en: String, vararg args: Any?): String = Strings.tSync(en, *args)
  * what locales are for — prefer date formatters built with this over
  * translation-table entries for "Mon"/"Tue"/….
  */
-fun appLocale(): java.util.Locale = java.util.Locale.forLanguageTag(LangPrefs.get().code)
+fun appLocale(): java.util.Locale = java.util.Locale.forLanguageTag(LangPrefs.get().localeTag)
 
 /** Composable variant: recomposes the caller when the language changes. */
 @Composable
 fun rememberAppLocale(): java.util.Locale {
     val lang by LangPrefs.lang.collectAsState()
-    return java.util.Locale.forLanguageTag(lang.code)
+    return java.util.Locale.forLanguageTag(lang.localeTag)
 }

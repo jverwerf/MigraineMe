@@ -72,7 +72,7 @@ object CertaintyWords {
     )
 
     /**
-     * The frequency vocabulary no table carries, in the six shipped languages.
+     * The frequency vocabulary no table carries, in the shipped languages.
      * Recognition only: adding a spelling here can rescue a level, it can never
      * re-point one, because every spelling under a level means that level in
      * every language it appears in.
@@ -91,6 +91,11 @@ object CertaintyWords {
             "À chaque fois", "A chaque fois", "Chaque fois", "Toujours", // fr
             "Ogni volta", "Tutte le volte", "Sempre",                  // it
             "Todas as vezes", "De cada vez",                           // pt
+            "毎回", "いつも",  // ja
+            "매번", "항상",  // ko
+            "Her zaman", "Her seferinde",  // tr
+            "Za każdym razem", "Zawsze",  // pl
+            "每次", "總是",  // zh
         )
         // OFTEN
         add(
@@ -102,6 +107,11 @@ object CertaintyWords {
             "Souvent", "Fréquemment",                                  // fr
             "Spesso", "Frequentemente",                                // it
             "Muitas vezes", "Com frequência",                          // pt
+            "よく", "頻繁に", "しばしば",  // ja
+            "자주", "종종",  // ko
+            "Sık sık", "Sıklıkla",  // tr
+            "Często",  // pl
+            "經常", "常常",  // zh
         )
         // SOMETIMES
         add(
@@ -113,6 +123,11 @@ object CertaintyWords {
             "Parfois", "Quelquefois",                                  // fr
             "A volte", "Talvolta",                                     // it
             "Às vezes", "As vezes", "Por vezes",                       // pt
+            "時々", "ときどき",  // ja
+            "가끔", "때때로",  // ko
+            "Bazen",  // tr
+            "Czasami", "Czasem",  // pl
+            "有時", "有時候",  // zh
         )
         // RARELY
         add(
@@ -124,6 +139,11 @@ object CertaintyWords {
             "Rarement",                                                // fr
             "Raramente", "Di rado",                                    // it
             "Raras vezes",                                             // pt
+            "まれに", "めったにない",  // ja
+            "드물게", "거의 없음",  // ko
+            "Nadiren",  // tr
+            "Rzadko",  // pl
+            "很少", "極少",  // zh
         )
         // NO
         add(
@@ -135,6 +155,11 @@ object CertaintyWords {
             "Jamais", "Non",                                           // fr
             "Mai",                                                     // it
             "Não", "Nao",                                              // pt
+            "いいえ", "なし", "一度もない",  // ja
+            "아니요", "없음", "전혀",  // ko
+            "Hayır", "Hiçbir zaman", "Asla",  // tr
+            "Nigdy",  // pl
+            "否", "沒有", "從不",  // zh
         )
     }
 

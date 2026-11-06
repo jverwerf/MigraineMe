@@ -3,7 +3,9 @@
 Upsert translations.jsonl into public.usda_foods_i18n of a Supabase project via the
 management API (token in ~/keys/supabase-pat.txt).
 
-Usage: python3 load.py <project-ref> [--chunk 1500] [--only-missing]
+Usage: python3 load.py <project-ref> [--chunk 1500] [--only-missing] [--new-langs]
+  --new-langs loads ja/ko/tr/pl/zh from translations_new.jsonl. MigraineMe only: the
+  MeSeries project does not accept those codes.
   MigraineMe:          qykflarpibofvffmzghi
   MeSeries/VertigoMe:  vpwnhpwiwxwoyjfytiye
 """
@@ -32,12 +34,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("ref")
     ap.add_argument("--chunk", type=int, default=1500)
+    ap.add_argument("--new-langs", action="store_true")
     a = ap.parse_args()
+    global LANGS
+    source = "translations.jsonl"
+    if a.new_langs:
+        LANGS = ["ja", "ko", "tr", "pl", "zh"]
+        source = "translations_new.jsonl"
     token = open(os.path.expanduser("~/keys/supabase-pat.txt")).read().strip()
 
     foods = json.load(open(os.path.join(HERE, "usda_foods_en.json"), encoding="utf-8"))
     tr = {}
-    with open(os.path.join(HERE, "translations.jsonl"), encoding="utf-8") as f:
+    with open(os.path.join(HERE, source), encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:

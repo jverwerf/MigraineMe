@@ -8,7 +8,9 @@ Resumable: results land in translations.jsonl, one line per English description:
 Re-running skips anything already translated. Batches that come back malformed are
 retried; anything still failing after MAX_TRIES is listed in failed.txt.
 
-Usage:  python3 translate.py [--workers 6] [--batch 50] [--limit N] [--shard i/n]
+Usage:  python3 translate.py [--workers 6] [--batch 50] [--limit N] [--shard i/n] [--new-langs]
+        --new-langs does ja/ko/tr/pl/zh into translations_new.jsonl instead, leaving
+        the six original languages and their file alone.
 Then:   python3 load.py <project-ref>   (writes usda_foods_i18n in Supabase)
 """
 import argparse, json, os, subprocess, sys, threading, time
@@ -19,7 +21,23 @@ SRC = os.path.join(HERE, "usda_foods_en.json")
 OUT = os.path.join(HERE, "translations.jsonl")
 FAILED = os.path.join(HERE, "failed.txt")
 LANGS = ["de", "es", "nl", "fr", "it", "pt"]
+NEW_LANGS = ["ja", "ko", "tr", "pl", "zh"]
+OUT_NEW = os.path.join(HERE, "translations_new.jsonl")
 MAX_TRIES = 3
+
+PROMPT_NEW = """You translate food names for a migraine-tracking app. The names come from the USDA FoodData Central database and use its comma-separated style: head noun first, then qualifiers.
+
+Translate each English name into Japanese (ja), Korean (ko), Turkish (tr), Polish (pl) and Traditional Chinese as written in Taiwan (zh, never Simplified characters, Taiwan food words). Rules:
+- Keep the comma-separated structure and order: head noun first, then qualifiers. In ja, ko and zh use the normal comma of that language or a plain comma, consistently.
+- Use the everyday word a native speaker would type when searching for that food.
+- Keep brand and restaurant names exactly as written (McDONALD'S, KELLOGG'S, ENFAMIL, Wagyu...). Keep numbers, percentages, units, fractions and abbreviations like NS, NFS unchanged.
+- Keep the same register and level of detail; do not add or drop qualifiers; do not explain.
+- Cooking states (raw, cooked, roasted, braised, canned, frozen, dried) and cuts of meat must be translated with the normal culinary term of that language.
+
+Input is a JSON array of English strings. Output ONLY a JSON array of the same length and order, each element an object with keys ja, ko, tr, pl, zh. No markdown fences, no commentary.
+
+INPUT:
+"""
 
 PROMPT = """You translate food names for a European migraine-tracking app. The names come from the USDA FoodData Central database and use its comma-separated style: head noun first, then qualifiers (e.g. "Cheese, cheddar, sharp, sliced"; "Beef, ground, 85% lean meat / 15% fat, raw").
 
@@ -108,7 +126,11 @@ def main():
     ap.add_argument("--batch", type=int, default=50)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--shard", default="0/1", help="i/n: only process batches where index %% n == i")
+    ap.add_argument("--new-langs", action="store_true")
     a = ap.parse_args()
+    if a.new_langs:
+        global LANGS, OUT, PROMPT
+        LANGS, OUT, PROMPT = NEW_LANGS, OUT_NEW, PROMPT_NEW
     shard_i, shard_n = (int(x) for x in a.shard.split("/"))
 
     src = json.load(open(SRC, encoding="utf-8"))
