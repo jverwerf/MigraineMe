@@ -7648,6 +7648,62 @@
         "OnboardingCoach.kt:tourSteps-table"
       ],
       "max_len": 80
+    },
+    {
+      "en": "T0",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+1d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+2d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+3d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+4d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+5d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
+    },
+    {
+      "en": "+6d",
+      "class": "hard",
+      "sites": [
+        "RiskWeightsScreen.kt:decay-day-label"
+      ],
+      "max_len": 5
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

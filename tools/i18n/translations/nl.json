@@ -5029,5 +5029,12 @@
  "no relief ratings": "geen verlichtingsbeoordelingen",
  "times used": "keer gebruikt",
  "units": "eenheden",
- "vs %s last": "vs %s vorige"
+ "vs %s last": "vs %s vorige",
+ "+1d": "+1d",
+ "+2d": "+2d",
+ "+3d": "+3d",
+ "+4d": "+4d",
+ "+5d": "+5d",
+ "+6d": "+6d",
+ "T0": "T0"
 }

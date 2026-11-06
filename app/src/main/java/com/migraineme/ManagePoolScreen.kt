@@ -908,7 +908,7 @@ private fun PoolItemRow(
                         .background(item.prediction.chipColor.copy(alpha = 0.20f))
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
-                    Text(item.prediction.display, color = item.prediction.chipColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t(item.prediction.display), color = item.prediction.chipColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
 

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5031 entries.
+ * 5038 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -251,6 +251,12 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "+ note" to "+ notitie",
     "+ other" to "+ andere",
     "+%s more" to "+%s meer",
+    "+1d" to "+1d",
+    "+2d" to "+2d",
+    "+3d" to "+3d",
+    "+4d" to "+4d",
+    "+5d" to "+5d",
+    "+6d" to "+6d",
     ", and suggested %s more" to ", en %s meer getipt",
     "0 min" to "0 min",
     "0 minutes" to "0 minuten",
@@ -1511,15 +1517,15 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Everything here is a change you accepted — nothing moves without you." to "Alles hier heb jij goedgekeurd — zonder jou verandert er niets.",
     "Everything here is fully adjustable. Go to Manage Items to change triggers, medicines, and reliefs. Go to Settings → Risk Model to adjust gauge thresholds and decay curves at any time. The AI will also suggest refinements on Insights as it learns from your data." to "Alles hier is aan te passen. Bij Je lijsten wijzig je triggers, medicijnen en verlichting. Bij Instellingen → Risicomodel wijzig je drempels en afbouwcurves wanneer je wilt. De AI stelt bij Inzichten ook verfijningen voor zodra ze van je gegevens leert.",
     "Everything recorded in this period, by type and category" to "Alles wat in deze periode is vastgelegd, per soort en categorie",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Everything tracked around the attacks in range" to "Alles rond de aanvallen in de periode",
     "Everything tracked around the attacks in this period" to "Alles wat rond de aanvallen in deze periode is bijgehouden",
     "Everything we read from this entry." to "Alles wat we uit deze notitie lazen.",
     "Everything you logged as a possible trigger" to "Alles wat je als mogelijke trigger logde",
     "Everything you logged as a possible trigger." to "Alles wat je als mogelijke trigger logde.",
     "Everything's still there, right where you left it." to "Alles staat er nog, precies waar je het achterliet.",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Te veel koffie, thee, energiedrank",
     "Excess screen time" to "Te veel schermtijd",
@@ -3014,15 +3020,15 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Preventives and ongoing treatment, with doses." to "Preventieve en lopende behandeling, met doses.",
     "Previous" to "Vorige",
     "Previous day" to "Dag ervoor",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Previous month" to "Vorige maand",
     "Privacy Policy" to "Privacy",
     "Processing…" to "Verwerken…",
     "Prochlorperazine" to "Prochloorperazine",
     "Prodrome" to "Prodroom",
     "Prodrome adjustments" to "Prodroom-aanpassingen",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Prodromen",
     "Prodromes" to "Prodromen",
     "Product not found" to "Niet gevonden",
@@ -3668,6 +3674,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Symptoms, Medicines & More" to "Klachten, medicijnen & meer",
     "Syncing Health Data" to "Gezondheidsdata syncen",
     "Syncing health data from Health Connect" to "Gegevens ophalen uit Health Connect",
+    "T0" to "T0",
     "THE ATTACK" to "DE AANVAL",
     "THE TOUR" to "DE TOUR",
     "TIMELINE" to "TIJDLIJN",
@@ -4516,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "You can subscribe anytime from Settings." to "Je kunt altijd abonneren via Instellingen.",
     "You don't have to manually log every trigger. MigraineMe pulls signals from your wearable, phone, location, and the apps you've linked (Health Connect) and converts them into trigger logs automatically.\n\nThe big ones: poor sleep or sudden over-sleep, low HRV vs. your baseline, falling barometric pressure, hot or humid days, period-prediction windows, and nutrient flags from anything you ate (caffeine, sodium, tyramine, alcohol, gluten, histamine).\n\nActivities like workouts, runs, walks, and meditations get pulled in the same way, so they appear under your daily logs without you tapping anything.\n\nEven prodromes can be auto-suggested when your data shows the signature pattern (HRV dip, sleep disruption, mood shift) that usually precedes one of your attacks.\n\nAnything auto-captured shows up on your Triggers screen with a timestamp so you can see exactly when it landed." to "Je hoeft niet elke trigger zelf te noteren. MigraineMe haalt signalen uit je wearable, telefoon, locatie en de apps die je hebt gekoppeld (Health Connect) en maakt daar automatisch triggerlogs van.\n\nDe grote: slecht slapen of ineens uitslapen, lage HRV tegenover je basislijn, dalende luchtdruk, warme of vochtige dagen, vensters uit de menstruatievoorspelling en voedingsmarkeringen uit wat je at (cafeïne, natrium, tyramine, alcohol, gluten, histamine).\n\nActiviteiten als work-outs, hardlopen, wandelen en meditaties komen er net zo in, dus die staan in je daglogs zonder dat je tikt.\n\nZelfs prodromen kunnen vanzelf worden voorgesteld als je data het bekende patroon toont (HRV-dip, verstoorde slaap, stemmingswissel) dat meestal aan je aanvallen voorafgaat.\n\nAlles wat automatisch is opgepikt staat met tijdstempel op je Triggers-scherm, zo zie je precies wanneer het binnenkwam.",
     "You have %1\$s migraines, %2\$s triggers, and %3\$s treatments logged." to "Je hebt %1\$s migraines, %2\$s triggers en %3\$s behandelingen genoteerd.",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "You have a migraine that's still open. " to "Je hebt een migraine die nog open staat. ",
     "You have not been through the setup questions" to "Je hebt de setupvragen nog niet beantwoord",
     "You have not blocked anyone." to "Je hebt niemand geblokkeerd.",
@@ -4523,9 +4533,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Jij logt je\n*aanvallen.*",
     "You logged a migraine %s days ago and it's still open. " to "Je noteerde %s dagen terug een migraine en die staat nog open. ",
     "You logged a migraine 1 day ago and it's still open. " to "Je noteerde 1 dag terug een migraine en die staat nog open. ",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "Je mist niets.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Je mist: de tour, de AI-voorsprong en je wearable, tot je Instellingen opent.",
     "You miss: the tour. Rerun it anytime from Profile." to "Je mist: de tour. Doe hem later opnieuw via Profiel.",

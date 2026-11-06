@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5031 entries.
+ * 5038 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -251,6 +251,12 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "+ note" to "+ nota",
     "+ other" to "+ altro",
     "+%s more" to "+%s altri",
+    "+1d" to "+1g",
+    "+2d" to "+2g",
+    "+3d" to "+3g",
+    "+4d" to "+4g",
+    "+5d" to "+5g",
+    "+6d" to "+6g",
     ", and suggested %s more" to ", e altri %s proposti",
     "0 min" to "0 min",
     "0 minutes" to "0 minuti",
@@ -1511,15 +1517,15 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Everything here is a change you accepted — nothing moves without you." to "Qui ci sono solo modifiche che hai accettato: nulla cambia senza di te.",
     "Everything here is fully adjustable. Go to Manage Items to change triggers, medicines, and reliefs. Go to Settings → Risk Model to adjust gauge thresholds and decay curves at any time. The AI will also suggest refinements on Insights as it learns from your data." to "Qui è tutto modificabile. In Le tue liste cambi fattori, farmaci e sollievi. In Impostazioni → Modello di rischio cambi soglie e curve quando vuoi. L'IA proporrà anche rifiniture in Analisi man mano che impara dai tuoi dati.",
     "Everything recorded in this period, by type and category" to "Tutto ciò che è stato registrato nel periodo, per tipo e categoria",
+)
+
+private fun itStrings1(): Map<String, String> = mapOf(
     "Everything tracked around the attacks in range" to "Tutto ciò che circonda gli attacchi del periodo",
     "Everything tracked around the attacks in this period" to "Tutto ciò che è stato tracciato intorno agli attacchi del periodo",
     "Everything we read from this entry." to "Tutto ciò che abbiamo letto da questa voce.",
     "Everything you logged as a possible trigger" to "Tutto ciò che hai segnato come possibile trigger",
     "Everything you logged as a possible trigger." to "Tutto ciò che hai segnato come possibile trigger.",
     "Everything's still there, right where you left it." to "È tutto ancora lì, proprio dove l'avevi lasciato.",
-)
-
-private fun itStrings1(): Map<String, String> = mapOf(
     "Excedrin" to "Excedrin",
     "Excess coffee, tea, energy drinks" to "Troppo caffè, tè, energy drink",
     "Excess screen time" to "Troppo schermo",
@@ -3014,15 +3020,15 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Preventives and ongoing treatment, with doses." to "Profilassi e terapia in corso, con le dosi.",
     "Previous" to "Precedente",
     "Previous day" to "Giorno prima",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "Previous month" to "Mese precedente",
     "Privacy Policy" to "Privacy",
     "Processing…" to "Elaboro…",
     "Prochlorperazine" to "Proclorperazina",
     "Prodrome" to "Prodromo",
     "Prodrome adjustments" to "Modifiche ai prodromi",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Prodrome management" to "Prodromi",
     "Prodromes" to "Prodromi",
     "Product not found" to "Non trovato",
@@ -3668,6 +3674,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Symptoms, Medicines & More" to "Sintomi, farmaci e altro",
     "Syncing Health Data" to "Sincronizzo salute",
     "Syncing health data from Health Connect" to "Sincronizzo i dati da Health Connect",
+    "T0" to "T0",
     "THE ATTACK" to "L'ATTACCO",
     "THE TOUR" to "IL TOUR",
     "TIMELINE" to "CRONOLOGIA",
@@ -4516,6 +4523,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "You can subscribe anytime from Settings." to "Puoi abbonarti quando vuoi da Impostazioni.",
     "You don't have to manually log every trigger. MigraineMe pulls signals from your wearable, phone, location, and the apps you've linked (Health Connect) and converts them into trigger logs automatically.\n\nThe big ones: poor sleep or sudden over-sleep, low HRV vs. your baseline, falling barometric pressure, hot or humid days, period-prediction windows, and nutrient flags from anything you ate (caffeine, sodium, tyramine, alcohol, gluten, histamine).\n\nActivities like workouts, runs, walks, and meditations get pulled in the same way, so they appear under your daily logs without you tapping anything.\n\nEven prodromes can be auto-suggested when your data shows the signature pattern (HRV dip, sleep disruption, mood shift) that usually precedes one of your attacks.\n\nAnything auto-captured shows up on your Triggers screen with a timestamp so you can see exactly when it landed." to "Non devi inserire ogni fattore a mano. MigraineMe prende segnali dal wearable, dal telefono, dalla posizione e dalle app che hai collegato (Health Connect) e li trasforma in fattori in automatico.\n\nI principali: sonno scarso o improvviso dormire troppo, HRV bassa rispetto alla tua base, pressione in calo, giornate calde o umide, finestre di previsione del ciclo e segnalazioni di nutrienti da ciò che hai mangiato (caffeina, sodio, tiramina, alcol, glutine, istamina).\n\nAttività come allenamenti, corse, camminate e meditazioni entrano allo stesso modo, quindi compaiono nei tuoi inserimenti del giorno senza toccare nulla.\n\nPersino i prodromi possono essere proposti quando i tuoi dati mostrano lo schema tipico (calo di HRV, sonno disturbato, cambio d'umore) che di solito precede i tuoi attacchi.\n\nTutto ciò che viene colto in automatico compare nella schermata Fattori con l'orario, così vedi esattamente quando è arrivato.",
     "You have %1\$s migraines, %2\$s triggers, and %3\$s treatments logged." to "Hai inserito %1\$s emicranie, %2\$s fattori e %3\$s terapie.",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "You have a migraine that's still open. " to "Hai un'emicrania ancora aperta. ",
     "You have not been through the setup questions" to "Non hai ancora risposto alle domande iniziali",
     "You have not blocked anyone." to "Non hai bloccato nessuno.",
@@ -4523,9 +4533,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "You log your\n*attacks.*" to "Registri i tuoi\n*attacchi.*",
     "You logged a migraine %s days ago and it's still open. " to "Hai inserito un'emicrania %s giorni fa ed è ancora aperta. ",
     "You logged a migraine 1 day ago and it's still open. " to "Hai inserito un'emicrania 1 giorno fa ed è ancora aperta. ",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "You miss nothing." to "Non perdi nulla.",
     "You miss: the tour, the AI head start and your wearable, until you open Settings." to "Perdi: il tour, il vantaggio dell'IA e il wearable, finché non apri Impostazioni.",
     "You miss: the tour. Rerun it anytime from Profile." to "Perdi: il tour. Rifallo quando vuoi dal Profilo.",

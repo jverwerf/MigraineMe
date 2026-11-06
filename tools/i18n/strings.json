@@ -7914,6 +7914,60 @@
     "count": 1
   },
   {
+    "en": "+1d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
+    "en": "+2d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
+    "en": "+3d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
+    "en": "+4d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
+    "en": "+5d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
+    "en": "+6d",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
+    "count": 1
+  },
+  {
     "en": ", and suggested %s more",
     "class": "soft",
     "sites": [
@@ -29403,6 +29457,15 @@
       "app/src/main/java/com/migraineme/HealthConnectChangesWorker.kt:123"
     ],
     "max_len": 56,
+    "count": 1
+  },
+  {
+    "en": "T0",
+    "class": "hard",
+    "sites": [
+      "RiskWeightsScreen.kt:decay-day-label"
+    ],
+    "max_len": 5,
     "count": 1
   },
   {

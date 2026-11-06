@@ -5029,5 +5029,12 @@
  "no relief ratings": "sem avaliações de alívio",
  "times used": "utilizações",
  "units": "unidades",
- "vs %s last": "vs %s antes"
+ "vs %s last": "vs %s antes",
+ "+1d": "+1d",
+ "+2d": "+2d",
+ "+3d": "+3d",
+ "+4d": "+4d",
+ "+5d": "+5d",
+ "+6d": "+6d",
+ "T0": "T0"
 }

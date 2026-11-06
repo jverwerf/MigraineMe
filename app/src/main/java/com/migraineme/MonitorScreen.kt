@@ -1766,7 +1766,7 @@ private fun RiskCard(
                     Text("%.1f".format(riskLive.score), color = zoneColor,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold))
                     Spacer(Modifier.width(8.dp))
-                    Text(riskLive.zone.uppercase(), color = zoneColor,
+                    Text(t(riskLive.zone.uppercase()), color = zoneColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         modifier = Modifier
                             .background(zoneColor.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
