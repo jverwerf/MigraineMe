@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
-// Translates Community CONTENT into the six app languages.
+// Translates Community CONTENT into the app languages.
 //
 // The app's t() tables translate our own fixed copy, keyed on the English
 // string. That cannot cover the Community feed: ingested article headlines,
@@ -13,7 +13,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 // rule and hands back the source hash it computed; this function translates a
 // bounded number of batches and writes the hash straight back, so the staleness
 // rule can never drift between the two halves. Edit the English text of an
-// article and its hash changes, so all six languages redo themselves on the
+// article and its hash changes, so all languages redo themselves on the
 // next run rather than sitting stale for ever.
 //
 // Bounded per invocation (MAX_CALLS) so a run always finishes well inside the
@@ -21,7 +21,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 // runs often enough to drain it; that is also how the initial backfill of a
 // few thousand rows was done, without a special one-off script.
 
-const LANGS = ["de", "es", "nl", "fr", "it", "pt"];
+const LANGS = ["de", "es", "nl", "fr", "it", "pt", "ja", "ko", "tr", "pl", "zh"];
 
 const LANG_NAMES = {
   de: "German",
@@ -29,7 +29,21 @@ const LANG_NAMES = {
   nl: "Dutch",
   fr: "French",
   it: "Italian",
-  pt: "Portuguese (European)"
+  pt: "Portuguese (European)",
+  ja: "Japanese",
+  ko: "Korean",
+  tr: "Turkish",
+  pl: "Polish",
+  zh: "Traditional Chinese as used in Taiwan (Taiwan vocabulary, never Simplified Chinese)"
+};
+
+// Register per language where the default below would be wrong or say nothing.
+const REGISTERS = {
+  ja: "plain polite です・ます, never casual speech",
+  ko: "polite 해요체, never 반말",
+  tr: "informal (sen)",
+  pl: "informal (ty), avoiding gendered past-tense verbs about the reader",
+  zh: "informal (你)"
 };
 
 // kind -> the table its translations live in, the column that points back at
@@ -131,7 +145,7 @@ function prompt(kind, lang, items) {
     "- A null or empty input field stays null in the output.",
     "- Keep every factual claim, number, dose and unit exactly as written. Do not add, soften, remove or explain anything. This text is read by patients making decisions about their own care.",
     "- Translate the meaning, not the words. Write what a native speaker would actually write.",
-    "- Register: informal (du / tu / je / tú). Warm, plain, written for patients, not for clinicians.",
+    `- Register: ${REGISTERS[lang] ?? "informal (du / tu / je / tú)"}. Warm, plain, written for patients, not for clinicians.`,
     "- No em dashes.",
     "- If an item ends in a question to the community, keep it a question.",
     "- Keep the length close to the original. These render in fixed cards.",

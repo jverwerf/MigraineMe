@@ -24,6 +24,11 @@ const PLAY_CODE_MSG: Record<string, string> = {
   it: "Questo è un codice Google Play. Tocca il pulsante Android nella nostra email per riscattarlo nel Play Store.",
   nl: "Dit is een Google Play-code. Tik op de Android-knop in onze e-mail om hem in de Play Store te verzilveren.",
   pt: "Este é um código Google Play. Toca no botão Android do nosso email para o resgatar na Play Store.",
+  ja: "これはGoogle Playのコードです。メール内のAndroidボタンをタップして、Playストアで引き換えてください。",
+  ko: "Google Play 코드예요. 이메일의 Android 버튼을 탭해서 Play 스토어에서 사용해 주세요.",
+  tr: "Bu bir Google Play kodu. Play Store'da kullanmak için e-postamızdaki Android düğmesine dokun.",
+  pl: "To kod Google Play. Stuknij przycisk Android w naszym e-mailu, aby zrealizować go w Sklepie Play.",
+  zh: "這是 Google Play 的兌換碼。請點選我們電子郵件中的 Android 按鈕，到 Play 商店兌換。",
 };
 
 const json = (data: unknown, status = 200) =>

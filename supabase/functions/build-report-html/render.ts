@@ -45,6 +45,7 @@ let rt: (en: string, ...args: unknown[]) => string = (en) => en;
  *  European rather than Brazilian Portuguese. */
 const LOCALE_TAGS: Record<string, string> = {
   en: "en-GB", de: "de-DE", es: "es-ES", nl: "nl-NL", fr: "fr-FR", it: "it-IT", pt: "pt-PT",
+  ja: "ja-JP", ko: "ko-KR", tr: "tr-TR", pl: "pl-PL", zh: "zh-TW",
 };
 let rtLocale = "en-GB";
 

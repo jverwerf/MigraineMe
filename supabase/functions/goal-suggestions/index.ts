@@ -387,7 +387,12 @@ ${languageDirective(lang)}${INFORMAL[lang] ? ` Address the person as "${INFORMAL
 }
 
 // The apps speak informally in every language; the model drifted to "votre".
-const INFORMAL: Partial<Record<Lang, string>> = { de: "du", es: "tú", nl: "je/jij", fr: "tu", it: "tu", pt: "tu" };
+const INFORMAL: Partial<Record<Lang, string>> = {
+  de: "du", es: "tú", nl: "je/jij", fr: "tu", it: "tu", pt: "tu",
+  ja: "です・ます調 (polite です/ます style, no casual speech and no 敬語 honorifics)",
+  ko: "해요체 (polite 해요 style, no 반말 and no 합쇼체)",
+  tr: "sen", pl: "ty", zh: "你",
+};
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function describeTarget(g: Goal): string {

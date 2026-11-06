@@ -2355,7 +2355,12 @@
       "why": "pool category: report renders it through pretty(); trigger/prodrome pool category, the anatomy sense; the app table's nl/it wording is the message-body sense",
       "value": {
         "nl": "Lichaam",
-        "it": "Corpo"
+        "it": "Corpo",
+        "ja": "身体",
+        "ko": "신체",
+        "tr": "Vücut",
+        "pl": "Ciało",
+        "zh": "身體"
       }
     },
     {
@@ -2387,7 +2392,12 @@
         "nl": "Combinatie",
         "fr": "Combinaison",
         "it": "Combinazione",
-        "pt": "Combinação"
+        "pt": "Combinação",
+        "ja": "配合薬",
+        "ko": "복합제",
+        "tr": "Kombinasyon",
+        "pl": "Leki złożone",
+        "zh": "複方藥"
       }
     },
     {
@@ -2415,7 +2425,12 @@
         "nl": "Ditaan",
         "fr": "Ditan",
         "it": "Ditano",
-        "pt": "Ditano"
+        "pt": "Ditano",
+        "ja": "ジタン系",
+        "ko": "디탄계",
+        "tr": "Ditan",
+        "pl": "Ditany",
+        "zh": "Ditan 類"
       }
     },
     {
@@ -2431,7 +2446,12 @@
         "nl": "Ergotamine",
         "fr": "Ergotamine",
         "it": "Ergotamina",
-        "pt": "Ergotamina"
+        "pt": "Ergotamina",
+        "ja": "エルゴタミン",
+        "ko": "에르고타민",
+        "tr": "Ergotamin",
+        "pl": "Ergotamina",
+        "zh": "麥角胺"
       }
     },
     {
@@ -2459,7 +2479,12 @@
         "nl": "Mentaal",
         "fr": "Mental",
         "it": "Mentale",
-        "pt": "Mental"
+        "pt": "Mental",
+        "ja": "精神面",
+        "ko": "정신적",
+        "tr": "Zihinsel",
+        "pl": "Psychiczne",
+        "zh": "心理"
       }
     },
     {
@@ -2475,7 +2500,12 @@
         "nl": "Motoriek",
         "fr": "Motricité",
         "it": "Motricità",
-        "pt": "Motricidade"
+        "pt": "Motricidade",
+        "ja": "運動機能",
+        "ko": "운동 기능",
+        "tr": "Motor işlevler",
+        "pl": "Motoryka",
+        "zh": "運動功能"
       }
     },
     {
@@ -2515,7 +2545,12 @@
         "nl": "Zintuigen",
         "fr": "Sens",
         "it": "Sensi",
-        "pt": "Sentidos"
+        "pt": "Sentidos",
+        "ja": "感覚",
+        "ko": "감각",
+        "tr": "Duyular",
+        "pl": "Zmysły",
+        "zh": "感官"
       }
     },
     {
@@ -2563,7 +2598,12 @@
         "nl": "Werkt goed",
         "fr": "Efficace",
         "it": "Funziona bene",
-        "pt": "Funciona bem"
+        "pt": "Funciona bem",
+        "ja": "よく効く",
+        "ko": "효과 좋음",
+        "tr": "İyi işe yarıyor",
+        "pl": "Działa dobrze",
+        "zh": "效果良好"
       }
     },
     {
@@ -2575,7 +2615,12 @@
         "nl": "Helpt iets",
         "fr": "Aide un peu",
         "it": "Aiuta un po'",
-        "pt": "Ajuda um pouco"
+        "pt": "Ajuda um pouco",
+        "ja": "少し効く",
+        "ko": "약간 도움됨",
+        "tr": "Biraz yardımcı",
+        "pl": "Trochę pomaga",
+        "zh": "有些幫助"
       }
     },
     {
@@ -2587,7 +2632,12 @@
         "nl": "Geen duidelijk effect",
         "fr": "Pas d'effet net",
         "it": "Nessun effetto chiaro",
-        "pt": "Sem efeito claro"
+        "pt": "Sem efeito claro",
+        "ja": "明確な効果なし",
+        "ko": "뚜렷한 효과 없음",
+        "tr": "Belirgin etki yok",
+        "pl": "Brak wyraźnego efektu",
+        "zh": "無明顯效果"
       }
     },
     {
@@ -2599,7 +2649,12 @@
         "nl": "Te weinig data",
         "fr": "Données insuffisantes",
         "it": "Dati insufficienti",
-        "pt": "Dados insuficientes"
+        "pt": "Dados insuficientes",
+        "ja": "データ不足",
+        "ko": "아직 데이터 부족",
+        "tr": "Henüz yeterli veri yok",
+        "pl": "Za mało danych",
+        "zh": "資料尚不足"
       }
     },
     {
@@ -2611,7 +2666,12 @@
         "nl": "geen verlichting",
         "fr": "aucun soulagement",
         "it": "nessun sollievo",
-        "pt": "sem alívio"
+        "pt": "sem alívio",
+        "ja": "緩和なし",
+        "ko": "완화 없음",
+        "tr": "rahatlama yok",
+        "pl": "brak ulgi",
+        "zh": "無緩解"
       }
     },
     {
@@ -2623,7 +2683,12 @@
         "nl": "weinig verlichting",
         "fr": "faible soulagement",
         "it": "sollievo lieve",
-        "pt": "alívio baixo"
+        "pt": "alívio baixo",
+        "ja": "わずかな緩和",
+        "ko": "약한 완화",
+        "tr": "az rahatlama",
+        "pl": "niewielka ulga",
+        "zh": "輕微緩解"
       }
     },
     {
@@ -2635,7 +2700,12 @@
         "nl": "matige verlichting",
         "fr": "soulagement modéré",
         "it": "sollievo moderato",
-        "pt": "alívio moderado"
+        "pt": "alívio moderado",
+        "ja": "中程度の緩和",
+        "ko": "보통 완화",
+        "tr": "orta düzeyde rahatlama",
+        "pl": "umiarkowana ulga",
+        "zh": "中度緩解"
       }
     },
     {
@@ -2647,7 +2717,12 @@
         "nl": "sterke verlichting",
         "fr": "fort soulagement",
         "it": "sollievo elevato",
-        "pt": "alívio elevado"
+        "pt": "alívio elevado",
+        "ja": "大きな緩和",
+        "ko": "큰 완화",
+        "tr": "güçlü rahatlama",
+        "pl": "silna ulga",
+        "zh": "明顯緩解"
       }
     },
     {
@@ -2659,7 +2734,12 @@
         "nl": "De pijn daalde ongeveer {0} punten binnen {1} na een dosis.",
         "fr": "La douleur a baissé d'environ {0} points dans les {1} suivant une prise.",
         "it": "Il dolore è sceso di circa {0} punti entro {1} da una dose.",
-        "pt": "A dor desceu cerca de {0} pontos em {1} após uma dose."
+        "pt": "A dor desceu cerca de {0} pontos em {1} após uma dose.",
+        "ja": "服用後{1}以内に、痛みが約{0}ポイント下がりました。",
+        "ko": "복용 후 {1} 이내에 통증이 약 {0}점 줄었어요.",
+        "tr": "Dozdan sonraki {1} içinde ağrı yaklaşık {0} puan düştü.",
+        "pl": "Ból spadł o około {0} pkt w ciągu {1} od dawki.",
+        "zh": "服藥後 {1} 內，疼痛下降約 {0} 分。"
       }
     },
     {
@@ -2671,7 +2751,12 @@
         "nl": "De pijn steeg ongeveer {0} punten binnen {1} na een dosis.",
         "fr": "La douleur a augmenté d'environ {0} points dans les {1} suivant une prise.",
         "it": "Il dolore è salito di circa {0} punti entro {1} da una dose.",
-        "pt": "A dor subiu cerca de {0} pontos em {1} após uma dose."
+        "pt": "A dor subiu cerca de {0} pontos em {1} após uma dose.",
+        "ja": "服用後{1}以内に、痛みが約{0}ポイント上がりました。",
+        "ko": "복용 후 {1} 이내에 통증이 약 {0}점 늘었어요.",
+        "tr": "Dozdan sonraki {1} içinde ağrı yaklaşık {0} puan arttı.",
+        "pl": "Ból wzrósł o około {0} pkt w ciągu {1} od dawki.",
+        "zh": "服藥後 {1} 內，疼痛上升約 {0} 分。"
       }
     },
     {
@@ -2683,7 +2768,12 @@
         "nl": "De pijn veranderde binnen {0} na een dosis niet meetbaar.",
         "fr": "La douleur n'a pas changé de façon mesurable dans les {0} suivant une prise.",
         "it": "Il dolore non è cambiato in modo misurabile entro {0} da una dose.",
-        "pt": "A dor não mudou de forma mensurável em {0} após uma dose."
+        "pt": "A dor não mudou de forma mensurável em {0} após uma dose.",
+        "ja": "服用後{0}以内に、痛みに測定できる変化はありませんでした。",
+        "ko": "복용 후 {0} 이내에 통증에 측정할 만한 변화가 없었어요.",
+        "tr": "Dozdan sonraki {0} içinde ağrıda ölçülebilir bir değişiklik olmadı.",
+        "pl": "Ból nie zmienił się w mierzalny sposób w ciągu {0} od dawki.",
+        "zh": "服藥後 {0} 內，疼痛沒有可測量的變化。"
       }
     },
     {
@@ -2695,7 +2785,12 @@
         "nl": "{0} doses met een pijnmeting ervoor en erna",
         "fr": "{0} prises avec une mesure de douleur avant et après",
         "it": "{0} dosi con una rilevazione del dolore prima e dopo",
-        "pt": "{0} doses com registo de dor antes e depois"
+        "pt": "{0} doses com registo de dor antes e depois",
+        "ja": "前後に痛みの記録がある服用：{0}回",
+        "ko": "전후 통증 기록이 있는 복용: {0}회",
+        "tr": "Öncesinde ve sonrasında ağrı kaydı olan {0} doz",
+        "pl": "Dawki z zapisem bólu przed i po: {0}",
+        "zh": "前後都有疼痛記錄的服藥：{0} 次"
       }
     },
     {
@@ -2707,7 +2802,12 @@
         "nl": "Aanvallen waren minstens {0} pijnpunten milder dan onbehandelde aanvallen.",
         "fr": "Les crises étaient au moins {0} points de douleur moins fortes que les crises non traitées.",
         "it": "Gli attacchi sono stati almeno {0} punti di dolore più lievi rispetto a quelli non trattati.",
-        "pt": "As crises foram pelo menos {0} pontos de dor mais leves do que as crises não tratadas."
+        "pt": "As crises foram pelo menos {0} pontos de dor mais leves do que as crises não tratadas.",
+        "ja": "発作の痛みは、治療しなかった発作より少なくとも{0}ポイント軽いものでした。",
+        "ko": "발작의 통증이 치료하지 않은 발작보다 최소 {0}점 더 가벼웠어요.",
+        "tr": "Ataklar, tedavi edilmeyen ataklardan en az {0} ağrı puanı daha hafifti.",
+        "pl": "Ataki były łagodniejsze od nieleczonych o co najmniej {0} pkt bólu.",
+        "zh": "發作的疼痛比未治療的發作至少輕 {0} 分。"
       }
     },
     {
@@ -2719,7 +2819,12 @@
         "nl": "Geen meetbaar voordeel — dit werd bij de zwaardere aanvallen gebruikt.",
         "fr": "Aucun bénéfice mesurable — cela a été pris lors des crises les plus fortes.",
         "it": "Nessun beneficio misurabile — è stato usato negli attacchi peggiori.",
-        "pt": "Sem benefício mensurável — foi usado nas crises piores."
+        "pt": "Sem benefício mensurável — foi usado nas crises piores.",
+        "ja": "ここでは測定できる効果はありません。より重い発作のときに使われていました。",
+        "ko": "여기서는 측정할 수 있는 효과가 없어요. 더 심한 발작 때 사용되었어요.",
+        "tr": "Burada ölçülebilir bir fayda yok: buna daha ağır ataklarda başvuruldu.",
+        "pl": "Brak mierzalnej korzyści: sięgano po to przy cięższych atakach.",
+        "zh": "這裡沒有可測量的益處：這是在較嚴重的發作時才使用的。"
       }
     },
     {
@@ -2731,7 +2836,12 @@
         "nl": "Behandelde en onbehandelde aanvallen waren ongeveer even zwaar.",
         "fr": "Les crises traitées et non traitées étaient de sévérité comparable.",
         "it": "Gli attacchi trattati e non trattati sono stati di gravità simile.",
-        "pt": "As crises tratadas e não tratadas tiveram gravidade semelhante."
+        "pt": "As crises tratadas e não tratadas tiveram gravidade semelhante.",
+        "ja": "治療した発作と治療しなかった発作の重さは、ほぼ同じでした。",
+        "ko": "치료한 발작과 치료하지 않은 발작의 심한 정도는 거의 같았어요.",
+        "tr": "Tedavi edilen ve edilmeyen ataklar yaklaşık aynı şiddetteydi.",
+        "pl": "Ataki leczone i nieleczone miały podobne nasilenie.",
+        "zh": "有治療與未治療的發作，嚴重程度大致相同。"
       }
     },
     {
@@ -2743,7 +2853,12 @@
         "nl": "{0} behandelde aanvallen vs {1} onbehandelde",
         "fr": "{0} crises traitées vs {1} non traitées",
         "it": "{0} attacchi trattati vs {1} non trattati",
-        "pt": "{0} crises tratadas vs {1} não tratadas"
+        "pt": "{0} crises tratadas vs {1} não tratadas",
+        "ja": "治療した発作{0}回、治療しなかった発作{1}回",
+        "ko": "치료한 발작 {0}회, 치료하지 않은 발작 {1}회",
+        "tr": "{0} tedavi edilen atak, {1} tedavi edilmeyen atak",
+        "pl": "Ataki leczone: {0}, nieleczone: {1}",
+        "zh": "有治療的發作 {0} 次，未治療 {1} 次"
       }
     },
     {
@@ -2755,7 +2870,12 @@
         "nl": "Vergelijkingen met onbehandelde aanvallen zijn een ondergrens, geen bovengrens: er wordt behandeld bij de zwaardere aanvallen, wat het voordeel onderschat.",
         "fr": "Les comparaisons avec les crises non traitées sont un minimum, pas un maximum : on traite les crises les plus fortes, ce qui sous-estime le bénéfice.",
         "it": "I confronti con gli attacchi non trattati sono un limite minimo, non massimo: si ricorre al trattamento negli attacchi peggiori, il che sottostima il beneficio.",
-        "pt": "As comparações com crises não tratadas são um mínimo, não um máximo: trata-se nas crises piores, o que subestima o benefício."
+        "pt": "As comparações com crises não tratadas são um mínimo, não um máximo: trata-se nas crises piores, o que subestima o benefício.",
+        "ja": "治療しなかった発作との比較は下限であり、上限ではありません。治療はより重い発作で使われるため、効果は実際より小さく見えます。",
+        "ko": "치료하지 않은 발작과의 비교는 상한이 아니라 하한이에요. 치료는 더 심한 발작 때 사용되므로 효과가 실제보다 작게 나타나요.",
+        "tr": "Tedavi edilmeyen ataklarla karşılaştırmalar bir üst sınır değil, alt sınırdır: tedaviye daha ağır ataklarda başvurulur, bu da faydayı olduğundan az gösterir.",
+        "pl": "Porównania z atakami nieleczonymi to dolna, a nie górna granica: po leczenie sięga się przy cięższych atakach, co zaniża korzyść.",
+        "zh": "與未治療發作的比較是下限，而不是上限：治療多用於較嚴重的發作，因此會低估益處。"
       }
     },
     {
@@ -2767,7 +2887,12 @@
         "nl": "Aanvallen duurden ongeveer {0} uur korter dan onbehandelde aanvallen van dezelfde ernst.",
         "fr": "Les crises ont duré environ {0} heures de moins que les crises non traitées de même sévérité.",
         "it": "Gli attacchi sono durati circa {0} ore in meno rispetto a quelli non trattati di pari gravità.",
-        "pt": "As crises duraram cerca de {0} horas a menos do que as crises não tratadas da mesma gravidade."
+        "pt": "As crises duraram cerca de {0} horas a menos do que as crises não tratadas da mesma gravidade.",
+        "ja": "発作は、同じ重さの治療しなかった発作より約{0}時間短くなりました。",
+        "ko": "발작이 같은 심한 정도의 치료하지 않은 발작보다 약 {0}시간 짧았어요.",
+        "tr": "Ataklar, aynı şiddetteki tedavi edilmeyen ataklardan yaklaşık {0} saat daha kısa sürdü.",
+        "pl": "Ataki trwały o około {0} godz. krócej niż nieleczone ataki o tym samym nasileniu.",
+        "zh": "發作時間比相同嚴重程度的未治療發作短約 {0} 小時。"
       }
     },
     {
@@ -2779,7 +2904,12 @@
         "nl": "Aanvallen duurden ongeveer {0} uur langer dan onbehandelde aanvallen van dezelfde ernst.",
         "fr": "Les crises ont duré environ {0} heures de plus que les crises non traitées de même sévérité.",
         "it": "Gli attacchi sono durati circa {0} ore in più rispetto a quelli non trattati di pari gravità.",
-        "pt": "As crises duraram cerca de {0} horas a mais do que as crises não tratadas da mesma gravidade."
+        "pt": "As crises duraram cerca de {0} horas a mais do que as crises não tratadas da mesma gravidade.",
+        "ja": "発作は、同じ重さの治療しなかった発作より約{0}時間長くなりました。",
+        "ko": "발작이 같은 심한 정도의 치료하지 않은 발작보다 약 {0}시간 길었어요.",
+        "tr": "Ataklar, aynı şiddetteki tedavi edilmeyen ataklardan yaklaşık {0} saat daha uzun sürdü.",
+        "pl": "Ataki trwały o około {0} godz. dłużej niż nieleczone ataki o tym samym nasileniu.",
+        "zh": "發作時間比相同嚴重程度的未治療發作長約 {0} 小時。"
       }
     },
     {
@@ -2791,7 +2921,12 @@
         "nl": "De aanvalsduur was ongeveer gelijk aan onbehandelde aanvallen van dezelfde ernst.",
         "fr": "La durée était comparable à celle des crises non traitées de même sévérité.",
         "it": "La durata è stata simile a quella degli attacchi non trattati di pari gravità.",
-        "pt": "A duração foi semelhante à das crises não tratadas da mesma gravidade."
+        "pt": "A duração foi semelhante à das crises não tratadas da mesma gravidade.",
+        "ja": "発作の長さは、同じ重さの治療しなかった発作とほぼ同じでした。",
+        "ko": "발작 시간은 같은 심한 정도의 치료하지 않은 발작과 거의 같았어요.",
+        "tr": "Atak süresi, aynı şiddetteki tedavi edilmeyen ataklarla yaklaşık aynıydı.",
+        "pl": "Czas trwania ataku był zbliżony do nieleczonych ataków o tym samym nasileniu.",
+        "zh": "發作時間與相同嚴重程度的未治療發作大致相同。"
       }
     },
     {
@@ -2803,7 +2938,12 @@
         "nl": "Eigen beoordeling van de patiënt: {0}.",
         "fr": "Évaluation du patient lui-même : {0}.",
         "it": "Valutazione del paziente stesso: {0}.",
-        "pt": "Avaliação do próprio paciente: {0}."
+        "pt": "Avaliação do próprio paciente: {0}.",
+        "ja": "患者さん本人の評価：{0}。",
+        "ko": "환자 본인의 평가: {0}.",
+        "tr": "Hastanın kendi değerlendirmesi: {0}.",
+        "pl": "Własna ocena pacjenta: {0}.",
+        "zh": "患者本人的評分：{0}。"
       }
     },
     {
@@ -2815,7 +2955,12 @@
         "nl": "{0} doses beoordeeld, gebruikt bij {1} aanvallen",
         "fr": "{0} prises évaluées, utilisé dans {1} crises",
         "it": "{0} dosi valutate, usato in {1} attacchi",
-        "pt": "{0} doses avaliadas, usado em {1} crises"
+        "pt": "{0} doses avaliadas, usado em {1} crises",
+        "ja": "評価された服用{0}回、使用した発作{1}回",
+        "ko": "평가한 복용 {0}회, 사용한 발작 {1}회",
+        "tr": "{0} doz değerlendirildi, {1} atakta kullanıldı",
+        "pl": "Ocenione dawki: {0}, ataki z użyciem: {1}",
+        "zh": "已評分 {0} 次服藥，用於 {1} 次發作"
       }
     },
     {
@@ -2827,7 +2972,12 @@
         "nl": "Gebruikt bij {0} aanvallen",
         "fr": "Utilisé dans {0} crises",
         "it": "Usato in {0} attacchi",
-        "pt": "Usado em {0} crises"
+        "pt": "Usado em {0} crises",
+        "ja": "使用した発作：{0}回",
+        "ko": "사용한 발작: {0}회",
+        "tr": "{0} atakta kullanıldı",
+        "pl": "Ataki z użyciem: {0}",
+        "zh": "用於 {0} 次發作"
       }
     },
     {
@@ -2839,7 +2989,12 @@
         "nl": "Behandelen binnen {0} ging samen met een {1} punten lagere piek.",
         "fr": "Traiter sous {0} allait de pair avec un pic inférieur de {1} points.",
         "it": "Trattare entro {0} si è accompagnato a un picco più basso di {1} punti.",
-        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais baixo."
+        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais baixo.",
+        "ja": "{0}以内に治療すると、ピークが{1}ポイント低い傾向がありました。",
+        "ko": "{0} 이내에 치료했을 때 최고 통증이 {1}점 낮았어요.",
+        "tr": "{0} içinde tedavi, {1} puan daha düşük bir zirveyle birlikte görüldü.",
+        "pl": "Leczenie w ciągu {0} wiązało się ze szczytem niższym o {1} pkt.",
+        "zh": "在 {0} 內治療，疼痛高峰低了 {1} 分。"
       }
     },
     {
@@ -2851,7 +3006,12 @@
         "nl": "Behandelen binnen {0} ging samen met een {1} punten hogere piek.",
         "fr": "Traiter sous {0} allait de pair avec un pic supérieur de {1} points.",
         "it": "Trattare entro {0} si è accompagnato a un picco più alto di {1} punti.",
-        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais alto."
+        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais alto.",
+        "ja": "{0}以内に治療すると、ピークが{1}ポイント高い傾向がありました。",
+        "ko": "{0} 이내에 치료했을 때 최고 통증이 {1}점 높았어요.",
+        "tr": "{0} içinde tedavi, {1} puan daha yüksek bir zirveyle birlikte görüldü.",
+        "pl": "Leczenie w ciągu {0} wiązało się ze szczytem wyższym o {1} pkt.",
+        "zh": "在 {0} 內治療，疼痛高峰高了 {1} 分。"
       }
     },
     {
@@ -2863,7 +3023,12 @@
         "nl": "Eerder behandelen ging samen met dezelfde piekernst.",
         "fr": "Traiter plus tôt allait de pair avec le même pic de sévérité.",
         "it": "Trattare prima si è accompagnato allo stesso picco di gravità.",
-        "pt": "Tratar mais cedo acompanhou o mesmo pico de gravidade."
+        "pt": "Tratar mais cedo acompanhou o mesmo pico de gravidade.",
+        "ja": "早めに治療しても、ピークの重さは同じでした。",
+        "ko": "더 일찍 치료해도 최고 통증의 정도는 같았어요.",
+        "tr": "Daha erken tedavi, aynı zirve şiddetiyle birlikte görüldü.",
+        "pl": "Wcześniejsze leczenie wiązało się z takim samym szczytowym nasileniem.",
+        "zh": "較早治療時，疼痛高峰的嚴重程度相同。"
       }
     },
     {
@@ -2875,7 +3040,12 @@
         "nl": "De grens is de eigen mediane behandelvertraging van deze patiënt, geen klinische drempel.",
         "fr": "Le seuil correspond au délai médian propre à ce patient avant de traiter, pas à un seuil clinique.",
         "it": "La soglia è il ritardo mediano di questo paziente nel trattare, non una soglia clinica.",
-        "pt": "O corte é o atraso mediano do próprio paciente até tratar, não um limiar clínico."
+        "pt": "O corte é o atraso mediano do próprio paciente até tratar, não um limiar clínico.",
+        "ja": "この区切りは、この患者さん自身の治療までの時間の中央値であり、臨床的な基準ではありません。",
+        "ko": "이 기준은 이 환자 본인의 치료까지 걸린 시간의 중앙값이며, 임상 기준이 아니에요.",
+        "tr": "Bu sınır, klinik bir eşik değil, bu hastanın tedaviye başlamadaki kendi medyan gecikmesidir.",
+        "pl": "Ta granica to własna mediana opóźnienia leczenia tego pacjenta, a nie próg kliniczny.",
+        "zh": "這個分界是此患者本人開始治療的延遲中位數，並非臨床閾值。"
       }
     },
     {
@@ -2887,7 +3057,12 @@
         "nl": "Samen genoteerd",
         "fr": "Notés ensemble",
         "it": "Registrati insieme",
-        "pt": "Registados juntos"
+        "pt": "Registados juntos",
+        "ja": "一緒に記録",
+        "ko": "함께 기록됨",
+        "tr": "Birlikte kaydedildi",
+        "pl": "Zapisane razem",
+        "zh": "一起記錄"
       }
     },
     {
@@ -2899,7 +3074,12 @@
         "nl": "Waarmee elke behandeling samenging in de eigen aanvallen van deze patiënt — correlatie, geen oorzaak",
         "fr": "Ce qui accompagnait chaque traitement dans les crises propres à ce patient — corrélation, pas causalité",
         "it": "Con cosa si è accompagnato ogni trattamento negli attacchi di questo paziente — correlazione, non causalità",
-        "pt": "Com o que cada tratamento andou associado nas crises deste paciente — correlação, não causalidade"
+        "pt": "Com o que cada tratamento andou associado nas crises deste paciente — correlação, não causalidade",
+        "ja": "この患者さん自身の発作で、各治療と同時に見られたこと（相関であり、因果関係ではありません）",
+        "ko": "이 환자 본인의 발작에서 각 치료와 함께 나타난 결과 (상관관계이며 인과관계가 아니에요)",
+        "tr": "Bu hastanın kendi ataklarında her tedavinin neyle birlikte görüldüğü (nedensellik değil, korelasyon)",
+        "pl": "Z czym wiązało się każde leczenie w atakach tego pacjenta (korelacja, nie przyczynowość)",
+        "zh": "每種治療在此患者本人的發作中伴隨的情況（是相關性，不是因果關係）"
       }
     },
     {
@@ -2911,7 +3091,12 @@
         "nl": "n = {0}",
         "fr": "n = {0}",
         "it": "n = {0}",
-        "pt": "n = {0}"
+        "pt": "n = {0}",
+        "ja": "n = {0}",
+        "ko": "n = {0}",
+        "tr": "n = {0}",
+        "pl": "n = {0}",
+        "zh": "n = {0}"
       }
     },
     {
@@ -2923,7 +3108,12 @@
         "nl": "gemiddeld {0} vóór aanvallen vs {1} anders",
         "fr": "moyenne {0} avant les crises vs {1} sinon",
         "it": "media {0} prima degli attacchi vs {1} altrimenti",
-        "pt": "média {0} antes das crises vs {1} nos restantes"
+        "pt": "média {0} antes das crises vs {1} nos restantes",
+        "ja": "発作前の平均{0}、それ以外{1}",
+        "ko": "발작 전 평균 {0}, 그 외 {1}",
+        "tr": "ataklardan önce ortalama {0}, diğer zamanlarda {1}",
+        "pl": "średnio {0} przed atakami, w innych dniach {1}",
+        "zh": "發作前平均 {0}，其他時候 {1}"
       }
     },
     {
@@ -2935,7 +3125,12 @@
         "nl": "Hoe vaak elke soort verlichting is gebruikt en welke verlichting de patiënt meldde",
         "fr": "À quelle fréquence chaque type de soulagement a été utilisé, et le soulagement rapporté par le patient",
         "it": "Quanto spesso è stato usato ogni tipo di sollievo e il sollievo riferito dal paziente",
-        "pt": "Com que frequência cada tipo de alívio foi usado e o alívio relatado pelo paciente"
+        "pt": "Com que frequência cada tipo de alívio foi usado e o alívio relatado pelo paciente",
+        "ja": "各緩和法の使用頻度と、患者さんが報告した緩和",
+        "ko": "각 완화 방법의 사용 횟수와 환자가 보고한 완화 정도",
+        "tr": "Her rahatlama türünün ne sıklıkla kullanıldığı ve hastanın bildirdiği rahatlama",
+        "pl": "Jak często używano każdego rodzaju ulgi i jaką ulgę zgłosił pacjent",
+        "zh": "各種緩解方式的使用頻率，以及患者回報的緩解程度"
       }
     },
     {
@@ -2947,7 +3142,12 @@
         "nl": "{0} keer gebruikt",
         "fr": "Utilisé {0} fois",
         "it": "Usato {0} volte",
-        "pt": "Usado {0} vezes"
+        "pt": "Usado {0} vezes",
+        "ja": "使用回数：{0}回",
+        "ko": "사용 횟수: {0}회",
+        "tr": "{0} kez kullanıldı",
+        "pl": "Liczba użyć: {0}",
+        "zh": "使用 {0} 次"
       }
     },
     {
@@ -2959,7 +3159,12 @@
         "nl": "meestal {0}",
         "fr": "généralement {0}",
         "it": "di solito {0}",
-        "pt": "normalmente {0}"
+        "pt": "normalmente {0}",
+        "ja": "多くは{0}",
+        "ko": "대체로 {0}",
+        "tr": "genellikle {0}",
+        "pl": "zwykle {0}",
+        "zh": "通常為{0}"
       }
     },
     {
@@ -2971,7 +3176,12 @@
         "nl": "gemelde verlichting",
         "fr": "soulagement rapporté",
         "it": "sollievo riferito",
-        "pt": "alívio relatado"
+        "pt": "alívio relatado",
+        "ja": "報告された緩和",
+        "ko": "보고된 완화 정도",
+        "tr": "bildirilen rahatlama",
+        "pl": "zgłoszona ulga",
+        "zh": "回報的緩解程度"
       }
     },
     {
@@ -2983,7 +3193,12 @@
         "nl": "Aanwezig op {0}% van de migrainevrije dagen vs {1}% van de aanvalsdagen",
         "fr": "Présent sur {0}% des jours sans migraine vs {1}% des jours de crise",
         "it": "Presente nel {0}% dei giorni senza emicrania vs {1}% dei giorni con attacco",
-        "pt": "Presente em {0}% dos dias sem crise vs {1}% dos dias com crise"
+        "pt": "Presente em {0}% dos dias sem crise vs {1}% dos dias com crise",
+        "ja": "片頭痛のない日の{0}%、発作のあった日の{1}%で見られました",
+        "ko": "편두통이 없는 날의 {0}%, 발작이 있었던 날의 {1}%에 나타났어요",
+        "tr": "Migrensiz günlerin %{0} kadarında, atak günlerinin %{1} kadarında görüldü",
+        "pl": "Obecne w {0}% dni bez migreny i w {1}% dni z atakiem",
+        "zh": "在 {0}% 的無偏頭痛日出現，發作日則為 {1}%"
       }
     },
     {
@@ -2995,7 +3210,12 @@
         "nl": "{0} migrainevrije dagen · {1} aanvalsdagen",
         "fr": "{0} jours sans migraine · {1} jours de crise",
         "it": "{0} giorni senza emicrania · {1} giorni con attacco",
-        "pt": "{0} dias sem crise · {1} dias com crise"
+        "pt": "{0} dias sem crise · {1} dias com crise",
+        "ja": "片頭痛のない日{0}日 · 発作のあった日{1}日",
+        "ko": "편두통이 없는 날 {0}일 · 발작이 있었던 날 {1}일",
+        "tr": "{0} migrensiz gün · {1} atak günü",
+        "pl": "Dni bez migreny: {0} · dni z atakiem: {1}",
+        "zh": "無偏頭痛日 {0} 天 · 發作日 {1} 天"
       }
     },
     {
@@ -3007,7 +3227,12 @@
         "nl": "{0} dagen ermee · {1} dagen zonder",
         "fr": "{0} jours avec · {1} jours sans",
         "it": "{0} giorni con · {1} giorni senza",
-        "pt": "{0} dias com · {1} dias sem"
+        "pt": "{0} dias com · {1} dias sem",
+        "ja": "あった日{0}日 · なかった日{1}日",
+        "ko": "있었던 날 {0}일 · 없었던 날 {1}일",
+        "tr": "Olduğu {0} gün · olmadığı {1} gün",
+        "pl": "Dni z tym: {0} · dni bez tego: {1}",
+        "zh": "有的日子 {0} 天 · 沒有的日子 {1} 天"
       }
     },
     {
@@ -3019,7 +3244,12 @@
         "nl": "Hiervoor is geen verlichting beoordeeld.",
         "fr": "Aucun soulagement n'a été évalué pour cela.",
         "it": "Nessun sollievo valutato per questo.",
-        "pt": "Não foi avaliado nenhum alívio para isto."
+        "pt": "Não foi avaliado nenhum alívio para isto.",
+        "ja": "これには緩和の評価がありません。",
+        "ko": "이 항목에는 완화 평가가 없어요.",
+        "tr": "Bunun için rahatlama değerlendirmesi yok.",
+        "pl": "Brak oceny ulgi dla tej pozycji.",
+        "zh": "這項沒有緩解評分。"
       }
     },
     {
@@ -3031,7 +3261,12 @@
         "nl": "Werkt goed = een gemeten voordeel, of verlichting die de patiënt als sterk beoordeelde. Helpt iets = een zwakker gemeten voordeel, of een matige beoordeling. Geen duidelijk effect = gemeten en niets gevonden, of als weinig of geen beoordeeld. Te weinig data = genoteerd, maar niets om te beoordelen.",
         "fr": "Efficace = un bénéfice mesuré, ou un soulagement que le patient a jugé fort. Aide un peu = un bénéfice mesuré plus faible, ou une évaluation modérée. Pas d'effet net = mesuré et rien trouvé, ou jugé faible ou nul. Données insuffisantes = noté, mais rien à juger.",
         "it": "Funziona bene = un beneficio misurato, o un sollievo che il paziente ha valutato elevato. Aiuta un po' = un beneficio misurato più debole, o una valutazione moderata. Nessun effetto chiaro = misurato e nulla trovato, o valutato basso o nullo. Dati insufficienti = registrato, ma nulla da giudicare.",
-        "pt": "Funciona bem = um benefício medido, ou alívio que o paciente classificou como elevado. Ajuda um pouco = um benefício medido mais fraco, ou uma classificação moderada. Sem efeito claro = medido e nada encontrado, ou classificado como baixo ou nulo. Dados insuficientes = registado, mas sem nada para avaliar."
+        "pt": "Funciona bem = um benefício medido, ou alívio que o paciente classificou como elevado. Ajuda um pouco = um benefício medido mais fraco, ou uma classificação moderada. Sem efeito claro = medido e nada encontrado, ou classificado como baixo ou nulo. Dados insuficientes = registado, mas sem nada para avaliar.",
+        "ja": "よく効く＝測定された効果があるか、患者さんが緩和を高く評価。少し効く＝測定された効果が弱いか、中程度の評価。明確な効果なし＝測定したが何も見つからないか、評価が低い、またはなし。データ不足＝記録はあるが判断材料がない。",
+        "ko": "효과 좋음 = 측정된 효과가 있거나 환자가 완화를 높게 평가함. 약간 도움됨 = 측정된 효과가 약하거나 보통으로 평가함. 뚜렷한 효과 없음 = 측정했지만 찾지 못했거나 낮음 또는 없음으로 평가함. 아직 데이터 부족 = 기록은 있지만 판단할 근거가 없음.",
+        "tr": "İyi işe yarıyor = ölçülmüş bir fayda ya da hastanın yüksek değerlendirdiği rahatlama. Biraz yardımcı = daha zayıf ölçülmüş bir fayda ya da orta düzey bir değerlendirme. Belirgin etki yok = ölçüldü ve bir şey bulunmadı ya da düşük veya hiç olarak değerlendirildi. Henüz yeterli veri yok = kaydedildi ama değerlendirecek bir şey yok.",
+        "pl": "Działa dobrze = zmierzona korzyść lub ulga wysoko oceniona przez pacjenta. Trochę pomaga = słabsza zmierzona korzyść lub umiarkowana ocena. Brak wyraźnego efektu = zmierzono i nic nie znaleziono lub oceniono nisko albo jako brak. Za mało danych = zapisano, ale nie ma czego oceniać.",
+        "zh": "效果良好 = 有測量到的益處，或患者對緩解的評分高。有些幫助 = 測量到的益處較弱，或評分中等。無明顯效果 = 有測量但沒有發現，或評分為低或無。資料尚不足 = 有記錄，但沒有可判斷的依據。"
       }
     },
     {
@@ -3043,7 +3278,12 @@
         "nl": "Er zijn nog {0} behandelingen genoteerd; die staan in het aanvalslogboek.",
         "fr": "{0} autres traitements ont été notés et figurent dans le journal des crises.",
         "it": "Sono stati registrati altri {0} trattamenti, elencati nel diario degli attacchi.",
-        "pt": "Foram registados mais {0} tratamentos, listados no registo de crises."
+        "pt": "Foram registados mais {0} tratamentos, listados no registo de crises.",
+        "ja": "ほかに{0}件の治療が記録されており、発作ログに載っています。",
+        "ko": "그 밖에 치료 {0}건이 기록되어 있으며 발작 기록에서 볼 수 있어요.",
+        "tr": "{0} tedavi daha kaydedildi ve atak günlüğünde listeleniyor.",
+        "pl": "Pozostałe zapisane metody leczenia (liczba: {0}) są w dzienniku ataków.",
+        "zh": "另有 {0} 項治療已記錄，列在發作記錄中。"
       }
     },
     {
@@ -3055,7 +3295,12 @@
         "nl": "Beter bij {0}",
         "fr": "Meilleur avec {0}",
         "it": "Meglio con {0}",
-        "pt": "Melhor com {0}"
+        "pt": "Melhor com {0}",
+        "ja": "{0}があるとより良い",
+        "ko": "{0} 있을 때 더 좋음",
+        "tr": "{0} varken daha iyi",
+        "pl": "Lepiej przy objawie: {0}",
+        "zh": "有{0}時較佳"
       }
     },
     {
@@ -3067,7 +3312,12 @@
         "nl": "Helpt minder bij {0}",
         "fr": "Aide moins avec {0}",
         "it": "Aiuta meno con {0}",
-        "pt": "Ajuda menos com {0}"
+        "pt": "Ajuda menos com {0}",
+        "ja": "{0}があると効きにくい",
+        "ko": "{0} 있을 때 도움 적음",
+        "tr": "{0} varken daha az yardımcı",
+        "pl": "Mniej pomaga przy objawie: {0}",
+        "zh": "有{0}時幫助較小"
       }
     },
     {
@@ -3079,7 +3329,12 @@
         "nl": "Samen genoteerd bij ongeveer {0} van {1} aanvallen",
         "fr": "Notés ensemble dans environ {0} crises sur {1}",
         "it": "Registrati insieme in circa {0} attacchi su {1}",
-        "pt": "Registados juntos em cerca de {0} de {1} crises"
+        "pt": "Registados juntos em cerca de {0} de {1} crises",
+        "ja": "発作{1}回のうち約{0}回で一緒に記録",
+        "ko": "발작 {1}회 중 약 {0}회 함께 기록됨",
+        "tr": "{1} atağın yaklaşık {0} tanesinde birlikte kaydedildi",
+        "pl": "Zapisane razem w około {0} z {1} ataków",
+        "zh": "{1} 次發作中約有 {0} 次一起記錄"
       }
     },
     {
@@ -3091,7 +3346,12 @@
         "nl": "Geen noemenswaardig verschil tussen de symptomen van deze patiënt.",
         "fr": "Pas de différence notable selon les symptômes de ce patient.",
         "it": "Nessuna differenza rilevante tra i sintomi di questo paziente.",
-        "pt": "Sem diferença relevante entre os sintomas deste paciente."
+        "pt": "Sem diferença relevante entre os sintomas deste paciente.",
+        "ja": "この患者さんの症状の間に、意味のある違いはありません。",
+        "ko": "이 환자의 증상 간에 의미 있는 차이가 없어요.",
+        "tr": "Bu hastanın belirtileri arasında anlamlı bir fark yok.",
+        "pl": "Brak istotnej różnicy między objawami tego pacjenta.",
+        "zh": "此患者的各症狀之間沒有明顯差異。"
       }
     },
     {
@@ -3103,7 +3363,12 @@
         "nl": "Paren die in dezelfde aanval zijn gebruikt. De analyse toetst elke behandeling apart, dus een paar wordt hier alleen geteld en nooit op zichzelf gemeten — er wordt geen effectgrootte voor de combinatie geclaimd.",
         "fr": "Paires utilisées pendant la même crise. Le moteur teste chaque traitement séparément : une paire est donc seulement comptée ici, jamais mesurée en tant que telle — aucune taille d'effet n'est avancée pour la combinaison.",
         "it": "Coppie usate nello stesso attacco. Il motore analizza ogni trattamento separatamente, quindi una coppia qui viene solo contata, mai misurata di per sé — per la combinazione non si afferma alcuna dimensione dell'effetto.",
-        "pt": "Pares usados na mesma crise. O motor testa cada tratamento em separado, por isso um par é aqui apenas contado, nunca medido por si só — não se afirma qualquer tamanho de efeito para a combinação."
+        "pt": "Pares usados na mesma crise. O motor testa cada tratamento em separado, por isso um par é aqui apenas contado, nunca medido por si só — não se afirma qualquer tamanho de efeito para a combinação.",
+        "ja": "同じ発作で使われた組み合わせです。分析は各治療を別々に検証するため、組み合わせはここで数えるだけで、単独では測定していません。組み合わせの効果の大きさは示していません。",
+        "ko": "같은 발작에서 함께 사용한 조합이에요. 분석은 각 치료를 따로 검증하므로 조합은 여기서 횟수만 세고 따로 측정하지 않아요. 조합의 효과 크기는 제시하지 않아요.",
+        "tr": "Aynı atakta başvurulan ikililer. Analiz her tedaviyi ayrı test eder, bu yüzden bir ikili burada yalnızca sayılır, kendi başına ölçülmez: kombinasyon için bir etki büyüklüğü öne sürülmez.",
+        "pl": "Pary użyte w tym samym ataku. Analiza testuje każde leczenie osobno, więc parę tylko się tu liczy, a nigdy nie mierzy osobno: dla połączenia nie podaje się wielkości efektu.",
+        "zh": "在同一次發作中一起使用的組合。分析會分別檢驗每種治療，所以組合在這裡只計次數，不會單獨測量：不對組合宣稱任何效果大小。"
       }
     },
     {
@@ -3115,7 +3380,12 @@
         "nl": "Samen gebruikt",
         "fr": "Utilisés ensemble",
         "it": "Usati insieme",
-        "pt": "Usados juntos"
+        "pt": "Usados juntos",
+        "ja": "一緒に使用",
+        "ko": "함께 사용",
+        "tr": "Birlikte kullanıldı",
+        "pl": "Używane razem",
+        "zh": "一起使用"
       }
     },
     {
@@ -3127,7 +3397,12 @@
         "nl": "Wat de pijn deed in de uren na een dosis, binnen dezelfde aanval, vergeleken met de 3 uur ervoor. Vereist pijn die over de tijd is genoteerd.",
         "fr": "Ce que la douleur a fait dans les heures suivant une prise, au sein de la même crise, par rapport aux 3 heures précédentes. Nécessite une douleur notée dans le temps.",
         "it": "Che cosa ha fatto il dolore nelle ore dopo una dose, all'interno dello stesso attacco, rispetto alle 3 ore precedenti. Richiede il dolore registrato nel tempo.",
-        "pt": "O que a dor fez nas horas após uma dose, dentro da mesma crise, face às 3 horas anteriores. Exige dor registada ao longo do tempo."
+        "pt": "O que a dor fez nas horas após uma dose, dentro da mesma crise, face às 3 horas anteriores. Exige dor registada ao longo do tempo.",
+        "ja": "同じ発作の中で、服用後数時間の痛みの変化を、服用前3時間と比べたものです。時間をおいた痛みの記録が必要です。",
+        "ko": "같은 발작 안에서 복용 후 몇 시간 동안의 통증 변화를 복용 전 3시간과 비교한 결과예요. 시간에 따른 통증 기록이 필요해요.",
+        "tr": "Aynı atak içinde, dozdan sonraki saatlerde ağrının ne yaptığı, önceki 3 saatle karşılaştırmalı. Zaman içinde ağrı kaydı gerektirir.",
+        "pl": "Co działo się z bólem w godzinach po dawce, w tym samym ataku, w porównaniu z 3 godzinami przed nią. Wymaga zapisów bólu w czasie.",
+        "zh": "在同一次發作中，服藥後數小時的疼痛變化，與服藥前 3 小時相比。需要隨時間記錄疼痛。"
       }
     },
     {
@@ -3139,7 +3414,12 @@
         "nl": "Of een behandeling anders uitpakte afhankelijk van de symptomen bij de aanval. Beoordelingen vergeleken, niet gemeten — hierop draait geen statistische toets.",
         "fr": "Si un traitement a agi différemment selon les symptômes présents pendant la crise. Évaluations comparées, non mesurées — aucun test statistique n'est appliqué ici.",
         "it": "Se un trattamento ha agito diversamente a seconda dei sintomi presenti nell'attacco. Valutazioni confrontate, non misurate — su queste non gira alcun test statistico.",
-        "pt": "Se um tratamento resultou de forma diferente consoante os sintomas da crise. Avaliações comparadas, não medidas — aqui não corre qualquer teste estatístico."
+        "pt": "Se um tratamento resultou de forma diferente consoante os sintomas da crise. Avaliações comparadas, não medidas — aqui não corre qualquer teste estatístico.",
+        "ja": "発作に伴う症状によって治療の効き方が違ったかどうかです。評価を比べたもので測定ではなく、統計的検定は行っていません。",
+        "ko": "발작에 동반된 증상에 따라 치료 효과가 달랐는지를 보여 줘요. 측정이 아니라 평가를 비교한 것이며 통계 검정은 하지 않아요.",
+        "tr": "Bir tedavinin, atağa eşlik eden belirtilere göre farklı etki edip etmediği. Değerlendirmeler karşılaştırıldı, ölçülmedi: bunlar üzerinde istatistiksel test yapılmaz.",
+        "pl": "Czy leczenie działało inaczej zależnie od objawów towarzyszących atakowi. Porównano oceny, bez pomiaru: nie wykonuje się na nich testu statystycznego.",
+        "zh": "治療效果是否因發作時伴隨的症狀而不同。這是比較評分，不是測量：不對這些資料進行統計檢定。"
       }
     },
     {
@@ -3151,7 +3431,12 @@
         "nl": "na 1 uur",
         "fr": "après 1 heure",
         "it": "dopo 1 ora",
-        "pt": "após 1 hora"
+        "pt": "após 1 hora",
+        "ja": "1時間後",
+        "ko": "1시간 후",
+        "tr": "1 saat sonra",
+        "pl": "po 1 godzinie",
+        "zh": "1 小時後"
       }
     },
     {
@@ -3163,7 +3448,12 @@
         "nl": "na {0} uur",
         "fr": "après {0} heures",
         "it": "dopo {0} ore",
-        "pt": "após {0} horas"
+        "pt": "após {0} horas",
+        "ja": "{0}時間後",
+        "ko": "{0}시간 후",
+        "tr": "{0} saat sonra",
+        "pl": "po {0} godz.",
+        "zh": "{0} 小時後"
       }
     },
     {
@@ -3175,7 +3465,12 @@
         "nl": "na {0} minuten",
         "fr": "après {0} minutes",
         "it": "dopo {0} minuti",
-        "pt": "após {0} minutos"
+        "pt": "após {0} minutos",
+        "ja": "{0}分後",
+        "ko": "{0}분 후",
+        "tr": "{0} dakika sonra",
+        "pl": "po {0} min",
+        "zh": "{0} 分鐘後"
       }
     },
     {
@@ -3187,7 +3482,12 @@
         "nl": "bij {0} van {1} doses",
         "fr": "dans {0} prises sur {1}",
         "it": "in {0} dosi su {1}",
-        "pt": "em {0} de {1} doses"
+        "pt": "em {0} de {1} doses",
+        "ja": "服用{1}回のうち{0}回",
+        "ko": "복용 {1}회 중 {0}회",
+        "tr": "{1} dozun {0} tanesinde",
+        "pl": "w {0} z {1} dawek",
+        "zh": "{1} 次服藥中有 {0} 次"
       }
     },
     {
@@ -3199,7 +3499,12 @@
         "nl": "bij {0} van {1} notities",
         "fr": "dans {0} entrées sur {1}",
         "it": "in {0} registrazioni su {1}",
-        "pt": "em {0} de {1} registos"
+        "pt": "em {0} de {1} registos",
+        "ja": "記録{1}件のうち{0}件",
+        "ko": "기록 {1}건 중 {0}건",
+        "tr": "{1} kaydın {0} tanesinde",
+        "pl": "w {0} z {1} wpisów",
+        "zh": "{1} 筆記錄中有 {0} 筆"
       }
     },
     {
@@ -3211,7 +3516,12 @@
         "nl": "bij {0} van {1} toepassingen",
         "fr": "dans {0} utilisations sur {1}",
         "it": "in {0} utilizzi su {1}",
-        "pt": "em {0} de {1} utilizações"
+        "pt": "em {0} de {1} utilizações",
+        "ja": "使用{1}回のうち{0}回",
+        "ko": "사용 {1}회 중 {0}회",
+        "tr": "{1} kullanımın {0} tanesinde",
+        "pl": "w {0} z {1} użyć",
+        "zh": "{1} 次使用中有 {0} 次"
       }
     },
     {
@@ -3223,7 +3533,12 @@
         "nl": "bij sommige hiervan steeg de pijn",
         "fr": "la douleur a monté après certains",
         "it": "dopo alcuni il dolore è salito",
-        "pt": "a dor subiu após alguns destes"
+        "pt": "a dor subiu após alguns destes",
+        "ja": "これらの一部の後に痛みが上がりました",
+        "ko": "이 중 일부 후에 통증이 늘었어요",
+        "tr": "bunların bazılarından sonra ağrı arttı",
+        "pl": "po niektórych z nich ból wzrósł",
+        "zh": "其中部分之後疼痛上升"
       }
     },
     {
@@ -3235,7 +3550,12 @@
         "nl": "hierna steeg de pijn",
         "fr": "la douleur a monté après",
         "it": "dopo questi il dolore è salito",
-        "pt": "a dor subiu após estes"
+        "pt": "a dor subiu após estes",
+        "ja": "これらの後に痛みが上がりました",
+        "ko": "이후에 통증이 늘었어요",
+        "tr": "bunlardan sonra ağrı arttı",
+        "pl": "po nich ból wzrósł",
+        "zh": "這些之後疼痛上升"
       }
     },
     {
@@ -3247,7 +3567,12 @@
         "nl": "{0} over {1} aanvallen met {2}, tegenover {3} over {4} zonder",
         "fr": "{0} sur {1} crises avec {2}, contre {3} sur {4} sans",
         "it": "{0} su {1} attacchi con {2}, contro {3} su {4} senza",
-        "pt": "{0} em {1} crises com {2}, face a {3} em {4} sem"
+        "pt": "{0} em {1} crises com {2}, face a {3} em {4} sem",
+        "ja": "{2}あり：発作{1}回で{0}、なし：発作{4}回で{3}",
+        "ko": "{2} 있음: 발작 {1}회에서 {0}, 없음: 발작 {4}회에서 {3}",
+        "tr": "{2} varken {1} atakta {0}, yokken {4} atakta {3}",
+        "pl": "Z objawem {2}: {0} (ataki: {1}), bez niego: {3} (ataki: {4})",
+        "zh": "有{2}時：{1} 次發作為{0}；沒有時：{4} 次發作為{3}"
       }
     },
     {
@@ -3259,7 +3584,12 @@
         "nl": "{0} ptn",
         "fr": "{0} pts",
         "it": "{0} pt",
-        "pt": "{0} pts"
+        "pt": "{0} pts",
+        "ja": "{0}点",
+        "ko": "{0}점",
+        "tr": "{0} puan",
+        "pl": "{0} pkt",
+        "zh": "{0} 分"
       }
     },
     {
@@ -3271,7 +3601,12 @@
         "nl": "{0}% van de opflakkeringsdagen",
         "fr": "{0}% des jours de poussée",
         "it": "{0}% dei giorni di riacutizzazione",
-        "pt": "{0}% dos dias de surto"
+        "pt": "{0}% dos dias de surto",
+        "ja": "悪化した日の{0}%",
+        "ko": "악화된 날의 {0}%",
+        "tr": "Alevlenme günlerinin %{0} kadarı",
+        "pl": "{0}% dni zaostrzeń",
+        "zh": "{0}% 的惡化日"
       }
     },
     {
@@ -3283,7 +3618,12 @@
         "nl": "Begint meestal: {0} ({1} van {2})",
         "fr": "Commence souvent : {0} ({1} sur {2})",
         "it": "Di solito inizia: {0} ({1} su {2})",
-        "pt": "Costuma começar: {0} ({1} de {2})"
+        "pt": "Costuma começar: {0} ({1} de {2})",
+        "ja": "始まりやすい場所：{0}（{2}回中{1}回）",
+        "ko": "주로 시작되는 곳: {0} ({2}회 중 {1}회)",
+        "tr": "Genellikle başladığı yer: {0} ({2} kezin {1} tanesinde)",
+        "pl": "Zwykle zaczyna się: {0} ({1} z {2})",
+        "zh": "通常開始於：{0}（{2} 次中有 {1} 次）"
       }
     },
     {
@@ -3295,7 +3635,12 @@
         "nl": "Gekoppelde triggers: {0}",
         "fr": "Facteurs liés : {0}",
         "it": "Fattori collegati: {0}",
-        "pt": "Fatores associados: {0}"
+        "pt": "Fatores associados: {0}",
+        "ja": "関連する誘因：{0}",
+        "ko": "연관된 유발 요인: {0}",
+        "tr": "Bağlantılı tetikleyiciler: {0}",
+        "pl": "Powiązane wyzwalacze: {0}",
+        "zh": "相關誘因：{0}"
       }
     },
     {
@@ -3307,7 +3652,12 @@
         "nl": "Gebruikt op {0} opflakkeringsdagen",
         "fr": "Utilisé sur {0} jours de poussée",
         "it": "Usato in {0} giorni di riacutizzazione",
-        "pt": "Usado em {0} dias de surto"
+        "pt": "Usado em {0} dias de surto",
+        "ja": "使用した悪化日：{0}日",
+        "ko": "사용한 악화일: {0}일",
+        "tr": "{0} alevlenme gününde kullanıldı",
+        "pl": "Dni zaostrzeń z użyciem: {0}",
+        "zh": "用於 {0} 個惡化日"
       }
     },
     {
@@ -3319,7 +3669,12 @@
         "nl": "{0} doses beoordeeld, gebruikt op {1} opflakkeringsdagen",
         "fr": "{0} prises évaluées, utilisé sur {1} jours de poussée",
         "it": "{0} dosi valutate, usato in {1} giorni di riacutizzazione",
-        "pt": "{0} doses avaliadas, usado em {1} dias de surto"
+        "pt": "{0} doses avaliadas, usado em {1} dias de surto",
+        "ja": "評価された服用{0}回、使用した悪化日{1}日",
+        "ko": "평가한 복용 {0}회, 사용한 악화일 {1}일",
+        "tr": "{0} doz değerlendirildi, {1} alevlenme gününde kullanıldı",
+        "pl": "Ocenione dawki: {0}, dni zaostrzeń z użyciem: {1}",
+        "zh": "已評分 {0} 次服藥，用於 {1} 個惡化日"
       }
     },
     {
@@ -3331,7 +3686,12 @@
         "nl": "Samen genoteerd op ongeveer {0} van {1} opflakkeringsdagen",
         "fr": "Notés ensemble sur environ {0} jours de poussée sur {1}",
         "it": "Registrati insieme in circa {0} giorni di riacutizzazione su {1}",
-        "pt": "Registados juntos em cerca de {0} de {1} dias de surto"
+        "pt": "Registados juntos em cerca de {0} de {1} dias de surto",
+        "ja": "悪化日{1}日のうち約{0}日で一緒に記録",
+        "ko": "악화일 {1}일 중 약 {0}일 함께 기록됨",
+        "tr": "{1} alevlenme gününün yaklaşık {0} tanesinde birlikte kaydedildi",
+        "pl": "Zapisane razem w około {0} z {1} dni zaostrzeń",
+        "zh": "{1} 個惡化日中約有 {0} 個一起記錄"
       }
     },
     {
@@ -3343,7 +3703,12 @@
         "nl": "Bijwerkingen bij {0} van {1} toepassingen",
         "fr": "Effets secondaires dans {0} utilisations sur {1}",
         "it": "Effetti collaterali in {0} utilizzi su {1}",
-        "pt": "Efeitos secundários em {0} de {1} utilizações"
+        "pt": "Efeitos secundários em {0} de {1} utilizações",
+        "ja": "使用{1}回のうち{0}回で副作用",
+        "ko": "사용 {1}회 중 {0}회 부작용",
+        "tr": "{1} kullanımın {0} tanesinde yan etki",
+        "pl": "Skutki uboczne w {0} z {1} użyć",
+        "zh": "{1} 次使用中有 {0} 次出現副作用"
       }
     },
     {

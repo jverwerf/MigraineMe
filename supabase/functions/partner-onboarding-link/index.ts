@@ -95,6 +95,41 @@ const COPY: Record<string, Copy> = {
     done1: "Os teus dados estão na Stripe. Se faltar alguma coisa, eles pedem-ta, e podes voltar a este mesmo link sempre que quiseres para ver ou alterar os teus dados.",
     done2: "A comissão é calculada todos os meses e paga na conta que acabaste de configurar.",
   },
+  ja: {
+    badT: "リンクを確認できません", bad: "この支払い用リンクは無効です。お送りしたリンクをご利用ください。",
+    errT: "問題が発生しました", err: "支払い設定を開けませんでした。少し待ってからもう一度お試しいただくか、ご連絡ください。",
+    doneT: "ありがとうございます",
+    done1: "ご入力の情報はStripeに送られました。ほかに必要なものがあればStripeからご案内があります。情報の確認や変更は、いつでもこの同じリンクから行えます。",
+    done2: "コミッションは毎月計算され、設定いただいた口座に支払われます。",
+  },
+  ko: {
+    badT: "링크를 확인할 수 없어요", bad: "이 지급 링크는 유효하지 않아요. 저희가 보내 드린 링크를 사용해 주세요.",
+    errT: "문제가 발생했어요", err: "지급 설정을 열 수 없었어요. 잠시 후 다시 시도하거나 저희에게 알려 주세요.",
+    doneT: "감사합니다",
+    done1: "입력하신 정보는 Stripe에 있어요. 더 필요한 것이 있으면 Stripe에서 요청할 거예요. 이 링크로 언제든 다시 돌아와 정보를 확인하거나 변경할 수 있어요.",
+    done2: "커미션은 매월 계산되어 방금 설정한 계좌로 지급돼요.",
+  },
+  tr: {
+    badT: "Bağlantı tanınmadı", bad: "Bu ödeme bağlantısı geçerli değil. Lütfen sana gönderdiğimiz bağlantıyı kullan.",
+    errT: "Bir sorun oluştu", err: "Ödeme kurulumunu açamadık. Lütfen birazdan yeniden dene ya da bize haber ver.",
+    doneT: "Teşekkürler",
+    done1: "Bilgilerin Stripe'ta. Başka bir şey gerekirse senden isteyecekler. Bilgilerini kontrol etmek veya değiştirmek için istediğin zaman aynı bağlantıya dönebilirsin.",
+    done2: "Komisyon her ay hesaplanır ve az önce ayarladığın hesaba ödenir.",
+  },
+  pl: {
+    badT: "Nie rozpoznano linku", bad: "Ten link do wypłat jest nieprawidłowy. Użyj linku przesłanego przez nas.",
+    errT: "Coś poszło nie tak", err: "Nie udało się otworzyć ustawień wypłat. Spróbuj ponownie za chwilę lub daj nam znać.",
+    doneT: "Dziękujemy",
+    done1: "Twoje dane są w Stripe. Jeśli będzie potrzebne coś jeszcze, Stripe o to poprosi. Do tego samego linku możesz wrócić w każdej chwili, aby sprawdzić lub zmienić dane.",
+    done2: "Prowizja jest obliczana co miesiąc i wypłacana na konto skonfigurowane przed chwilą.",
+  },
+  zh: {
+    badT: "無法辨識連結", bad: "這個撥款連結無效。請使用我們寄給你的連結。",
+    errT: "發生問題", err: "無法開啟撥款設定。請稍後再試，或告訴我們。",
+    doneT: "謝謝",
+    done1: "你的資料已交給 Stripe。如果還需要其他資料，他們會向你索取。你可以隨時回到這個連結，查看或變更你的資料。",
+    done2: "佣金每月計算一次，並撥入你剛設定的帳戶。",
+  },
 };
 
 const copyFor = (req: Request): Copy => {

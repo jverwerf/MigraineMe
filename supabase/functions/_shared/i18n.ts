@@ -44,12 +44,17 @@ import DE from "./translations/de.ts";
 import ES from "./translations/es.ts";
 import FR from "./translations/fr.ts";
 import IT from "./translations/it.ts";
+import JA from "./translations/ja.ts";
+import KO from "./translations/ko.ts";
 import NL from "./translations/nl.ts";
+import PL from "./translations/pl.ts";
 import PT from "./translations/pt.ts";
+import TR from "./translations/tr.ts";
+import ZH from "./translations/zh.ts";
 
-export type Lang = "en" | "de" | "es" | "nl" | "fr" | "it" | "pt";
+export type Lang = "en" | "de" | "es" | "nl" | "fr" | "it" | "pt" | "ja" | "ko" | "tr" | "pl" | "zh";
 
-export const LANGS: readonly Lang[] = ["en", "de", "es", "nl", "fr", "it", "pt"];
+export const LANGS: readonly Lang[] = ["en", "de", "es", "nl", "fr", "it", "pt", "ja", "ko", "tr", "pl", "zh"];
 
 const SPLIT_TABLES: Partial<Record<Lang, Record<string, string>>> = {
   de: DE,
@@ -58,6 +63,11 @@ const SPLIT_TABLES: Partial<Record<Lang, Record<string, string>>> = {
   fr: FR,
   it: IT,
   pt: PT,
+  ja: JA,
+  ko: KO,
+  tr: TR,
+  pl: PL,
+  zh: ZH,
 };
 
 // Merged lazily and cached: an edge function cold-starts per request and most
@@ -195,6 +205,19 @@ const LANGUAGE_NAMES: Record<Lang, string> = {
   fr: "French",
   it: "Italian",
   pt: "European Portuguese",
+  ja: "Japanese",
+  ko: "Korean",
+  tr: "Turkish",
+  pl: "Polish",
+  zh: "Traditional Chinese as used in Taiwan (Taiwan vocabulary, never Simplified Chinese)",
+};
+
+// "Informal" would give casual speech in Japanese and Korean, which is wrong for
+// this app. Polish past tense marks gender, and the app does not know it.
+const REGISTER: Partial<Record<Lang, string>> = {
+  ja: "Use plain polite です・ます, never casual speech and never 敬語 honorifics.",
+  ko: "Use polite 해요체, never 반말 and never 합쇼체.",
+  pl: "Use the natural, informal register (ty) a health app would use with someone it knows well. Avoid gendered past-tense verbs about the person.",
 };
 
 /**
@@ -212,5 +235,5 @@ export function languageDirective(lang: Lang): string {
   const name = LANGUAGE_NAMES[lang];
   return `\n\nIMPORTANT: write every user-facing string in your response in ${name}. `
     + `Keep JSON keys, enum values and any identifiers exactly as specified in English. `
-    + `Use the natural, informal register a health app would use with someone it knows well.`;
+    + (REGISTER[lang] ?? `Use the natural, informal register a health app would use with someone it knows well.`);
 }
