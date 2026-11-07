@@ -5160,7 +5160,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Deze Cliniko-login is niet ingesteld als behandelaar, dus je kunt hiermee geen afspraken aannemen.",
  "This practitioner is not taking appointments here.": "Deze behandelaar neemt hier geen afspraken aan.",
  "You are not connected to that practitioner.": "Je bent niet gekoppeld aan die behandelaar.",
- "I agree to my health data being used as described in the Privacy Policy.": "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt zoals beschreven in het privacybeleid.",
  "Your health data": "Je gezondheidsdata",
  "Not answered": "Onbeantwoord",
  "Profile updates": "Profielupdates",
@@ -5197,5 +5196,6 @@
  "Milligrams (mg)": "Milligram (mg)",
  "Minimal": "Minimaal",
  "Motor": "Motorisch",
- "Remove download": "Download weghalen"
+ "Remove download": "Download weghalen",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt om deze app te laten werken, zoals beschreven in het privacybeleid. We verkopen ze nooit en gebruiken ze nooit voor reclame."
 }

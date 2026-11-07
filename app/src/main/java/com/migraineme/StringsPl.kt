@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5494 entries.
+ * 5495 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -1412,7 +1412,6 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Liczba osobnych epizodów stanu CZUWANIA podczas snu, zapisanych przez twoją aplikację do snu w Health Connect.",
     "Countdown" to "Odliczanie",
     "Counted toward your goal." to "Liczy się do twojego celu.",
-    "Remove download" to "Usuń pobrany plik",
     "Counting imports in insights is part of the subscription" to "Wliczanie importów do wniosków jest częścią subskrypcji",
     "Counts are the total times you logged the activity as missed." to "Liczba to łączna ilość razy, gdy aktywność została zapisana jako pominięta.",
     "Covers scalp, temples and eyes" to "Obejmuje skórę głowy, skronie i oczy",
@@ -2265,7 +2264,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Wysoka wilgotność",
     "Humidity low" to "Niska wilgotność",
     "Hydration" to "Nawodnienie",
-    "I agree to my health data being used as described in the Privacy Policy." to "Zgadzam się na wykorzystywanie moich danych o zdrowiu w sposób opisany w Polityce prywatności.",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "Zgadzam się na wykorzystywanie moich danych o zdrowiu do działania tej aplikacji, w sposób opisany w Polityce prywatności. Nigdy ich nie sprzedajemy ani nie używamy do reklam.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Akceptuję Warunki korzystania i Politykę prywatności. W społeczności nie tolerujemy nadużyć ani niewłaściwych treści.",
     "I am 18 or over" to "Mam 18+ lat",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Pomogę ci zrozumieć twoje wzorce migreny na podstawie zapisanych danych: snu, HRV, regeneracji, wyzwalaczy i nie tylko.",
@@ -3493,6 +3492,7 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "Usunąć „%s”? Nie można cofnąć.",
     "Remove %s from this log" to "Usuń %s z tego wpisu",
     "Remove aura from this log" to "Usuń aurę z wpisu",
+    "Remove download" to "Usuń pobrany plik",
     "Remove entry" to "Usuń wpis",
     "Remove from Frequent" to "Usuń z Częstych",
     "Remove from favorites" to "Usuń z ulubionych",
@@ -4523,10 +4523,10 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Use any relief methods?" to "Sposoby na ulgę?",
     "Use for insights" to "Użyj do wniosków",
     "Use search at the top to jump to a specific metric." to "Użyj wyszukiwania u góry, by przejść do wybranej miary.",
-    "Use search at the top to jump to a specific metric. Permissions can be changed later in Android system settings." to "Użyj wyszukiwarki u góry, aby przejść do wybranej miary. Uprawnienia możesz zmienić później w ustawieniach systemu Android.",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Use search at the top to jump to a specific metric. Permissions can be changed later in Android system settings." to "Użyj wyszukiwarki u góry, aby przejść do wybranej miary. Uprawnienia możesz zmienić później w ustawieniach systemu Android.",
     "Use the card for a quick weekly trend read; tap in when you want to understand " to "Użyj karty, by szybko zerknąć na tygodniowy trend; wejdź, gdy chcesz zrozumieć ",
     "Used %s times, no relief rated" to "Użyto %s razy, bez oceny ulgi",
     "Used %s times, no relief rated|few" to "Użyto %s razy, bez oceny ulgi",

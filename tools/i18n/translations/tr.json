@@ -5162,7 +5162,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Bu Cliniko girişi uzman olarak ayarlanmamış, bu yüzden randevu alamaz.",
  "This practitioner is not taking appointments here.": "Bu uzman burada randevu almıyor.",
  "You are not connected to that practitioner.": "Bu uzmanla bağlantın yok.",
- "I agree to my health data being used as described in the Privacy Policy.": "Sağlık verilerimin Gizlilik Politikası’nda açıklandığı şekilde kullanılmasını kabul ediyorum.",
  "Your health data": "Sağlık verilerin",
  "Not answered": "Yanıtsız",
  "Profile updates": "Profil güncellemeleri",
@@ -5199,5 +5198,6 @@
  "Milligrams (mg)": "Miligram (mg)",
  "Minimal": "Çok az",
  "Motor": "Motor",
- "Remove download": "İndirmeyi kaldır"
+ "Remove download": "İndirmeyi kaldır",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "Sağlık verilerimin, Gizlilik Politikası’nda açıklandığı şekilde bu uygulamanın çalıştırılması için kullanılmasını kabul ediyorum. Verileri asla satmıyor ve reklam için kullanmıyoruz."
 }

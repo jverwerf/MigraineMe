@@ -19322,7 +19322,7 @@
     "count": 1
   },
   {
-    "en": "I agree to my health data being used as described in the Privacy Policy.",
+    "en": "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/HealthConsent.kt:87"

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5198 entries.
+ * 5199 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -1209,7 +1209,6 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Aantal losse WAKKER-fasen tijdens de slaap, zoals je slaapapp ze in Health Connect vastlegt.",
     "Countdown" to "Aftellen",
     "Counted toward your goal." to "Telt mee voor je doel.",
-    "Remove download" to "Download weghalen",
     "Counting imports in insights is part of the subscription" to "Imports meetellen in inzichten hoort bij het abonnement",
     "Counts are the total times you logged the activity as missed." to "Dit telt hoe vaak je de activiteit als gemist noteerde.",
     "Covers scalp, temples and eyes" to "Dekt hoofd, slapen en ogen",
@@ -2047,7 +2046,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luchtvochtigheid hoog",
     "Humidity low" to "Luchtvochtigheid laag",
     "Hydration" to "Hydratatie",
-    "I agree to my health data being used as described in the Privacy Policy." to "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt zoals beschreven in het privacybeleid.",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt om deze app te laten werken, zoals beschreven in het privacybeleid. We verkopen ze nooit en gebruiken ze nooit voor reclame.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ik ga akkoord met de voorwaarden en het privacybeleid. Misbruik en aanstootgevende inhoud zijn in de community niet toegestaan.",
     "I am 18 or over" to "Ik ben 18 of ouder",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Ik help je je patronen te snappen met wat je bijhoudt: slaap, HRV, herstel, triggers en meer.",
@@ -3244,6 +3243,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "\"%s\" weghalen? Dit kan niet terug.",
     "Remove %s from this log" to "%s uit deze log halen",
     "Remove aura from this log" to "Aura weghalen",
+    "Remove download" to "Download weghalen",
     "Remove entry" to "Weghalen",
     "Remove from Frequent" to "Uit Vaak halen",
     "Remove from favorites" to "Uit favorieten",
@@ -4523,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Wat je pijn deed in de uren na een dosis, binnen dezelfde aanval. Vereist pijn die je in de tijd bijhoudt.",
     "What's on the plate?" to "Wat ligt er op je bord?",
     "What's on your mind?" to "Wat houdt je bezig?",
-    "When" to "Wanneer",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "When" to "Wanneer",
     "When I haven't exercised" to "Als ik niet gesport heb",
     "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores)." to "Met Oura gekozen komt stress rechtstreeks uit Oura's stressdata: stress_high ÷ (stress_high + recovery_high) × 100. Dit vervangt de standaard berekende stress (uit HRV- + rusthartslag-z-scores).",
     "When an item you follow becomes a trigger for the day" to "Als iets dat je volgt vandaag een trigger wordt",

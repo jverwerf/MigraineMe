@@ -84,7 +84,7 @@ fun HealthConsentTick(checked: Boolean, onChange: (Boolean) -> Unit) {
         )
         Column(Modifier.weight(1f)) {
             Text(
-                t("I agree to my health data being used as described in the Privacy Policy."),
+                t("I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising."),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.BodyTextColor,
                 modifier = Modifier.clickable { onChange(!checked) },

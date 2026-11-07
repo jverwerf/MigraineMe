@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5199 entries.
+ * 5200 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -1209,7 +1209,6 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "睡眠期間「清醒」階段事件的獨立次數,由你的睡眠應用程式記錄在 Health Connect 中。",
     "Countdown" to "倒數計時",
     "Counted toward your goal." to "已計入你的目標。",
-    "Remove download" to "移除下載",
     "Counting imports in insights is part of the subscription" to "在洞察中計入匯入的資料,屬於訂閱方案的一部分",
     "Counts are the total times you logged the activity as missed." to "次數是你將該活動記錄為已錯過的總次數。",
     "Covers scalp, temples and eyes" to "覆蓋頭皮、太陽穴和眼睛",
@@ -2048,7 +2047,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "濕度偏高",
     "Humidity low" to "濕度偏低",
     "Hydration" to "水分攝取",
-    "I agree to my health data being used as described in the Privacy Policy." to "我同意依照隱私權政策所述使用我的健康資料。",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "我同意依照隱私權政策所述，將我的健康資料用於運作此 App。我們絕不會出售這些資料，也不會將其用於廣告。",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "我同意使用條款與隱私權政策。社群內不容許濫用行為的使用者及不當內容。",
     "I am 18 or over" to "我已年滿 18 歲",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "我可以根據你記錄的資料,幫你了解偏頭痛的規律,包括睡眠、HRV、恢復狀態、誘因等。",
@@ -3245,6 +3244,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "移除「%s」?此操作無法復原。",
     "Remove %s from this log" to "從這筆紀錄移除 %s",
     "Remove aura from this log" to "從此紀錄移除預兆",
+    "Remove download" to "移除下載",
     "Remove entry" to "移除紀錄",
     "Remove from Frequent" to "從「常用」移除",
     "Remove from favorites" to "從我的最愛移除",
@@ -4523,10 +4523,10 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "What your data *says.*" to "你的*資料*怎麼說。",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "在同一次發作中,服藥後幾小時內你的疼痛有何變化。需要長時間記錄疼痛程度。",
     "What's on the plate?" to "盤子裡有什麼?",
-    "What's on your mind?" to "你在想什麼?",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "What's on your mind?" to "你在想什麼?",
     "When" to "時間",
     "When I haven't exercised" to "沒運動時",
     "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores)." to "選擇 Oura 時,壓力會直接取自 Oura 的壓力資料:stress_high ÷ (stress_high + recovery_high) × 100。這會取代預設的計算壓力(依 HRV 與 RHR 的 z 分數)。",

@@ -5161,7 +5161,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "このClinikoのログインは施術者として設定されていないため、予約を受けられません。",
  "This practitioner is not taking appointments here.": "この施術者は、ここでは予約を受け付けていません。",
  "You are not connected to that practitioner.": "その施術者とは連携していません。",
- "I agree to my health data being used as described in the Privacy Policy.": "プライバシーポリシーに記載のとおり、私の健康データが使用されることに同意します。",
  "Your health data": "あなたの健康データ",
  "Not answered": "未回答",
  "Profile updates": "プロフィールの更新",
@@ -5198,5 +5197,6 @@
  "Milligrams (mg)": "ミリグラム",
  "Minimal": "ごくわずか",
  "Motor": "運動症状",
- "Remove download": "ダウンロードを削除"
+ "Remove download": "ダウンロードを削除",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "このアプリの運営のために、プライバシーポリシーに記載のとおり私の健康データが使用されることに同意します。データを販売したり広告に使用したりすることはありません。"
 }

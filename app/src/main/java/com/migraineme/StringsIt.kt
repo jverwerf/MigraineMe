@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5198 entries.
+ * 5199 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -1209,7 +1209,6 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Numero di fasi SVEGLIO distinte nel sonno, come le registra la tua app del sonno in Health Connect.",
     "Countdown" to "Conteggio",
     "Counted toward your goal." to "Conta per il tuo obiettivo.",
-    "Remove download" to "Rimuovi download",
     "Counting imports in insights is part of the subscription" to "Contare le importazioni negli insight fa parte dell'abbonamento",
     "Counts are the total times you logged the activity as missed." to "Conta quante volte hai segnato l'attività come persa.",
     "Covers scalp, temples and eyes" to "Copre cuoio, tempie e occhi",
@@ -2047,7 +2046,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Umidità alta",
     "Humidity low" to "Umidità bassa",
     "Hydration" to "Idratazione",
-    "I agree to my health data being used as described in the Privacy Policy." to "Acconsento all'uso dei miei dati sanitari come descritto nell'Informativa sulla privacy.",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "Acconsento all'uso dei miei dati sanitari per il funzionamento di questa app, come descritto nell'Informativa sulla privacy. Non li vendiamo mai e non li usiamo mai per la pubblicità.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Accetto i Termini d'uso e l'Informativa sulla privacy. Abusi e contenuti offensivi non sono tollerati nella community.",
     "I am 18 or over" to "Ho 18 anni o più",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Posso aiutarti a capire i tuoi schemi con i dati che registri: sonno, HRV, recupero, fattori e altro.",
@@ -3244,6 +3243,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "Togliere \"%s\"? Non si torna indietro.",
     "Remove %s from this log" to "Togli %s da questa voce",
     "Remove aura from this log" to "Togli l'aura",
+    "Remove download" to "Rimuovi download",
     "Remove entry" to "Togli voce",
     "Remove from Frequent" to "Togli da Frequenti",
     "Remove from favorites" to "Togli dai preferiti",
@@ -4523,10 +4523,10 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Che cosa ha fatto il dolore nelle ore dopo una dose, nello stesso attacco. Servono valori del dolore nel tempo.",
     "What's on the plate?" to "Cosa c'è nel piatto?",
     "What's on your mind?" to "A cosa pensi?",
-    "When" to "Quando",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "When" to "Quando",
     "When I haven't exercised" to "Quando non ho fatto sport",
     "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores)." to "Con Oura scelto, lo stress arriva direttamente dai suoi dati: stress_high ÷ (stress_high + recovery_high) × 100. Sostituisce lo stress calcolato di base (z-score di HRV + battito a riposo).",
     "When an item you follow becomes a trigger for the day" to "Quando una voce che segui diventa fattore del giorno",

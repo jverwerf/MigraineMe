@@ -5161,7 +5161,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "이 Cliniko 로그인은 전문가로 설정되어 있지 않아서 예약을 받을 수 없어요.",
  "This practitioner is not taking appointments here.": "이 전문가는 여기서 예약을 받지 않아요.",
  "You are not connected to that practitioner.": "해당 전문가와 연결되어 있지 않아요.",
- "I agree to my health data being used as described in the Privacy Policy.": "개인정보 처리방침에 설명된 대로 내 건강 데이터가 사용되는 데 동의합니다.",
  "Your health data": "내 건강 데이터",
  "Not answered": "미응답",
  "Profile updates": "프로필 업데이트",
@@ -5198,5 +5197,6 @@
  "Milligrams (mg)": "밀리그램 (mg)",
  "Minimal": "최소",
  "Motor": "운동",
- "Remove download": "다운로드 삭제"
+ "Remove download": "다운로드 삭제",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "개인정보 처리방침에 설명된 대로 이 앱을 운영하는 데 내 건강 데이터가 사용되는 것에 동의합니다. 데이터를 판매하거나 광고에 사용하지 않습니다."
 }

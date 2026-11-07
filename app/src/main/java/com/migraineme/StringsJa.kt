@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5199 entries.
+ * 5200 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -1209,7 +1209,6 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "睡眠中に目が覚めた回数です。お使いの睡眠アプリがHealth Connectに記録したものです。",
     "Countdown" to "残り時間",
     "Counted toward your goal." to "目標に数えられます。",
-    "Remove download" to "ダウンロードを削除",
     "Counting imports in insights is part of the subscription" to "インサイトでの取り込み件数の集計は、サブスクリプションに含まれます",
     "Counts are the total times you logged the activity as missed." to "回数は、その活動を「できなかった」と記録した合計回数です。",
     "Covers scalp, temples and eyes" to "頭皮、こめかみ、目を覆います",
@@ -2048,7 +2047,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "湿度が高い",
     "Humidity low" to "湿度が低い",
     "Hydration" to "水分補給",
-    "I agree to my health data being used as described in the Privacy Policy." to "プライバシーポリシーに記載のとおり、私の健康データが使用されることに同意します。",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "このアプリの運営のために、プライバシーポリシーに記載のとおり私の健康データが使用されることに同意します。データを販売したり広告に使用したりすることはありません。",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "利用規約とプライバシーポリシーに同意します。コミュニティでは、迷惑行為や不適切な内容は認められません。",
     "I am 18 or over" to "18歳以上です",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "記録したデータ(睡眠、HRV、回復、誘因など)をもとに、片頭痛のパターンを理解するお手伝いをします。",
@@ -3245,6 +3244,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "「%s」を削除しますか？元に戻せません。",
     "Remove %s from this log" to "%sをこの記録から削除",
     "Remove aura from this log" to "この記録から前兆を削除",
+    "Remove download" to "ダウンロードを削除",
     "Remove entry" to "記録を削除",
     "Remove from Frequent" to "「よく使う」から削除",
     "Remove from favorites" to "お気に入りから削除",
@@ -4523,10 +4523,10 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "What your data *says.*" to "データが*語ること。*",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "服用後の数時間、同じ発作の中で痛みがどう変化したか。痛みを継続して記録する必要があります。",
     "What's on the plate?" to "食事は何ですか?",
-    "What's on your mind?" to "今何を考えていますか?",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "What's on your mind?" to "今何を考えていますか?",
     "When" to "いつ",
     "When I haven't exercised" to "運動しなかったとき",
     "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores)." to "Ouraを選ぶと、ストレスはOuraのストレスデータから直接記録されます:stress_high ÷ (stress_high + recovery_high) × 100。これは、標準の計算によるストレス(HRVと安静時心拍のzスコアから算出)に代わります。",

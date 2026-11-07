@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5200 entries.
+ * 5201 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -1209,7 +1209,6 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Uyku uygulamanın Health Connect'e kaydettiği, uyku sırasındaki ayrı UYANIK evresi olaylarının sayısı.",
     "Countdown" to "Geri sayım",
     "Counted toward your goal." to "Hedefine sayıldı.",
-    "Remove download" to "İndirmeyi kaldır",
     "Counting imports in insights is part of the subscription" to "İçgörülerde içe aktarılanları saymak abonelikte yer alır",
     "Counts are the total times you logged the activity as missed." to "Sayılar, etkinliği kaçırıldı olarak kaydettiğin toplam sayıdır.",
     "Covers scalp, temples and eyes" to "Kafa derisini, şakakları ve gözleri kaplar",
@@ -2048,7 +2047,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Nem yüksek",
     "Humidity low" to "Nem düşük",
     "Hydration" to "Su dengesi",
-    "I agree to my health data being used as described in the Privacy Policy." to "Sağlık verilerimin Gizlilik Politikası’nda açıklandığı şekilde kullanılmasını kabul ediyorum.",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "Sağlık verilerimin, Gizlilik Politikası’nda açıklandığı şekilde bu uygulamanın çalıştırılması için kullanılmasını kabul ediyorum. Verileri asla satmıyor ve reklam için kullanmıyoruz.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul ediyorum. Toplulukta kötüye kullanıma ve uygunsuz içeriğe izin verilmez.",
     "I am 18 or over" to "18 yaşındayım",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Kaydettiğin verileri kullanarak migren örüntülerini anlamana yardımcı olabilirim: uyku, HRV, toparlanma, tetikleyiciler ve daha fazlası.",
@@ -3246,6 +3245,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "\"%s\" kaldırılsın mı? Geri alınamaz.",
     "Remove %s from this log" to "%s öğesini bu günlükten kaldır",
     "Remove aura from this log" to "Aurayı kayıttan kaldır",
+    "Remove download" to "İndirmeyi kaldır",
     "Remove entry" to "Kaydı kaldır",
     "Remove from Frequent" to "Sık Kullanılanlardan Çıkar",
     "Remove from favorites" to "Favorilerden çıkar",
@@ -4523,10 +4523,10 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "What your aura has been doing across your attacks" to "Auran ataklarında nasıl davrandı",
     "What your data *says.*" to "Verilerin ne *söylüyor.*",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "Aynı atak içinde, bir dozdan sonraki saatlerde ağrının nasıl değiştiği. Zaman içinde kaydedilmiş ağrı gerekir.",
-    "What's on the plate?" to "Tabakta ne var?",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "What's on the plate?" to "Tabakta ne var?",
     "What's on your mind?" to "Aklında ne var?",
     "When" to "Ne zaman",
     "When I haven't exercised" to "Egzersiz yapmadığımda",

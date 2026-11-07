@@ -5160,7 +5160,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Questo accesso a Cliniko non è configurato come professionista, quindi non può ricevere appuntamenti.",
  "This practitioner is not taking appointments here.": "Questo professionista non riceve appuntamenti qui.",
  "You are not connected to that practitioner.": "Non sei collegato a quel professionista.",
- "I agree to my health data being used as described in the Privacy Policy.": "Acconsento all'uso dei miei dati sanitari come descritto nell'Informativa sulla privacy.",
  "Your health data": "I tuoi dati salute",
  "Not answered": "Non risposto",
  "Profile updates": "Aggiornamenti del profilo",
@@ -5197,5 +5196,6 @@
  "Milligrams (mg)": "Milligrammi (mg)",
  "Minimal": "Minimo",
  "Motor": "Motorio",
- "Remove download": "Rimuovi download"
+ "Remove download": "Rimuovi download",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "Acconsento all'uso dei miei dati sanitari per il funzionamento di questa app, come descritto nell'Informativa sulla privacy. Non li vendiamo mai e non li usiamo mai per la pubblicità."
 }

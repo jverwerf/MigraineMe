@@ -5161,7 +5161,6 @@
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "這個 Cliniko 登入帳號尚未設定為執業者,因此無法接受預約。",
  "This practitioner is not taking appointments here.": "這位執業者目前不在此接受預約。",
  "You are not connected to that practitioner.": "你尚未與這位執業者連結。",
- "I agree to my health data being used as described in the Privacy Policy.": "我同意依照隱私權政策所述使用我的健康資料。",
  "Your health data": "你的健康資料",
  "Not answered": "未回答",
  "Profile updates": "個人資料更新",
@@ -5198,5 +5197,6 @@
  "Milligrams (mg)": "毫克 (mg)",
  "Minimal": "極輕微",
  "Motor": "運動功能",
- "Remove download": "移除下載"
+ "Remove download": "移除下載",
+ "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising.": "我同意依照隱私權政策所述，將我的健康資料用於運作此 App。我們絕不會出售這些資料，也不會將其用於廣告。"
 }

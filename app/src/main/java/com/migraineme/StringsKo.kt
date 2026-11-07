@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5199 entries.
+ * 5200 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -1209,7 +1209,6 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "수면 앱이 Health Connect에 기록한 수면 중 깨어 있던 단계의 개별 횟수예요.",
     "Countdown" to "카운트다운",
     "Counted toward your goal." to "목표에 반영됐어요.",
-    "Remove download" to "다운로드 삭제",
     "Counting imports in insights is part of the subscription" to "인사이트에서 가져온 데이터 집계는 구독에 포함돼요",
     "Counts are the total times you logged the activity as missed." to "횟수는 해당 활동을 놓친 것으로 기록한 총 횟수예요.",
     "Covers scalp, temples and eyes" to "두피, 관자놀이, 눈을 덮어요",
@@ -2048,7 +2047,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "습도 높음",
     "Humidity low" to "습도 낮음",
     "Hydration" to "수분 섭취",
-    "I agree to my health data being used as described in the Privacy Policy." to "개인정보 처리방침에 설명된 대로 내 건강 데이터가 사용되는 데 동의합니다.",
+    "I agree to my health data being used to run this app, as described in the Privacy Policy. We never sell it or use it for advertising." to "개인정보 처리방침에 설명된 대로 이 앱을 운영하는 데 내 건강 데이터가 사용되는 것에 동의합니다. 데이터를 판매하거나 광고에 사용하지 않습니다.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "이용약관과 개인정보 처리방침에 동의해요. 커뮤니티에서는 악의적인 사용자와 부적절한 콘텐츠를 허용하지 않아요.",
     "I am 18 or over" to "18세 이상이에요",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "기록한 데이터(수면, HRV, 회복, 유발 요인 등)로 편두통 패턴을 이해하도록 도와드릴게요.",
@@ -3245,6 +3244,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Remove \"%s\"? This can't be undone." to "\"%s\" 삭제할까요? 되돌릴 수 없어요.",
     "Remove %s from this log" to "이 기록에서 %s 제거",
     "Remove aura from this log" to "기록에서 조짐 삭제",
+    "Remove download" to "다운로드 삭제",
     "Remove entry" to "기록 삭제",
     "Remove from Frequent" to "자주 쓰는 항목에서 삭제",
     "Remove from favorites" to "즐겨찾기에서 제거",
@@ -4523,10 +4523,10 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "What your data *says.*" to "데이터가 *말해 주는 것.*",
     "What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time." to "같은 발작 안에서 약을 복용한 뒤 몇 시간 동안 통증이 어떻게 변했는지예요. 시간에 따른 통증 기록이 필요해요.",
     "What's on the plate?" to "식탁에 뭐가 있나요?",
-    "What's on your mind?" to "무슨 생각 하세요?",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "What's on your mind?" to "무슨 생각 하세요?",
     "When" to "언제",
     "When I haven't exercised" to "운동하지 않았을 때",
     "When Oura is selected, stress is written directly from Oura's stress data: stress_high ÷ (stress_high + recovery_high) × 100. This replaces the default computed stress (from HRV + RHR z-scores)." to "Oura를 선택하면 스트레스를 Oura의 스트레스 데이터에서 바로 가져와요: stress_high ÷ (stress_high + recovery_high) × 100. 기본으로 계산하던 스트레스(HRV + RHR z점수 기반)를 대신해요.",
