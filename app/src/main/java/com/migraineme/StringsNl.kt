@@ -2209,6 +2209,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Let-down" to "Ontspanning na stress",
     "Let-down effect" to "Na stress",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Laat %1\$s een AI-samenvatting vragen van wat je deelt. Die gaat zonder je naam naar OpenAI, maar kan je eigen notities bevatten.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s kan ook een sessie met je opnemen en daar met OpenAI tekst en een conceptnotitie van maken. Het geluid wordt niet bewaard.",
     "Level" to "Niveau",
     "Level %s" to "Niveau %s",
     "Lie down" to "Gaan liggen",

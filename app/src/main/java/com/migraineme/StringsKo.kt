@@ -2210,6 +2210,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Let-down" to "스트레스 후 이완",
     "Let-down effect" to "긴장 후 이완 효과",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "%1\$s이(가) 공유한 내용의 AI 요약을 요청할 수 있어요. 이름 없이 OpenAI로 전송되지만 직접 쓴 메모가 포함될 수 있어요.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s님은 회원님과의 세션을 녹음해 OpenAI로 텍스트와 메모 초안으로 만들 수도 있습니다. 소리는 보관되지 않습니다.",
     "Level" to "단계",
     "Level %s" to "단계 %s",
     "Lie down" to "눕기",

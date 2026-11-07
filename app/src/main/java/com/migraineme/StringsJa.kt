@@ -2210,6 +2210,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Let-down" to "ストレス後の緩み",
     "Let-down effect" to "ストレス後の反動",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "%1\$sが、共有内容のAI要約を依頼できるようにします。名前を除いてOpenAIに送信されますが、ご自身のメモが含まれる場合があります。",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s はあなたとのセッションを録音し、OpenAI を使って文字とメモの下書きにすることもできます。音声は保存されません。",
     "Level" to "段階",
     "Level %s" to "段階 %s",
     "Lie down" to "横になる",

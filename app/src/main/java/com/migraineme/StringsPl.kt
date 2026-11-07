@@ -2438,6 +2438,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Let-down" to "Odprężenie po stresie",
     "Let-down effect" to "Efekt odprężenia",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Pozwala %1\$s poprosić o podsumowanie AI tego, co udostępniasz. Trafia do OpenAI bez Twojego imienia, ale może zawierać notatki.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s może też nagrać sesję z Tobą i zamienić ją za pomocą OpenAI na tekst i szkic notatki. Dźwięk nie jest przechowywany.",
     "Level" to "Poziom",
     "Level %s" to "Poziom %s",
     "Lie down" to "Połóż się",

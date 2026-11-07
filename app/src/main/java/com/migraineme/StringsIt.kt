@@ -2209,6 +2209,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Let-down" to "Rilassamento post-stress",
     "Let-down effect" to "Dopo lo stress",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Permette a %1\$s di chiedere un riepilogo IA di ciò che condividi. Va a OpenAI senza il tuo nome, ma può includere le tue note.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s può anche registrare una seduta con te e trasformarla in testo e in una bozza di nota con OpenAI. L’audio non viene conservato.",
     "Level" to "Livello",
     "Level %s" to "Livello %s",
     "Lie down" to "Sdraiarsi",

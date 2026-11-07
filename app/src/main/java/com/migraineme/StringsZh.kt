@@ -2210,6 +2210,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Let-down" to "壓力解除後的放鬆",
     "Let-down effect" to "壓力解除效應",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "讓 %1\$s 可以要求為你分享的內容產生 AI 摘要。內容會在移除姓名後傳送給 OpenAI,但可能包含你寫的筆記。",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s 也可以錄下與您的療程，並透過 OpenAI 轉成文字和筆記草稿。聲音不會保留。",
     "Level" to "等級",
     "Level %s" to "等級 %s",
     "Lie down" to "躺下來",

@@ -2210,6 +2210,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Let-down" to "Stres sonrası gevşeme",
     "Let-down effect" to "Etki sonrası düşüş",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "%1\$s, paylaştıklarının yapay zekâ özetini isteyebilir. Adın olmadan OpenAI'a gönderilir ama yazdığın notları içerebilir.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s sizinle yaptığı bir seansı kaydedip OpenAI ile metne ve not taslağına da çevirebilir. Ses saklanmaz.",
     "Level" to "Seviye",
     "Level %s" to "Seviye %s",
     "Lie down" to "Uzan",

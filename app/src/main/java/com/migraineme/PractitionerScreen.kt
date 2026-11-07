@@ -632,10 +632,12 @@ fun ConsentSheet(
                             }
                         }
                         if (aiInfo) Text(t("Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.", practitionerName), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
+                        if (aiInfo) Text(t("%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept.", practitionerName), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
                     }
                 } else {
                     TextButton(onClick = { choosing = true }, colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.AccentPurple)) { Text(t("Choose what to share")) }
                 }
+                if (aiAllowed == null) Text(t("%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept.", practitionerName), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
 
 }
         },

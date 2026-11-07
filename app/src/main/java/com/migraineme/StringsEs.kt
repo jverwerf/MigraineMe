@@ -2209,6 +2209,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Let-down" to "Relajación tras estrés",
     "Let-down effect" to "Tras el estrés",
     "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Permite a %1\$s pedir un resumen con IA de lo que compartes. Va a OpenAI sin tu nombre, pero puede incluir tus notas.",
+    "%1\$s can also record a session with you and turn it into text and a draft note, using OpenAI. The sound is not kept." to "%1\$s también puede grabar una sesión contigo y convertirla en texto y un borrador de nota con OpenAI. El sonido no se guarda.",
     "Level" to "Nivel",
     "Level %s" to "Nivel %s",
     "Lie down" to "Tumbarse",
