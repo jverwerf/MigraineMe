@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5091 entries.
+ * 5092 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -109,6 +109,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% van de opvlamdagen",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s van %4\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% van de dagen tegenover %2\$s%% normaal",
+    "%1\$s%% of risk · %2\$s pts" to "%1\$s%% van risico · %2\$s ptn",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% van risico · %2\$s ptn · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% van dagen",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s aanvallen",
@@ -275,6 +276,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1 zone gekozen",
     "1 attack" to "1 aanval",
     "1 day" to "1 dag",
+    "1 day active" to "1 dag actief",
     "1 day before" to "1 dag ervoor",
     "1 day before onset" to "1 dag voor start",
     "1 day of risk scores checked" to "1 dag risicoscores getoetst",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "Elke maandag\n*leert* het jou.",
     "Every Monday it *learns.*" to "Elke maandag *leert* het.",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Elke maandag stelt de AI met je herijking doelen voor, zoals meer slaap of minder schermtijd. Je weekoverzicht laat zien of ze werken.",
-    "Every attack in range, in the order things happened" to "Elke aanval in de periode, op volgorde",
-    "Every attack in the period, in the order things happened" to "Elke aanval in de periode, in volgorde van gebeurtenis",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "Elke aanval in de periode, op volgorde",
+    "Every attack in the period, in the order things happened" to "Elke aanval in de periode, in volgorde van gebeurtenis",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Elke gelogde aanval wordt met deze vergeleken op alles wat je vastlegde: triggers, slaap, weer, symptomen, wat je nam en wanneer. Hoe meer een eerdere aanval met deze deelt, hoe zwaarder die telt, en alles hierboven is het gewogen midden van die aanvallen. Bij te weinig vergelijkbare aanvallen tonen we liever niets dan een gok.",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "Elke dag is er een van drie: een migrainedag als je een aanval logde, ",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "Elk apparaat op deze pagina hebben we zelf getest, en voor elk een korting geregeld voor MigraineMe-gebruikers.",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praktijken bij jou in de buurt. Ze horen niet bij MigraineMe en zien je dagboek niet.",
     "Practitioner" to "Behandelaar",
     "Practitioners" to "Behandelaars",
-    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "De behandelaars hier zijn zelfstandig. MigraineMe heeft hen niet in dienst en staat buiten wat je met hen afspreekt.",
-    "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Zorgverleners om je dagboek mee te delen, artikelen voor jou, en een forum met mensen zoals jij.",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "De behandelaars hier zijn zelfstandig. MigraineMe heeft hen niet in dienst en staat buiten wat je met hen afspreekt.",
+    "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Zorgverleners om je dagboek mee te delen, artikelen voor jou, en een forum met mensen zoals jij.",
     "Predict ovulation" to "Eisprong schatten",
     "Predict ovulation too?" to "Ook de eisprong voorspellen?",
     "Predicted" to "Verwacht",
@@ -4521,11 +4523,11 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Workout HR zones" to "HR-zones bij training",
     "Works Best When" to "Werkt best als",
     "Works Best When…" to "Werkt best als…",
-    "Works best when" to "Werkt het best als",
-    "Works well" to "Werkt goed",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Works best when" to "Werkt het best als",
+    "Works well" to "Werkt goed",
     "Worse in spring" to "Erger in de lente",
     "Worse in summer" to "Erger in de zomer",
     "Worse in winter" to "Erger in de winter",
@@ -5005,7 +5007,6 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "time" to "tijd",
     "times used" to "keer gebruikt",
     "today" to "vandaag",
-    "today only" to "alleen vandaag",
     "tomorrow" to "morgen",
     "top center" to "boven midden",
     "top left" to "boven links",

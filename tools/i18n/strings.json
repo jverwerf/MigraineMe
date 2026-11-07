@@ -6350,13 +6350,13 @@
     "count": 2
   },
   {
-    "en": "today only",
+    "en": "1 day active",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/HomeScreen.kt",
       "app/src/main/java/com/migraineme/RiskDetailScreen.kt"
     ],
-    "max_len": 16,
+    "max_len": 20,
     "count": 2
   },
   {

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5093 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -109,6 +109,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 症状のある日の%2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s(%4\$s中%3\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%%の日(通常%2\$s%%)",
+    "%1\$s%% of risk · %2\$s pts" to "リスクの%1\$s%% · %2\$s点",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "リスクの%1\$s%% · %2\$s点 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "日数の割合: %1\$s%% 対 %2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · 発作%2\$s件",
@@ -275,6 +276,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1か所選択中",
     "1 attack" to "発作1回",
     "1 day" to "1日",
+    "1 day active" to "1日間活動",
     "1 day before" to "1日前",
     "1 day before onset" to "発症の1日前",
     "1 day of risk scores checked" to "1日分のリスクスコアを確認しました",
@@ -1515,11 +1517,11 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "毎週月曜日、\nあなたを*学びます。*",
     "Every Monday it *learns.*" to "毎週月曜日に*学びます。*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "毎週月曜日に、再調整の結果とあわせて、睡眠を増やす、画面を見る時間を減らすなどの目標をAIが提案します。週間レビューで、効果が出ているかを確認できます。",
-    "Every attack in range, in the order things happened" to "期間内のすべての発作を、起きた順に",
-    "Every attack in the period, in the order things happened" to "期間内のすべての発作を、起きた順に表示します",
 )
 
 private fun jaStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "期間内のすべての発作を、起きた順に",
+    "Every attack in the period, in the order things happened" to "期間内のすべての発作を、起きた順に表示します",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "記録したすべての発作を、この発作と比較します。比べる項目は、誘因、睡眠、天気、症状、服用した薬とその時刻など、記録したすべてです。過去の発作がこの発作と共通する点が多いほど重く扱い、上の内容はそれらの発作の加重平均です。似た発作が少なすぎる場合は、推測を示さず何も表示しません。",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "1日は次の3つのいずれかになります。発作を記録した日は片頭痛の日、",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "このページの機器はすべて私たち自身で試し、MigraineMeをお使いの方向けに、それぞれ割引も交渉しました。",
@@ -3018,11 +3020,11 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "片頭痛のうち、自分で対処できる部分のための実用的な道具です。光、音、睡眠、そして発作そのものに対応します。どれも、まず私たち自身のつらい日々で試したものです。",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "近くで見つかった診療所です。MigraineMeとは関係がなく、あなたの日記は見られません。",
     "Practitioner" to "医療者",
-    "Practitioners" to "医療者",
-    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "ここに載っている施術者は独立しています。MigraineMeが雇用しているわけではなく、あなたとの取り決めにも関与しません。",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Practitioners" to "医療者",
+    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "ここに載っている施術者は独立しています。MigraineMeが雇用しているわけではなく、あなたとの取り決めにも関与しません。",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "日記を共有できる施術者、あなたに合わせて選んだ記事、同じ悩みを持つ人たちのフォーラムが使えます。",
     "Predict ovulation" to "排卵を予測",
     "Predict ovulation too?" to "排卵も予測しますか?",
@@ -4521,11 +4523,11 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Working well" to "効果あり",
     "Workout HR zones" to "運動中の心拍ゾーン",
     "Works Best When" to "効きやすい条件",
-    "Works Best When…" to "効きやすい条件",
-    "Works best when" to "効きやすい条件",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Works Best When…" to "効きやすい条件",
+    "Works best when" to "効きやすい条件",
     "Works well" to "効果あり",
     "Worse in spring" to "春に悪化",
     "Worse in summer" to "夏に悪化",
@@ -5006,7 +5008,6 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "time" to "時刻",
     "times used" to "使用回数",
     "today" to "今日",
-    "today only" to "今日のみ",
     "tomorrow" to "明日",
     "top center" to "上部中央",
     "top left" to "左上",

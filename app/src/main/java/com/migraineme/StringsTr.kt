@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5093 entries.
+ * 5094 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -109,6 +109,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · belirti günlerinde %%%2\$s",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s / %4\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "Günlerin %%%1\$s'i, genelde %%%2\$s",
+    "%1\$s%% of risk · %2\$s pts" to "Riskin %%%1\$s'i · %2\$s puan",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "Riskin %%%1\$s'i · %2\$s puan · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "Günlerin %%%1\$s / %%%2\$s",
     "%1\$s%% · %2\$s attacks" to "%%%1\$s · %2\$s atak",
@@ -275,6 +276,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1 bölge seçildi",
     "1 attack" to "1 atak",
     "1 day" to "1 gün",
+    "1 day active" to "1 gün aktif",
     "1 day before" to "1 gün önce",
     "1 day before onset" to "Başlamadan 1 gün önce",
     "1 day of risk scores checked" to "1 günlük risk skoru kontrol edildi",
@@ -1515,11 +1517,11 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "Her pazartesi\nseni *öğrenir.*",
     "Every Monday it *learns.*" to "Her pazartesi *öğrenir.*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Her pazartesi yapay zekâ, yeniden kalibrasyonunla birlikte daha çok uyku ya da daha az ekran süresi gibi hedefler önerir. Haftalık özetin bu hedeflerin işe yarayıp yaramadığını gösterir.",
-    "Every attack in range, in the order things happened" to "Aralıktaki her atak, olayların gerçekleşme sırasıyla",
-    "Every attack in the period, in the order things happened" to "Dönemdeki her atak, olayların gerçekleşme sırasıyla",
 )
 
 private fun trStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "Aralıktaki her atak, olayların gerçekleşme sırasıyla",
+    "Every attack in the period, in the order things happened" to "Dönemdeki her atak, olayların gerçekleşme sırasıyla",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Kaydettiğin her atak, bu atakla kaydettiğin her şey üzerinden karşılaştırılır: tetikleyiciler, uyku, hava durumu, belirtiler, aldığın ilaçlar ve ne zaman aldığın. Geçmiş bir atak bununla ne kadar çok ortak noktaya sahipse o kadar çok ağırlık taşır ve yukarıdaki her şey bu ataklar arasındaki ağırlıklı ortalamadır. Benzer atak çok azsa tahmin göstermek yerine hiçbir şey göstermez.",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "Her gün üçünden birine girer: atak kaydettiysen migren günü, ",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "Bu sayfadaki her cihazı kendimiz denedik ve her biri için MigraineMe kullanıcılarına özel bir indirim ayarladık.",
@@ -3018,11 +3020,11 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Potassium low" to "Potasyum düşük",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Migrenin üzerinde bir şey yapabileceğin yönler için pratik araçlar: ışık, gürültü, uyku ve atağın kendisi. Her biri önce bizim kendi kötü günlerimizden geçti.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Yakınında bulduğumuz muayenehaneler. MigraineMe'nin parçası değiller ve günlüğünü göremezler.",
-    "Practitioner" to "Uzman",
-    "Practitioners" to "Uzmanlar",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Practitioner" to "Uzman",
+    "Practitioners" to "Uzmanlar",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Burada listelenen uzmanlar bağımsızdır. MigraineMe onları çalıştırmaz ve onlarla vardığın anlaşmalara karışmaz.",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Günlüğünü paylaşabileceğin uzmanlar, senin için seçilmiş makaleler ve senin gibi insanların forumu.",
     "Predict ovulation" to "Yumurtlama tahmini",
@@ -4521,11 +4523,11 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Working from home" to "Evden çalışma",
     "Working well" to "İyi çalışıyor",
     "Workout HR zones" to "Antrenman nabız bölgeleri",
-    "Works Best When" to "En İyi Etki Ettiği Durum",
-    "Works Best When…" to "En iyi şu durumda…",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Works Best When" to "En İyi Etki Ettiği Durum",
+    "Works Best When…" to "En iyi şu durumda…",
     "Works best when" to "En iyi şu durumda işe yarar",
     "Works well" to "Etkili",
     "Worse in spring" to "İlkbaharda daha kötü",
@@ -5007,7 +5009,6 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "time" to "saat",
     "times used" to "kullanım sayısı",
     "today" to "bugün",
-    "today only" to "yalnızca bugün",
     "tomorrow" to "yarın",
     "top center" to "üst orta",
     "top left" to "sol üst",

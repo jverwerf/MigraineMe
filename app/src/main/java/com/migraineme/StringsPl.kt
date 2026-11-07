@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5387 entries.
+ * 5388 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -162,6 +162,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% dni z objawami",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s z %4\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% dni, zwykle %2\$s%%",
+    "%1\$s%% of risk · %2\$s pts" to "%1\$s%% ryzyka · %2\$s pkt",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% ryzyka · %2\$s pkt · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% dni",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s ataków",
@@ -460,6 +461,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1 obszar wybrany",
     "1 attack" to "1 atak",
     "1 day" to "1 dzień",
+    "1 day active" to "1 dzień aktywny",
     "1 day before" to "Dzień wcześniej",
     "1 day before onset" to "1 dzień przed atakiem",
     "1 day of risk scores checked" to "Sprawdzono 1 dzień wyników ryzyka",
@@ -1515,11 +1517,11 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Disable Battery Optimization" to "Wyłącz optymalizację baterii",
     "Discard" to "Odrzuć",
     "Disconnect" to "Odłącz",
-    "Disconnect Garmin?" to "Odłączyć Garmin?",
-    "Disconnect Oura?" to "Odłączyć Oura?",
 )
 
 private fun plStrings1(): Map<String, String> = mapOf(
+    "Disconnect Garmin?" to "Odłączyć Garmin?",
+    "Disconnect Oura?" to "Odłączyć Oura?",
     "Disconnect Polar?" to "Odłączyć Polar?",
     "Disconnect WHOOP?" to "Odłączyć WHOOP?",
     "Disconnect?" to "Odłączyć?",
@@ -3018,11 +3020,11 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth." to "Gdy atak już się rozpoczął. Przyciemniony, cichy pokój, przyciszone dźwięki i zimny kompres owinięty w ściereczkę.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Gdy już go masz, zapisywanie to cały sens: MigraineMe porównuje, jak przebiegają twoje ataki ",
     "Ondansetron" to "Ondansetron",
-    "One tap to confirm or skip" to "Dotknij, by potwierdzić lub pominąć",
-    "One thing at a time — what happened today?" to "Po kolei – co się dziś wydarzyło?",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "One tap to confirm or skip" to "Dotknij, by potwierdzić lub pominąć",
+    "One thing at a time — what happened today?" to "Po kolei – co się dziś wydarzyło?",
     "One-tap doctor-ready PDF of everything you've logged." to "Jednym dotknięciem: PDF dla lekarza ze wszystkim, co zapisano.",
     "Ongoing Migraine" to "Migrena trwa",
     "Ongoing migraine reminder" to "Przypomnienie o trwającej migrenie",
@@ -4521,11 +4523,11 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Warned, nothing came" to "Ostrzeżenie, bez ataku",
     "Warning Signs" to "Zwiastuny",
     "Warning sign: %1\$s" to "Sygnał ostrzegawczy: %1\$s",
-    "Warning signs" to "Zwiastuny",
-    "Warning signs before" to "Zwiastuny wcześniej",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Warning signs" to "Zwiastuny",
+    "Warning signs before" to "Zwiastuny wcześniej",
     "Warning signs first" to "Najpierw ostrzeżenia",
     "Warning signs you get" to "Twoje sygnały ostrzegawcze",
     "Warning signs you log" to "Twoje ostrzeżenia",
@@ -5285,7 +5287,6 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "time" to "godzina",
     "times used" to "liczba użyć",
     "today" to "dziś",
-    "today only" to "tylko dziś",
     "tomorrow" to "jutro",
     "top center" to "góra środek",
     "top left" to "u góry po lewej",

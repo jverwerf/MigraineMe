@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5093 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -109,6 +109,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 佔症狀日 %2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s（%4\$s 中的 %3\$s）",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% 的日子,一般為 %2\$s%%",
+    "%1\$s%% of risk · %2\$s pts" to "風險 %1\$s%% · %2\$s 分",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "風險 %1\$s%% · %2\$s 分 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% 對 %2\$s%% 的天數",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s 次發作",
@@ -275,6 +276,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "已選 1 個區域",
     "1 attack" to "1 次發作",
     "1 day" to "1 天",
+    "1 day active" to "活躍1天",
     "1 day before" to "1 天前",
     "1 day before onset" to "發作前 1 天",
     "1 day of risk scores checked" to "已檢查 1 天的風險分數",
@@ -1515,11 +1517,11 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "每週一\n它都會*更了解*你。",
     "Every Monday it *learns.*" to "每週一它都會*學習。*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "每週一,AI 會連同你的重新校準建議目標,例如多睡一點或減少螢幕時間。你的每週回顧會顯示這些目標是否有效。",
-    "Every attack in range, in the order things happened" to "範圍內每次發作，依發生順序排列",
-    "Every attack in the period, in the order things happened" to "這段期間的每次發作，依發生順序排列",
 )
 
 private fun zhStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "範圍內每次發作，依發生順序排列",
+    "Every attack in the period, in the order things happened" to "這段期間的每次發作，依發生順序排列",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "你記錄過的每次發作，都會就你記下的所有內容與這次發作比對：誘因、睡眠、天氣、症狀、你服用了什麼以及何時服用。過去的發作與這次越相似，權重就越高，上面顯示的一切都是這些發作的加權中間值。如果相似的發作太少，我們寧可不顯示，也不做猜測。",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "每一天都屬於三種之一：如果你記錄了發作，就是偏頭痛日，",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "這個頁面上的每一款裝置,我們都親自試用過,並為 MigraineMe 使用者爭取到各自的折扣。",
@@ -3018,11 +3020,11 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "針對偏頭痛中你能著力的部分，提供實用好物：光線、噪音、睡眠，以及發作本身。每一樣都先陪我們自己度過了難熬的日子。",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "我們在你附近找到的診所。它們不屬於 MigraineMe，也看不到你的日記。",
     "Practitioner" to "醫療人員",
-    "Practitioners" to "醫療人員",
-    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "這裡列出的執業人員皆為獨立個體。MigraineMe 不僱用他們，也不參與你與他們之間的約定。",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Practitioners" to "醫療人員",
+    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "這裡列出的執業人員皆為獨立個體。MigraineMe 不僱用他們，也不參與你與他們之間的約定。",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "可分享日記的專業人員、為你精選的文章，以及與你有相同經歷的人所組成的論壇。",
     "Predict ovulation" to "預測排卵",
     "Predict ovulation too?" to "也要預測排卵嗎？",
@@ -4521,11 +4523,11 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Working well" to "效果良好",
     "Workout HR zones" to "運動心率區間",
     "Works Best When" to "最有效的時機",
-    "Works Best When…" to "效果最佳的時機…",
-    "Works best when" to "效果最佳的時機",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Works Best When…" to "效果最佳的時機…",
+    "Works best when" to "效果最佳的時機",
     "Works well" to "效果良好",
     "Worse in spring" to "春季更嚴重",
     "Worse in summer" to "夏季更嚴重",
@@ -5006,7 +5008,6 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "time" to "時間",
     "times used" to "使用次數",
     "today" to "今天",
-    "today only" to "僅限今天",
     "tomorrow" to "明天",
     "top center" to "上方置中",
     "top left" to "左上",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5093 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -109,6 +109,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 증상일의 %2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%4\$s 중 %3\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%%의 날 (평소 %2\$s%%)",
+    "%1\$s%% of risk · %2\$s pts" to "위험 %1\$s%% · %2\$s점",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "위험 %1\$s%% · %2\$s점 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "전체 일수 중 %1\$s%% 대 %2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · 발작 %2\$s회",
@@ -275,6 +276,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1개 영역 선택됨",
     "1 attack" to "발작 1회",
     "1 day" to "1일",
+    "1 day active" to "1일 활동",
     "1 day before" to "1일 전",
     "1 day before onset" to "시작 1일 전",
     "1 day of risk scores checked" to "위험 점수 1일치 확인",
@@ -1515,11 +1517,11 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "매주 월요일,\n당신을 *알아가요.*",
     "Every Monday it *learns.*" to "매주 월요일 *배워요.*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "매주 월요일, AI가 재조정 결과와 함께 수면 늘리기나 화면 시간 줄이기 같은 목표를 제안해요. 주간 리뷰에서 목표가 효과가 있는지 확인할 수 있어요.",
-    "Every attack in range, in the order things happened" to "기간 내 모든 발작을 일어난 순서대로",
-    "Every attack in the period, in the order things happened" to "기간 내 모든 발작을 일어난 순서대로",
 )
 
 private fun koStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "기간 내 모든 발작을 일어난 순서대로",
+    "Every attack in the period, in the order things happened" to "기간 내 모든 발작을 일어난 순서대로",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "기록한 모든 발작을 이 발작과 비교해요. 유발 요인, 수면, 날씨, 증상, 복용한 약과 시간까지 기록한 모든 항목이 대상이에요. 과거 발작이 이 발작과 비슷할수록 더 크게 반영되고, 위의 내용은 모두 그 발작들의 가중 평균이에요. 비슷한 발작이 너무 적으면 추측하지 않고 아무것도 보여 주지 않아요.",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "하루는 세 가지 중 하나예요. 발작을 기록했다면 편두통 날, ",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "이 페이지의 모든 기기는 저희가 직접 써 봤고, MigraineMe 사용자를 위해 기기마다 할인도 협상했어요.",
@@ -3018,11 +3020,11 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "빛, 소음, 수면, 발작 자체처럼 편두통에서 직접 대처할 수 있는 부분을 위한 실용적인 도구 모음이에요. 모두 저희가 힘든 날에 먼저 직접 써 본 것들이에요.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "근처에서 찾은 병원이에요. MigraineMe와는 무관하며 내 일기는 볼 수 없어요.",
     "Practitioner" to "의료 전문가",
-    "Practitioners" to "의료 전문가",
-    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "여기 소개된 전문가는 독립된 분들이에요. MigraineMe는 이분들을 고용하지 않으며, 함께 정한 내용에도 관여하지 않아요.",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Practitioners" to "의료 전문가",
+    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "여기 소개된 전문가는 독립된 분들이에요. MigraineMe는 이분들을 고용하지 않으며, 함께 정한 내용에도 관여하지 않아요.",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "일기를 공유할 수 있는 전문가, 나를 위해 고른 글, 나와 같은 사람들의 포럼이 있어요.",
     "Predict ovulation" to "배란 예측",
     "Predict ovulation too?" to "배란도 예측할까요?",
@@ -4521,11 +4523,11 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Working well" to "효과 좋음",
     "Workout HR zones" to "운동 중 심박수 구간",
     "Works Best When" to "가장 잘 듣는 때",
-    "Works Best When…" to "효과 좋은 때…",
-    "Works best when" to "가장 효과적일 때",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Works Best When…" to "효과 좋은 때…",
+    "Works best when" to "가장 효과적일 때",
     "Works well" to "효과 좋음",
     "Worse in spring" to "봄에 더 심해요",
     "Worse in summer" to "여름에 더 심해요",
@@ -5006,7 +5008,6 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "time" to "시간",
     "times used" to "사용 횟수",
     "today" to "오늘",
-    "today only" to "오늘만",
     "tomorrow" to "내일",
     "top center" to "위 가운데",
     "top left" to "왼쪽 위",

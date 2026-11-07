@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5091 entries.
+ * 5092 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -109,6 +109,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% des jours de poussée",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s sur %4\$s)",
     "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% des jours contre %2\$s%% d'habitude",
+    "%1\$s%% of risk · %2\$s pts" to "%1\$s%% du risque · %2\$s pts",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% du risque · %2\$s pts · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% des jours",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s crises",
@@ -275,6 +276,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "1 area selected" to "1 zone choisie",
     "1 attack" to "1 crise",
     "1 day" to "1 jour",
+    "1 day active" to "1 jour actif",
     "1 day before" to "1 jour avant",
     "1 day before onset" to "1 jour avant début",
     "1 day of risk scores checked" to "1 jour de scores de risque vérifié",
@@ -1515,11 +1517,11 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Every Monday\nit *learns* you." to "Chaque lundi,\nil *t'apprend.*",
     "Every Monday it *learns.*" to "Chaque lundi, il *apprend.*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Chaque lundi, l'IA te propose des objectifs avec ton recalibrage, comme plus de sommeil ou moins d'écran. Ton bilan de la semaine montre s'ils marchent.",
-    "Every attack in range, in the order things happened" to "Chaque crise de la période, dans l'ordre",
-    "Every attack in the period, in the order things happened" to "Chaque crise de la période, dans l'ordre des événements",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Every attack in range, in the order things happened" to "Chaque crise de la période, dans l'ordre",
+    "Every attack in the period, in the order things happened" to "Chaque crise de la période, dans l'ordre des événements",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Chaque crise enregistrée est comparée à celle-ci sur tout ce que tu as noté : déclencheurs, sommeil, météo, symptômes, ce que tu as pris et quand. Plus une crise passée partage avec celle-ci, plus elle compte, et tout ce qui précède est la moyenne pondérée de ces crises. Avec trop peu de crises similaires, rien ne s'affiche plutôt qu'une supposition.",
     "Every day falls into one of three: a migraine day if you logged an attack, " to "Chaque jour est l'un des trois : jour de migraine si tu as noté une crise, ",
     "Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one." to "Chaque appareil de cette page, nous l'avons testé nous-mêmes, et négocié une remise pour les utilisatrices de MigraineMe.",
@@ -3018,11 +3020,11 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Cabinets près de chez toi. Ils ne font pas partie de MigraineMe et ne voient pas ton journal.",
     "Practitioner" to "Praticien",
     "Practitioners" to "Praticiens",
-    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Les praticiens listés ici sont indépendants. MigraineMe ne les emploie pas et n'intervient pas dans ce que tu conviens avec eux.",
-    "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Des praticiens avec qui partager ton journal, des articles choisis pour toi, et un forum de gens comme toi.",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Les praticiens listés ici sont indépendants. MigraineMe ne les emploie pas et n'intervient pas dans ce que tu conviens avec eux.",
+    "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Des praticiens avec qui partager ton journal, des articles choisis pour toi, et un forum de gens comme toi.",
     "Predict ovulation" to "Prédire l'ovulation",
     "Predict ovulation too?" to "Prédire aussi l'ovulation ?",
     "Predicted" to "Prévu",
@@ -4521,11 +4523,11 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Workout HR zones" to "Zones de FC à l'effort",
     "Works Best When" to "Marche mieux si",
     "Works Best When…" to "Marche mieux si…",
-    "Works best when" to "Marche mieux quand",
-    "Works well" to "Efficace",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Works best when" to "Marche mieux quand",
+    "Works well" to "Efficace",
     "Worse in spring" to "Pire au printemps",
     "Worse in summer" to "Pire en été",
     "Worse in winter" to "Pire en hiver",
@@ -5005,7 +5007,6 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "time" to "heure",
     "times used" to "utilisations",
     "today" to "aujourd'hui",
-    "today only" to "aujourd'hui",
     "tomorrow" to "demain",
     "top center" to "en haut centre",
     "top left" to "en haut g.",

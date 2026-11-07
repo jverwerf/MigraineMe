@@ -1532,7 +1532,7 @@
     "source": "audit"
   },
   {
-    "en": "today only",
+    "en": "1 day active",
     "class": "hard",
     "max_len": 16,
     "sites": [
