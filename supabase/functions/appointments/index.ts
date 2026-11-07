@@ -245,6 +245,12 @@ Deno.serve(async (req) => {
       const u = String(data?.[0]?.plugins?.meet_url || "").trim();
       return /^https:\/\/([a-z0-9-]+\.)*(meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|zoom\.us|webex\.com)\/\S*$/i.test(u) ? u : null;
     };
+    /** The main page calls with one app's header for every MeSeries app, so a practitioner's row says which app it is. */
+    const appOf = async (practitionerId: string): Promise<string | null> => {
+      if (!APP_SCOPED) return null;
+      const { data } = await db.from("practitioners").select("app_id").eq("id", practitionerId).limit(1);
+      return data?.[0]?.app_id || appId;
+    };
     const calendarChoice = async (practitionerId: string): Promise<string | null> => {
       const { data } = await db.from("practitioners").select("plugins").eq("id", practitionerId).limit(1);
       return data?.[0]?.plugins?.calendar || null;
@@ -266,7 +272,7 @@ Deno.serve(async (req) => {
       return data?.[0]?.external_id ? String(data[0].external_id) : null;
     };
     const linkBetween = async (practitionerId: string, userId: string) => {
-      const { data } = await scoped(db.from("practitioner_clients").select("id,status").eq("practitioner_id", practitionerId).eq("user_id", userId)).limit(5);
+      const { data } = await db.from("practitioner_clients").select("id,status").eq("practitioner_id", practitionerId).eq("user_id", userId).limit(5);
       return (data || []).find((l: any) => l.status === "active") || null;
     };
     const sessionsFor = async (integ: Integ, patientId: string) => {
@@ -292,17 +298,17 @@ Deno.serve(async (req) => {
       return rows;
     };
     /** FCM data values must be strings. Times let the app offer to add a confirmed session to the phone's calendar. */
-    const notify = async (userId: string, what: keyof typeof NOTICE, requestId: string, extra: Record<string, string> = {}) => {
+    const notify = async (userId: string, what: keyof typeof NOTICE, requestId: string, extra: Record<string, string> = {}, forApp: string | null = appId) => {
       const [title, text] = NOTICE[what];
       try {
         if (APP_SCOPED) {
           const { data } = await db.from("profiles").select("fcm_token,fcm_app_id,lang").eq("user_id", userId).limit(1);
           const p: any = data?.[0];
           const owner = typeof p?.fcm_app_id === "string" && p.fcm_app_id ? p.fcm_app_id : "vertigo";
-          if (!p?.fcm_token || owner !== appId) return;
+          if (!p?.fcm_token || owner !== forApp) return;
           const t = translatorFor(asLang(p.lang));
           await db.functions.invoke("send-fcm-push", { body: {
-            type: "practitioner_appointment", app_id: appId, tokens: [p.fcm_token],
+            type: "practitioner_appointment", app_id: forApp, tokens: [p.fcm_token],
             notification: { title: t(title), body: t(text) }, data: { request_id: requestId, ...extra },
           } });
         } else {
@@ -485,13 +491,14 @@ Deno.serve(async (req) => {
         const link = await needLink();
         await needOpen(link.practitioner_id);
         const start = validStart(body.start);
+        const linkApp = await appOf(link.practitioner_id);
         const { data, error } = await db.from("practitioner_appointment_requests").insert({
           practitioner_id: link.practitioner_id, user_id: link.user_id, kind: "followup", proposed_by: "practitioner", status: "requested",
           proposed_start: start, proposed_end: body.end ? new Date(Date.parse(String(body.end))).toISOString() : null,
-          external_type_id: body.type_id ? String(body.type_id) : null, message: String(body.message || "").slice(0, 500) || null, ...stamp,
+          external_type_id: body.type_id ? String(body.type_id) : null, message: String(body.message || "").slice(0, 500) || null, ...(linkApp ? { app_id: linkApp } : {}),
         }).select(COLS).single();
         if (error) throw error;
-        await notify(link.user_id, "proposed", data.id);
+        await notify(link.user_id, "proposed", data.id, {}, linkApp);
         return json({ request: data });
       }
       case "respond": {
@@ -499,7 +506,7 @@ Deno.serve(async (req) => {
         if (row.proposed_by !== "client" || row.status !== "requested") throw new UserError("That request is no longer open.", 409);
         if (!body.accept) {
           const done = await update(row.id, { status: "declined", responded_at: new Date().toISOString(), response_note: String(body.note || "").slice(0, 500) || null });
-          await notify(row.user_id, "declined", row.id);
+          await notify(row.user_id, "declined", row.id, {}, await appOf(row.practitioner_id));
           return json({ request: done });
         }
         const link = await linkBetween(row.practitioner_id, row.user_id);
@@ -511,7 +518,7 @@ Deno.serve(async (req) => {
           starts_at: String(done.scheduled_for), ends_at: String(done.proposed_end || new Date(Date.parse(done.scheduled_for) + 30 * 60000).toISOString()),
           practitioner_name: String(who?.[0]?.display_name || ""),
           meet_url: (await meetOf(row.practitioner_id)) || "",
-        });
+        }, await appOf(row.practitioner_id));
         return json({ request: done });
       }
       case "cancel": {
@@ -523,7 +530,7 @@ Deno.serve(async (req) => {
         }
         const done = await update(row.id, { status: "cancelled", responded_at: new Date().toISOString() });
         if (row.proposed_by === "practitioner" && row.status === "requested") return json({ request: done });
-        await notify(row.user_id, "cancelled", row.id);
+        await notify(row.user_id, "cancelled", row.id, {}, await appOf(row.practitioner_id));
         return json({ request: done });
       }
       case "set_calendar": {
