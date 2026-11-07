@@ -202,7 +202,7 @@ private fun TriggerSymptomProfileCard(
                         // The two rates, undivided. Dividing them gave a bare
                         // "2.4×" that read as an amount rather than a comparison,
                         // and the rates say the same thing without the arithmetic.
-                        Text(t("%1\$s%% of days vs %2\$s%% usually", condPct.toInt(), baselinePct.toInt()),
+                        Text(t("%1\$s%% with it vs %2\$s%% without", condPct.toInt(), baselinePct.toInt()),
                             color = if (condPct >= baselinePct * 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             textAlign = TextAlign.End,

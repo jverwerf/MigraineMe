@@ -2349,7 +2349,7 @@ internal fun PatternsPreviewCard(
                     Text("${prettyLabel(stat.factorName)} \u2192 ${prettyLabel(stat.symptomOutcome)}", color = Color.White,
                         style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                     // The two rates, undivided — same as the Patterns detail card.
-                    Text(t("%1\$s%% of days vs %2\$s%% usually",
+                    Text(t("%1\$s%% with it vs %2\$s%% without",
                         stat.pctMigraineWindows.toInt(), stat.pctControlWindows.toInt()),
                         color = if (stat.pctMigraineWindows >= stat.pctControlWindows * 2f) Color(0xFFE57373) else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),

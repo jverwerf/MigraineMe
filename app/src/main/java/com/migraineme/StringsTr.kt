@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5105 entries.
+ * 5107 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -108,10 +108,10 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · ataklarda %%%2\$s",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · belirti günlerinde %%%2\$s",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s / %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "Günlerin %1\$s%%, genelde %2\$s%%",
     "%1\$s%% of risk · %2\$s pts" to "Riskin %%%1\$s'i · %2\$s puan",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "Riskin %%%1\$s'i · %2\$s puan · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "Günlerin %%%1\$s / %%%2\$s",
+    "%1\$s%% with it vs %2\$s%% without" to "varken %1\$s%%, yokken %2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%%%1\$s · %2\$s atak",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Şiddet: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, yaklaşık %2\$s",
@@ -1579,6 +1579,10 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41 gözlük",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41 tonu ışığa duyarlılık için on yıllardır araştırılıyor. Avulux'tan daha ucuz ve gün boyu takması daha kolay.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "FL-41 tonlu gözlükler, iç ve dış mekân modelleri.",
+    "FLAGGED AND ADDED DATA" to "İŞARETLİ VE EKLENEN",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "İŞARETLENEN VE EKLENEN VERİLER · her çizgi kendi aralığına göre ölçeklenir",
+    "FLAGGED DATA" to "İŞARETLİ",
+    "FLAGGED DATA · each line scaled to its own range" to "İŞARETLENEN VERİLER · her çizgi kendi aralığına göre ölçeklenir",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Facebook girişi başarısız (erişim anahtarı eksik).",
     "Facebook sign-in unavailable." to "Facebook girişi kullanılamıyor.",
@@ -3016,13 +3020,13 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Nüfus varsayılanları. Kalibre edecek yanıt olmadığı için risk göstergen ve azalma eğrileri, sıradan migreni olan sıradan biri için ayarlandı. Kayıt tuttukça sana göre ayarlanır.",
     "Portion" to "Porsiyon",
     "Portion is a guess" to "Porsiyon tahmini",
+)
+
+private fun trStrings2(): Map<String, String> = mapOf(
     "Post" to "Paylaş",
     "Postdrome" to "Postdrom",
     "Postdrome (%s)" to "Postdrom (%s)",
     "Postdrome (after attack)" to "Postdrom (atak sonrası)",
-)
-
-private fun trStrings2(): Map<String, String> = mapOf(
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Buradaki gönderileri başka yetişkinler yazıyor. Böyle kalması için girmeden önce lütfen yaşını onayla.",
     "Posture and deep neck" to "Duruş ve derin boyun",
     "Potassium" to "Potasyum",
@@ -3728,8 +3732,6 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "ATAK",
     "THE TOUR" to "TANITIM",
     "TIMELINE" to "ZAMAN AKIŞI",
-    "TRACKED DATA" to "TAKİP EDİLENLER",
-    "TRACKED DATA · each line scaled to its own range" to "TAKİP EDİLEN VERİLER · her çizgi kendi aralığına göre ölçeklenir",
     "TV / film" to "TV / film",
     "Take 15 seconds to log your day" to "Gününü kaydetmek için 15 saniye ayır",
     "Take any medicine?" to "İlaç aldın mı?",
@@ -4521,11 +4523,11 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Without aura" to "Aurasız",
     "Woke Up" to "Uyandın",
     "Woke up" to "Uyanma",
-    "Woke up time" to "Uyanma saati",
-    "Word-finding trouble" to "Kelime bulma güçlüğü",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Woke up time" to "Uyanma saati",
+    "Word-finding trouble" to "Kelime bulma güçlüğü",
     "Words" to "Kelimeler",
     "Work" to "İş",
     "Work pressure, anxiety, conflict" to "İş baskısı, kaygı, çatışma",

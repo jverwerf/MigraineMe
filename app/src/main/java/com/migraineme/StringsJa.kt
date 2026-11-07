@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5104 entries.
+ * 5106 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -108,10 +108,10 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · 発作の%2\$s%%",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 症状のある日の%2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s(%4\$s中%3\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%%の日(通常%2\$s%%)",
     "%1\$s%% of risk · %2\$s pts" to "リスクの%1\$s%% · %2\$s点",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "リスクの%1\$s%% · %2\$s点 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "日数の割合: %1\$s%% 対 %2\$s%%",
+    "%1\$s%% with it vs %2\$s%% without" to "あり%1\$s%%・なし%2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · 発作%2\$s件",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • 強さ：%3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s(%2\$s頃)",
@@ -1579,6 +1579,10 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41メガネ",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41のレンズは、光過敏について何十年も研究されてきました。Avuluxより安く、一日中かけやすいです。",
     "FL-41 tinted glasses, indoor and outdoor versions." to "FL-41の色付きメガネ(屋内用・屋外用)",
+    "FLAGGED AND ADDED DATA" to "フラグ付き・追加",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "フラグ付きデータと追加データ · 各線はそれぞれの範囲で表示",
+    "FLAGGED DATA" to "フラグ付き",
+    "FLAGGED DATA · each line scaled to its own range" to "フラグ付きデータ · 各線はそれぞれの範囲で表示",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Facebookでのログインに失敗しました(アクセストークンがありません)。",
     "Facebook sign-in unavailable." to "Facebookでのログインは利用できません。",
@@ -3016,13 +3020,13 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Portion" to "分量",
     "Portion is a guess" to "量は推定です",
     "Post" to "投稿",
+)
+
+private fun jaStrings2(): Map<String, String> = mapOf(
     "Postdrome" to "後発症状",
     "Postdrome (%s)" to "後発症状(%s)",
     "Postdrome (after attack)" to "後発症状(発作の後)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "ここでの投稿は、他の成人が書いたものです。そのため、入る前に年齢を確認してください。",
-)
-
-private fun jaStrings2(): Map<String, String> = mapOf(
     "Posture and deep neck" to "姿勢と首の深部",
     "Potassium" to "カリウム",
     "Potassium high" to "カリウムが高い",
@@ -3727,8 +3731,6 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "発作について",
     "THE TOUR" to "案内",
     "TIMELINE" to "経過",
-    "TRACKED DATA" to "記録データ",
-    "TRACKED DATA · each line scaled to its own range" to "記録されたデータ · 各線はそれぞれの範囲に合わせて表示",
     "TV / film" to "テレビ・映画",
     "Take 15 seconds to log your day" to "15秒で今日を記録しましょう",
     "Take any medicine?" to "薬を飲みましたか?",
@@ -4521,11 +4523,11 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Woke Up" to "起床",
     "Woke up" to "起床",
     "Woke up time" to "起床時刻",
-    "Word-finding trouble" to "言葉が出にくい",
-    "Words" to "言葉",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Word-finding trouble" to "言葉が出にくい",
+    "Words" to "言葉",
     "Work" to "仕事",
     "Work pressure, anxiety, conflict" to "仕事のプレッシャー、不安、対立",
     "Work pressure, deadlines" to "仕事のプレッシャー、締め切り",

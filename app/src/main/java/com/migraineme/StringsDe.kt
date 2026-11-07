@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5105 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -108,10 +108,10 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% der Attacken",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% der Schubtage",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s von %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% der Tage statt sonst %2\$s%%",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% des Risikos · %2\$s Pkt.",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% des Risikos · %2\$s Pkt. · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs. %2\$s%% der Tage",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% mit vs. %2\$s%% ohne",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s Attacken",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Stärke: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s gegen %2\$s",
@@ -1579,6 +1579,10 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41-Brille",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41-Tönung wird seit Jahrzehnten bei Lichtempfindlichkeit untersucht. Günstiger als Avulux und leichter den ganzen Tag zu tragen.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Brillen mit FL-41-Tönung, für drinnen und draußen.",
+    "FLAGGED AND ADDED DATA" to "MARKIERT UND HINZUGEFÜGT",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "MARKIERTE UND ERGÄNZTE DATEN · jede Linie auf ihren eigenen Wertebereich skaliert",
+    "FLAGGED DATA" to "MARKIERT",
+    "FLAGGED DATA · each line scaled to its own range" to "MARKIERTE DATEN · jede Linie auf ihren eigenen Wertebereich skaliert",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Facebook-Anmeldung fehlgeschlagen (kein Zugriffstoken).",
     "Facebook sign-in unavailable." to "Facebook-Anmeldung nicht verfügbar.",
@@ -3016,13 +3020,13 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Portion is a guess" to "Portion geschätzt",
     "Post" to "Beitrag",
     "Postdrome" to "Postdrom",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "Postdrom (%s)",
     "Postdrome (after attack)" to "Postdrom (danach)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Beiträge hier stammen von anderen Erwachsenen. Bitte bestätige dein Alter, bevor du eintrittst.",
     "Posture and deep neck" to "Haltung und tiefer Nacken",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoch",
     "Potassium low" to "Kalium niedrig",
@@ -3726,8 +3730,6 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "DIE ATTACKE",
     "THE TOUR" to "DIE TOUR",
     "TIMELINE" to "VERLAUF",
-    "TRACKED DATA" to "ERFASST",
-    "TRACKED DATA · each line scaled to its own range" to "ERFASSTE DATEN · jede Linie auf ihren eigenen Bereich skaliert",
     "TV / film" to "TV / Film",
     "Take 15 seconds to log your day" to "15 Sekunden für deinen Tag",
     "Take any medicine?" to "Medikament genommen?",
@@ -4521,11 +4523,11 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Aufgewacht",
     "Woke up time" to "Aufwachzeit",
     "Word-finding trouble" to "Wortfindungsstörung",
-    "Words" to "Wortfindung",
-    "Work" to "Arbeit",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Words" to "Wortfindung",
+    "Work" to "Arbeit",
     "Work pressure, anxiety, conflict" to "Arbeitsdruck, Angst, Konflikt",
     "Work pressure, deadlines" to "Arbeitsdruck, Fristen",
     "Worked out for you, not answered" to "Für dich berechnet, nicht beantwortet",

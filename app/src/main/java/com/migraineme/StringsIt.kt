@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5105 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -108,10 +108,10 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% degli attacchi",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% dei giorni acuti",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s su %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% dei giorni contro il %2\$s%% di solito",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% del rischio · %2\$s pt",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% del rischio · %2\$s pt · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% dei giorni",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% con vs %2\$s%% senza",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s attacchi",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Intensità: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, verso le %2\$s",
@@ -1579,6 +1579,10 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "occhiali FL-41",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "Il filtro FL-41 è studiato da decenni per la sensibilità alla luce. Costa meno di Avulux ed è più facile da portare tutto il giorno.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Occhiali con filtro FL-41, versione da interno ed esterno.",
+    "FLAGGED AND ADDED DATA" to "SEGNALATI E AGGIUNTI",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "DATI SEGNALATI E AGGIUNTI · ogni linea in scala sul proprio intervallo",
+    "FLAGGED DATA" to "SEGNALATI",
+    "FLAGGED DATA · each line scaled to its own range" to "DATI SEGNALATI · ogni linea in scala sul proprio intervallo",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Accesso Facebook non riuscito (token mancante).",
     "Facebook sign-in unavailable." to "Accesso Facebook non disponibile.",
@@ -3016,13 +3020,13 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Portion is a guess" to "Porzione stimata",
     "Post" to "Pubblica",
     "Postdrome" to "Postdromo",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "Postdromo (%s)",
     "Postdrome (after attack)" to "Postdromo (dopo)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "I post qui sono scritti da altri adulti. Per mantenerlo così, conferma la tua età prima di entrare.",
     "Posture and deep neck" to "Postura e collo profondo",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Potassio",
     "Potassium high" to "Potassio alto",
     "Potassium low" to "Potassio basso",
@@ -3726,8 +3730,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "L'ATTACCO",
     "THE TOUR" to "IL TOUR",
     "TIMELINE" to "CRONOLOGIA",
-    "TRACKED DATA" to "SEGNATO",
-    "TRACKED DATA · each line scaled to its own range" to "DATI TRACCIATI · ogni linea sulla propria scala",
     "TV / film" to "TV / film",
     "Take 15 seconds to log your day" to "15 secondi per inserire la giornata",
     "Take any medicine?" to "Preso un farmaco?",
@@ -4521,11 +4523,11 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Sveglia",
     "Woke up time" to "Ora del risveglio",
     "Word-finding trouble" to "Difficoltà a trovare le parole",
-    "Words" to "Parole",
-    "Work" to "Lavoro",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Words" to "Parole",
+    "Work" to "Lavoro",
     "Work pressure, anxiety, conflict" to "Pressione al lavoro, ansia, conflitti",
     "Work pressure, deadlines" to "Pressione e scadenze",
     "Worked out for you, not answered" to "Calcolato per te, non risposto",

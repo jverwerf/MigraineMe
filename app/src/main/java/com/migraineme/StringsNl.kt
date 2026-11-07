@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5105 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -108,10 +108,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% van de aanvallen",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% van de opvlamdagen",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s van %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% van de dagen tegenover %2\$s%% normaal",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% van risico · %2\$s ptn",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% van risico · %2\$s ptn · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% van dagen",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% met vs %2\$s%% zonder",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s aanvallen",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Zwaarte: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, rond %2\$s",
@@ -1579,6 +1579,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41-bril",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41-tint wordt al decennia onderzocht bij lichtgevoeligheid. Goedkoper dan Avulux en de hele dag prettiger te dragen.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Bril met FL-41-tint, voor binnen en buiten.",
+    "FLAGGED AND ADDED DATA" to "GEMARKEERD EN TOEGEVOEGD",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "GEMARKEERDE EN TOEGEVOEGDE GEGEVENS · elke lijn op zijn eigen bereik geschaald",
+    "FLAGGED DATA" to "GEMARKEERD",
+    "FLAGGED DATA · each line scaled to its own range" to "GEMARKEERDE GEGEVENS · elke lijn op zijn eigen bereik geschaald",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Facebook-login mislukt (geen toegangstoken).",
     "Facebook sign-in unavailable." to "Facebook-login niet beschikbaar.",
@@ -3016,13 +3020,13 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Portion is a guess" to "Portie geschat",
     "Post" to "Plaatsen",
     "Postdrome" to "Nawee",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "Postdroom (%s)",
     "Postdrome (after attack)" to "Nawee (erna)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Berichten hier zijn geschreven door andere volwassenen. Bevestig je leeftijd voordat je verder gaat.",
     "Posture and deep neck" to "Houding en diepe nekspieren",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoog",
     "Potassium low" to "Kalium laag",
@@ -3726,8 +3730,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "DE AANVAL",
     "THE TOUR" to "DE TOUR",
     "TIMELINE" to "TIJDLIJN",
-    "TRACKED DATA" to "BIJGEHOUDEN",
-    "TRACKED DATA · each line scaled to its own range" to "GEVOLGDE DATA · elke lijn op eigen schaal",
     "TV / film" to "Tv / film",
     "Take 15 seconds to log your day" to "15 seconden om je dag te noteren",
     "Take any medicine?" to "Medicijnen genomen?",
@@ -4521,11 +4523,11 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Wakker",
     "Woke up time" to "Wektijd",
     "Word-finding trouble" to "Woordvindproblemen",
-    "Words" to "Woorden",
-    "Work" to "Werk",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Words" to "Woorden",
+    "Work" to "Werk",
     "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",
     "Work pressure, deadlines" to "Werkdruk, deadlines",
     "Worked out for you, not answered" to "Voor je berekend, niet beantwoord",

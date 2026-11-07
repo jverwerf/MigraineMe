@@ -1492,9 +1492,33 @@
    ]
   },
   {
-   "en": "TRACKED DATA · each line scaled to its own range",
+   "en": "FLAGGED DATA · each line scaled to its own range",
    "class": "soft",
-   "max_len": 86,
+   "max_len": 96,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "FLAGGED AND ADDED DATA · each line scaled to its own range",
+   "class": "soft",
+   "max_len": 110,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "FLAGGED DATA",
+   "class": "soft",
+   "max_len": 40,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "FLAGGED AND ADDED DATA",
+   "class": "soft",
+   "max_len": 50,
    "sites": [
     "build-report-html/render.ts"
    ]

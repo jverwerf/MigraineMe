@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5105 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -108,10 +108,10 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% des crises",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% des jours de poussée",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s sur %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% des jours contre %2\$s%% d'habitude",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% du risque · %2\$s pts",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% du risque · %2\$s pts · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% des jours",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% avec vs %2\$s%% sans",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s crises",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Intensité : %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, vers %2\$s",
@@ -1579,6 +1579,10 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "lunettes FL-41",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "Le teint FL-41 est étudié pour la photophobie depuis des décennies. Moins cher qu'Avulux et plus facile à porter toute la journée.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Verres teintés FL-41, versions intérieur et extérieur.",
+    "FLAGGED AND ADDED DATA" to "SIGNALÉES ET AJOUTÉES",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "DONNÉES SIGNALÉES ET AJOUTÉES · chaque courbe à sa propre échelle",
+    "FLAGGED DATA" to "SIGNALÉES",
+    "FLAGGED DATA · each line scaled to its own range" to "DONNÉES SIGNALÉES · chaque courbe à sa propre échelle",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Connexion Facebook échouée (jeton manquant).",
     "Facebook sign-in unavailable." to "Connexion Facebook indisponible.",
@@ -3016,13 +3020,13 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Portion is a guess" to "Portion estimée",
     "Post" to "Publier",
     "Postdrome" to "Postdrome",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "Postdrome (%s)",
     "Postdrome (after attack)" to "Postdrome (après)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Les publications ici sont écrites par d'autres adultes. Pour que cela reste ainsi, merci de confirmer votre âge avant d'entrer.",
     "Posture and deep neck" to "Posture et nuque profonde",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Potassium",
     "Potassium high" to "Potassium élevé",
     "Potassium low" to "Potassium bas",
@@ -3726,8 +3730,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "LA CRISE",
     "THE TOUR" to "LA VISITE",
     "TIMELINE" to "CHRONOLOGIE",
-    "TRACKED DATA" to "SUIVI",
-    "TRACKED DATA · each line scaled to its own range" to "DONNÉES SUIVIES · chaque ligne à sa propre échelle",
     "TV / film" to "Télé / film",
     "Take 15 seconds to log your day" to "15 secondes pour noter ta journée",
     "Take any medicine?" to "Un médicament ?",
@@ -4521,11 +4523,11 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Réveil",
     "Woke up time" to "Heure de réveil",
     "Word-finding trouble" to "Manque du mot",
-    "Words" to "Mots",
-    "Work" to "Travail",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Words" to "Mots",
+    "Work" to "Travail",
     "Work pressure, anxiety, conflict" to "Pression au travail, anxiété, conflit",
     "Work pressure, deadlines" to "Pression, échéances",
     "Worked out for you, not answered" to "Calculé pour toi, pas répondu",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5104 entries.
+ * 5106 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -108,10 +108,10 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · 발작의 %2\$s%%",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 증상일의 %2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%4\$s 중 %3\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%%의 날 (평소 %2\$s%%)",
     "%1\$s%% of risk · %2\$s pts" to "위험 %1\$s%% · %2\$s점",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "위험 %1\$s%% · %2\$s점 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "전체 일수 중 %1\$s%% 대 %2\$s%%",
+    "%1\$s%% with it vs %2\$s%% without" to "있을 때 %1\$s%%, 없을 때 %2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · 발작 %2\$s회",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • 강도: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, %2\$s경",
@@ -1579,6 +1579,10 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41 안경",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41 틴트는 수십 년간 빛 민감성 연구에 쓰였어요. Avulux보다 저렴하고 하루 종일 쓰기도 편해요.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "FL-41 틴트 안경, 실내용과 실외용.",
+    "FLAGGED AND ADDED DATA" to "표시·추가됨",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "표시된 데이터 및 추가한 데이터 · 각 선은 자체 범위에 맞춰 조정",
+    "FLAGGED DATA" to "표시됨",
+    "FLAGGED DATA · each line scaled to its own range" to "표시된 데이터 · 각 선은 자체 범위에 맞춰 조정",
     "Facebook" to "페이스북",
     "Facebook sign-in failed (missing access token)." to "페이스북 로그인에 실패했어요. (액세스 토큰 없음)",
     "Facebook sign-in unavailable." to "페이스북 로그인을 사용할 수 없어요.",
@@ -3016,13 +3020,13 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Portion" to "분량",
     "Portion is a guess" to "섭취량은 추정치",
     "Post" to "게시",
+)
+
+private fun koStrings2(): Map<String, String> = mapOf(
     "Postdrome" to "후기 증상",
     "Postdrome (%s)" to "후기 증상(%s)",
     "Postdrome (after attack)" to "후기 증상 (발작 후)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "이곳의 글은 다른 성인들이 작성해요. 계속 그렇게 유지하려면 입장 전에 나이를 확인해 주세요.",
-)
-
-private fun koStrings2(): Map<String, String> = mapOf(
     "Posture and deep neck" to "자세와 깊은 목 근육",
     "Potassium" to "칼륨",
     "Potassium high" to "칼륨 높음",
@@ -3727,8 +3731,6 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "발작",
     "THE TOUR" to "둘러보기",
     "TIMELINE" to "경과",
-    "TRACKED DATA" to "기록한 데이터",
-    "TRACKED DATA · each line scaled to its own range" to "추적한 데이터 · 각 선은 자체 범위에 맞춰 표시돼요",
     "TV / film" to "TV / 영화",
     "Take 15 seconds to log your day" to "15초 만에 하루를 기록해요",
     "Take any medicine?" to "복용한 약 있나요?",
@@ -4521,11 +4523,11 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Woke Up" to "일어남",
     "Woke up" to "기상",
     "Woke up time" to "일어난 시간",
-    "Word-finding trouble" to "단어 찾기 어려움",
-    "Words" to "단어",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Word-finding trouble" to "단어 찾기 어려움",
+    "Words" to "단어",
     "Work" to "업무",
     "Work pressure, anxiety, conflict" to "업무 압박, 불안, 갈등",
     "Work pressure, deadlines" to "업무 압박, 마감",

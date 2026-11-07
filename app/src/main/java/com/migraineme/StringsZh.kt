@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5104 entries.
+ * 5106 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -108,10 +108,10 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · 佔發作 %2\$s%%",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · 佔症狀日 %2\$s%%",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s（%4\$s 中的 %3\$s）",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% 的日子,一般為 %2\$s%%",
     "%1\$s%% of risk · %2\$s pts" to "風險 %1\$s%% · %2\$s 分",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "風險 %1\$s%% · %2\$s 分 · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% 對 %2\$s%% 的天數",
+    "%1\$s%% with it vs %2\$s%% without" to "有時 %1\$s%%,沒有時 %2\$s%%",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s 次發作",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • 嚴重程度：%3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s，約 %2\$s",
@@ -1579,6 +1579,10 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "FL-41 眼鏡",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "FL-41 濾光鏡片針對畏光的研究已有數十年。比 Avulux 便宜，也更適合整天配戴。",
     "FL-41 tinted glasses, indoor and outdoor versions." to "FL-41 濾光眼鏡，室內與戶外款皆有。",
+    "FLAGGED AND ADDED DATA" to "已標記和新增",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "已標記與新增的資料 · 每條線依各自範圍縮放",
+    "FLAGGED DATA" to "已標記",
+    "FLAGGED DATA · each line scaled to its own range" to "已標記的資料 · 每條線依各自範圍縮放",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Facebook 登入失敗(缺少存取權杖)。",
     "Facebook sign-in unavailable." to "Facebook 登入無法使用。",
@@ -3016,13 +3020,13 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Portion" to "份量",
     "Portion is a guess" to "份量為估計值",
     "Post" to "發佈",
+)
+
+private fun zhStrings2(): Map<String, String> = mapOf(
     "Postdrome" to "後期症狀",
     "Postdrome (%s)" to "後期症狀（%s）",
     "Postdrome (after attack)" to "後期症狀（發作後）",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "這裡的貼文由其他成年人撰寫。為了維持這樣的環境，進入前請先確認你的年齡。",
-)
-
-private fun zhStrings2(): Map<String, String> = mapOf(
     "Posture and deep neck" to "姿勢與頸部深層肌群",
     "Potassium" to "鉀",
     "Potassium high" to "鉀偏高",
@@ -3727,8 +3731,6 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "這次發作",
     "THE TOUR" to "導覽",
     "TIMELINE" to "時間軸",
-    "TRACKED DATA" to "已記錄資料",
-    "TRACKED DATA · each line scaled to its own range" to "追蹤資料 · 各線條依自身範圍縮放",
     "TV / film" to "電視 / 電影",
     "Take 15 seconds to log your day" to "花 15 秒記錄你的一天",
     "Take any medicine?" to "有服用藥物嗎?",
@@ -4521,11 +4523,11 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Woke Up" to "醒來",
     "Woke up" to "醒來",
     "Woke up time" to "起床時間",
-    "Word-finding trouble" to "找字困難",
-    "Words" to "找字",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Word-finding trouble" to "找字困難",
+    "Words" to "找字",
     "Work" to "工作",
     "Work pressure, anxiety, conflict" to "工作壓力、焦慮、衝突",
     "Work pressure, deadlines" to "工作壓力、截止期限",

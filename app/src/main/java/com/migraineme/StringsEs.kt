@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5105 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -108,10 +108,10 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% de los ataques",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% de los días de brote",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s de %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% de los días frente al %2\$s%% habitual",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% del riesgo · %2\$s pts",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% del riesgo · %2\$s pts · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% de días",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% con él vs %2\$s%% sin él",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s ataques",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Fuerza: %3\$s/10",
     "%1\$s, around %2\$s" to "%1\$s, hacia las %2\$s",
@@ -1579,6 +1579,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "gafas FL-41",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "El tinte FL-41 lleva décadas estudiándose para la sensibilidad a la luz. Más barato que Avulux y más fácil de llevar todo el día.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Gafas con tinte FL-41, versión de interior y de exterior.",
+    "FLAGGED AND ADDED DATA" to "MARCADOS Y AÑADIDOS",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "DATOS MARCADOS Y AÑADIDOS · cada línea a escala de su propio rango",
+    "FLAGGED DATA" to "MARCADOS",
+    "FLAGGED DATA · each line scaled to its own range" to "DATOS MARCADOS · cada línea a escala de su propio rango",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Falló el acceso con Facebook (sin token).",
     "Facebook sign-in unavailable." to "Acceso con Facebook no disponible.",
@@ -3016,13 +3020,13 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Portion is a guess" to "Porción estimada",
     "Post" to "Publicar",
     "Postdrome" to "Posdromo",
+)
+
+private fun esStrings2(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "Postdromo (%s)",
     "Postdrome (after attack)" to "Posdromo (después)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Las publicaciones aquí son de otros adultos. Para mantenerlo así, confirma tu edad antes de entrar.",
     "Posture and deep neck" to "Postura y cuello profundo",
-)
-
-private fun esStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Potasio",
     "Potassium high" to "Potasio alto",
     "Potassium low" to "Potasio bajo",
@@ -3726,8 +3730,6 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "EL ATAQUE",
     "THE TOUR" to "EL RECORRIDO",
     "TIMELINE" to "CRONOLOGÍA",
-    "TRACKED DATA" to "REGISTRADO",
-    "TRACKED DATA · each line scaled to its own range" to "DATOS REGISTRADOS · cada línea a su propia escala",
     "TV / film" to "TV / cine",
     "Take 15 seconds to log your day" to "15 segundos para anotar tu día",
     "Take any medicine?" to "¿Tomaste medicina?",
@@ -4521,11 +4523,11 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Despertar",
     "Woke up time" to "Hora de despertar",
     "Word-finding trouble" to "Dificultad con las palabras",
-    "Words" to "Palabras",
-    "Work" to "Trabajo",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Words" to "Palabras",
+    "Work" to "Trabajo",
     "Work pressure, anxiety, conflict" to "Presión laboral, ansiedad, conflicto",
     "Work pressure, deadlines" to "Presión y plazos",
     "Worked out for you, not answered" to "Calculado para ti, sin responder",

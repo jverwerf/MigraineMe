@@ -3241,7 +3241,7 @@
     "count": 2
   },
   {
-    "en": "%1$s%% of days vs %2$s%% usually",
+    "en": "%1$s%% with it vs %2$s%% without",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:205",
@@ -29939,7 +29939,7 @@
     "count": 1
   },
   {
-    "en": "TRACKED DATA",
+    "en": "FLAGGED DATA",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2660"
@@ -29948,12 +29948,30 @@
     "count": 1
   },
   {
-    "en": "TRACKED DATA · each line scaled to its own range",
+    "en": "FLAGGED AND ADDED DATA",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2660"
+    ],
+    "max_len": 50,
+    "count": 1
+  },
+  {
+    "en": "FLAGGED DATA · each line scaled to its own range",
     "class": "soft",
     "sites": [
       "build-report-html/render.ts"
     ],
     "max_len": 86,
+    "count": 1
+  },
+  {
+    "en": "FLAGGED AND ADDED DATA · each line scaled to its own range",
+    "class": "soft",
+    "sites": [
+      "build-report-html/render.ts"
+    ],
+    "max_len": 110,
     "count": 1
   },
   {

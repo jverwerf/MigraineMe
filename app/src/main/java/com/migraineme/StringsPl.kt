@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5399 entries.
+ * 5401 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -161,10 +161,10 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "%1\$s · %2\$s%% of attacks" to "%1\$s · %2\$s%% ataków",
     "%1\$s · %2\$s%% of flare days" to "%1\$s · %2\$s%% dni z objawami",
     "%1\$s → %2\$s (%3\$s of %4\$s)" to "%1\$s → %2\$s (%3\$s z %4\$s)",
-    "%1\$s%% of days vs %2\$s%% usually" to "%1\$s%% dni, zwykle %2\$s%%",
     "%1\$s%% of risk · %2\$s pts" to "%1\$s%% ryzyka · %2\$s pkt",
     "%1\$s%% of risk · %2\$s pts · %3\$s" to "%1\$s%% ryzyka · %2\$s pkt · %3\$s",
     "%1\$s%% vs %2\$s%% of days" to "%1\$s%% vs %2\$s%% dni",
+    "%1\$s%% with it vs %2\$s%% without" to "%1\$s%% z nim vs %2\$s%% bez",
     "%1\$s%% · %2\$s attacks" to "%1\$s%% · %2\$s ataków",
     "%1\$s%% · %2\$s attacks|few" to "%1\$s%% · %2\$s ataki",
     "%1\$s%2\$sm • Severity: %3\$s/10" to "%1\$s%2\$sm • Nasilenie: %3\$s/10",
@@ -1785,6 +1785,10 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "FL-41 glasses" to "okulary FL-41",
     "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day." to "Odcień FL-41 od dekad bada się pod kątem wrażliwości na światło. Tańszy niż Avulux i wygodniejszy do noszenia przez cały dzień.",
     "FL-41 tinted glasses, indoor and outdoor versions." to "Okulary z odcieniem FL-41, wersje do wnętrz i na zewnątrz.",
+    "FLAGGED AND ADDED DATA" to "OZNACZONE I DODANE",
+    "FLAGGED AND ADDED DATA · each line scaled to its own range" to "DANE OZNACZONE I DODANE · każda linia w skali własnego zakresu",
+    "FLAGGED DATA" to "OZNACZONE",
+    "FLAGGED DATA · each line scaled to its own range" to "DANE OZNACZONE · każda linia w skali własnego zakresu",
     "Facebook" to "Facebook",
     "Facebook sign-in failed (missing access token)." to "Logowanie przez Facebooka nie powiodło się (brak tokenu dostępu).",
     "Facebook sign-in unavailable." to "Logowanie przez Facebooka niedostępne.",
@@ -3016,13 +3020,13 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "On flare days" to "W dni z atakiem",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Tylko w dobre dni. Potrzebujesz wolnego kawałka ściany, łóżka lub maty oraz piłki tenisowej do rozluźnienia na końcu.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "W dobre dni lub gdy kark jest napięty po długim siedzeniu przy biurku. Nie podczas ataku, jeśli ruch głową nasila ból.",
+)
+
+private fun plStrings2(): Map<String, String> = mapOf(
     "On track" to "Według planu",
     "Once a day" to "Raz dziennie",
     "Once a day, %s days a week" to "Raz dziennie, %s dni w tygodniu",
     "Once a day, %s days a week|few" to "Raz dziennie, %s dni w tygodniu",
-)
-
-private fun plStrings2(): Map<String, String> = mapOf(
     "Once a day, %s days a week|one" to "Raz dziennie, %s dzień w tygodniu",
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Raz w tygodniu AI proponuje zmiany, np. przesunięcie linii na wskaźnikach. Zaznacz te, na które się zgadzasz.",
     "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere." to "Raz w tygodniu, razem z rekalibracją, MigraineMe analizuje twoje dane i podpowiada cele, które mogą pomóc, np. picie wody, sen albo trening tętna. Cele może też ustawiać twój specjalista. Wyłącz, aby ukryć cele wszędzie.",
@@ -3981,8 +3985,6 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "THE ATTACK" to "ATAK",
     "THE TOUR" to "PRZEWODNIK",
     "TIMELINE" to "OŚ CZASU",
-    "TRACKED DATA" to "ZAPISANE DANE",
-    "TRACKED DATA · each line scaled to its own range" to "ŚLEDZONE DANE · każda linia w skali własnego zakresu",
     "TV / film" to "TV / film",
     "Take 15 seconds to log your day" to "15 sekund, by zapisać swój dzień",
     "Take any medicine?" to "Przyjmujesz lek?",
@@ -4521,11 +4523,11 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
     "Wake Time" to "Pobudka",
     "Wake time" to "Godzina pobudki",
-    "Wake time early" to "Wczesna pobudka",
-    "Wake time late" to "Późna pora wstawania",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Wake time early" to "Wczesna pobudka",
+    "Wake time late" to "Późna pora wstawania",
     "Wake-ups and restlessness" to "Wybudzenia i niepokój",
     "Walk" to "Spacer",
     "Walking" to "Spacerowanie",

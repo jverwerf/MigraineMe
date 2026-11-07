@@ -646,7 +646,7 @@ function attackCard(m: Migraine, d: ReportData): string {
             })()}
           </div>
           ${chart.ranges.length ? `<div class="under-col narrow">
-            ${chart.ranges.length ? `<div class="under-h">${rt("TRACKED DATA")}</div>` : ""}
+            ${chart.ranges.length ? `<div class="under-h">${chart.added ? rt("FLAGGED AND ADDED DATA") : rt("FLAGGED DATA")}</div>` : ""}
             <table class="log">
               ${chart.ranges.map((r) => `<tr>
                 <td class="k" style="color:${r.color};width:auto">${esc(r.label)}</td>
@@ -688,13 +688,28 @@ function smoothPath(pts: { x: number; y: number }[]): string {
  *   bottom — only the continuously tracked metrics, each named at the end of
  *            its own line.
  */
+/** Every series some linked item in this report stands for: the lines that were flagged. */
+function flaggedAnywhere(d: ReportData): Set<string> {
+  const out = new Set<string>();
+  for (const list of [d.prodromes, d.triggers, d.medicines, d.reliefs]) {
+    for (const r of list) {
+      const name = r.name ?? r.type;
+      if (!name) continue;
+      const norm = name.toLowerCase().replace(/:/g, "").trim()
+        .replace(/\s+(low|high|short|long|late|early|many|few)\b.*/, "").trim();
+      for (const k of d.labelToMetricKeys[norm] ?? []) out.add(k);
+    }
+  }
+  return out;
+}
+
 function attackChart(
   m: Migraine,
   d: ReportData,
   events: { at: Date; label: string; category: string; color: string }[],
   metricEvents: { at: Date; label: string; keys: string[]; auto: boolean }[],
   metricKeys: string[],
-): { svg: string; ranges: { label: string; range: string; color: string }[] } {
+): { svg: string; ranges: { label: string; range: string; color: string }[]; added?: boolean } {
   const start = parseDate(m.start_at)!;
   const end = parseDate(m.ended_at) ?? start;
   const hasMetricsEarly = d.metricSeries.some((s) => metricKeys.includes(s.key));
@@ -785,6 +800,8 @@ function attackChart(
 
   // ── bottom panel: continuous metrics only, named on the line ──
   const series = d.metricSeries.filter((s) => metricKeys.includes(s.key));
+  // A line the reader switched on that no attack flagged is not "flagged".
+  const added = series.some((s) => !flaggedAnywhere(d).has(s.key));
   const colorFor = (sr: typeof series[number]) => sr.color ?? C.accent;
   const metricSvg = series.map((s) => {
     const pts = s.points
@@ -930,7 +947,7 @@ function attackChart(
     <text x="${(padL - 2).toFixed(1)}" y="${(p1Top + 8).toFixed(1)}" font-size="6"
       fill="rgba(167,148,189,0.7)" letter-spacing="0.7">${rt("THE ATTACK")}</text>
     ${metricSvg.length ? `<text x="${(padL - 2).toFixed(1)}" y="${(p2Top + 8).toFixed(1)}" font-size="6"
-      fill="rgba(167,148,189,0.7)" letter-spacing="0.7">${rt("TRACKED DATA · each line scaled to its own range")}</text>` : ""}
+      fill="rgba(167,148,189,0.7)" letter-spacing="0.7">${added ? rt("FLAGGED AND ADDED DATA · each line scaled to its own range") : rt("FLAGGED DATA · each line scaled to its own range")}</text>` : ""}
     ${metricSvg.map((mm) => mm.path).join("")}
     ${flagged}
     ${metricLabels}
@@ -942,6 +959,7 @@ function attackChart(
 
   return {
     svg,
+    added,
     ranges: metricSvg.filter((mm) => mm.path)
       .map((mm) => ({ label: mm.label!, range: mm.range!, color: mm.color })),
   };

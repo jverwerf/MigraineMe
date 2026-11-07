@@ -1049,6 +1049,7 @@ fun InsightsReportScreen(
                         detail = detail,
                         events = if (id == sel?.id) windowEvents else emptyList(),
                         metrics = aSeries,
+                        hasAddedLines = (enabledKeys - allAutoSelectedKeys).isNotEmpty(),
                         windowStart = aStart,
                         windowEnd = aEnd,
                         linked = if (id == sel?.id) linkedItems else null,
@@ -2487,6 +2488,7 @@ internal fun AttackCard(
     symptomCategories: Map<String, String>,
     /** Timestamped aura zones for this attack, when it has them. */
     auraZones: List<SupabaseDbService.AuraZoneRow> = emptyList(),
+    hasAddedLines: Boolean = false,
 ) {
     val zone = ZoneId.systemDefault()
     val dtLoc = rememberAppLocale()
@@ -2559,7 +2561,7 @@ internal fun AttackCard(
         )
 
         Spacer(Modifier.height(8.dp))
-        AttackSequence(mg, detail, linked, symptoms, symptomCategories, metrics)
+        AttackSequence(mg, detail, linked, symptoms, symptomCategories, metrics, hasAddedLines)
     }
 }
 
@@ -2572,6 +2574,8 @@ private fun AttackSequence(
     symptoms: List<SupabaseDbService.SymptomLogRow>,
     symptomCategories: Map<String, String>,
     metrics: List<MetricSeries> = emptyList(),
+    /** The reader switched on a line nothing flagged, so "flagged" alone would be untrue. */
+    hasAddedLines: Boolean = false,
 ) {
     data class Row3(val label: String, val at: Instant?, val text: String, val pain: Boolean = false)
 
@@ -2657,7 +2661,7 @@ private fun AttackSequence(
     val drawn = metrics.filter { it.points.size >= 2 }
     if (drawn.isNotEmpty()) {
         Spacer(Modifier.height(8.dp))
-        Text(t("TRACKED DATA"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+        Text(if (hasAddedLines) t("FLAGGED AND ADDED DATA") else t("FLAGGED DATA"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
             style = MaterialTheme.typography.labelSmall)
         drawn.forEach { series ->
             val values = series.points.map { it.value }
@@ -2905,7 +2909,7 @@ internal fun AttackChart(
             Offset(xOf(mg.start), p2Bottom), strokeWidth = 1.dp.toPx(),
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
 
-        // Tracked data: each line scaled to its own range, labelled along its own
+        // Flagged data: each line scaled to its own range, labelled along its own
         // line at a position no other label can claim.
         //
         // Placement is decided, not searched. Every earlier attempt hunted for a
