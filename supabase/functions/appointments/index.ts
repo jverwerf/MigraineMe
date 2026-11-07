@@ -13,6 +13,11 @@
 //   respond   accept or decline what the client suggested
 //   cancel    withdraw a suggestion, or cancel an accepted session
 //   pending   the client's suggestions waiting on this practitioner, all clients
+//   set_calendar  the choice under Plugins, and where "Book an intro call" goes in
+//             the apps: none = their own link, me = the request in the app (no link),
+//             cliniko = their Cliniko online booking page when that is switched on.
+//             The apps only read booking_url, so released versions follow this too.
+//             The own link is kept in plugins so it comes back on None.
 //   calendar  every suggested or confirmed time in a range, so the calendar works
 //             without any practice software
 // Client actions, always the caller's own rows:
@@ -20,6 +25,10 @@
 //   client_suggest  suggest a time to a linked practitioner
 //   client_respond  accept or decline what the practitioner suggested
 //   client_cancel   withdraw a request that nobody has answered yet
+//
+// CALENDAR CHOICE: practitioners.plugins.calendar, set under Plugins. "none" means
+// no calendar and no appointments, "me" means only what is agreed here, "cliniko"
+// adds Cliniko's sessions and booking. Unset: cliniko when connected, otherwise me.
 //
 // OPEN TIMES: Cliniko's available_times answers 404 unless the practice has
 // online booking on, so when it does we work the times out from Cliniko's own
@@ -218,9 +227,19 @@ serve(async (req) => {
 
     const COLS = "id,practitioner_id,user_id,kind,proposed_by,status,message,preferred_times,response_note,proposed_start,proposed_end,scheduled_for,external_provider,external_id,external_type_id,created_at,responded_at";
 
-    const integrationOf = async (practitionerId: string): Promise<Integ | null> => {
-      const { data: pr } = await db.from("practitioners").select("user_id").eq("id", practitionerId).limit(1);
+    const calendarChoice = async (practitionerId: string): Promise<string | null> => {
+      const { data } = await db.from("practitioners").select("plugins").eq("id", practitionerId).limit(1);
+      return data?.[0]?.plugins?.calendar || null;
+    };
+    const needOpen = async (practitionerId: string) => {
+      if ((await calendarChoice(practitionerId)) === "none") throw new UserError("This practitioner is not taking appointments here.", 409);
+    };
+    /** The Cliniko key, unless they chose not to use Cliniko as their calendar. anyChoice is for undoing a booking already made there. */
+    const integrationOf = async (practitionerId: string, anyChoice = false): Promise<Integ | null> => {
+      const { data: pr } = await db.from("practitioners").select("user_id,plugins").eq("id", practitionerId).limit(1);
       const owner = pr?.[0]?.user_id; if (!owner) return null;
+      const choice = pr?.[0]?.plugins?.calendar;
+      if (!anyChoice && (choice === "none" || choice === "me")) return null;
       const { data } = await db.from("practitioner_integrations").select("id,api_key,shard").eq("user_id", owner).eq("provider", PROVIDER).limit(1);
       return (data?.[0] as Integ) || null;
     };
@@ -315,6 +334,8 @@ serve(async (req) => {
           const { data: prs } = ids.length ? await db.from("practitioners").select("id,display_name").in("id", ids) : { data: [] as any[] };
           const nameOf: Record<string, string> = {}; for (const p of prs || []) nameOf[p.id] = p.display_name;
           const sessions: any[] = [];
+          const closed: string[] = [];
+          for (const id of ids) if ((await calendarChoice(id as string)) === "none") closed.push(id as string);
           for (const l of links || []) {
             try {
               const integ = await integrationOf(l.practitioner_id);
@@ -322,10 +343,11 @@ serve(async (req) => {
               if (integ && patient) for (const s of await sessionsFor(integ, patient)) sessions.push({ ...s, practitioner_id: l.practitioner_id, practitioner_name: nameOf[l.practitioner_id] || null });
             } catch (e) { console.warn("sessions skipped", e); }
           }
-          return json({ requests: (rows || []).map((r: any) => ({ ...r, practitioner_name: nameOf[r.practitioner_id] || null })), sessions });
+          return json({ requests: (rows || []).map((r: any) => ({ ...r, practitioner_name: nameOf[r.practitioner_id] || null })), sessions, closed });
         }
         case "client_suggest": {
           const pid = String(body.practitioner_id || "");
+          await needOpen(pid);
           if (!(await linkBetween(pid, user.id))) throw new UserError("You are not connected to that practitioner.", 403);
           const start = validStart(body.start);
           const { data, error } = await db.from("practitioner_appointment_requests").insert({
@@ -388,7 +410,7 @@ serve(async (req) => {
             if (patient) sessions = await sessionsFor(integ, patient);
           } catch (e) { cliniko_error = (e as Error).message; }
         }
-        return json({ requests: rows || [], sessions, cliniko: { connected: !!integ, matched: !!patient, types, error: cliniko_error } });
+        return json({ requests: rows || [], sessions, calendar: await calendarChoice(link.practitioner_id), cliniko: { connected: !!integ, matched: !!patient, types, error: cliniko_error } });
       }
       case "slots": {
         const link = await needLink();
@@ -399,6 +421,7 @@ serve(async (req) => {
       }
       case "propose": {
         const link = await needLink();
+        await needOpen(link.practitioner_id);
         const start = validStart(body.start);
         const { data, error } = await db.from("practitioner_appointment_requests").insert({
           practitioner_id: link.practitioner_id, user_id: link.user_id, kind: "followup", proposed_by: "practitioner", status: "requested",
@@ -428,7 +451,7 @@ serve(async (req) => {
         const row = await mineRow();
         if (!["requested", "accepted"].includes(row.status)) throw new UserError("That is no longer open.", 409);
         if (row.status === "accepted" && row.external_id) {
-          const integ = await integrationOf(row.practitioner_id);
+          const integ = await integrationOf(row.practitioner_id, true);
           if (integ) await ck(integ, `/individual_appointments/${row.external_id}/cancel`, { method: "PATCH", body: JSON.stringify({ cancellation_reason: 50 }) });
         }
         const done = await update(row.id, { status: "cancelled", responded_at: new Date().toISOString() });
@@ -436,8 +459,38 @@ serve(async (req) => {
         await notify(row.user_id, "cancelled", row.id);
         return json({ request: done });
       }
+      case "set_calendar": {
+        const choice = String(body.choice || "");
+        if (!["none", "me", "cliniko"].includes(choice)) throw new UserError("Pick a calendar.");
+        const custom = body.custom_url === undefined ? undefined : String(body.custom_url || "").trim();
+        if (custom && !/^https?:\/\/\S+\.\S+/i.test(custom)) throw new UserError("That does not look like a web address. Start it with https://");
+        let clinikoUrl: string | null = null, onlineBooking: boolean | null = null;
+        if (choice === "cliniko") {
+          const { data } = await db.from("practitioner_integrations").select("id,api_key,shard,web_base").eq("user_id", user.id).eq("provider", PROVIDER).limit(1);
+          const integ: any = data?.[0];
+          if (!integ) throw new UserError("Connect Cliniko first.", 412);
+          const settings = await ck(integ, "/settings").catch(() => null);
+          onlineBooking = settings?.online_bookings?.enabled === true;
+          if (onlineBooking && integ.web_base) clinikoUrl = `${integ.web_base}/bookings`;
+        }
+        const { data: rows } = await db.from("practitioners").select("id,plugins,booking_url,booking_urls").in("id", myIds);
+        let shown: string | null = null;
+        for (const r of rows || []) {
+          const plugins: any = { ...(r.plugins || {}) };
+          // First time through: what they already had is their own link.
+          if (!("calendar" in plugins) && !("own_booking" in plugins)) plugins.own_booking = { url: r.booking_url || null, urls: r.booking_urls || null };
+          if (custom !== undefined) plugins.own_booking = { url: custom || null, urls: null };
+          plugins.calendar = choice;
+          const own = plugins.own_booking || { url: null, urls: null };
+          const patch = choice === "none" ? { booking_url: own.url, booking_urls: own.urls } : { booking_url: clinikoUrl, booking_urls: null };
+          const { error } = await db.from("practitioners").update({ plugins, ...patch }).eq("id", r.id);
+          if (error) throw error;
+          shown = own.url;
+        }
+        return json({ choice, own_url: shown, booking_url: choice === "none" ? shown : clinikoUrl, online_booking: onlineBooking });
+      }
       case "pending": {
-        const { data: rows } = await db.from("practitioner_appointment_requests").select("id,practitioner_id,user_id,status,proposed_start,kind,proposed_by").in("practitioner_id", myIds).eq("status", "requested").eq("proposed_by", "client");
+        const { data: rows } = await db.from("practitioner_appointment_requests").select("id,practitioner_id,user_id,status,message,preferred_times,proposed_start,kind,proposed_by").in("practitioner_id", myIds).eq("status", "requested").eq("proposed_by", "client");
         await expireOld((rows || []) as any[]);
         const open = (rows || []).filter((r: any) => r.status !== "expired");
         const linkOf = await linksByPair(myIds);

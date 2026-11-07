@@ -84,6 +84,8 @@ fun PractitionerAppointments(
         }
     }
 
+    if (practitionerId in data?.closed.orEmpty()) return
+
     val rows = data?.requests.orEmpty().filter { it.practitioner_id == practitionerId }
     val sessions = data?.sessions.orEmpty().filter { it.practitioner_id == practitionerId }
     val open = rows.filter { it.status == "requested" }

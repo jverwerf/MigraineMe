@@ -896,6 +896,8 @@ object SupabasePractitionerService {
     data class MyAppointments(
         val requests: List<AppointmentRequest> = emptyList(),
         val sessions: List<AppointmentSession> = emptyList(),
+        /** Practitioners whose calendar is set to None: no appointments with them. */
+        val closed: List<String> = emptyList(),
     )
 
     private suspend fun appointmentsCall(accessToken: String, body: JsonObject): String {
@@ -945,8 +947,10 @@ object SupabasePractitionerService {
         practitionerId: String,
         message: String?,
         preferredTimes: String?,
+        proposedStart: String? = null,
     ) {
         val body = buildJsonObject {
+            if (proposedStart != null) put("proposed_start", proposedStart)
             put("practitioner_id", practitionerId)
             put("user_id", userId)
             put("kind", "initial")

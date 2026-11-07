@@ -391,14 +391,14 @@ fun PractitionerPanel(
         AskForPlaceDialog(
             practitionerName = p.display_name,
             onDismiss = { requesting = null },
-            onSend = { note ->
+            onSend = { note, startIso ->
                 requesting = null
                 scope.launch {
                     val token = authVm.getValidAccessToken(context) ?: return@launch
                     val uid = auth.userId ?: return@launch
                     runCatching {
                         withContext(Dispatchers.IO) {
-                            SupabasePractitionerService.requestAppointment(token, uid, p.id, note, null)
+                            SupabasePractitionerService.requestAppointment(token, uid, p.id, note, null, startIso)
                         }
                     }.onFailure { error = it.message }
                     reload++
@@ -1491,9 +1491,12 @@ private fun SectionCard(sec: SupabasePractitionerService.Section) {
 fun AskForPlaceDialog(
     practitionerName: String,
     onDismiss: () -> Unit,
-    onSend: (String?) -> Unit,
+    onSend: (String?, String?) -> Unit,
 ) {
     var note by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var date by remember { mutableStateOf<java.time.LocalDate?>(null) }
+    var time by remember { mutableStateOf<java.time.LocalTime?>(null) }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF2A0C3C),
@@ -1507,6 +1510,18 @@ fun AskForPlaceDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.SubtleTextColor,
                 )
+                // A preferred time puts the request straight on their calendar.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(modifier = Modifier.weight(1f), onClick = {
+                        val d = date ?: java.time.LocalDate.now().plusDays(1)
+                        android.app.DatePickerDialog(context, { _, y, m, day -> date = java.time.LocalDate.of(y, m + 1, day) }, d.year, d.monthValue - 1, d.dayOfMonth)
+                            .apply { datePicker.minDate = System.currentTimeMillis() }.show()
+                    }) { Text(date?.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)) ?: t("Pick a date"), maxLines = 1) }
+                    OutlinedButton(modifier = Modifier.weight(1f), onClick = {
+                        val c = time ?: java.time.LocalTime.of(10, 0)
+                        android.app.TimePickerDialog(context, { _, h, m -> time = java.time.LocalTime.of(h, m) }, c.hour, c.minute, android.text.format.DateFormat.is24HourFormat(context)).show()
+                    }) { Text(time?.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)) ?: t("Pick a time"), maxLines = 1) }
+                }
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
@@ -1525,7 +1540,10 @@ fun AskForPlaceDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSend(note.trim().takeIf { it.isNotEmpty() }) },
+                onClick = {
+                    val start = if (date != null && time != null) java.time.LocalDateTime.of(date, time).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().toString() else null
+                    onSend(note.trim().takeIf { it.isNotEmpty() }, start)
+                },
                 colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.AccentPurple),
             ) { Text(t("Send request")) }
         },
