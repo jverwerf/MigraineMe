@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -603,7 +603,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Allergien",
     "Allergies or hayfever" to "Allergien/Heuschnupfen",
     "Allow" to "Erlauben",
-    "Allow AI summaries" to "KI-Zusammenfassungen erlauben",
+    "Allow AI summaries" to "KI-Resümees erlauben",
     "Allow Calendar Access" to "Kalender erlauben",
     "Allow Location Access" to "Standort erlauben",
     "Allow Microphone Access" to "Mikrofon erlauben",
@@ -756,6 +756,8 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automatisch",
     "Auto-detect workouts and yoga" to "Workouts und Yoga automatisch erkennen",
     "Auto-detected" to "Auto-erkannt",
+    "Auto-generated from predicted menstruation" to "Automatisch aus der vorhergesagten Periode erstellt",
+    "Auto-generated from predicted ovulation" to "Automatisch aus dem vorhergesagten Eisprung erstellt",
     "Auto-update" to "Auto-Update",
     "Auto-update Average" to "Schnitt auto.",
     "Auto-update average" to "Schnitt automatisch",
@@ -1515,11 +1517,11 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Evening" to "Abend",
     "Evening Check-in" to "Abend-Check",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Hinweise zum Abend-Check sind im System aus. Tippe den Schalter, um sie zu öffnen.",
-    "Evening Check-in — %1\$s of %2\$s" to "Abend-Check — %1\$s von %2\$s",
-    "Evening check-in" to "Abend-Check",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Abend-Check — %1\$s von %2\$s",
+    "Evening check-in" to "Abend-Check",
     "Evening check-in by voice" to "Abend-Check per Sprache",
     "Evening check-in reminders" to "Erinnerungen an den Abend-Check",
     "Every 1-2 months" to "Alle 1-2 Monate",
@@ -3018,11 +3020,11 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Standard-Abklingkurve (Population).",
     "Population default thresholds for {0} active triggers." to "Standard-Schwellen (Population) für {0} aktive Auslöser.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Populationsstandard. Es gab keine Antworten zum Kalibrieren, daher sind deine Risikoanzeige und ihre Abklingkurven auf eine normale Person mit normaler Migräne eingestellt. Mit deinen Logs werden sie auf dich abgestimmt.",
-    "Portion" to "Portion",
-    "Portion is a guess" to "Portion geschätzt",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Portion",
+    "Portion is a guess" to "Portion geschätzt",
     "Post" to "Beitrag",
     "Postdrome" to "Postdrom",
     "Postdrome (%s)" to "Postdrom (%s)",
@@ -4521,11 +4523,11 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Innerhalb von {0}",
     "Without a subscription, imported data only goes into your journal." to "Ohne Abo landen importierte Daten nur in deinem Tagebuch.",
     "Without aura" to "Ohne Aura",
-    "Woke Up" to "Aufgewacht",
-    "Woke up" to "Aufgewacht",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Aufgewacht",
+    "Woke up" to "Aufgewacht",
     "Woke up time" to "Aufwachzeit",
     "Word-finding trouble" to "Wortfindungsstörung",
     "Words" to "Wortfindung",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -603,7 +603,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Allergie",
     "Allergies or hayfever" to "Allergie o pollini",
     "Allow" to "Consenti",
-    "Allow AI summaries" to "Consenti i riepiloghi IA",
+    "Allow AI summaries" to "Abilita riepiloghi IA",
     "Allow Calendar Access" to "Consenti calendario",
     "Allow Location Access" to "Consenti posizione",
     "Allow Microphone Access" to "Consenti microfono",
@@ -756,6 +756,8 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automatico",
     "Auto-detect workouts and yoga" to "Rileva da sé allenamenti e yoga",
     "Auto-detected" to "Automatico",
+    "Auto-generated from predicted menstruation" to "Generato automaticamente dalle mestruazioni previste",
+    "Auto-generated from predicted ovulation" to "Generato automaticamente dall'ovulazione prevista",
     "Auto-update" to "Auto",
     "Auto-update Average" to "Media auto",
     "Auto-update average" to "Media auto",
@@ -1515,11 +1517,11 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Evening" to "Sera",
     "Evening Check-in" to "Check serale",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Gli avvisi del punto serale sono spenti nel sistema. Tocca per aprire le impostazioni.",
-    "Evening Check-in — %1\$s of %2\$s" to "Check serale — %1\$s di %2\$s",
-    "Evening check-in" to "Punto serale",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Check serale — %1\$s di %2\$s",
+    "Evening check-in" to "Punto serale",
     "Evening check-in by voice" to "Punto serale a voce",
     "Evening check-in reminders" to "Promemoria del punto serale",
     "Every 1-2 months" to "Ogni 1-2 mesi",
@@ -3018,11 +3020,11 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Curva predefinita di popolazione.",
     "Population default thresholds for {0} active triggers." to "Soglie predefinite di popolazione per {0} fattori attivi.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Valori di popolazione. Non c'erano risposte per calibrare, quindi il tuo indice di rischio e le sue curve sono impostati per una persona tipica con emicranie tipiche. Si adatteranno a te man mano che registri.",
-    "Portion" to "Porzione",
-    "Portion is a guess" to "Porzione stimata",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Porzione",
+    "Portion is a guess" to "Porzione stimata",
     "Post" to "Pubblica",
     "Postdrome" to "Postdromo",
     "Postdrome (%s)" to "Postdromo (%s)",
@@ -4521,11 +4523,11 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Entro {0}",
     "Without a subscription, imported data only goes into your journal." to "Senza abbonamento, i dati importati vanno solo nel diario.",
     "Without aura" to "Senza aura",
-    "Woke Up" to "Sveglia",
-    "Woke up" to "Sveglia",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Sveglia",
+    "Woke up" to "Sveglia",
     "Woke up time" to "Ora del risveglio",
     "Word-finding trouble" to "Difficoltà a trovare le parole",
     "Words" to "Parole",

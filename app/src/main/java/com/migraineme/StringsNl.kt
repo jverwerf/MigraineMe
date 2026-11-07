@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -603,7 +603,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Allergieën",
     "Allergies or hayfever" to "Allergie of hooikoorts",
     "Allow" to "Toestaan",
-    "Allow AI summaries" to "AI-samenvattingen toestaan",
+    "Allow AI summaries" to "AI-samenvattingen aan",
     "Allow Calendar Access" to "Agenda toestaan",
     "Allow Location Access" to "Locatie toestaan",
     "Allow Microphone Access" to "Microfoon toestaan",
@@ -756,6 +756,8 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automatisch",
     "Auto-detect workouts and yoga" to "Workouts en yoga vanzelf herkennen",
     "Auto-detected" to "Automatisch",
+    "Auto-generated from predicted menstruation" to "Automatisch aangemaakt op basis van voorspelde menstruatie",
+    "Auto-generated from predicted ovulation" to "Automatisch aangemaakt op basis van voorspelde ovulatie",
     "Auto-update" to "Auto",
     "Auto-update Average" to "Auto-gemiddelde",
     "Auto-update average" to "Auto-gemiddelde",
@@ -1515,11 +1517,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Evening" to "Avond",
     "Evening Check-in" to "Avondcheck",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Meldingen voor de avondcheck staan uit in het systeem. Tik om de instellingen te openen.",
-    "Evening Check-in — %1\$s of %2\$s" to "Avondcheck — %1\$s van %2\$s",
-    "Evening check-in" to "Avondcheck",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Avondcheck — %1\$s van %2\$s",
+    "Evening check-in" to "Avondcheck",
     "Evening check-in by voice" to "Avondcheck met je stem",
     "Evening check-in reminders" to "Herinnering avondcheck",
     "Every 1-2 months" to "Elke 1-2 maanden",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Standaard afbouwcurve (populatie).",
     "Population default thresholds for {0} active triggers." to "Standaarddrempels (populatie) voor {0} actieve triggers.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Populatiestandaard. Er waren geen antwoorden om op te kalibreren, dus je risicometer en afbouwcurves staan ingesteld op een gemiddeld persoon met gemiddelde migraine. Ze worden op jou afgestemd terwijl je logt.",
-    "Portion" to "Portie",
-    "Portion is a guess" to "Portie geschat",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Portie",
+    "Portion is a guess" to "Portie geschat",
     "Post" to "Plaatsen",
     "Postdrome" to "Nawee",
     "Postdrome (%s)" to "Postdroom (%s)",
@@ -4521,11 +4523,11 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Binnen {0}",
     "Without a subscription, imported data only goes into your journal." to "Zonder abonnement komt geïmporteerde data alleen in je dagboek.",
     "Without aura" to "Zonder aura",
-    "Woke Up" to "Wakker",
-    "Woke up" to "Wakker",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Wakker",
+    "Woke up" to "Wakker",
     "Woke up time" to "Wektijd",
     "Word-finding trouble" to "Woordvindproblemen",
     "Words" to "Woorden",

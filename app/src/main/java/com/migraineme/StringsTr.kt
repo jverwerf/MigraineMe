@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5109 entries.
+ * 5111 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -603,7 +603,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alerjiler",
     "Allergies or hayfever" to "Alerji veya saman nezlesi",
     "Allow" to "İzin ver",
-    "Allow AI summaries" to "Yapay zekâ özetlerine izin ver",
+    "Allow AI summaries" to "Yapay zekâ özetleri",
     "Allow Calendar Access" to "Takvime izin ver",
     "Allow Location Access" to "Konum erişimine izin ver",
     "Allow Microphone Access" to "Mikrofona izin ver",
@@ -756,6 +756,8 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Otomatik",
     "Auto-detect workouts and yoga" to "Antrenman ve yogayı otomatik algıla",
     "Auto-detected" to "Otomatik bulundu",
+    "Auto-generated from predicted menstruation" to "Tahmini adetten otomatik oluşturuldu",
+    "Auto-generated from predicted ovulation" to "Tahmini yumurtlamadan otomatik oluşturuldu",
     "Auto-update" to "Oto. güncelle",
     "Auto-update Average" to "Ortalamayı oto. yenile",
     "Auto-update average" to "Ortalamayı oto. yenile",
@@ -1515,11 +1517,11 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Evening" to "Akşam",
     "Evening Check-in" to "Akşam Kontrolü",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Akşam Kontrolü bildirimleri sistem ayarlarında kapalı. Ayarları açmak için anahtara dokun.",
-    "Evening Check-in — %1\$s of %2\$s" to "Akşam Kontrolü — %1\$s / %2\$s",
-    "Evening check-in" to "Akşam kontrolü",
 )
 
 private fun trStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Akşam Kontrolü — %1\$s / %2\$s",
+    "Evening check-in" to "Akşam kontrolü",
     "Evening check-in by voice" to "Sesle akşam kontrolü",
     "Evening check-in reminders" to "Akşam kontrolü hatırlatıcıları",
     "Every 1-2 months" to "1-2 ayda bir",
@@ -3018,11 +3020,11 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Poor sleep efficiency" to "Düşük uyku verimliliği",
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "Öğeleri Yönet bölümüne uğra ve sana gereksiz gelen her şeyi kapat (etkilemiyorsa kafein ya da hiç yaşamadığın varsayılan bir belirti). Daha az gürültü = daha net, daha dürüst bir gösterge.",
     "Population default decay curve." to "Nüfus varsayılanı azalma eğrisi.",
-    "Population default thresholds for {0} active triggers." to "{0} etkin tetikleyici için nüfus varsayılan eşikleri.",
-    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Nüfus varsayılanları. Kalibre edecek yanıt olmadığı için risk göstergen ve azalma eğrileri, sıradan migreni olan sıradan biri için ayarlandı. Kayıt tuttukça sana göre ayarlanır.",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Population default thresholds for {0} active triggers." to "{0} etkin tetikleyici için nüfus varsayılan eşikleri.",
+    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Nüfus varsayılanları. Kalibre edecek yanıt olmadığı için risk göstergen ve azalma eğrileri, sıradan migreni olan sıradan biri için ayarlandı. Kayıt tuttukça sana göre ayarlanır.",
     "Portion" to "Porsiyon",
     "Portion is a guess" to "Porsiyon tahmini",
     "Post" to "Paylaş",
@@ -4521,11 +4523,11 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Within hours" to "Saatler içinde",
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "Olağan aralığında: 14 günlük ortalamandan en fazla 2 standart sapma uzakta.",
     "Within {0}" to "{0} içinde",
-    "Without a subscription, imported data only goes into your journal." to "Abonelik olmadan, içe aktarılan veriler yalnızca günlüğüne eklenir.",
-    "Without aura" to "Aurasız",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Without a subscription, imported data only goes into your journal." to "Abonelik olmadan, içe aktarılan veriler yalnızca günlüğüne eklenir.",
+    "Without aura" to "Aurasız",
     "Woke Up" to "Uyandın",
     "Woke up" to "Uyanma",
     "Woke up time" to "Uyanma saati",

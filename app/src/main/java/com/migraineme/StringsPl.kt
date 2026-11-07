@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5403 entries.
+ * 5405 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -796,7 +796,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alergie",
     "Allergies or hayfever" to "Alergie lub katar sienny",
     "Allow" to "Zezwól",
-    "Allow AI summaries" to "Zezwól na podsumowania AI",
+    "Allow AI summaries" to "Włącz streszczenia AI",
     "Allow Calendar Access" to "Zezwól na kalendarz",
     "Allow Location Access" to "Zezwól na lokalizację",
     "Allow Microphone Access" to "Zezwól na mikrofon",
@@ -955,6 +955,8 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automatycznie",
     "Auto-detect workouts and yoga" to "Wykrywaj treningi i jogę automatycznie",
     "Auto-detected" to "Auto-wykryte",
+    "Auto-generated from predicted menstruation" to "Utworzono automatycznie z przewidywanej miesiączki",
+    "Auto-generated from predicted ovulation" to "Utworzono automatycznie z przewidywanej owulacji",
     "Auto-update" to "Aktualizacje",
     "Auto-update Average" to "Auto-średnia",
     "Auto-update average" to "Autoaktualizuj średnią",
@@ -1515,11 +1517,11 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Difficulty concentrating" to "Trudności z koncentracją",
     "Difficulty focusing" to "Trudności ze skupieniem",
     "Difficulty speaking" to "Trudności z mówieniem",
-    "Digestive" to "Trawienne",
-    "Digital wellness correlation" to "Korelacja z cyfrowym dobrostanem",
 )
 
 private fun plStrings1(): Map<String, String> = mapOf(
+    "Digestive" to "Trawienne",
+    "Digital wellness correlation" to "Korelacja z cyfrowym dobrostanem",
     "Dihydroergotamine (DHE)" to "Dihydroergotamina (DHE)",
     "Dinner" to "Kolacja",
     "Directions" to "Trasa",
@@ -3018,11 +3020,11 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "On %s%% of your calmer days." to "W %s%% Twoich spokojniejszych dni.",
     "On %s%% of your migraine-free days." to "W %s%% twoich dni bez migreny.",
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Na Androidzie: otwórz MigraineMe, przejdź do ekranu ulepszenia i wpisz kod %1\$s.",
-    "On calmer days" to "Spokojniejsze dni",
-    "On flare days" to "W dni z atakiem",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "On calmer days" to "Spokojniejsze dni",
+    "On flare days" to "W dni z atakiem",
     "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Tylko w dobre dni. Potrzebujesz wolnego kawałka ściany, łóżka lub maty oraz piłki tenisowej do rozluźnienia na końcu.",
     "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "W dobre dni lub gdy kark jest napięty po długim siedzeniu przy biurku. Nie podczas ataku, jeśli ruch głową nasila ból.",
     "On track" to "Według planu",
@@ -4521,11 +4523,11 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "WHOOP connection failed" to "Błąd połączenia z WHOOP",
     "WHOOP disconnected." to "Odłączono WHOOP.",
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP nie udostępnia tętna, więc ten cel nie może wypełnić się sam. Połącz Garmin, Oura, Polar lub Health Connect.",
-    "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "Integracja z WHOOP jest obecnie dostępna tylko na zaproszenie. Poproś o dostęp, a włączymy ją dla twojego konta.",
-    "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "Integracja z WHOOP jest obecnie dostępna tylko na zaproszenie. Poproś o dostęp, a włączymy ją dla twojego konta.",
+    "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
     "Wake Time" to "Pobudka",
     "Wake time" to "Godzina pobudki",
     "Wake time early" to "Wczesna pobudka",

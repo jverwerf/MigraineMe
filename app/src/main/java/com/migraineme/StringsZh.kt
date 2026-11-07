@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5108 entries.
+ * 5110 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -756,6 +756,8 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "自動偵測",
     "Auto-detect workouts and yoga" to "自動偵測運動和瑜伽",
     "Auto-detected" to "自動偵測",
+    "Auto-generated from predicted menstruation" to "根據預測的經期自動產生",
+    "Auto-generated from predicted ovulation" to "根據預測的排卵日自動產生",
     "Auto-update" to "自動更新",
     "Auto-update Average" to "自動更新平均值",
     "Auto-update average" to "自動更新平均值",
@@ -1515,11 +1517,11 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Evening" to "晚上",
     "Evening Check-in" to "晚間記錄",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "系統設定中已關閉晚間記錄通知。點一下開關即可開啟設定。",
-    "Evening Check-in — %1\$s of %2\$s" to "晚間記錄 — %1\$s／%2\$s",
-    "Evening check-in" to "晚間記錄",
 )
 
 private fun zhStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "晚間記錄 — %1\$s／%2\$s",
+    "Evening check-in" to "晚間記錄",
     "Evening check-in by voice" to "用語音進行晚間記錄",
     "Evening check-in reminders" to "晚間記錄提醒",
     "Every 1-2 months" to "每 1-2 個月",
@@ -3018,11 +3020,11 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "到「管理項目」看看,把對你來說沒用的項目關掉(例如不受影響的咖啡因,或你從未出現過的預設症狀)。雜訊越少,指標就越準確、越貼近真實。",
     "Population default decay curve." to "族群預設衰減曲線。",
     "Population default thresholds for {0} active triggers." to "{0} 個啟用中誘因的族群預設閾值。",
-    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "預設為一般族群數值。目前沒有可用來校準的回答,所以你的風險指標與其衰減曲線,是依一般偏頭痛患者來設定的。隨著你持續記錄,它們會逐漸調整成適合你。",
-    "Portion" to "份量",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "預設為一般族群數值。目前沒有可用來校準的回答,所以你的風險指標與其衰減曲線,是依一般偏頭痛患者來設定的。隨著你持續記錄,它們會逐漸調整成適合你。",
+    "Portion" to "份量",
     "Portion is a guess" to "份量為估計值",
     "Post" to "發佈",
     "Postdrome" to "後期症狀",
@@ -4521,11 +4523,11 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "在你的正常範圍內:與 14 天平均值相差不超過 2 個標準差。",
     "Within {0}" to "{0} 內",
     "Without a subscription, imported data only goes into your journal." to "沒有訂閱的話,匯入的資料只會存入你的日記。",
-    "Without aura" to "無預兆",
-    "Woke Up" to "醒來",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Without aura" to "無預兆",
+    "Woke Up" to "醒來",
     "Woke up" to "醒來",
     "Woke up time" to "起床時間",
     "Word-finding trouble" to "找字困難",

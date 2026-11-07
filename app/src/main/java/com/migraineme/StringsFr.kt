@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -603,7 +603,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Allergies",
     "Allergies or hayfever" to "Allergies / pollen",
     "Allow" to "Autoriser",
-    "Allow AI summaries" to "Autoriser les résumés par IA",
+    "Allow AI summaries" to "Autoriser résumés IA",
     "Allow Calendar Access" to "Autoriser l'agenda",
     "Allow Location Access" to "Autoriser la position",
     "Allow Microphone Access" to "Autoriser le micro",
@@ -756,6 +756,8 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automatique",
     "Auto-detect workouts and yoga" to "Détection auto des séances et du yoga",
     "Auto-detected" to "Auto-détecté",
+    "Auto-generated from predicted menstruation" to "Généré automatiquement d'après tes prochaines règles prévues",
+    "Auto-generated from predicted ovulation" to "Généré automatiquement d'après ton ovulation prévue",
     "Auto-update" to "Auto",
     "Auto-update Average" to "Moyenne auto",
     "Auto-update average" to "Moyenne auto",
@@ -1515,11 +1517,11 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Evening" to "Soir",
     "Evening Check-in" to "Bilan du soir",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Les alertes du point du soir sont désactivées dans le système. Touche pour ouvrir les réglages.",
-    "Evening Check-in — %1\$s of %2\$s" to "Bilan du soir — %1\$s sur %2\$s",
-    "Evening check-in" to "Point du soir",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Bilan du soir — %1\$s sur %2\$s",
+    "Evening check-in" to "Point du soir",
     "Evening check-in by voice" to "Point du soir à la voix",
     "Evening check-in reminders" to "Rappels du point du soir",
     "Every 1-2 months" to "Tous les 1-2 mois",
@@ -3018,11 +3020,11 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Courbe par défaut (population).",
     "Population default thresholds for {0} active triggers." to "Seuils par défaut (population) pour {0} facteurs actifs.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Réglages de population. Sans réponses pour calibrer, ta jauge de risque et ses courbes sont réglées pour une personne ordinaire avec des migraines ordinaires. Elles s'ajustent à toi au fil de tes notes.",
-    "Portion" to "Portion",
-    "Portion is a guess" to "Portion estimée",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Portion",
+    "Portion is a guess" to "Portion estimée",
     "Post" to "Publier",
     "Postdrome" to "Postdrome",
     "Postdrome (%s)" to "Postdrome (%s)",
@@ -4521,11 +4523,11 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Sous {0}",
     "Without a subscription, imported data only goes into your journal." to "Sans abonnement, les données importées vont seulement dans votre journal.",
     "Without aura" to "Sans aura",
-    "Woke Up" to "Réveil",
-    "Woke up" to "Réveil",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Réveil",
+    "Woke up" to "Réveil",
     "Woke up time" to "Heure de réveil",
     "Word-finding trouble" to "Manque du mot",
     "Words" to "Mots",

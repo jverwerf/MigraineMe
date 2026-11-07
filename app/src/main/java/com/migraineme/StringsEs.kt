@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -603,7 +603,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alergias",
     "Allergies or hayfever" to "Alergias o polen",
     "Allow" to "Permitir",
-    "Allow AI summaries" to "Permitir resúmenes con IA",
+    "Allow AI summaries" to "Permitir resúmenes IA",
     "Allow Calendar Access" to "Permitir calendario",
     "Allow Location Access" to "Permitir ubicación",
     "Allow Microphone Access" to "Permitir micrófono",
@@ -756,6 +756,8 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "Automático",
     "Auto-detect workouts and yoga" to "Detecta entrenos y yoga solo",
     "Auto-detected" to "Automático",
+    "Auto-generated from predicted menstruation" to "Generado automáticamente según la menstruación prevista",
+    "Auto-generated from predicted ovulation" to "Generado automáticamente según la ovulación prevista",
     "Auto-update" to "Auto",
     "Auto-update Average" to "Media automática",
     "Auto-update average" to "Media automática",
@@ -1515,11 +1517,11 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Evening" to "Noche",
     "Evening Check-in" to "Repaso de noche",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Los avisos del repaso están desactivados en el sistema. Toca para abrir los ajustes.",
-    "Evening Check-in — %1\$s of %2\$s" to "Repaso de noche — %1\$s de %2\$s",
-    "Evening check-in" to "Repaso de tarde",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "Repaso de noche — %1\$s de %2\$s",
+    "Evening check-in" to "Repaso de tarde",
     "Evening check-in by voice" to "Repaso de tarde por voz",
     "Evening check-in reminders" to "Avisos del repaso de tarde",
     "Every 1-2 months" to "Cada 1-2 meses",
@@ -3018,11 +3020,11 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Curva estándar de población.",
     "Population default thresholds for {0} active triggers." to "Umbrales estándar de población para {0} factores activos.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Valores de población. No hubo respuestas para calibrar, así que tu indicador de riesgo y sus curvas están ajustados a una persona típica con migrañas típicas. Se irán afinando contigo a medida que registres.",
-    "Portion" to "Ración",
-    "Portion is a guess" to "Porción estimada",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Ración",
+    "Portion is a guess" to "Porción estimada",
     "Post" to "Publicar",
     "Postdrome" to "Posdromo",
     "Postdrome (%s)" to "Postdromo (%s)",
@@ -4521,11 +4523,11 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "En {0}",
     "Without a subscription, imported data only goes into your journal." to "Sin suscripción, los datos importados solo van a tu diario.",
     "Without aura" to "Sin aura",
-    "Woke Up" to "Despertar",
-    "Woke up" to "Despertar",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Despertar",
+    "Woke up" to "Despertar",
     "Woke up time" to "Hora de despertar",
     "Word-finding trouble" to "Dificultad con las palabras",
     "Words" to "Palabras",

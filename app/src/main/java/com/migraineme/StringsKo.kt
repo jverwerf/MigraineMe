@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5108 entries.
+ * 5110 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -756,6 +756,8 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "자동 감지",
     "Auto-detect workouts and yoga" to "운동과 요가 자동 감지",
     "Auto-detected" to "자동 감지",
+    "Auto-generated from predicted menstruation" to "예상 생리일 기준으로 자동 생성됨",
+    "Auto-generated from predicted ovulation" to "예상 배란일 기준으로 자동 생성됨",
     "Auto-update" to "자동 업데이트",
     "Auto-update Average" to "평균 자동 갱신",
     "Auto-update average" to "평균 자동 갱신",
@@ -1515,11 +1517,11 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Evening" to "저녁",
     "Evening Check-in" to "저녁 체크인",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "저녁 체크인 알림이 시스템 설정에서 꺼져 있어요. 스위치를 눌러 설정을 열어 보세요.",
-    "Evening Check-in — %1\$s of %2\$s" to "저녁 체크인 — %2\$s 중 %1\$s",
-    "Evening check-in" to "저녁 체크인",
 )
 
 private fun koStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "저녁 체크인 — %2\$s 중 %1\$s",
+    "Evening check-in" to "저녁 체크인",
     "Evening check-in by voice" to "음성으로 저녁 체크인",
     "Evening check-in reminders" to "저녁 체크인 알림",
     "Every 1-2 months" to "1~2개월마다",
@@ -3018,11 +3020,11 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "항목 관리에 들어가서 나에게 필요 없는 항목은 꺼 보세요. 예를 들어 영향이 없는 카페인이나 한 번도 겪지 않은 기본 증상이 있어요. 불필요한 항목이 줄면 게이지가 더 정확하고 솔직해져요.",
     "Population default decay curve." to "일반 인구 기준 기본 감소 곡선이에요.",
     "Population default thresholds for {0} active triggers." to "활성 유발 요인 {0}개의 일반 인구 기준 임계값이에요.",
-    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "일반 인구 기준값이에요. 보정에 쓸 답변이 없어서, 위험도 게이지와 감소 곡선이 일반적인 편두통을 가진 평범한 사람에 맞춰져 있어요. 기록할수록 나에게 맞게 조정돼요.",
-    "Portion" to "분량",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "일반 인구 기준값이에요. 보정에 쓸 답변이 없어서, 위험도 게이지와 감소 곡선이 일반적인 편두통을 가진 평범한 사람에 맞춰져 있어요. 기록할수록 나에게 맞게 조정돼요.",
+    "Portion" to "분량",
     "Portion is a guess" to "섭취량은 추정치",
     "Post" to "게시",
     "Postdrome" to "후기 증상",
@@ -4521,11 +4523,11 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "평소 범위 안: 14일 평균에서 표준편차 2배 이내예요.",
     "Within {0}" to "{0} 이내",
     "Without a subscription, imported data only goes into your journal." to "구독하지 않으면 가져온 데이터는 일기에만 저장돼요.",
-    "Without aura" to "조짐 없음",
-    "Woke Up" to "일어남",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Without aura" to "조짐 없음",
+    "Woke Up" to "일어남",
     "Woke up" to "기상",
     "Woke up time" to "일어난 시간",
     "Word-finding trouble" to "단어 찾기 어려움",

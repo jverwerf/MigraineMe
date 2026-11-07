@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5108 entries.
+ * 5110 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -756,6 +756,8 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Auto-detect" to "自動検出",
     "Auto-detect workouts and yoga" to "運動とヨガを自動検出",
     "Auto-detected" to "自動検出",
+    "Auto-generated from predicted menstruation" to "予測された月経から自動作成",
+    "Auto-generated from predicted ovulation" to "予測された排卵日から自動作成",
     "Auto-update" to "自動更新",
     "Auto-update Average" to "平均を自動更新",
     "Auto-update average" to "平均を自動更新",
@@ -1515,11 +1517,11 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Evening" to "夕方",
     "Evening Check-in" to "夕方の記録",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "夕方の記録の通知は、システム設定でオフになっています。スイッチをタップすると設定を開きます。",
-    "Evening Check-in — %1\$s of %2\$s" to "夕方の記録 — %1\$s/%2\$s",
-    "Evening check-in" to "夕方の記録",
 )
 
 private fun jaStrings1(): Map<String, String> = mapOf(
+    "Evening Check-in — %1\$s of %2\$s" to "夕方の記録 — %1\$s/%2\$s",
+    "Evening check-in" to "夕方の記録",
     "Evening check-in by voice" to "音声で夕方の記録",
     "Evening check-in reminders" to "夕方の記録のお知らせ",
     "Every 1-2 months" to "1〜2か月ごと",
@@ -3018,11 +3020,11 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "「項目の管理」を開いて、自分に関係のないものをオフにしましょう(影響のないカフェインや、一度も経験しない標準の症状など)。不要な項目が減るほど、ゲージはより正確で確かなものになります。",
     "Population default decay curve." to "母集団の標準的な減衰曲線です。",
     "Population default thresholds for {0} active triggers." to "有効な誘因{0}件の、母集団の標準しきい値です。",
-    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "母集団の標準設定です。調整に使える回答がなかったため、リスクゲージと減衰曲線は、一般的な片頭痛のある一般的な人向けに設定されています。記録を続けると、あなたに合わせて調整されます。",
-    "Portion" to "分量",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "母集団の標準設定です。調整に使える回答がなかったため、リスクゲージと減衰曲線は、一般的な片頭痛のある一般的な人向けに設定されています。記録を続けると、あなたに合わせて調整されます。",
+    "Portion" to "分量",
     "Portion is a guess" to "量は推定です",
     "Post" to "投稿",
     "Postdrome" to "後発症状",
@@ -4521,11 +4523,11 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "いつもの範囲内：14日間の平均から標準偏差2つ分以内です。",
     "Within {0}" to "{0}以内",
     "Without a subscription, imported data only goes into your journal." to "購読していない場合、取り込んだデータは日記にのみ保存されます。",
-    "Without aura" to "前兆なし",
-    "Woke Up" to "起床",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Without aura" to "前兆なし",
+    "Woke Up" to "起床",
     "Woke up" to "起床",
     "Woke up time" to "起床時刻",
     "Word-finding trouble" to "言葉が出にくい",
