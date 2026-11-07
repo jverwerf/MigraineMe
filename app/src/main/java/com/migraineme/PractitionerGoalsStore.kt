@@ -6,10 +6,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
+import java.util.UUID
 
 /**
  * The client's goals, both those a linked practitioner set and the client's
@@ -18,6 +24,10 @@ import java.time.temporal.TemporalAdjusters
  *
  * refresh() is called on first composition of those screens and after every
  * log, so one tap on Home is reflected on Monitor without a reload.
+ *
+ * Offline: the last goals and days stay on the phone, and a done that cannot
+ * reach the server is saved here, shown in the counts straight away and sent
+ * on the next foreground or refresh, against the day it was done.
  */
 object PractitionerGoalsStore {
     private const val TAG = "PractitionerGoals"
@@ -31,7 +41,7 @@ object PractitionerGoalsStore {
     private val _goals = MutableStateFlow<List<SupabasePractitionerService.GoalRow>>(emptyList())
     val goals: StateFlow<List<SupabasePractitionerService.GoalRow>> = _goals
 
-    /** goal id -> rows from goal_daily_progress, oldest first. */
+    /** goal id -> rows from goal_daily_progress plus the dones still waiting to be sent, oldest first. */
     private val _progress = MutableStateFlow<Map<String, List<SupabasePractitionerService.GoalProgressRow>>>(emptyMap())
     val progress: StateFlow<Map<String, List<SupabasePractitionerService.GoalProgressRow>>> = _progress
 
@@ -153,6 +163,7 @@ object PractitionerGoalsStore {
     }
 
     suspend fun refresh(context: Context) {
+        loadLocalCopy()
         refreshHrFeed(context)
         if (MonitorCardConfig.GOALS_ENABLED) refreshGoalsOn(context)
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return
@@ -163,17 +174,22 @@ object PractitionerGoalsStore {
     // user navigating away mid-fetch must not leave the store half-filled
     // ("The coroutine scope left the composition" seen on the emulator 10-01).
     suspend fun refresh(token: String) = withContext(Dispatchers.IO + NonCancellable) {
+        flushPending(token)
         val rows = runCatching { svc.myGoals(token) }
             .onFailure { Log.w(TAG, "myGoals failed: ${it.message}") }
             .getOrNull() ?: return@withContext
         _goals.value = rows
+        readFromServer = true
         registerPractitionerFilms(token, rows)
         loadMetrics(token)
         val today = LocalDate.now()
         val from = today.minusDays(PROGRESS_DAYS - 1).toString()
         val map = LinkedHashMap<String, List<SupabasePractitionerService.GoalProgressRow>>()
-        for (g in rows) map[g.id] = fetchProgress(token, g.id, from, today.toString())
-        _progress.value = map
+        // A failed read keeps what is already known for that goal.
+        for (g in rows) map[g.id] = fetchProgress(token, g.id, from, today.toString()) ?: serverProgress[g.id].orEmpty()
+        serverProgress = map
+        publishProgress()
+        saveLocalCopy(rows.firstOrNull()?.user_id ?: JwtUtils.extractUserIdFromAccessToken(token))
     }
 
     /** Goals that name a practitioner's own film ("pr:<id>") need that film in the
@@ -181,10 +197,18 @@ object PractitionerGoalsStore {
     private suspend fun registerPractitionerFilms(token: String, rows: List<SupabasePractitionerService.GoalRow>) {
         val ids = rows.mapNotNull { it.exercise_id?.takeIf { id -> id.startsWith(ExerciseCatalogue.PRACTITIONER_PREFIX) } }
             .map { it.removePrefix(ExerciseCatalogue.PRACTITIONER_PREFIX) }.distinct()
-        if (ids.isEmpty()) return
+        if (ids.isEmpty()) {
+            localFilms = emptyList()
+            return
+        }
         val films = runCatching { svc.practitionerExercises(token, ids) }
             .onFailure { Log.w(TAG, "practitionerExercises failed: ${it.message}") }
             .getOrNull() ?: return
+        localFilms = films
+        registerFilms(films)
+    }
+
+    private fun registerFilms(films: List<SupabasePractitionerService.PractitionerExerciseRow>) {
         ExerciseCatalogue.register(films.map { f ->
             ExerciseRoutine(
                 ExerciseCatalogue.PRACTITIONER_PREFIX + f.id,
@@ -203,28 +227,252 @@ object PractitionerGoalsStore {
         })
     }
 
+    /** Null when the read failed, so the caller can keep what it has. */
     private suspend fun fetchProgress(token: String, goalId: String, from: String, to: String) =
         runCatching { svc.goalProgress(token, goalId, from, to) }
             .onFailure { Log.w(TAG, "goalProgress failed: ${it.message}") }
-            .getOrDefault(emptyList())
+            .getOrNull()
 
-    /** Log a manual count / minutes for today and refresh that goal's progress. */
+    /**
+     * Log a manual count / minutes for today and refresh that goal's progress.
+     * If the server cannot be reached the done is saved on the phone and counts
+     * as logged. False only when nobody it belongs to is signed in, or the
+     * server refused it.
+     */
     suspend fun log(
         context: Context,
         goal: SupabasePractitionerService.GoalRow,
         countDelta: Int = 0,
         minutesDelta: Double = 0.0,
-    ): Boolean = withContext(Dispatchers.IO) {
-        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext false
+    ): Boolean = withContext(Dispatchers.IO + NonCancellable) {
+        val ctx = context.applicationContext
         val today = LocalDate.now()
-        val ok = runCatching { svc.logGoal(token, goal, today.toString(), countDelta, minutesDelta) }
-            .onFailure { Log.w(TAG, "logGoal failed: ${it.message}") }
-            .isSuccess
-        if (ok) {
-            val from = today.minusDays(PROGRESS_DAYS - 1).toString()
-            _progress.value = _progress.value + (goal.id to fetchProgress(token, goal.id, from, today.toString()))
+        val done = PendingDone(
+            id = UUID.randomUUID().toString(),
+            goal_id = goal.id,
+            user_id = goal.user_id,
+            date = today.toString(),
+            count = countDelta,
+            minutes = minutesDelta,
+        )
+        val token = SessionStore.getValidAccessToken(ctx)
+        var failure: Throwable? = null
+        if (token != null) {
+            failure = runCatching { svc.logGoal(token, goal, done.date, countDelta, minutesDelta) }
+                .onFailure { Log.w(TAG, "logGoal failed: ${it.message}") }
+                .exceptionOrNull()
+            if (failure == null) {
+                // Counted even if the read below fails.
+                addToServerProgress(done)
+                if (flushPending(token)) {
+                    refresh(token)
+                } else {
+                    val from = today.minusDays(PROGRESS_DAYS - 1).toString()
+                    fetchProgress(token, goal.id, from, today.toString())?.let { serverProgress = serverProgress + (goal.id to it) }
+                    publishProgress()
+                    saveLocalCopy(goal.user_id)
+                }
+                return@withContext true
+            }
+            if (isRefusal(failure)) return@withContext false
         }
-        ok
+        if (SessionStore.readUserId(ctx) != goal.user_id) return@withContext false
+        val unconfirmed = failure as? GoalWriteUnconfirmed
+        writePending(ctx, readPending(ctx) + done.copy(
+            manual_count_if_landed = unconfirmed?.count,
+            manual_minutes_if_landed = unconfirmed?.minutes,
+        ))
+        publishProgress()
+        true
+    }
+
+    // ---- offline: the local copy of the goals, and dones waiting for a connection ----
+
+    /** One done the server has not confirmed. Its id is the row's source, so a resend cannot add it twice. */
+    @Serializable
+    private data class PendingDone(
+        val id: String,
+        val goal_id: String,
+        val user_id: String,
+        val date: String,
+        val count: Int = 0,
+        val minutes: Double = 0.0,
+        /** Set when the manual total was sent and no answer came: the manual row holding this means it landed. */
+        val manual_count_if_landed: Int? = null,
+        val manual_minutes_if_landed: Double? = null,
+    )
+
+    @Serializable
+    private data class LocalCopy(
+        val user_id: String,
+        val goals: List<SupabasePractitionerService.GoalRow> = emptyList(),
+        val progress: Map<String, List<SupabasePractitionerService.GoalProgressRow>> = emptyMap(),
+        val films: List<SupabasePractitionerService.PractitionerExerciseRow> = emptyList(),
+    )
+
+    private const val KEY_PENDING = "pending_dones"
+    private const val KEY_LOCAL_COPY = "local_copy"
+    private const val OFFLINE_SOURCE_PREFIX = "offline:"
+    private val localJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    private val pendingLock = Any()
+    private val flushMutex = Mutex()
+
+    @Volatile private var appCtx: Context? = null
+    /** What the server last said, before the waiting dones are added on top for [progress]. */
+    @Volatile private var serverProgress: Map<String, List<SupabasePractitionerService.GoalProgressRow>> = emptyMap()
+    @Volatile private var localFilms: List<SupabasePractitionerService.PractitionerExerciseRow> = emptyList()
+    @Volatile private var localCopyReadFor: String? = null
+
+    /** The goals have been read from the server since launch (the list may otherwise be the local copy). */
+    @Volatile var readFromServer = false
+        private set
+
+    fun init(context: Context) {
+        appCtx = context.applicationContext
+        loadLocalCopy()
+    }
+
+    /** Fill an empty store from the phone, for whoever is signed in. Cheap after the first call. */
+    fun loadLocalCopy() {
+        val ctx = appCtx ?: return
+        val uid = SessionStore.readUserId(ctx) ?: return
+        synchronized(pendingLock) {
+            if (localCopyReadFor == uid) return
+            localCopyReadFor = uid
+        }
+        if (_goals.value.isNotEmpty()) return
+        val copy = prefs(ctx).getString(KEY_LOCAL_COPY, null)
+            ?.let { raw -> runCatching { localJson.decodeFromString<LocalCopy>(raw) }.getOrNull() }
+            ?.takeIf { it.user_id == uid }
+            ?: return
+        localFilms = copy.films
+        registerFilms(copy.films)
+        serverProgress = copy.progress
+        _goals.value = copy.goals
+        publishProgress()
+    }
+
+    /** Signed out: the goals on the phone go with the session. Waiting dones stay, tied to their user. */
+    fun forgetLocalCopy(context: Context) {
+        prefs(context).edit().remove(KEY_LOCAL_COPY).apply()
+        localCopyReadFor = null
+        localFilms = emptyList()
+        serverProgress = emptyMap()
+        readFromServer = false
+        _goals.value = emptyList()
+        _progress.value = emptyMap()
+    }
+
+    /** App opened or back in the foreground: send what is waiting, then read the result. */
+    suspend fun syncOnForeground(context: Context) = withContext(Dispatchers.IO + NonCancellable) {
+        loadLocalCopy()
+        if (readPending(context.applicationContext).isEmpty()) return@withContext
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
+        if (flushPending(token)) refresh(token)
+    }
+
+    /**
+     * Send the waiting dones, oldest first, each under its own source on its
+     * original date. Stops at the first failed send and keeps the rest. True if any went out.
+     */
+    private suspend fun flushPending(token: String): Boolean = flushMutex.withLock {
+        val ctx = appCtx ?: return@withLock false
+        val uid = JwtUtils.extractUserIdFromAccessToken(token) ?: return@withLock false
+        var sent = false
+        for (done in readPending(ctx).filter { it.user_id == uid }) {
+            val failure = runCatching {
+                if (!alreadyLanded(token, done)) {
+                    svc.writeGoalLog(token, SupabasePractitionerService.GoalLogRow(
+                        goal_id = done.goal_id,
+                        user_id = done.user_id,
+                        date = done.date,
+                        count = done.count,
+                        minutes = done.minutes,
+                        source = OFFLINE_SOURCE_PREFIX + done.id,
+                    ))
+                }
+            }.onFailure { Log.w(TAG, "queued done not sent: ${it.message}") }.exceptionOrNull()
+            if (failure != null && !isRefusal(failure)) break
+            // Only drop it once the server has it (or never will, e.g. the goal was deleted).
+            writePending(ctx, readPending(ctx).filter { it.id != done.id })
+            if (failure == null) {
+                addToServerProgress(done)
+                sent = true
+            }
+        }
+        if (sent) {
+            publishProgress()
+            saveLocalCopy(uid)
+        }
+        sent
+    }
+
+    private suspend fun alreadyLanded(token: String, done: PendingDone): Boolean {
+        val count = done.manual_count_if_landed ?: return false
+        val minutes = done.manual_minutes_if_landed ?: return false
+        val row = svc.manualGoalLog(token, done.goal_id, done.date) ?: return false
+        return row.count >= count && row.minutes >= minutes
+    }
+
+    /** The server looked at it and said no: resending the same row would get the same answer. */
+    private fun isRefusal(e: Throwable?) = e is GoalServerAnswer && e.status in setOf(400, 403, 404, 409)
+
+    private fun prefs(context: Context) =
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+    private fun readPending(ctx: Context): List<PendingDone> = synchronized(pendingLock) {
+        prefs(ctx).getString(KEY_PENDING, null)
+            ?.let { raw -> runCatching { localJson.decodeFromString<List<PendingDone>>(raw) }.getOrNull() }
+            .orEmpty()
+    }
+
+    private fun writePending(ctx: Context, list: List<PendingDone>) = synchronized(pendingLock) {
+        // commit, not apply: a done must survive the app being closed right after the film.
+        prefs(ctx).edit().putString(KEY_PENDING, localJson.encodeToString(list)).commit()
+    }
+
+    private fun saveLocalCopy(userId: String?) {
+        val ctx = appCtx ?: return
+        if (userId == null) return
+        val copy = LocalCopy(userId, _goals.value, serverProgress, localFilms)
+        prefs(ctx).edit().putString(KEY_LOCAL_COPY, localJson.encodeToString(copy)).apply()
+    }
+
+    private fun addToServerProgress(done: PendingDone) {
+        serverProgress = withDone(serverProgress, done)
+    }
+
+    private fun publishProgress() {
+        val pending = appCtx?.let { readPending(it) }.orEmpty()
+        _progress.value = pending.fold(serverProgress) { map, done -> withDone(map, done) }
+    }
+
+    /** The same arithmetic as goal_daily_progress, for one done on top of the rows. */
+    private fun withDone(
+        map: Map<String, List<SupabasePractitionerService.GoalProgressRow>>,
+        done: PendingDone,
+    ): Map<String, List<SupabasePractitionerService.GoalProgressRow>> {
+        val goal = _goals.value.firstOrNull { it.id == done.goal_id } ?: return map
+        if (done.date < LocalDate.now().minusDays(PROGRESS_DAYS - 1).toString()) return map
+        val rows = map[goal.id].orEmpty()
+        val old = rows.firstOrNull { it.day == done.date }
+        val row = when {
+            goal.isCounter -> {
+                val value = (old?.value ?: 0.0) + done.count
+                SupabasePractitionerService.GoalProgressRow(done.date, value, value >= (goal.target_count ?: 1))
+            }
+            goal.isMindfulness -> {
+                val value = (old?.value ?: 0.0) + done.minutes
+                SupabasePractitionerService.GoalProgressRow(
+                    done.date, value, old?.achieved == true || value >= (goal.target_minutes ?: Double.MAX_VALUE),
+                )
+            }
+            // Heart rate and metric goals: a hand tick marks the day met and invents no reading.
+            else -> SupabasePractitionerService.GoalProgressRow(
+                done.date, old?.value, old?.achieved == true || done.count > 0, old?.is_estimate == true,
+            )
+        }
+        return map + (goal.id to (rows.filter { it.day != done.date } + row).sortedBy { it.day })
     }
 
     suspend fun setReminders(context: Context, goalId: String, enabled: Boolean): Boolean = withContext(Dispatchers.IO) {

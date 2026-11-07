@@ -749,6 +749,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     authVm.syncFromSessionStore(appCtx)
                     PremiumManager.loadState(appCtx)
                 }
+                // Goal dones saved while offline go up as soon as the app is back.
+                scope.launch { PractitionerGoalsStore.syncOnForeground(appCtx) }
                 // Run location sync on app resume
                 LocationDailySyncWorker.runOnceNow(appCtx)
 

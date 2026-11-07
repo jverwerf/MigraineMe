@@ -13,6 +13,8 @@ class MigraineMeApp : Application() {
         // Same contract for display language: canonical data stays English,
         // we translate at the render boundary. See LangPrefs.
         LangPrefs.init(this)
+        // The goals on the phone, so a film finished offline still finds its goal.
+        PractitionerGoalsStore.init(this)
         // Ask Play once whether an ad brought this install here. See InstallAttribution.
         InstallAttribution.captureOnce(this)
         // Home-screen widgets are Premium; keep their stored answer in step.

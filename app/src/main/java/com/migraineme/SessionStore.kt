@@ -187,6 +187,7 @@ object SessionStore {
 
     fun clear(context: Context) {
         context.getSharedPreferences(PREFS, MODE_PRIVATE).edit().clear().apply()
+        PractitionerGoalsStore.forgetLocalCopy(context)
     }
 
     /**

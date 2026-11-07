@@ -41,6 +41,12 @@ import kotlinx.serialization.json.add
  * requested_scopes; nothing she does writes `scopes`. That is enforced by row
  * level security, not by this class, so a bug here cannot leak a diary.
  */
+/** The server answered a request with an error status. */
+class GoalServerAnswer(val status: Int, message: String) : IllegalStateException(message)
+
+/** The manual total was sent and no answer came back, so it may or may not have landed. */
+class GoalWriteUnconfirmed(val count: Int, val minutes: Double, cause: Throwable) : Exception(cause)
+
 object SupabasePractitionerService {
 
     private val baseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
@@ -603,14 +609,7 @@ object SupabasePractitionerService {
         countDelta: Int = 0,
         minutesDelta: Double = 0.0,
     ): GoalLogRow {
-        val existing: List<GoalLogRow> = client.get(
-            "$baseUrl/rest/v1/practitioner_goal_logs?goal_id=eq.${goal.id}&date=eq.$date&source=eq.manual" +
-                "&select=id,goal_id,user_id,date,count,minutes,source&limit=1"
-        ) {
-            header("apikey", anonKey)
-            header("Authorization", "Bearer $accessToken")
-        }.requireOk("logGoal read").body()
-        val cur = existing.firstOrNull()
+        val cur = manualGoalLog(accessToken, goal.id, date)
         val row = GoalLogRow(
             goal_id = goal.id,
             user_id = goal.user_id,
@@ -619,6 +618,37 @@ object SupabasePractitionerService {
             minutes = ((cur?.minutes ?: 0.0) + minutesDelta).coerceAtLeast(0.0),
             source = "manual",
         )
+        try {
+            writeGoalLog(accessToken, row)
+        } catch (e: GoalServerAnswer) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw GoalWriteUnconfirmed(row.count, row.minutes, e)
+        }
+        return row
+    }
+
+    /** The day's manual row for a goal, if there is one. */
+    suspend fun manualGoalLog(accessToken: String, goalId: String, date: String): GoalLogRow? {
+        val rows: List<GoalLogRow> = client.get(
+            "$baseUrl/rest/v1/practitioner_goal_logs?goal_id=eq.$goalId&date=eq.$date&source=eq.manual" +
+                "&select=id,goal_id,user_id,date,count,minutes,source&limit=1"
+        ) {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }.requireOk("logGoal read").body()
+        return rows.firstOrNull()
+    }
+
+    /**
+     * Upsert one row on (goal, day, source). goal_daily_progress adds up every
+     * source of a day, so a done saved offline goes in under its own source: it
+     * adds to the day without touching the manual total, and sending it twice
+     * only rewrites the same row.
+     */
+    suspend fun writeGoalLog(accessToken: String, row: GoalLogRow) {
         client.post("$baseUrl/rest/v1/practitioner_goal_logs?on_conflict=goal_id,date,source") {
             header("apikey", anonKey)
             header("Authorization", "Bearer $accessToken")
@@ -626,7 +656,6 @@ object SupabasePractitionerService {
             contentType(ContentType.Application.Json)
             setBody(row)
         }.requireOk("logGoal")
-        return row
     }
 
     /** Mute or unmute a goal's reminder pushes. The server owns the schedule. */
@@ -709,7 +738,7 @@ object SupabasePractitionerService {
     }
 
     private suspend fun HttpResponse.requireOk(what: String): HttpResponse {
-        if (!status.isSuccess()) error("$what failed: ${status.value} ${runCatching { bodyAsText() }.getOrDefault("")}")
+        if (!status.isSuccess()) throw GoalServerAnswer(status.value, "$what failed: ${status.value} ${runCatching { bodyAsText() }.getOrDefault("")}")
         return this
     }
 

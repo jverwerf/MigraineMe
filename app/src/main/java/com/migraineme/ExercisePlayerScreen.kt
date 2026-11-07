@@ -78,12 +78,13 @@ fun ExercisePlayerScreen(
     // as playback starts. Play retries: PlayerView re-prepares an idle player.
     var showNoConnection by remember(routine.id) { mutableStateOf(false) }
 
-    // Set when a finished play-through was added to a linked goal; shown as one
-    // static line under the film.
+    // Set when a finished play-through was added to a linked goal, sent or saved
+    // on the phone until the connection is back; shown as one static line under the film.
     var countedTowardGoal by remember(routine.id) { mutableStateOf(false) }
-    // Goals may not be loaded yet when the player is opened straight from the list.
+    // Goals may not be loaded yet when the player is opened straight from the list,
+    // or may only be the copy on the phone.
     androidx.compose.runtime.LaunchedEffect(routine.id) {
-        if (MonitorCardConfig.GOALS_ENABLED && PractitionerGoalsStore.goals.value.isEmpty()) {
+        if (MonitorCardConfig.GOALS_ENABLED && !PractitionerGoalsStore.readFromServer) {
             PractitionerGoalsStore.refresh(context.applicationContext)
         }
     }
@@ -145,15 +146,17 @@ fun ExercisePlayerScreen(
                         if (playbackState == Player.STATE_ENDED && !endCounted) {
                             endCounted = true
                             if (MonitorCardConfig.GOALS_ENABLED) {
+                                PractitionerGoalsStore.loadLocalCopy()
                                 val linked = PractitionerGoalsStore.goals.value.filter {
                                     it.isActive && it.isCounter && it.exercise_id == routine.id
                                 }
                                 if (linked.isNotEmpty()) {
                                     val appCtx = context.applicationContext
+                                    countedTowardGoal = true
                                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                                         var any = false
                                         for (g in linked) if (PractitionerGoalsStore.log(appCtx, g, countDelta = 1)) any = true
-                                        if (any) countedTowardGoal = true
+                                        if (!any) countedTowardGoal = false
                                     }
                                 }
                             }
