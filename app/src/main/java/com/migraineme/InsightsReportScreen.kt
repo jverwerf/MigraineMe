@@ -1835,7 +1835,7 @@ private fun FilteredSpiderCard(data: SpiderData, secondAxes: List<SpiderAxis>? =
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(data.logType, color = AppTheme.TitleColor,
+                Text(t(data.logType), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Text(t("%1\$s logged • %2\$s categories", data.totalLogged, data.breakdown.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)

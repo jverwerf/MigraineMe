@@ -214,7 +214,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
 
                 // All metrics
                 RiskMetricRow("Risk Score", "%.1f".format(score))
-                RiskMetricRow("Zone", zone)
+                RiskMetricRow("Zone", t(zone))
                 if (percent != null) RiskMetricRow("Risk %", "${percent}%")
                 RiskMetricRow("Active Triggers", "${triggers.size}")
 

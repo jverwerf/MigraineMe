@@ -226,6 +226,55 @@ fun datePattern(english: String, locale: java.util.Locale): String {
     }
 }
 
+/**
+ * Library text we do not own (Material's "Close sheet" and "Drag handle", the
+ * video player's controls) reads the activity's resources, which follow the
+ * device, not the app language. Pointing those resources at the app language
+ * lets the libraries' own translations show. Only the resource lookup changes:
+ * Locale.getDefault(), and with it number formatting, stays as it was.
+ */
+@Suppress("DEPRECATION")
+fun applyAppLocaleToResources(context: android.content.Context, lang: Lang) {
+    val res = context.resources
+    val cfg = android.content.res.Configuration(res.configuration)
+    cfg.setLocale(java.util.Locale.forLanguageTag(lang.localeTag))
+    res.updateConfiguration(cfg, res.displayMetrics)
+}
+
+/**
+ * "Add a trigger" and "Delete this trigger?" as whole phrases, one key per item
+ * type: gluing a word into "Add %s" breaks in every language that inflects the
+ * noun. The keys are declared in manual_keys.json.
+ */
+@Composable
+fun addItemTitle(itemType: String): String = t(
+    when (itemType) {
+        "trigger" -> "Add trigger##title"
+        "medicine" -> "Add medicine##title"
+        "relief" -> "Add relief##title"
+        "prodrome" -> "Add prodrome##title"
+        "activity" -> "Add activity##title"
+        "location" -> "Add location##title"
+        "missed_activity" -> "Add missed activity##title"
+        "side_effect" -> "Add side effect##title"
+        else -> "Add item##title"
+    }
+)
+
+@Composable
+fun deleteItemTitle(itemType: String): String = t(
+    when (itemType) {
+        "trigger" -> "Delete trigger?"
+        "medicine" -> "Delete medicine?"
+        "relief" -> "Delete relief?"
+        "prodrome" -> "Delete prodrome?"
+        "activity" -> "Delete activity?"
+        "location" -> "Delete location?"
+        "missed_activity" -> "Delete missed activity?"
+        else -> "Delete item?"
+    }
+)
+
 /** Between items of a list in running text: Japanese and Chinese use 、 not a comma. */
 fun listSeparator(): String = if (LangPrefs.get().localeTag.take(2) in setOf("ja", "zh")) "\u3001" else ", "
 

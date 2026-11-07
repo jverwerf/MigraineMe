@@ -73,6 +73,7 @@ fun sourceDisplayLabel(raw: String, context: android.content.Context? = null): S
     "polar" -> "Polar"
     "phone" -> tSync("Phone")
     "health_connect" -> "Health Connect"
+    "open_meteo" -> "Open-Meteo"
     "manual_usda" -> tSync("Manual")
     "barcode_off" -> tSync("Barcode")
     "photo_ai" -> tSync("Photo")

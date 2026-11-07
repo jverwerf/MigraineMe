@@ -332,6 +332,8 @@ class MainActivity : ComponentActivity() {
         handleNavigationIntent(intent)
 
         setContent {
+            val appLang by LangPrefs.lang.collectAsState()
+            remember(appLang) { applyAppLocaleToResources(this@MainActivity, appLang) }
             MaterialTheme {
                 AppRoot(pendingNavigationRoute = pendingNavigationRoute)
             }
@@ -2150,6 +2152,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = triggerVm.errors,
                                 title = t("Triggers"),
+                                addTitle = addItemTitle("trigger"),
                                 subtitle = t("Add, star, or remove triggers"),
                                 iconColor = Color(0xFFFFB74D),
                                 drawHeroIcon = { HubIcons.run { drawTriggerBolt(it) } },
@@ -2248,6 +2251,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = medicineVm.errors,
                                 title = t("Medicines"),
+                                addTitle = addItemTitle("medicine"),
                                 subtitle = t("Add, star, or remove medicines"),
                                 iconColor = Color(0xFF4FC3F7),
                                 drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
@@ -2341,6 +2345,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = reliefVm.errors,
                                 title = t("Reliefs"),
+                                addTitle = addItemTitle("relief"),
                                 subtitle = t("Add, star, or remove reliefs"),
                                 iconColor = Color(0xFF81C784),
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
@@ -2439,6 +2444,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = prodromeVm.errors,
                                 title = t("Prodromes"),
+                                addTitle = addItemTitle("prodrome"),
                                 subtitle = t("Early warning signs before a migraine"),
                                 iconColor = Color(0xFFCE93D8),
                                 drawHeroIcon = { HubIcons.run { drawProdromeEye(it) } },
@@ -2529,6 +2535,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = locationVm.errors,
                                 title = t("Locations"),
+                                addTitle = addItemTitle("location"),
                                 subtitle = t("Where were you?"),
                                 iconColor = Color(0xFF64B5F6),
                                 drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
@@ -2578,6 +2585,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = activityVm.errors,
                                 title = t("Activities"),
+                                addTitle = addItemTitle("activity"),
                                 subtitle = t("What were you doing?"),
                                 iconColor = Color(0xFFFF8A65),
                                 drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
@@ -2628,6 +2636,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = missedVm.errors,
                                 title = t("Missed Activities"),
+                                addTitle = addItemTitle("missed_activity"),
                                 subtitle = t("What did you miss?"),
                                 iconColor = Color(0xFFEF9A9A),
                                 drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
@@ -2678,6 +2687,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             config = PoolConfig(
                                 errors = tseVm.errors,
                                 title = t("Side effects"),
+                                addTitle = addItemTitle("side_effect"),
                                 subtitle = t("Symptoms you flag as caused by your treatments, medicines or reliefs"),
                                 iconColor = AppTheme.AccentPurple,
                                 drawHeroIcon = { HubIcons.run { drawCapsulePlus(it) } },

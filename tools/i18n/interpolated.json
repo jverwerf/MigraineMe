@@ -100,10 +100,6 @@
     "line": "                            (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ExercisesScreen.kt:209",
-    "line": "                    t(routine.level) + \" · \" + t(\"%s min\", routine.minutes),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/ForumScreen.kt:376",
     "line": "                            \"\\uD83D\\uDD12 \" + t(\"Premium\"),"
   },
@@ -146,6 +142,10 @@
   {
     "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:231",
     "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:502",
+    "line": "        val text = body.orEmpty() + if (calendarIntent != null) \" \" + tSync(\"Add it to your calendar?\") else \"\""
   },
   {
     "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:336",
@@ -296,7 +296,7 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:712",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:724",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {

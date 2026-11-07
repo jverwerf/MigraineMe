@@ -468,7 +468,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     ordered.forEach { metric ->
                         val entry = bestByMetric[metric]
                         val value = if (entry == null) "-"
-                            else "${entry.value}${if (entry.unit.isNotEmpty()) " ${entry.unit}" else ""}"
+                            else "${prettyLabel(entry.value)}${if (entry.unit.isNotEmpty()) " ${entry.unit}" else ""}"
                         val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

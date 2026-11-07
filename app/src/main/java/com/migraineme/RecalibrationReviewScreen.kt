@@ -384,7 +384,7 @@ private fun ProposalRow(
         Column(modifier = Modifier.weight(1f)) {
             // Label + change
             FlowRow(verticalArrangement = Arrangement.Center) {
-                Text(t(proposal.label),
+                Text(prettyLabel(proposal.label),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -488,7 +488,7 @@ private fun AnswerProposalRow(
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                proposal.question?.let { t(it) } ?: t(proposal.label),
+                proposal.question?.let { t(it) } ?: prettyLabel(proposal.label),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             )
@@ -754,7 +754,7 @@ private fun WarningRow(proposal: RecalibrationViewModel.Proposal) {
         )
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(t(proposal.label),
+            Text(prettyLabel(proposal.label),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             )
@@ -780,7 +780,7 @@ private fun prettyValue(v: String): String = when (v.uppercase()) {
     "MILD" -> t("MILD")
     "LOW" -> t("LOW")
     "NONE" -> t("NONE")
-    else -> v
+    else -> prettyLabel(v)
 }
 
 /** Row surface: a wash of the accent when ticked, nearly nothing when not. Static. */

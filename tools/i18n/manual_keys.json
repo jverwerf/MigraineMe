@@ -8601,6 +8601,294 @@
       "sites": [
         "server-note-or-zone"
       ]
+    },
+    {
+      "en": "5-6h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "6-7h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "7-8h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "8-9h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "9+h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "< 5h",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 12
+    },
+    {
+      "en": "A little",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Add activity##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add item##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add location##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add medicine##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add missed activity##title",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Add prodrome##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add relief##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add side effect##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Add trigger##title",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Definitely",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Delete activity?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete item?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete location?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete medicine?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete missed activity?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Delete prodrome?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete relief?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Delete trigger?",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Ended: %s",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Item",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Maybe",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Milligrams (mg)",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Minimal",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 20
+    },
+    {
+      "en": "Motor",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Not answered",
+      "class": "hard",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Profile updates",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Started: %s",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
+    },
+    {
+      "en": "Updated clinical profile",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 48
+    },
+    {
+      "en": "Your answers",
+      "class": "soft",
+      "sites": [
+        "tSync at render, no literal at a display anchor"
+      ],
+      "max_len": 40
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

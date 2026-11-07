@@ -1213,7 +1213,7 @@ fun MonitorMedicineConfigScreen(onBack: () -> Unit) {
                                 Text(t(m.label), color = Color.White,
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                                 m.category?.let {
-                                    Text(it, color = AppTheme.SubtleTextColor,
+                                    Text(prettyLabel(it), color = AppTheme.SubtleTextColor,
                                         style = MaterialTheme.typography.labelSmall)
                                 }
                             }
@@ -1238,7 +1238,7 @@ fun MonitorMedicineConfigScreen(onBack: () -> Unit) {
                             Box(Modifier.size(18.dp).clip(CircleShape)
                                 .background(if (isSel) Color(0xFF81C784) else Color.White.copy(alpha = 0.08f)))
                             Spacer(Modifier.width(10.dp))
-                            Text(c, color = Color.White,
+                            Text(prettyLabel(c), color = Color.White,
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         }
                     }

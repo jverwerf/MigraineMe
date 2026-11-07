@@ -200,7 +200,7 @@ fun TimingScreen(
                         Text(t("Started"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                     }
                     AppDateTimePicker(
-                        label = beganAt?.let { "Started: ${formatIsoDdMmYyHm(it)}" } ?: t("Set start time"),
+                        label = beganAt?.let { t("Started: %s", formatIsoDdMmYyHm(it)) } ?: t("Set start time"),
                         allowFuture = false
                     ) { beganAt = it; syncDraft() }
                 }
@@ -213,7 +213,7 @@ fun TimingScreen(
                         Text(t("Ended"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                     }
                     AppDateTimePicker(
-                        label = endedAt?.let { "Ended: ${formatIsoDdMmYyHm(it)}" } ?: t("Set end time (optional)"),
+                        label = endedAt?.let { t("Ended: %s", formatIsoDdMmYyHm(it)) } ?: t("Set end time (optional)"),
                         allowFuture = false
                     ) { endedAt = it; syncDraft() }
                 }

@@ -86,6 +86,8 @@ data class PickerIconEntry(val key: String, val label: String, val icon: ImageVe
 
 data class PoolConfig(
     val title: String,
+    /** Heading of the add dialog, a whole phrase so languages can inflect the noun. */
+    val addTitle: String,
     val subtitle: String,
     val iconColor: Color,
     val drawHeroIcon: DrawScope.(Color) -> Unit,
@@ -615,7 +617,7 @@ fun ManagePoolScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text(t("Add %s", config.title.lowercase().removeSuffix("s"))) },
+            title = { Text(config.addTitle) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     // Name

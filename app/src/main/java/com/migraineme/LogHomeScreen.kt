@@ -567,7 +567,7 @@ fun SymptomSeveritySheet(
                 textAlign = TextAlign.Center
             )
             Text(
-                t("Remove %s from this log", label),
+                t("Remove %s from this log", prettyLabel(label)),
                 color = AppTheme.AccentPink.copy(alpha = 0.9f),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().clickable { onRemove() },
@@ -579,7 +579,7 @@ fun SymptomSeveritySheet(
 
 /** Local formatter — the shared formatIsoDdMmYyHm helpers are file-private. */
 private fun formatSymptomTime(iso: String?): String {
-    if (iso.isNullOrBlank()) return "At attack start"
+    if (iso.isNullOrBlank()) return tSync("At attack start")
     return runCatching {
         java.time.OffsetDateTime.parse(iso)
             .atZoneSameInstant(java.time.ZoneId.systemDefault())

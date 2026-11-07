@@ -300,7 +300,7 @@ fun ManageSymptomsScreen(
                             "accompanying" -> "General"
                             else -> cat
                         }
-                        Text(displayCat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 8.dp))
+                        Text(prettyLabel(displayCat), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 8.dp))
                         symptoms.forEach { symptom ->
                             val isFav = symptom.id in favoriteIds
                             val prefId = favorites.find { it.symptomId == symptom.id }?.id

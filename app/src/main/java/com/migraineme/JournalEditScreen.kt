@@ -358,6 +358,8 @@ fun JournalEditScreen(
         "missed_activity" -> "Missed activity"
         else -> "Item"
     }
+    val addTitle = addItemTitle(itemType)
+    val deleteTitle = deleteItemTitle(itemType)
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -394,7 +396,7 @@ fun JournalEditScreen(
             if (isAdd) {
                 LabelPlate {
                     Text(
-                        t("Add %s", typeTitle.lowercase()),
+                        addTitle,
                         color = Color.White,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
@@ -407,7 +409,7 @@ fun JournalEditScreen(
             // auto/system rows stay read-only. ──
             if (itemType == "relief" && (reliefFrequent.isNotEmpty() || reliefAll.isNotEmpty())) {
                 BaseCard {
-                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t(typeTitle), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(4.dp))
                     Box(Modifier.fillMaxWidth()) {
                         Row(
@@ -416,7 +418,7 @@ fun JournalEditScreen(
                         ) {
                             BrainyRowIcon(reliefType, iconKey = reliefIconKeys[reliefType], category = "relief", size = 24.dp)
                             Text(
-                                reliefType.ifBlank { "Unknown" },
+                                prettyLabel(reliefType).ifBlank { t("Unknown") },
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                                 modifier = Modifier.weight(1f),
@@ -440,7 +442,7 @@ fun JournalEditScreen(
                                 )
                                 reliefFrequent.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt, color = Color.White) },
+                                        text = { Text(prettyLabel(opt), color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
@@ -458,7 +460,7 @@ fun JournalEditScreen(
                                 )
                                 reliefAll.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt, color = Color.White) },
+                                        text = { Text(prettyLabel(opt), color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
@@ -472,7 +474,7 @@ fun JournalEditScreen(
                 }
             } else if (canPick) {
                 BaseCard {
-                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t(typeTitle), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(4.dp))
                     Box(Modifier.fillMaxWidth()) {
                         Row(
@@ -481,7 +483,7 @@ fun JournalEditScreen(
                         ) {
                             BrainyRowIcon(pickType, iconKey = pickIconKeys[pickType], category = itemType, size = 24.dp)
                             Text(
-                                pickDisplay.ifBlank { "Unknown" },
+                                prettyLabel(pickDisplay).ifBlank { t("Unknown") },
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                                 modifier = Modifier.weight(1f),
@@ -516,7 +518,7 @@ fun JournalEditScreen(
                                 )
                                 pickFrequent.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt, color = Color.White) },
+                                        text = { Text(prettyLabel(opt), color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = pickIconKeys[opt], category = itemType, size = 24.dp, gap = 0.dp) },
                                         onClick = { pick(opt) },
                                     )
@@ -531,7 +533,7 @@ fun JournalEditScreen(
                                 )
                                 pickAll.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt, color = Color.White) },
+                                        text = { Text(prettyLabel(opt), color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = pickIconKeys[opt], category = itemType, size = 24.dp, gap = 0.dp) },
                                         onClick = { pick(opt) },
                                     )
@@ -542,10 +544,10 @@ fun JournalEditScreen(
                 }
             } else {
                 BaseCard {
-                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t(typeTitle), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        label.ifBlank { "Unknown" },
+                        prettyLabel(label).ifBlank { t("Unknown") },
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
@@ -1066,7 +1068,7 @@ fun JournalEditScreen(
             if (confirmDelete) {
                 AlertDialog(
                     onDismissRequest = { confirmDelete = false },
-                    title = { Text(t("Delete %s?", typeTitle)) },
+                    title = { Text(deleteTitle) },
                     text = { Text(t("This can't be undone.")) },
                     confirmButton = {
                         TextButton(onClick = {

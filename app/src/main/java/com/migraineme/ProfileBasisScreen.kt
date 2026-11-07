@@ -328,7 +328,7 @@ private fun BasisContent(
     BaseCard {
         SectionHeader(Icons.Outlined.Watch, t("Data it can see"), t("Connected right now"), null)
         Spacer(Modifier.height(4.dp))
-        val names = d.sources.map { src -> WearableSource.entries.firstOrNull { it.key == src }?.label ?: src }
+        val names = d.sources.map { src -> WearableSource.entries.firstOrNull { it.key == src }?.label ?: sourceDisplayLabel(src) }
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(t("Wearables and health apps"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
@@ -437,9 +437,9 @@ private fun ChangeRow(p: JsonObject) {
         "menstruation_decay" -> Triple(t("Cycle curve"), null, t("changed"))
         "clinical_assessment" -> Triple(t("Your assessment"), null, t("rewritten"))
         "medicine", "relief", "symptom", "activity", "missed_activity" ->
-            Triple(t(label), null, if (to == "favorite") t("quick-log") else t("removed from quick-log"))
+            Triple(prettyLabel(label), null, if (to == "favorite") t("quick-log") else t("removed from quick-log"))
         // A corrected answer: the label is the field key ("seasonal_pattern").
-        "answer", "profile" -> Triple(humanField(label), from?.let { t(it) }, to?.let { t(it) })
+        "answer", "profile" -> Triple(prettyLabel(humanField(label)), from?.let { prettyLabel(it) }, to?.let { prettyLabel(it) })
         else -> Triple(t(label), from, to)
     }
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -475,14 +475,14 @@ private fun MadeOfItCard(d: BasisData) {
         Spacer(Modifier.height(4.dp))
         if (areas.isNotEmpty()) {
             LabelWithTag(t("Your trigger areas"), t("at setup"), frozen = true)
-            PillRow(areas.map { t(it) to PillTone.PLAIN })
+            PillRow(areas.map { prettyLabel(it) to PillTone.PLAIN })
             Spacer(Modifier.height(8.dp))
         }
         LabelWithTag(t("Watched closely"), t("now"), frozen = false)
-        if (high.isEmpty()) NoneText() else PillRow(high.map { t(it) to (if (moved(it, "HIGH")) PillTone.DEF_MOVED else PillTone.DEF) })
+        if (high.isEmpty()) NoneText() else PillRow(high.map { prettyLabel(it) to (if (moved(it, "HIGH")) PillTone.DEF_MOVED else PillTone.DEF) })
         Spacer(Modifier.height(8.dp))
         LabelWithTag(t("Watched loosely"), t("now"), frozen = false)
-        if (mild.isEmpty()) NoneText() else PillRow(mild.map { t(it) to (if (moved(it, "MILD")) PillTone.MAYBE_MOVED else PillTone.MAYBE) })
+        if (mild.isEmpty()) NoneText() else PillRow(mild.map { prettyLabel(it) to (if (moved(it, "MILD")) PillTone.MAYBE_MOVED else PillTone.MAYBE) })
         if (setBy > 0) {
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
