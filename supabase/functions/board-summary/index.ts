@@ -32,7 +32,8 @@ Write a summary of 4 to 7 short, plain sentences: how things have been going, wh
 
 Rules:
 - Use only what is in the text. Never add a number, cause or fact that is not there.
-- A pattern in the data is a pattern, not a cause. Say "goes with", not "causes".
+- A pattern in the data is a pattern, not a cause. Say "goes with" or "happened alongside". Never say something works, is effective, helped, contributed to or led to a result, even if the text you were given says so. Where a client rated a treatment, say they rated it.
+- Neutral clinical tone. No praise and no words like remarkable, success or great.
 - No diagnosis and no advice on medication or treatment.
 - If something important is missing or the data is thin, say so in one sentence.
 - Refer to "the client". Plain text only, no headings or lists.`;
