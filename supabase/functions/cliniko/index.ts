@@ -319,6 +319,31 @@ serve(async (req) => {
         });
         const events: any[] = [{ ...stamp, link_id: link.id, provider: PROVIDER, kind: "attachment", external_id: att?.id ? String(att.id) : null, detail: { filename, bytes: bytes.length } }];
 
+        // Optional second file: the same zip of CSVs and charts as the board's Export button.
+        let dataFile: any = null, dataError: string | null = null;
+        const zb64 = String(body.zip_base64 || "");
+        if (zb64) {
+          try {
+            const zbytes = Uint8Array.from(atob(zb64), (c) => c.charCodeAt(0));
+            if (zbytes.length > 12 * 1024 * 1024) throw new UserError("That export is over 12 MB. Narrow the range.");
+            const zname = String(body.zip_filename || "data.zip").replace(/[^\w.-]+/g, "-");
+            const zpre = await ck(integ, `/patients/${row.external_id}/attachment_presigned_post`);
+            if (!zpre?.url || !zpre?.fields) throw new UserError("Cliniko gave no upload slot.", 502);
+            const zfd = new FormData();
+            for (const [k, v] of Object.entries(zpre.fields)) zfd.append(k, String(v));
+            zfd.append("file", new Blob([zbytes], { type: "application/zip" }), zname);
+            const zup = await fetch(zpre.url, { method: "POST", body: zfd });
+            const zxml = await zup.text();
+            if (zup.status !== 201 && zup.status !== 204 && !zup.ok) throw new UserError(`The file upload failed (${zup.status}).`, 502);
+            const zkey = (zxml.match(/<Key>([^<]+)<\/Key>/) || [])[1] || String(zpre.fields.key || "");
+            if (!zkey) throw new UserError("The upload gave no file key.", 502);
+            dataFile = await ck(integ, "/patient_attachments", {
+              method: "POST", body: JSON.stringify({ patient_id: row.external_id, upload_url: zpre.url.replace(/\/?$/, "/") + zkey.replace(/^\//, ""), description: String(body.zip_description || "").slice(0, 255) || null, filename: zname }),
+            });
+            events.push({ ...stamp, link_id: link.id, provider: PROVIDER, kind: "attachment", external_id: dataFile?.id ? String(dataFile.id) : null, detail: { filename: zname, bytes: zbytes.length } });
+          } catch (e) { dataError = (e as Error).message; }
+        }
+
         // 4. a DRAFT treatment note: the practitioner finishes and signs it in Cliniko.
         let note: any = null, noteError: string | null = null;
         const n = body.note || {};
@@ -344,7 +369,8 @@ serve(async (req) => {
         await db.from("practitioner_integration_events").insert(events as any);
         await touch(integ, noteError);
         return json({ attachment: att ? { id: String(att.id), filename, processing_completed: att.processing_completed ?? false } : null,
-                      note: note ? { id: String(note.id), draft: true } : null, note_error: noteError });
+                      note: note ? { id: String(note.id), draft: true } : null, note_error: noteError,
+                      data_file: dataFile ? { id: String(dataFile.id) } : null, data_error: dataError });
       }
 
       default:
