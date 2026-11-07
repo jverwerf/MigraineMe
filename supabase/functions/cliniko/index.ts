@@ -295,29 +295,33 @@ serve(async (req) => {
         const link = await needLink();
         const row = await loadPatientRow(link.id);
         if (!row) throw new UserError("Match the patient first.", 412);
+        // Either file is optional: the practitioner ticks what goes, and a send with neither is refused.
         const b64 = String(body.pdf_base64 || "");
-        if (!b64) throw new UserError("No PDF in the request.");
-        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        if (bytes.length > 12 * 1024 * 1024) throw new UserError("That PDF is over 12 MB. Narrow the range.");
+        if (!b64 && !body.zip_base64) throw new UserError("Nothing to send.");
         const filename = String(body.filename || "report.pdf").replace(/[^\w.-]+/g, "-");
         const description = String(body.description || "").slice(0, 255);
-
-        // 1. presigned post for this patient  2. multipart to S3  3. the record
-        const pre = await ck(integ, `/patients/${row.external_id}/attachment_presigned_post`);
-        if (!pre?.url || !pre?.fields) throw new UserError("Cliniko gave no upload slot.", 502);
-        const fd = new FormData();
-        for (const [k, v] of Object.entries(pre.fields)) fd.append(k, String(v));
-        fd.append("file", new Blob([bytes], { type: "application/pdf" }), filename);
-        const up = await fetch(pre.url, { method: "POST", body: fd });
-        const xml = await up.text();
-        if (up.status !== 201 && up.status !== 204 && !up.ok) throw new UserError(`The file upload failed (${up.status}).`, 502);
-        const key = (xml.match(/<Key>([^<]+)<\/Key>/) || [])[1] || String(pre.fields.key || "");
-        if (!key) throw new UserError("The upload gave no file key.", 502);
-        const uploadUrl = pre.url.replace(/\/?$/, "/") + key.replace(/^\//, "");
-        const att = await ck(integ, "/patient_attachments", {
-          method: "POST", body: JSON.stringify({ patient_id: row.external_id, upload_url: uploadUrl, description: description || null, filename }),
-        });
-        const events: any[] = [{ ...stamp, link_id: link.id, provider: PROVIDER, kind: "attachment", external_id: att?.id ? String(att.id) : null, detail: { filename, bytes: bytes.length } }];
+        let att: any = null;
+        const events: any[] = [];
+        if (b64) {
+          const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          if (bytes.length > 12 * 1024 * 1024) throw new UserError("That PDF is over 12 MB. Narrow the range.");
+          // 1. presigned post for this patient  2. multipart to S3  3. the record
+          const pre = await ck(integ, `/patients/${row.external_id}/attachment_presigned_post`);
+          if (!pre?.url || !pre?.fields) throw new UserError("Cliniko gave no upload slot.", 502);
+          const fd = new FormData();
+          for (const [k, v] of Object.entries(pre.fields)) fd.append(k, String(v));
+          fd.append("file", new Blob([bytes], { type: "application/pdf" }), filename);
+          const up = await fetch(pre.url, { method: "POST", body: fd });
+          const xml = await up.text();
+          if (up.status !== 201 && up.status !== 204 && !up.ok) throw new UserError(`The file upload failed (${up.status}).`, 502);
+          const key = (xml.match(/<Key>([^<]+)<\/Key>/) || [])[1] || String(pre.fields.key || "");
+          if (!key) throw new UserError("The upload gave no file key.", 502);
+          const uploadUrl = pre.url.replace(/\/?$/, "/") + key.replace(/^\//, "");
+          att = await ck(integ, "/patient_attachments", {
+            method: "POST", body: JSON.stringify({ patient_id: row.external_id, upload_url: uploadUrl, description: description || null, filename }),
+          });
+          events.push({ ...stamp, link_id: link.id, provider: PROVIDER, kind: "attachment", external_id: att?.id ? String(att.id) : null, detail: { filename, bytes: bytes.length } });
+        }
 
         // Optional second file: the same zip of CSVs and charts as the board's Export button.
         let dataFile: any = null, dataError: string | null = null;
@@ -356,7 +360,7 @@ serve(async (req) => {
             content: { sections: [{ name: String(n.section || "Summary"), description: null, questions: [
               { name: String(n.question || "Key numbers"), type, answer },
               ...(n.shared ? [{ name: String(n.shared_label || "Shared data"), type: "text", answer: String(n.shared) }] : []),
-              { name: String(n.attachment_label || "Attachment"), type: "text", answer: filename },
+              { name: String(n.attachment_label || "Attachment"), type: "text", answer: b64 ? filename : String(body.zip_filename || "") },
             ] }] },
           });
           try { note = await ck(integ, "/treatment_notes", { method: "POST", body: JSON.stringify(section("paragraph", html)) }); }
