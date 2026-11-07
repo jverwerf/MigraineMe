@@ -4,6 +4,11 @@
 // from Supabase via REST, caches the catalogue in SharedPreferences for
 // offline use, and renders each article's markdown body with a small
 // in-house parser (no extra dependencies).
+//
+// In any language but English the same rows come with their translation
+// embedded (help_article_translations, help_category_translations). An article
+// with no translation stays English on its own, the rest of the list is not
+// affected. Each language has its own cache, so switching never shows the old one.
 
 package com.migraineme
 
@@ -124,14 +129,16 @@ class HelpViewModel : ViewModel() {
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
-    private val prefsName = "help_centre_cache_v1"
+    // English keeps the original name, so the cache already on a phone still counts.
+    private fun prefsName(lang: String) =
+        if (lang == "en") "help_centre_cache_v1" else "help_centre_cache_v1_$lang"
     private val keyCategories = "categories"
     private val keyArticles = "articles"
 
     fun setQuery(q: String) = _state.update { it.copy(query = q) }
 
     fun loadCache(context: Context) {
-        val prefs = context.applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val prefs = context.applicationContext.getSharedPreferences(prefsName(LangPrefs.get().code), Context.MODE_PRIVATE)
         val cats = prefs.getString(keyCategories, null)?.let { parseCategoriesJson(it) } ?: emptyList()
         val arts = prefs.getString(keyArticles, null)?.let { parseArticlesJson(it) } ?: emptyList()
         _state.update { it.copy(categories = cats, articles = arts) }
@@ -140,15 +147,17 @@ class HelpViewModel : ViewModel() {
     fun load(context: Context) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = _state.value.articles.isEmpty()) }
+            val lang = LangPrefs.get().code
             try {
                 val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return@launch
-                val (cats, arts) = withContext(Dispatchers.IO) { fetchAll(accessToken) }
-                val prefs = context.applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+                val (cats, arts) = withContext(Dispatchers.IO) { fetchAll(accessToken, lang) }
+                val prefs = context.applicationContext.getSharedPreferences(prefsName(lang), Context.MODE_PRIVATE)
                 prefs.edit()
                     .putString(keyCategories, encodeCategoriesJson(cats))
                     .putString(keyArticles, encodeArticlesJson(arts))
                     .apply()
-                _state.update { it.copy(categories = cats, articles = arts) }
+                // The language changed while this was on its way: keep the cache, not the screen.
+                if (LangPrefs.get().code == lang) _state.update { it.copy(categories = cats, articles = arts) }
             } catch (e: Exception) {
                 android.util.Log.w("Help", "load failed", e)
             } finally {
@@ -158,7 +167,7 @@ class HelpViewModel : ViewModel() {
     }
 
     fun articlesIn(cat: HelpCategory): List<HelpArticle> {
-        val q = _state.value.query.trim().lowercase()
+        val q = helpSearchFold(_state.value.query.trim())
         val inCat = _state.value.articles
             .filter { it.categorySlug == cat.slug }
             .sortedBy { it.orderIndex }
@@ -172,7 +181,7 @@ class HelpViewModel : ViewModel() {
 
     // ─── Network ────────────────────────────────────────────────────
 
-    private fun fetchAll(accessToken: String): Pair<List<HelpCategory>, List<HelpArticle>> {
+    private fun fetchAll(accessToken: String, lang: String): Pair<List<HelpCategory>, List<HelpArticle>> {
         val base = BuildConfig.SUPABASE_URL
         val anon = BuildConfig.SUPABASE_ANON_KEY
 
@@ -190,8 +199,23 @@ class HelpViewModel : ViewModel() {
             }
         }
 
-        val catsJson = get("/rest/v1/help_categories?select=*&order=order_index.asc")
-        val artsJson = get("/rest/v1/help_articles?select=*&order=order_index.asc")
+        val catsJson: String
+        val artsJson: String
+        if (lang == "en") {
+            catsJson = get("/rest/v1/help_categories?select=*&order=order_index.asc")
+            artsJson = get("/rest/v1/help_articles?select=*&order=order_index.asc")
+        } else {
+            // search_text is left out here: it is built from whichever text wins.
+            catsJson = get(
+                "/rest/v1/help_categories?select=slug,name,order_index,help_category_translations(name)" +
+                    "&help_category_translations.lang=eq.$lang&order=order_index.asc"
+            )
+            artsJson = get(
+                "/rest/v1/help_articles?select=slug,category_slug,title,body_markdown,order_index," +
+                    "help_article_translations(title,body_markdown)" +
+                    "&help_article_translations.lang=eq.$lang&order=order_index.asc"
+            )
+        }
         return parseCategoriesJson(catsJson) to parseArticlesJson(artsJson)
     }
 
@@ -199,9 +223,10 @@ class HelpViewModel : ViewModel() {
         val arr = JSONArray(s)
         return List(arr.length()) { i ->
             val o = arr.getJSONObject(i)
+            val tr = o.optJSONArray("help_category_translations")?.optJSONObject(0)
             HelpCategory(
                 slug = o.getString("slug"),
-                name = o.getString("name"),
+                name = tr?.optString("name")?.takeIf { it.isNotBlank() } ?: o.getString("name"),
                 orderIndex = o.optInt("order_index", 0)
             )
         }
@@ -211,12 +236,15 @@ class HelpViewModel : ViewModel() {
         val arr = JSONArray(s)
         return List(arr.length()) { i ->
             val o = arr.getJSONObject(i)
+            val tr = o.optJSONArray("help_article_translations")?.optJSONObject(0)
+            val title = tr?.optString("title")?.takeIf { it.isNotBlank() } ?: o.getString("title")
+            val body = tr?.optString("body_markdown")?.takeIf { it.isNotBlank() } ?: o.getString("body_markdown")
             HelpArticle(
                 slug = o.getString("slug"),
                 categorySlug = o.getString("category_slug"),
-                title = o.getString("title"),
-                bodyMarkdown = o.getString("body_markdown"),
-                searchText = o.getString("search_text"),
+                title = title,
+                bodyMarkdown = body,
+                searchText = o.optString("search_text").ifEmpty { helpSearchFold("$title $body") },
                 orderIndex = o.optInt("order_index", 0)
             )
         }
@@ -245,6 +273,14 @@ class HelpViewModel : ViewModel() {
     }
 }
 
+/**
+ * What search compares: lowercase, with the Turkish i's folded together. The
+ * phone lowercases I to i, while Turkish words hold a dotless one, so "ILIK"
+ * would otherwise never find "ılık". Same as iOS.
+ */
+fun helpSearchFold(s: String): String =
+    s.lowercase().replace("\u0131", "i").replace("i\u0307", "i")
+
 // ─────────────────────────────────────────────────────────────────────
 // Help list screen
 // ─────────────────────────────────────────────────────────────────────
@@ -258,7 +294,7 @@ fun HelpScreen(
     val ctx = LocalContext.current
     val state by vm.state.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(LangPrefs.get()) {
         vm.loadCache(ctx)
         vm.load(ctx)
     }
@@ -458,7 +494,7 @@ fun HelpSectionCard(section: HelpSection, onOpenArticle: (HelpArticle) -> Unit) 
         section.subsections.forEach { (sub, arts) ->
             if (sub != null) {
                 Text(
-                    sub.uppercase(),
+                    sub.uppercase(appLocale()),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White.copy(alpha = 0.5f),
