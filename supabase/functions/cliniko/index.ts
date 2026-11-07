@@ -319,10 +319,27 @@ serve(async (req) => {
           all.push(...got);
           if (got.length < 100) break;
         }
-        const out = all.filter((a: any) => !a.cancelled_at).map((a: any) => ({
-          id: String(a.id), starts_at: a.starts_at, ends_at: a.ends_at, patient: a.patient_name || null,
-          type: typeName[idFromLink(a.appointment_type) || ""] || null,
-        }));
+        const pracName: Record<string, string> = {};
+        for (const p of pracs?.practitioners || []) pracName[String(p.id)] = [p.first_name, p.last_name].filter(Boolean).join(" ");
+        // Which of these patients is linked to one of this person's clients, so a session can open that client's board.
+        const { data: myLinks } = await db.from("practitioner_clients").select("id").in("practitioner_id", myIds);
+        const linkIds = (myLinks || []).map((l: any) => l.id);
+        const { data: linked } = linkIds.length
+          ? await db.from("practitioner_integration_patients").select("link_id,external_id").eq("provider", PROVIDER).in("link_id", linkIds)
+          : { data: [] as any[] };
+        const linkOf: Record<string, string> = {};
+        for (const l of linked || []) linkOf[String(l.external_id)] = l.link_id;
+        const out = all.filter((a: any) => !a.cancelled_at).map((a: any) => {
+          const patientId = idFromLink(a.patient) || "";
+          return {
+            id: String(a.id), starts_at: a.starts_at, ends_at: a.ends_at, patient: a.patient_name || null,
+            type: typeName[idFromLink(a.appointment_type) || ""] || null,
+            practitioner: pracName[idFromLink(a.practitioner) || ""] || null,
+            notes: a.notes || null, did_not_arrive: !!a.did_not_arrive, arrived: !!a.patient_arrived,
+            patient_url: integ.web_base && patientId ? `${integ.web_base}/patients/${patientId}` : null,
+            link_id: linkOf[patientId] || null,
+          };
+        });
         await touch(integ);
         return json({ appointments: out });
       }
