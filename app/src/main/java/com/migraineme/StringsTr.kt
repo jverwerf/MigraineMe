@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5134 entries.
+ * 5163 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -376,6 +376,9 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "Her migrenin, tetikleyicinin, prodromun, ilacın, rahatlamanın, aktivitenin, konumun ve kaçırılan aktivitenin zaman sırasına göre dizildiği bir akış.\n\nGörünümü türe veya zaman aralığına göre filtreleyebilir ya da eksik alanları olan kayıtları görmek için doğrudan \"Dikkat gerekenler\"e geçebilirsin (bitiş saati olmayan bir atak, şiddeti girilmemiş bir migren, ayrıntı bekleyen hızlı bir kayıt).\n\nBir kayda dokunarak düzenleme modunda açabilir ve eksikleri tamamlayabilirsin. Sekmenin üzerindeki sayı rozeti, şu anda kaç kaydın dikkat gerektirdiğini gösterir; böylece geri dönmeyi hatırlamak zorunda kalmazsın.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "Boynunun yan tarafında ya da arkasında net bir çekilme hissi, tuttukça hafifler. Fayda, birkaç hafta boyunca çoğu gün yapmaktan gelir. Keskin bir ağrıya doğru asla esnetme.",
     "A clear wall, a bed or a mat, a tennis ball" to "Boş bir duvar, bir yatak ya da mat, bir tenis topu",
+    "A client accepted your appointment time" to "Bir danışan randevu saatini kabul etti",
+    "A client declined your appointment time" to "Bir danışan randevu saatini reddetti",
+    "A client suggested an appointment time" to "Bir danışan randevu saati önerdi",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "Masa başında geçen bir gün göğsünü gerginleştirir ve omuzlarını öne yuvarlar. Başın da onları takip eder; omuzlarının önüne geçtiğinde ensendeki kaslara asılı kalır.",
     "A day without an attack." to "Atak olmayan bir gün.",
     "A few hours" to "Birkaç saat",
@@ -1054,6 +1057,11 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "Migren için değil, bulantı ve kusma için onaylanmıştır. Seni en çok bulantı yoruyorsa işe yarar.",
     "Clinical assessment" to "Klinik değerlendirme",
     "Clinical assessment of your profile" to "Profilinin klinik değerlendirmesi",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "Cliniko API anahtarını kabul etmedi. Cliniko'da Bilgilerim, API anahtarları bölümünden kontrol et.",
+    "Cliniko has no appointment types yet." to "Cliniko'da henüz randevu türü yok.",
+    "Cliniko has no business set up yet." to "Cliniko'da henüz işletme kurulmamış.",
+    "Cliniko has no record with that id." to "Cliniko'da bu kimliğe ait kayıt yok.",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Cliniko istek sınırı uyguluyor. Bir dakika sonra tekrar dene.",
     "Close" to "Kapat",
     "Cluster" to "Küme",
     "Cluster headache" to "Küme baş ağrısı",
@@ -1116,6 +1124,8 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Confusion" to "Kafa karışıklığı",
     "Connect" to "Bağlan",
     "Connect *Health Connect.*" to "*Health Connect* uygulamasını bağla.",
+    "Connect Cliniko first, under Your dashboard." to "Önce Cliniko'yu bağla, Panelin bölümünde.",
+    "Connect Cliniko first." to "Önce Cliniko'yu bağla.",
     "Connect Health Connect" to "Health Connect'i bağla",
     "Connect Oura, Polar, Garmin and Health Connect." to "Oura, Polar, Garmin ve Health Connect hesaplarını bağla.",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "WHOOP, Oura, Polar, Garmin ve Health Connect'i bağla.",
@@ -1507,6 +1517,9 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "E-postanı gir, sana bir sıfırlama bağlantısı gönderelim.",
     "Entry actions" to "Kayıt işlemleri",
     "Environment" to "Çevre",
+)
+
+private fun trStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "Çevre Verileri",
     "Environment History" to "Çevre Geçmişi",
     "Environment tracking is disabled" to "Çevre takibi kapalı",
@@ -1517,9 +1530,6 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamin (Cafergot)",
     "Ergots" to "Ergotlar",
     "Error" to "Hata",
-)
-
-private fun trStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Hata: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Bu rapordaki ataklarda da görülen yerleşik örüntüler.",
     "Estimate" to "Tahmin",
@@ -2815,6 +2825,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "Süren tedavi",
     "Ongoing treatment and your treatment story" to "Süren tedavi ve tedavi hikâyen",
     "Online" to "Çevrimiçi",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "Yalnızca henüz yanıtlanmamış bir talep geri çekilebilir. Onaylanmış bir seansı iptal etmesi için uzmanından iste.",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "Bu egzersizlere, bir fizyoterapist boynuna bakmadan başlama. Yanlış yapılırsa ya da kilitlenmiş veya zorlanmış kas gibi başka bir sorun için yapılırsa ağrını artırabilirler.",
     "Only your practitioner can change this goal." to "Bu hedefi yalnızca uzmanın değiştirebilir.",
     "Only {0} weeks of data in this record" to "Bu kayıtta yalnızca {0} haftalık veri var",
@@ -2980,7 +2991,10 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Fiziksel ve hormonal tetikleyiciler",
     "Physical health tracking is disabled" to "Fiziksel sağlık takibi kapalı",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Monitör kartında risk skorunun altında gösterilecek 3 ölçüm seç. Bunlar her kategoride belirlediğin favorilerden gelir.",
+    "Pick a calendar." to "Bir takvim seç.",
     "Pick a date" to "Tarih seç",
+    "Pick a date and time." to "Bir tarih ve saat seç.",
+    "Pick a date range." to "Bir tarih aralığı seç.",
     "Pick a medicine or category to chart" to "Grafik için bir ilaç ya da kategori seç",
     "Pick a metric" to "Ölçüm seç",
     "Pick a metric first." to "Önce bir ölçüm seç.",
@@ -3006,6 +3020,9 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Please enter a promo code." to "Lütfen bir promosyon kodu gir.",
     "Please enter your current password." to "Lütfen mevcut şifreni gir.",
     "Please enter your information manually below." to "Lütfen bilgilerini aşağıya elle gir.",
+)
+
+private fun trStrings2(): Map<String, String> = mapOf(
     "Please fill in all password fields." to "Tüm şifre alanlarını doldur.",
     "Please go to Monitor to complete setup." to "Kurulumu tamamlamak için lütfen Monitor'e git.",
     "Please type %1\$s to confirm." to "Onaylamak için %1\$s yaz.",
@@ -3020,9 +3037,6 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Polar's Nightly Recharge status (1–5 stars) is converted to a percentage: status × 20. So 5★ → 100%, 4★ → 80%, etc." to "Polar'ın Nightly Recharge durumu (1–5 yıldız) yüzdeye çevrilir: durum × 20. Yani 5★ → %100, 4★ → %80 vb.",
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar'ın uyku sürekliliği (1,0–5,0 ölçeği) yüzdeye çevrilir: (süreklilik − 1) ÷ 4 × 100.",
     "Pollen" to "Polen",
-)
-
-private fun trStrings2(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Polen ve hava kalitesi",
     "Pollen counts and air pollution." to "Polen değerleri ve hava kirliliği.",
     "Pollen high" to "Polen yüksek",
@@ -3501,7 +3515,9 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "%2\$s kullanımın %1\$s tanesinde yan etki",
     "Side effects: " to "Yan etkiler: ",
     "Sign in" to "Giriş yap",
+    "Sign in first." to "Önce giriş yap.",
     "Sign in to continue tracking" to "Takibe devam etmek için giriş yap",
+    "Sign in to see it:" to "Görmek için giriş yap:",
     "Sign out" to "Çıkış yap",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "Bu cihazda hesabından çıkış yap.\nVerilerin bulutta güvende kalmaya devam edecek.",
     "Sign out?" to "Çıkılsın mı?",
@@ -3840,8 +3856,18 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "Kullanım Şartı",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "İlk sihirbaz adımındaki \"Şu an oluyor\" düğmesini dene; hemen kaydeder, ayrıntıları sonra gelip doldurabilirsin.",
     "Thanks for letting us know. We'll review this content shortly." to "Bildirdiğin için teşekkürler. Bu içeriği kısa süre içinde inceleyeceğiz.",
+    "That Cliniko key is not allowed to book appointments." to "Bu Cliniko anahtarının randevu oluşturma izni yok.",
+    "That account is not set up as a practitioner." to "Bu hesap uzman olarak ayarlanmamış.",
+    "That client is not connected to you." to "Bu danışan seninle bağlantılı değil.",
     "That didn't work" to "İşe yaramadı",
+    "That does not look like a web address. Start it with https://" to "Bu bir web adresine benzemiyor. https:// ile başlat.",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "Bu dosya metin olarak okunamadı. CSV olarak dışa aktar ve 6 MB'ın altında tut.",
+    "That is no longer open." to "Bu artık açık değil.",
+    "That range is too long." to "Bu aralık çok uzun.",
+    "That request is no longer open." to "Bu talep artık açık değil.",
+    "That request was not found." to "Bu talep bulunamadı.",
+    "That suggestion is no longer open." to "Bu öneri artık açık değil.",
+    "That time has already passed." to "Bu saat çoktan geçti.",
     "The AI drafts your triggers, thresholds and pool" to "Yapay zekâ tetikleyicilerini, eşiklerini ve havuzunu hazırlar",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "Yapay zekâ, ne kaydedersen kaydet ondan öğrenir. Kurulum sorularını yanıtlarsan, migrenin hakkında kendi anlatımınla başlar — uyku, stres, yiyecek, hava durumu, hormonlar ve uyarı işaretleri — böylece seni ilk değerlendirişi boş bir sayfadan daha isabetli olur.",
     "The AI needs about five logged attacks before it has anything to say." to "Yapay zekânın söyleyecek bir şeyi olması için yaklaşık beş atak kaydetmen gerekir.",
@@ -3900,6 +3926,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "Tiamin yüksek",
     "Thiamin low" to "Tiamin düşük",
     "Thirst" to "Susuzluk",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "Bu Cliniko girişi uzman olarak ayarlanmamış, bu yüzden randevu alamaz.",
     "This Week" to "Bu hafta",
     "This action can't be undone." to "Bu işlem geri alınamaz.",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "Bu, uygulamanın arka planda Android tarafından kapatılmadan çalışabilmesini sağlar.\n\n",
@@ -3918,6 +3945,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "Bu sayfada her birinin fiziksel olarak ne yaptığı ve kanıtların ne kadar sağlam olduğu yer alır, ",
     "This period against the equal one before it" to "Bu dönem, öncesindeki eşit uzunluktaki dönemle karşılaştırılıyor",
     "This practitioner" to "Bu uzman",
+    "This practitioner is not taking appointments here." to "Bu uzman burada randevu almıyor.",
     "This promo code doesn't exist." to "Bu promosyon kodu yok.",
     "This promo code has expired." to "Bu promosyon kodunun süresi dolmuş.",
     "This promo code has reached its usage limit." to "Bu promosyon kodu kullanım sınırına ulaştı.",
@@ -4495,6 +4523,9 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Where did you feel the pain?" to "Ağrıyı nerede hissettin?",
     "Where everything lives, tab by tab" to "Her şey nerede, sekme sekme",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Görüşünün neresinde belirdi? Alanlara kendi gözünle gördüğün gibi dokun.",
+)
+
+private fun trStrings3(): Map<String, String> = mapOf(
     "Where in your vision it shows up, as seen through your own eyes" to "Görüşünün neresinde ortaya çıkıyor, kendi gözlerinle gördüğün gibi",
     "Where it is heading" to "Nereye gidiyor",
     "Where the pain sat" to "Ağrı neredeydi",
@@ -4523,9 +4554,6 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Why this helps" to "Neden işe yarar",
     "Why we suggested this" to "Bunu neden önerdik",
     "Why your thresholds are set where they are" to "Eşiklerin neden bu seviyelerde",
-)
-
-private fun trStrings3(): Map<String, String> = mapOf(
     "Wind" to "Rüzgâr",
     "Wind Speed" to "Rüzgâr hızı",
     "Wind Speed (m/s)" to "Rüzgâr hızı (m/s)",
@@ -4600,6 +4628,7 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "Dün",
     "Yoga" to "Yoga",
     "You are *not alone.*" to "Sen *yalnız değilsin.*",
+    "You are not connected to that practitioner." to "Bu uzmanla bağlantın yok.",
     "You can also do this later from the menu." to "Bunu sonra menüden de yapabilirsin.",
     "You can log triggers manually when recording a migraine, or enable automatic " to "Migren kaydederken tetikleyicileri elle girebilir ya da otomatik ",
     "You can run setup, or rerun it, anytime from Profile." to "Kurulumu istediğin zaman Profil'den başlatabilir veya yeniden yapabilirsin.",

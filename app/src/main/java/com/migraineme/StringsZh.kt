@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5133 entries.
+ * 5162 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -376,6 +376,9 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "依時間順序列出每一筆偏頭痛、誘因、前驅症狀、藥物、緩解、活動、地點和錯過的活動。\n\n你可以依類型或時間範圍篩選檢視,也可以直接跳到「需要留意」,查看欄位不完整的紀錄(例如沒有結束時間的發作、沒有嚴重程度的偏頭痛,或等待補充詳細資料的快速記錄)。\n\n點一下任何一筆紀錄即可進入編輯模式,補上缺少的內容。分頁上的數字徽章會顯示目前有多少筆紀錄需要留意,你不用特地記得回來查看。",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "頸部側面或後方有明顯的拉伸感,維持姿勢時會逐漸放鬆。連續幾週在大部分日子都做,才能看到效果。千萬不要拉到出現刺痛。",
     "A clear wall, a bed or a mat, a tennis ball" to "一面淨空的牆、床或墊子、網球",
+    "A client accepted your appointment time" to "有客戶接受了你的預約時間",
+    "A client declined your appointment time" to "有客戶婉拒了你的預約時間",
+    "A client suggested an appointment time" to "有客戶建議了預約時間",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "整天坐在桌前,胸口會變緊,肩膀也往前圈。你的頭會跟著前移,一旦頭跑到肩膀前方,就得靠頸部後側的肌肉撐著。",
     "A day without an attack." to "沒有發作的一天。",
     "A few hours" to "幾個小時",
@@ -1054,6 +1057,11 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "核准用於噁心和嘔吐,而非偏頭痛。如果讓你最難受的是噁心不適,可能會有幫助。",
     "Clinical assessment" to "臨床評估",
     "Clinical assessment of your profile" to "針對你個人資料的臨床評估",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "Cliniko 不接受這組 API 金鑰。請到 Cliniko 的「My info」>「API keys」檢查。",
+    "Cliniko has no appointment types yet." to "Cliniko 還沒有任何預約類型。",
+    "Cliniko has no business set up yet." to "Cliniko 還沒有設定任何商家。",
+    "Cliniko has no record with that id." to "Cliniko 找不到這個 ID 的紀錄。",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Cliniko 暫時限制了我們的請求。請一分鐘後再試。",
     "Close" to "關閉",
     "Cluster" to "叢發性",
     "Cluster headache" to "叢發性頭痛",
@@ -1116,6 +1124,8 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Confusion" to "意識混亂",
     "Connect" to "連接",
     "Connect *Health Connect.*" to "連結 *Health Connect*。",
+    "Connect Cliniko first, under Your dashboard." to "請先在「你的儀表板」中連接 Cliniko。",
+    "Connect Cliniko first." to "請先連接 Cliniko。",
     "Connect Health Connect" to "連接 Health Connect",
     "Connect Oura, Polar, Garmin and Health Connect." to "連結 Oura、Polar、Garmin 和 Health Connect。",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "連接 WHOOP、Oura、Polar、Garmin 和 Health Connect。",
@@ -1507,6 +1517,9 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "請輸入你的電子郵件，我們會寄給你重設連結。",
     "Entry actions" to "項目操作",
     "Environment" to "環境",
+)
+
+private fun zhStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "環境資料",
     "Environment History" to "環境紀錄",
     "Environment tracking is disabled" to "環境追蹤已停用",
@@ -1517,9 +1530,6 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
     "Ergots" to "麥角類藥物",
     "Error" to "錯誤",
-)
-
-private fun zhStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "錯誤:%1\$s",
     "Established patterns that also appeared in the attacks in this report." to "同時也出現在本報告各次發作中的既有規律。",
     "Estimate" to "估計值",
@@ -2814,6 +2824,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "進行中的治療",
     "Ongoing treatment and your treatment story" to "進行中的治療與你的治療歷程",
     "Online" to "線上",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "只有尚未被回覆的請求才能撤回。若要取消已確認的預約,請聯絡你的執業者。",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "請等物理治療師檢查過你的頸部後,再開始這些運動。如果做法不正確,或用在不對的問題上(例如肌肉卡住或拉傷),可能會讓你的疼痛加劇。",
     "Only your practitioner can change this goal." to "只有你的醫療專業人員能變更此目標。",
     "Only {0} weeks of data in this record" to "此紀錄中只有 {0} 週的資料",
@@ -2979,7 +2990,10 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "身體活動與荷爾蒙誘因",
     "Physical health tracking is disabled" to "身體健康追蹤已停用",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "選擇 3 項指標,顯示在監測卡片的風險分數下方。這些指標來自你在各類別中設定的最愛項目。",
+    "Pick a calendar." to "請選擇一個日曆。",
     "Pick a date" to "選擇日期",
+    "Pick a date and time." to "請選擇日期和時間。",
+    "Pick a date range." to "請選擇日期範圍。",
     "Pick a medicine or category to chart" to "選擇要繪製圖表的藥物或類別",
     "Pick a metric" to "選擇指標",
     "Pick a metric first." to "請先選擇指標。",
@@ -3006,6 +3020,9 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "請輸入你目前的密碼。",
     "Please enter your information manually below." to "請在下方手動輸入你的資料。",
     "Please fill in all password fields." to "請填寫所有密碼欄位。",
+)
+
+private fun zhStrings2(): Map<String, String> = mapOf(
     "Please go to Monitor to complete setup." to "請前往監測完成設定。",
     "Please type %1\$s to confirm." to "請輸入 %1\$s 以確認。",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ 血氧 (SpO2) 單次檢測結果。需搭配具備 SpO2 感測器的相容裝置。",
@@ -3020,9 +3037,6 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar 的睡眠連續性(1.0–5.0 分)會換算為百分比:(連續性 − 1) ÷ 4 × 100。",
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉與空氣品質",
-)
-
-private fun zhStrings2(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "花粉濃度與空氣污染。",
     "Pollen high" to "花粉偏高",
     "Pollen or hay fever season" to "花粉或花粉症季節",
@@ -3500,7 +3514,9 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "副作用：%2\$s 次使用中有 %1\$s 次",
     "Side effects: " to "副作用：",
     "Sign in" to "登入",
+    "Sign in first." to "請先登入。",
     "Sign in to continue tracking" to "登入以繼續記錄",
+    "Sign in to see it:" to "登入後查看:",
     "Sign out" to "登出",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "登出此裝置上的帳號。\n你的資料仍會安全保存在雲端。",
     "Sign out?" to "要登出嗎？",
@@ -3839,8 +3855,18 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "使用條款",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "在精靈的第一步測試「現在正在發生」按鈕;它會立即記錄,之後你可以再回來補充細節。",
     "Thanks for letting us know. We'll review this content shortly." to "謝謝你告訴我們,我們會儘快審查這則內容。",
+    "That Cliniko key is not allowed to book appointments." to "這組 Cliniko 金鑰沒有預約權限。",
+    "That account is not set up as a practitioner." to "這個帳號尚未設定為執業者。",
+    "That client is not connected to you." to "這位客戶尚未與你連結。",
     "That didn't work" to "操作失敗了",
+    "That does not look like a web address. Start it with https://" to "這看起來不像網址。請以 https:// 開頭。",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "無法將該檔案讀取為文字。請匯出為 CSV,並將大小控制在 6 MB 以內。",
+    "That is no longer open." to "這項已不再開放。",
+    "That range is too long." to "這個範圍太長了。",
+    "That request is no longer open." to "這個請求已不再開放。",
+    "That request was not found." to "找不到這個請求。",
+    "That suggestion is no longer open." to "這個建議已不再開放。",
+    "That time has already passed." to "這個時間已經過了。",
     "The AI drafts your triggers, thresholds and pool" to "AI 會草擬你的誘因、門檻值和項目池",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "無論如何，AI 都會從你的記錄中學習。回答設定問題，能讓它以你自己對偏頭痛的描述作為起點——睡眠、壓力、飲食、天氣、荷爾蒙和預警徵兆——所以它對你的初步判讀會比從空白開始更貼近你。",
     "The AI needs about five logged attacks before it has anything to say." to "AI 需要大約五次已記錄的發作,才能提供分析。",
@@ -3899,6 +3925,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "硫胺素偏高",
     "Thiamin low" to "硫胺素偏低",
     "Thirst" to "口渴",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "這個 Cliniko 登入帳號尚未設定為執業者,因此無法接受預約。",
     "This Week" to "本週",
     "This action can't be undone." to "此動作無法復原。",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "這樣應用程式就能在背景執行工作,不會被 Android 終止。\n\n",
@@ -3917,6 +3944,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "本頁列出各項裝置實際上的作用,以及證據的可靠程度,",
     "This period against the equal one before it" to "本期與前一段等長的期間比較",
     "This practitioner" to "這位專業人員",
+    "This practitioner is not taking appointments here." to "這位執業者目前不在此接受預約。",
     "This promo code doesn't exist." to "此優惠碼不存在。",
     "This promo code has expired." to "此優惠碼已過期。",
     "This promo code has reached its usage limit." to "此優惠碼已達使用次數上限。",
@@ -4495,6 +4523,9 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "各項功能的位置,依分頁介紹",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "預兆出現在視野的哪裡?請依你親眼所見的樣子點選區域。",
     "Where in your vision it shows up, as seen through your own eyes" to "出現在視野的哪個位置,以你自己的視角呈現",
+)
+
+private fun zhStrings3(): Map<String, String> = mapOf(
     "Where it is heading" to "發展方向",
     "Where the pain sat" to "疼痛的位置",
     "Where were you?" to "你在哪裡?",
@@ -4523,9 +4554,6 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "為什麼建議這個",
     "Why your thresholds are set where they are" to "你的閾值為何設在這裡",
     "Wind" to "風",
-)
-
-private fun zhStrings3(): Map<String, String> = mapOf(
     "Wind Speed" to "風速",
     "Wind Speed (m/s)" to "風速(m/s)",
     "Wind speed" to "風速",
@@ -4599,6 +4627,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "昨天",
     "Yoga" to "瑜伽",
     "You are *not alone.*" to "你並*不孤單。*",
+    "You are not connected to that practitioner." to "你尚未與這位執業者連結。",
     "You can also do this later from the menu." to "之後你也可以從選單進行。",
     "You can log triggers manually when recording a migraine, or enable automatic " to "記錄偏頭痛時,你可以手動記錄誘因,或啟用自動",
     "You can run setup, or rerun it, anytime from Profile." to "你隨時可以在個人資料中開始或重新進行設定。",

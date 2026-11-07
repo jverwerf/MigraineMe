@@ -34,6 +34,10 @@
 // upcoming sessions to both sides. Only Google Meet, Microsoft Teams, Zoom and Webex
 // addresses are ever passed on.
 //
+// PRACTITIONER EMAIL: when a client suggests a time, or answers one, the practitioner
+// gets a short email in their first listed language, with no client name and no health
+// detail, only a link to sign in. They have no app to push to.
+//
 // OPEN TIMES: Cliniko's available_times answers 404 unless the practice has
 // online booking on, so when it does we work the times out from Cliniko's own
 // working hours minus appointments, group appointments and unavailable blocks.
@@ -214,6 +218,7 @@ const NOTICE: Record<string, [string, string]> = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  let lang: unknown = null; // for error messages: what the page asks for, else the profile
   try {
     if (req.method !== "POST") throw new UserError("POST only", 405);
     const auth = req.headers.get("Authorization") || "";
@@ -224,6 +229,8 @@ Deno.serve(async (req) => {
     if (uerr || !user) throw new UserError("Sign in first.", 401);
     const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
     const body = await req.json().catch(() => ({}));
+    lang = body.lang || null;
+    if (!lang) { const { data: pf } = await db.from("profiles").select("lang").eq("user_id", user.id).limit(1); lang = pf?.[0]?.lang || null; }
     const action = String(body.action || "");
     const scoped = (q: any) => (APP_SCOPED ? q.eq("app_id", appId) : q);
     const stamp: Record<string, string> = APP_SCOPED ? { app_id: appId! } : {};
@@ -303,6 +310,31 @@ Deno.serve(async (req) => {
         }
       } catch (e) { console.warn("appointment push failed", e); }
     };
+    const emailPractitioner = async (practitionerId: string, subjectKey: string) => {
+      try {
+        const { data } = await db.from("practitioners").select("user_id,login_email,languages,plugins").eq("id", practitionerId).limit(1);
+        const p: any = data?.[0];
+        if (!p || p.plugins?.calendar === "none") return;
+        let to = String(p.login_email || "").trim();
+        if (!to && p.user_id) { const { data: u } = await db.auth.admin.getUserById(p.user_id); to = u?.user?.email || ""; }
+        if (!to) return;
+        const app = String(appId || "migraine");
+        const FROM: Record<string, string> = {
+          migraine: "MigraineMe <help@migraineme.app>", vertigo: "VertigoMe <help@vertigome.com>", tinnitus: "TinnitusMe <help@tinnitusme.com>",
+          gout: "GoutMe <help@goutme.app>", anxiety: "AnxietyMe <help@anxietyme.app>",
+        };
+        const key = Deno.env.get(`RESEND_API_KEY_${app.toUpperCase()}`) || Deno.env.get("RESEND_API_KEY") || "";
+        if (!key) { console.warn("no email key"); return; }
+        const first = Array.isArray(p.languages) ? String(p.languages[0] || "") : "";
+        const t = translatorFor(asLang(first.toLowerCase().slice(0, 2)));
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: FROM[app] || FROM.migraine, to: [to], subject: t(subjectKey), text: `${t(subjectKey)}\n\n${t("Sign in to see it:")} https://me-practitioner.com/` }),
+        });
+        if (!res.ok) console.warn("practitioner email failed", res.status);
+      } catch (e) { console.warn("practitioner email failed", e); }
+    };
     const update = async (id: string, patch: Record<string, unknown>) => {
       const { data, error } = await db.from("practitioner_appointment_requests").update(patch).eq("id", id).select(COLS).single();
       if (error) throw error;
@@ -366,15 +398,22 @@ Deno.serve(async (req) => {
             message: String(body.message || "").slice(0, 500) || null, ...stamp,
           }).select(COLS).single();
           if (error) throw error;
+          await emailPractitioner(pid, "A client suggested an appointment time");
           return json({ request: data });
         }
         case "client_respond": {
           const row = await own();
           if (row.proposed_by !== "practitioner" || row.status !== "requested") throw new UserError("That suggestion is no longer open.", 409);
-          if (!body.accept) return json({ request: await update(row.id, { status: "declined", responded_at: new Date().toISOString(), response_note: String(body.note || "").slice(0, 500) || null }) });
+          if (!body.accept) {
+            const done = await update(row.id, { status: "declined", responded_at: new Date().toISOString(), response_note: String(body.note || "").slice(0, 500) || null });
+            await emailPractitioner(row.practitioner_id, "A client declined your appointment time");
+            return json({ request: done });
+          }
           const link = await linkBetween(row.practitioner_id, user.id);
           if (!link) throw new UserError("You are not connected to that practitioner.", 403);
-          return json({ request: await acceptRow(row, row.proposed_start, row.external_type_id, link.id) });
+          const done = await acceptRow(row, row.proposed_start, row.external_type_id, link.id);
+          await emailPractitioner(row.practitioner_id, "A client accepted your appointment time");
+          return json({ request: done });
         }
         case "client_cancel": {
           const row = await own();
@@ -547,7 +586,7 @@ Deno.serve(async (req) => {
     }
     throw new UserError("Unknown action");
   } catch (e) {
-    if (e instanceof UserError) return json({ error: e.message }, e.status);
+    if (e instanceof UserError) return json({ error: translatorFor(asLang(lang))(e.message) }, e.status);
     console.error(e);
     return json({ error: (e as any)?.message || "Something went wrong." }, 500);
   }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5133 entries.
+ * 5162 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -376,6 +376,9 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "片頭痛、誘因、予兆、薬、緩和、活動、場所、できなかった活動のすべてを時系列で表示します。\n\n種類や期間で絞り込めます。「要確認」を選ぶと、未入力の項目があるものだけを表示します(終了時刻のない発作、強さのない片頭痛、詳細待ちのクイック記録など)。\n\n項目をタップすると編集画面が開き、足りない内容を入力できます。タブの数字は、確認が必要な項目の数です。戻るタイミングを覚えておく必要はありません。",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "首の横や後ろがしっかり引っ張られ、そのまま保つと和らぐ程度に伸ばします。数週間、ほとんどの日に続けることで効果が出ます。鋭い痛みが出るまで伸ばさないでください。",
     "A clear wall, a bed or a mat, a tennis ball" to "物のない壁、ベッドかマット、テニスボール",
+    "A client accepted your appointment time" to "クライアントが予約の日時を承諾しました",
+    "A client declined your appointment time" to "クライアントが予約の日時を断りました",
+    "A client suggested an appointment time" to "クライアントが予約の日時を提案しました",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "1日中デスクにいると、胸が縮こまり、肩が前に丸まります。頭もそれにつられ、肩より前に出ると、首の後ろの筋肉にぶら下がる形になります。",
     "A day without an attack." to "発作のない日。",
     "A few hours" to "数時間",
@@ -1054,6 +1057,11 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "片頭痛ではなく、吐き気と嘔吐に対して承認されています。吐き気が特につらい方に役立ちます。",
     "Clinical assessment" to "臨床評価",
     "Clinical assessment of your profile" to "プロフィールの臨床評価",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "ClinikoがAPIキーを受け付けませんでした。Clinikoの「My info」にある「API keys」で確認してね。",
+    "Cliniko has no appointment types yet." to "Clinikoにはまだ予約の種類がありません。",
+    "Cliniko has no business set up yet." to "Clinikoにはまだ事業所が設定されていません。",
+    "Cliniko has no record with that id." to "そのIDのレコードはClinikoにありません。",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Clinikoのリクエスト制限にかかりました。1分後にもう一度試してね。",
     "Close" to "閉じる",
     "Cluster" to "群発",
     "Cluster headache" to "群発頭痛",
@@ -1116,6 +1124,8 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Confusion" to "混乱",
     "Connect" to "接続",
     "Connect *Health Connect.*" to "*Health Connect*を接続しましょう。",
+    "Connect Cliniko first, under Your dashboard." to "まず「ダッシュボード」でClinikoを連携してね。",
+    "Connect Cliniko first." to "まずClinikoを連携してね。",
     "Connect Health Connect" to "Health Connectを接続",
     "Connect Oura, Polar, Garmin and Health Connect." to "Oura、Polar、Garmin、Health Connectを接続します。",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "WHOOP、Oura、Polar、GarminとHealth Connectを接続します。",
@@ -1507,6 +1517,9 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "メールアドレスを入力してください。リセット用のリンクをお送りします。",
     "Entry actions" to "記録の操作",
     "Environment" to "環境",
+)
+
+private fun jaStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "環境データ",
     "Environment History" to "環境の履歴",
     "Environment tracking is disabled" to "環境の記録はオフです",
@@ -1517,9 +1530,6 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "エルゴタミン(Cafergot)",
     "Ergots" to "エルゴタミン類",
     "Error" to "エラー",
-)
-
-private fun jaStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "失敗:%1\$s",
     "Established patterns that also appeared in the attacks in this report." to "このレポートの発作にも見られた、確立されたパターンです。",
     "Estimate" to "推定",
@@ -2814,6 +2824,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "治療中",
     "Ongoing treatment and your treatment story" to "治療中の内容と治療の経過",
     "Online" to "オンライン",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "まだ誰も返事をしていないリクエストだけ取り下げられます。確定した予約は、施術者にキャンセルを頼んでね。",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "首を理学療法士に診てもらってから始めてください。やり方を誤ったり、筋肉のこわばりや痛めた状態など別の問題に行ったりすると、痛みが悪化することがあります。",
     "Only your practitioner can change this goal." to "この目標は担当の医療者だけが変更できます。",
     "Only {0} weeks of data in this record" to "この記録にはデータが{0}週間分しかありません",
@@ -2979,7 +2990,10 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "身体活動とホルモンの誘因",
     "Physical health tracking is disabled" to "身体の記録はオフになっています",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "モニターカードのリスクスコアの下に表示する指標を3つ選んでください。各カテゴリで設定したお気に入りから選べます。",
+    "Pick a calendar." to "カレンダーを選んでね。",
     "Pick a date" to "日付を選ぶ",
+    "Pick a date and time." to "日時を選んでね。",
+    "Pick a date range." to "期間を選んでね。",
     "Pick a medicine or category to chart" to "グラフにする薬または分類を選択",
     "Pick a metric" to "指標を選択",
     "Pick a metric first." to "先に指標を選択",
@@ -3006,6 +3020,9 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "現在のパスワードを入力してください。",
     "Please enter your information manually below." to "下に情報を手動で入力してください。",
     "Please fill in all password fields." to "パスワードの欄をすべて入力してください。",
+)
+
+private fun jaStrings2(): Map<String, String> = mapOf(
     "Please go to Monitor to complete setup." to "設定を完了するには、モニターに移動してください。",
     "Please type %1\$s to confirm." to "%1\$s と入力して確認",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™によるSpO2のスポット測定結果です。SpO2センサー搭載の対応機器が必要です。",
@@ -3020,9 +3037,6 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polarの睡眠の連続性(1.0〜5.0の尺度)は、(連続性 − 1) ÷ 4 × 100 でパーセントに換算されます。",
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉と大気の状態",
-)
-
-private fun jaStrings2(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "花粉の飛散量と大気汚染です。",
     "Pollen high" to "花粉が多い",
     "Pollen or hay fever season" to "花粉または花粉症の季節",
@@ -3500,7 +3514,9 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "%2\$s回中%1\$s回で副作用あり",
     "Side effects: " to "副作用：",
     "Sign in" to "ログイン",
+    "Sign in first." to "先にログインしてね。",
     "Sign in to continue tracking" to "ログインして記録を続けます",
+    "Sign in to see it:" to "ログインして確認してね:",
     "Sign out" to "ログアウト",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "この端末でアカウントからログアウトします。\nデータはクラウドに安全に保存されています。",
     "Sign out?" to "ログアウト?",
@@ -3839,8 +3855,18 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "利用規約",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "最初のステップにある「今まさに起きています」ボタンを試してみましょう。すぐに記録され、詳細はあとから入力できます。",
     "Thanks for letting us know. We'll review this content shortly." to "お知らせありがとうございます。この内容は、まもなく確認します。",
+    "That Cliniko key is not allowed to book appointments." to "そのClinikoのキーでは予約できません。",
+    "That account is not set up as a practitioner." to "そのアカウントは施術者として設定されていません。",
+    "That client is not connected to you." to "そのクライアントとは連携していません。",
     "That didn't work" to "失敗しました",
+    "That does not look like a web address. Start it with https://" to "ウェブアドレスではないようです。https://から始めてね。",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "このファイルをテキストとして読み込めませんでした。CSV形式で書き出し、6 MB未満にしてください。",
+    "That is no longer open." to "それはもう受け付けていません。",
+    "That range is too long." to "期間が長すぎます。",
+    "That request is no longer open." to "そのリクエストはもう受け付けていません。",
+    "That request was not found." to "そのリクエストが見つかりません。",
+    "That suggestion is no longer open." to "その提案はもう受け付けていません。",
+    "That time has already passed." to "その時間はもう過ぎています。",
     "The AI drafts your triggers, thresholds and pool" to "AIが誘因、しきい値、プールの案を作ります",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "どちらでも、AIは記録した内容から学びます。設定の質問に答えると、睡眠・ストレス・食事・天気・ホルモン・前触れなど、あなた自身が捉えた片頭痛の傾向を最初の手がかりにできるので、白紙から始めるより的確になります。",
     "The AI needs about five logged attacks before it has anything to say." to "AIが何かを伝えられるようになるまでには、記録された発作が5件ほど必要です。",
@@ -3899,6 +3925,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "チアミンが多い",
     "Thiamin low" to "チアミンが少ない",
     "Thirst" to "のどの渇き",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "このClinikoのログインは施術者として設定されていないため、予約を受けられません。",
     "This Week" to "今週",
     "This action can't be undone." to "この操作は取り消せません。",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "これにより、AndroidにアプリをOFFにされることなく、バックグラウンドで処理を実行できます。\n\n",
@@ -3917,6 +3944,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "このページでは、それぞれが体にどう働くかと、根拠の確かさを示し、",
     "This period against the equal one before it" to "この期間と、直前の同じ長さの期間との比較",
     "This practitioner" to "この施術者",
+    "This practitioner is not taking appointments here." to "この施術者は、ここでは予約を受け付けていません。",
     "This promo code doesn't exist." to "このプロモコードは存在しません。",
     "This promo code has expired." to "このプロモコードは期限切れです。",
     "This promo code has reached its usage limit." to "このプロモコードは利用上限に達しました。",
@@ -4495,6 +4523,9 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "どこに何があるか、タブごとに",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "視界のどこに現れましたか?自分の目で見たとおりに、その部分をタップしてください。",
     "Where in your vision it shows up, as seen through your own eyes" to "視界のどこに現れるか(自分の目で見た位置)",
+)
+
+private fun jaStrings3(): Map<String, String> = mapOf(
     "Where it is heading" to "これからの方向",
     "Where the pain sat" to "痛んだ場所",
     "Where were you?" to "どこにいましたか?",
@@ -4523,9 +4554,6 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "この提案の理由",
     "Why your thresholds are set where they are" to "しきい値がこの値になっている理由",
     "Wind" to "風",
-)
-
-private fun jaStrings3(): Map<String, String> = mapOf(
     "Wind Speed" to "風速",
     "Wind Speed (m/s)" to "風速（m/s）",
     "Wind speed" to "風速",
@@ -4599,6 +4627,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "昨日",
     "Yoga" to "ヨガ",
     "You are *not alone.*" to "あなたは*ひとりではありません。*",
+    "You are not connected to that practitioner." to "その施術者とは連携していません。",
     "You can also do this later from the menu." to "後でメニューからも行えます。",
     "You can log triggers manually when recording a migraine, or enable automatic " to "片頭痛を記録するときに誘因を手動で記録するか、自動",
     "You can run setup, or rerun it, anytime from Profile." to "設定はプロフィールからいつでも開始・やり直しできます。",

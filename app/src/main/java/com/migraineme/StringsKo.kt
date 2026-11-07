@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5133 entries.
+ * 5162 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -376,6 +376,9 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "편두통, 유발 요인, 전구 증상, 약, 완화, 활동, 장소, 놓친 활동까지 모든 기록을 시간순으로 보여주는 피드예요.\n\n유형이나 기간별로 필터링하거나 \"확인 필요\"로 바로 이동해서 빠진 항목이 있는 기록(종료 시간이 없는 발작, 강도가 없는 편두통, 세부 정보를 기다리는 빠른 기록)을 확인할 수 있어요.\n\n기록을 누르면 수정 모드로 열려서 빠진 내용을 채울 수 있어요. 탭의 숫자 배지는 지금 확인이 필요한 기록의 수를 보여주기 때문에 따로 기억해 두지 않아도 돼요.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "목 옆이나 뒤쪽이 분명하게 당기다가 자세를 유지하면 풀려요. 몇 주 동안 거의 매일 하면 효과를 볼 수 있어요. 날카로운 통증이 느껴질 때까지 늘리지 마세요.",
     "A clear wall, a bed or a mat, a tennis ball" to "치워진 벽, 침대나 매트, 테니스공",
+    "A client accepted your appointment time" to "고객이 회원님의 예약 시간을 수락했어요",
+    "A client declined your appointment time" to "고객이 회원님의 예약 시간을 거절했어요",
+    "A client suggested an appointment time" to "고객이 예약 시간을 제안했어요",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "하루 종일 책상에 앉아 있으면 가슴이 뻐근해지고 어깨가 앞으로 말려요. 머리도 따라 나오고, 머리가 어깨보다 앞에 놓이면 목 뒤쪽 근육에 매달리게 돼요.",
     "A day without an attack." to "발작 없는 하루.",
     "A few hours" to "몇 시간",
@@ -1054,6 +1057,11 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "편두통이 아니라 메스꺼움과 구토에 대해 허가된 약이에요. 메스꺼움이 가장 힘들다면 유용해요.",
     "Clinical assessment" to "임상 평가",
     "Clinical assessment of your profile" to "내 프로필에 대한 임상 평가",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "Cliniko가 API 키를 받아들이지 않았어요. Cliniko의 내 정보, API 키에서 확인해 주세요.",
+    "Cliniko has no appointment types yet." to "Cliniko에 아직 예약 유형이 없어요.",
+    "Cliniko has no business set up yet." to "Cliniko에 아직 설정된 사업장이 없어요.",
+    "Cliniko has no record with that id." to "Cliniko에 해당 ID의 기록이 없어요.",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Cliniko에서 요청을 제한하고 있어요. 1분 후에 다시 시도해 주세요.",
     "Close" to "닫기",
     "Cluster" to "군발",
     "Cluster headache" to "군발 두통",
@@ -1116,6 +1124,8 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Confusion" to "혼란",
     "Connect" to "연결",
     "Connect *Health Connect.*" to "*Health Connect* 연결하기",
+    "Connect Cliniko first, under Your dashboard." to "먼저 내 대시보드에서 Cliniko를 연결해 주세요.",
+    "Connect Cliniko first." to "먼저 Cliniko를 연결해 주세요.",
     "Connect Health Connect" to "Health Connect 연결",
     "Connect Oura, Polar, Garmin and Health Connect." to "Oura, Polar, Garmin, Health Connect를 연결해요.",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "WHOOP, Oura, Polar, Garmin, Health Connect를 연결해요.",
@@ -1507,6 +1517,9 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "이메일을 입력하면 재설정 링크를 보내 드려요.",
     "Entry actions" to "기록 작업",
     "Environment" to "환경",
+)
+
+private fun koStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "환경 데이터",
     "Environment History" to "환경 기록",
     "Environment tracking is disabled" to "환경 기록이 꺼져 있어요",
@@ -1517,9 +1530,6 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "에르고타민 (Cafergot)",
     "Ergots" to "에르고타민류",
     "Error" to "오류",
-)
-
-private fun koStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "오류 %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "이 보고서의 발작에서도 나타난, 이미 확인된 패턴이에요.",
     "Estimate" to "추정",
@@ -2814,6 +2824,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "진행 중인 치료",
     "Ongoing treatment and your treatment story" to "진행 중인 치료와 나의 치료 이야기",
     "Online" to "온라인",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "아직 답변이 없는 요청만 철회할 수 있어요. 확정된 세션은 전문가에게 취소를 요청해 주세요.",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "물리치료사가 목을 살펴본 뒤에만 이 운동을 시작하세요. 잘못된 방법으로 하거나, 근육이 뭉쳤거나 삔 것처럼 다른 문제에 하면 통증이 더 심해질 수 있어요.",
     "Only your practitioner can change this goal." to "이 목표는 담당 전문가만 바꿀 수 있어요.",
     "Only {0} weeks of data in this record" to "이 기록에는 {0}주 분량의 데이터만 있어요",
@@ -2979,7 +2990,10 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "신체 활동 및 호르몬 유발 요인",
     "Physical health tracking is disabled" to "신체 건강 추적이 꺼져 있어요",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "모니터 카드의 위험 점수 아래에 표시할 지표 3개를 골라요. 카테고리별로 설정한 즐겨찾기에서 가져온 지표예요.",
+    "Pick a calendar." to "캘린더를 선택해 주세요.",
     "Pick a date" to "날짜 선택",
+    "Pick a date and time." to "날짜와 시간을 선택해 주세요.",
+    "Pick a date range." to "날짜 범위를 선택해 주세요.",
     "Pick a medicine or category to chart" to "차트로 볼 약이나 카테고리를 골라요",
     "Pick a metric" to "지표 선택",
     "Pick a metric first." to "먼저 지표를 골라요.",
@@ -3006,6 +3020,9 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "현재 비밀번호를 입력해 주세요.",
     "Please enter your information manually below." to "아래에 정보를 직접 입력해 주세요.",
     "Please fill in all password fields." to "비밀번호를 모두 입력해 주세요.",
+)
+
+private fun koStrings2(): Map<String, String> = mapOf(
     "Please go to Monitor to complete setup." to "설정을 완료하려면 모니터로 이동해 주세요.",
     "Please type %1\$s to confirm." to "확인하려면 %1\$s 입력",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ SpO2 즉시 측정 결과예요. SpO2 센서가 있는 호환 기기가 필요해요.",
@@ -3020,9 +3037,6 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar의 수면 연속성(1.0~5.0 척도)은 백분율로 환산해요: (연속성 − 1) ÷ 4 × 100.",
     "Pollen" to "꽃가루",
     "Pollen and air quality" to "꽃가루와 대기질",
-)
-
-private fun koStrings2(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "꽃가루 수치와 대기 오염 정보예요.",
     "Pollen high" to "꽃가루 높음",
     "Pollen or hay fever season" to "꽃가루 또는 건초열 시즌",
@@ -3500,7 +3514,9 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "사용 %2\$s회 중 %1\$s회 부작용",
     "Side effects: " to "부작용: ",
     "Sign in" to "로그인",
+    "Sign in first." to "먼저 로그인해 주세요.",
     "Sign in to continue tracking" to "로그인하고 계속 기록해요",
+    "Sign in to see it:" to "확인하려면 로그인하세요:",
     "Sign out" to "로그아웃",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "이 기기에서 계정을 로그아웃해요.\n데이터는 클라우드에 안전하게 남아 있어요.",
     "Sign out?" to "로그아웃?",
@@ -3839,8 +3855,18 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "이용약관",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "첫 번째 단계의 \"지금 일어나고 있어요\" 버튼을 써 보세요. 바로 기록되니 나중에 돌아와서 세부 내용을 채울 수 있어요.",
     "Thanks for letting us know. We'll review this content shortly." to "알려 주셔서 감사해요. 이 콘텐츠를 곧 검토할게요.",
+    "That Cliniko key is not allowed to book appointments." to "이 Cliniko 키로는 예약을 만들 수 없어요.",
+    "That account is not set up as a practitioner." to "이 계정은 전문가로 설정되어 있지 않아요.",
+    "That client is not connected to you." to "이 고객은 회원님과 연결되어 있지 않아요.",
     "That didn't work" to "잘 안 됐어요",
+    "That does not look like a web address. Start it with https://" to "웹 주소가 올바르지 않아요. https://로 시작해 주세요.",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "파일을 텍스트로 읽을 수 없어요. CSV로 내보내고 6MB 이하로 맞춰 주세요.",
+    "That is no longer open." to "더 이상 열려 있지 않아요.",
+    "That range is too long." to "범위가 너무 길어요.",
+    "That request is no longer open." to "이 요청은 더 이상 열려 있지 않아요.",
+    "That request was not found." to "해당 요청을 찾을 수 없어요.",
+    "That suggestion is no longer open." to "이 제안은 더 이상 열려 있지 않아요.",
+    "That time has already passed." to "이미 지난 시간이에요.",
     "The AI drafts your triggers, thresholds and pool" to "AI가 유발 요인, 기준값, 후보 목록을 초안으로 작성해요",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "어떤 경우든 AI는 기록하신 내용에서 배워요. 설정 질문에 답하면 수면, 스트레스, 음식, 날씨, 호르몬, 경고 신호 등 편두통에 대한 직접 설명이 출발점이 되어, 빈 상태에서 시작할 때보다 처음부터 더 가깝게 파악해요.",
     "The AI needs about five logged attacks before it has anything to say." to "AI는 발작을 약 다섯 번 기록해야 말씀드릴 내용이 생겨요.",
@@ -3899,6 +3925,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "티아민 높음",
     "Thiamin low" to "티아민 낮음",
     "Thirst" to "갈증",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "이 Cliniko 로그인은 전문가로 설정되어 있지 않아서 예약을 받을 수 없어요.",
     "This Week" to "이번 주",
     "This action can't be undone." to "이 작업은 되돌릴 수 없어요.",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "이렇게 하면 Android가 앱을 강제로 종료하지 않고 백그라운드 작업을 실행할 수 있어요.\n\n",
@@ -3917,6 +3944,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "이 페이지에서는 각각이 몸에 실제로 어떻게 작용하는지, 근거가 얼마나 탄탄한지 ",
     "This period against the equal one before it" to "이 기간과 바로 앞의 같은 길이 기간 비교",
     "This practitioner" to "이 전문가",
+    "This practitioner is not taking appointments here." to "이 전문가는 여기서 예약을 받지 않아요.",
     "This promo code doesn't exist." to "존재하지 않는 프로모션 코드예요.",
     "This promo code has expired." to "만료된 프로모션 코드예요.",
     "This promo code has reached its usage limit." to "사용 한도에 도달한 프로모션 코드예요.",
@@ -4495,6 +4523,9 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "탭별로 보는 기능 위치",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "시야의 어디에 나타났나요? 직접 본 모습대로 해당 영역을 눌러 주세요.",
     "Where in your vision it shows up, as seen through your own eyes" to "직접 본 것처럼, 시야의 어디에 나타나는지",
+)
+
+private fun koStrings3(): Map<String, String> = mapOf(
     "Where it is heading" to "향하는 방향",
     "Where the pain sat" to "통증이 있던 곳",
     "Where were you?" to "어디에 있었나요?",
@@ -4523,9 +4554,6 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "이렇게 제안한 이유",
     "Why your thresholds are set where they are" to "기준값이 이렇게 정해진 이유",
     "Wind" to "바람",
-)
-
-private fun koStrings3(): Map<String, String> = mapOf(
     "Wind Speed" to "풍속",
     "Wind Speed (m/s)" to "풍속 (m/s)",
     "Wind speed" to "풍속",
@@ -4599,6 +4627,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "어제",
     "Yoga" to "요가",
     "You are *not alone.*" to "*혼자가 아니에요.*",
+    "You are not connected to that practitioner." to "해당 전문가와 연결되어 있지 않아요.",
     "You can also do this later from the menu." to "나중에 메뉴에서도 할 수 있어요.",
     "You can log triggers manually when recording a migraine, or enable automatic " to "편두통을 기록할 때 유발 요인을 직접 입력하거나, 자동 ",
     "You can run setup, or rerun it, anytime from Profile." to "초기 설정은 프로필에서 언제든 시작하거나 다시 진행할 수 있어요.",

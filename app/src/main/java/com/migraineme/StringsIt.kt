@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5132 entries.
+ * 5161 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -376,6 +376,9 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "Un flusso in ordine di tempo di ogni emicrania, fattore, prodromo, farmaco, sollievo, attività, luogo e attività persa.\n\nFiltra per tipo o periodo, oppure vai dritto a \"Da completare\" per vedere le voci con campi vuoti (un attacco senza ora di fine, un'emicrania senza intensità, un inserimento rapido in attesa di dettagli).\n\nTocca una voce per aprirla in modifica e riempire ciò che manca. Il numero sulla scheda mostra quante voci sono da completare, così non devi ricordartene.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "Una trazione netta lungo il lato o il retro del collo, che si attenua mentre tieni. Il beneficio arriva facendolo quasi tutti i giorni per qualche settimana. Non allungare mai fino a un dolore acuto.",
     "A clear wall, a bed or a mat, a tennis ball" to "Una parete libera, letto o tappetino, una pallina da tennis",
+    "A client accepted your appointment time" to "Un cliente ha accettato il tuo orario per l'appuntamento",
+    "A client declined your appointment time" to "Un cliente ha rifiutato il tuo orario per l'appuntamento",
+    "A client suggested an appointment time" to "Un cliente ha proposto un orario per un appuntamento",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "Una giornata alla scrivania lascia il petto contratto e le spalle curve in avanti. La testa le segue, e quando si trova davanti alle spalle resta appesa ai muscoli dietro il collo.",
     "A day without an attack." to "Un giorno senza attacco.",
     "A few hours" to "Qualche ora",
@@ -1054,6 +1057,11 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "Approvato per nausea e vomito, non per l'emicrania. Utile se è la nausea a stenderti.",
     "Clinical assessment" to "Valutazione clinica",
     "Clinical assessment of your profile" to "Sguardo clinico sul tuo profilo",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "Cliniko non ha accettato la chiave API. Controllala in My info, API keys in Cliniko.",
+    "Cliniko has no appointment types yet." to "Cliniko non ha ancora tipi di appuntamento.",
+    "Cliniko has no business set up yet." to "Cliniko non ha ancora un'attività configurata.",
+    "Cliniko has no record with that id." to "Cliniko non ha nessun record con quell'id.",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Cliniko sta limitando le nostre richieste. Riprova tra un minuto.",
     "Close" to "Chiudi",
     "Cluster" to "A grappolo",
     "Cluster headache" to "Cefalea a grappolo",
@@ -1116,6 +1124,8 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Confusion" to "Confusione",
     "Connect" to "Collega",
     "Connect *Health Connect.*" to "Collega *Health Connect.*",
+    "Connect Cliniko first, under Your dashboard." to "Collega prima Cliniko, in La tua dashboard.",
+    "Connect Cliniko first." to "Collega prima Cliniko.",
     "Connect Health Connect" to "Collega Health Connect",
     "Connect Oura, Polar, Garmin and Health Connect." to "Collega Oura, Polar, Garmin e Health Connect.",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "Collega WHOOP, Oura, Polar, Garmin e Health Connect.",
@@ -1507,6 +1517,9 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "Scrivi la tua e-mail e ti mandiamo un link.",
     "Entry actions" to "Azioni sulla voce",
     "Environment" to "Ambiente",
+)
+
+private fun itStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "Ambiente",
     "Environment History" to "Ambiente",
     "Environment tracking is disabled" to "L'ambiente è spento",
@@ -1517,9 +1530,6 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamina (Cafergot)",
     "Ergots" to "Ergotaminici",
     "Error" to "Errore",
-)
-
-private fun itStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Errore: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Pattern consolidati apparsi anche negli attacchi di questo report.",
     "Estimate" to "Stima",
@@ -2813,6 +2823,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "Terapia in corso",
     "Ongoing treatment and your treatment story" to "Terapia in corso e la tua storia di cura",
     "Online" to "Online",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "Si può ritirare solo una richiesta senza risposta. Chiedi al tuo professionista di annullare una sessione confermata.",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "Inizia questi esercizi solo dopo che un fisioterapista ha visto il tuo collo. Fatti male, o per il problema sbagliato, come un muscolo bloccato o stirato, possono peggiorare il dolore.",
     "Only your practitioner can change this goal." to "Solo il tuo specialista può cambiare questo obiettivo.",
     "Only {0} weeks of data in this record" to "Solo {0} settimane di dati in questo registro",
@@ -2978,7 +2989,10 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Fattori fisici e ormonali",
     "Physical health tracking is disabled" to "Il corpo è spento",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Scegli 3 misure sotto il rischio nella scheda Monitor. Vengono dai preferiti di ogni categoria.",
+    "Pick a calendar." to "Scegli un calendario.",
     "Pick a date" to "Scegli una data",
+    "Pick a date and time." to "Scegli data e ora.",
+    "Pick a date range." to "Scegli un intervallo di date.",
     "Pick a medicine or category to chart" to "Scegli un farmaco o una categoria",
     "Pick a metric" to "Scegli misura",
     "Pick a metric first." to "Scegli prima la misura.",
@@ -3006,6 +3020,9 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Please enter your information manually below." to "Scrivi qui sotto i tuoi dati.",
     "Please fill in all password fields." to "Compila tutti i campi.",
     "Please go to Monitor to complete setup." to "Vai nel Monitor per finire.",
+)
+
+private fun itStrings2(): Map<String, String> = mapOf(
     "Please type %1\$s to confirm." to "Scrivi %1\$s per confermare.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Misura puntuale SpO2 di Polar Elixir™. Serve un dispositivo compatibile con sensore SpO2.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ misura la temperatura assoluta della pelle nel sonno. I valori grezzi restano interni e lo scarto dalla notte prima è calcolato ogni giorno. Serve un dispositivo compatibile (Vantage V3, Grit X2 Pro, ecc.).",
@@ -3020,9 +3037,6 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Polline",
     "Pollen and air quality" to "Pollini e qualità dell'aria",
     "Pollen counts and air pollution." to "Livelli di pollini e inquinamento.",
-)
-
-private fun itStrings2(): Map<String, String> = mapOf(
     "Pollen high" to "Polline alto",
     "Pollen or hay fever season" to "Polline o stagione del raffreddore da fieno",
     "Polyunsaturated fat" to "Grassi polinsaturi",
@@ -3499,7 +3513,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "Effetti collaterali in %1\$s utilizzi su %2\$s",
     "Side effects: " to "Effetti: ",
     "Sign in" to "Accedi",
+    "Sign in first." to "Accedi prima.",
     "Sign in to continue tracking" to "Accedi per continuare",
+    "Sign in to see it:" to "Accedi per vederlo:",
     "Sign out" to "Esci",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "Esci dal tuo account su questo dispositivo.\nI tuoi dati restano al sicuro nel cloud.",
     "Sign out?" to "Esco?",
@@ -3838,8 +3854,18 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "Termini d'uso",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "Prova il pulsante «Sta succedendo adesso» al primo passaggio; salva subito e i dettagli li aggiungi dopo.",
     "Thanks for letting us know. We'll review this content shortly." to "Grazie della segnalazione. Lo guardiamo a breve.",
+    "That Cliniko key is not allowed to book appointments." to "Quella chiave Cliniko non può prenotare appuntamenti.",
+    "That account is not set up as a practitioner." to "Quell'account non è configurato come professionista.",
+    "That client is not connected to you." to "Quel cliente non è collegato a te.",
     "That didn't work" to "Non ha funzionato",
+    "That does not look like a web address. Start it with https://" to "Non sembra un indirizzo web. Inizia con https://",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "Impossibile leggere il file come testo. Esporta in CSV e resta sotto i 6 MB.",
+    "That is no longer open." to "Non è più aperto.",
+    "That range is too long." to "Quell'intervallo è troppo lungo.",
+    "That request is no longer open." to "Quella richiesta non è più aperta.",
+    "That request was not found." to "Richiesta non trovata.",
+    "That suggestion is no longer open." to "Quel suggerimento non è più aperto.",
+    "That time has already passed." to "Quell'orario è già passato.",
     "The AI drafts your triggers, thresholds and pool" to "L'IA prepara fattori, soglie e pool",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "L'IA impara comunque da ciò che registri. Rispondere alle domande le dà il tuo racconto delle emicranie da cui partire — sonno, stress, cibo, meteo, ormoni e segnali — così la sua prima lettura è più vicina di una pagina bianca.",
     "The AI needs about five logged attacks before it has anything to say." to "L'IA ha bisogno di circa cinque attacchi registrati prima di poter dire qualcosa.",
@@ -3898,6 +3924,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "Tiamina alta",
     "Thiamin low" to "Tiamina bassa",
     "Thirst" to "Sete",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "Questo accesso a Cliniko non è configurato come professionista, quindi non può ricevere appuntamenti.",
     "This Week" to "Settimana",
     "This action can't be undone." to "Non si può annullare.",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "Così l'app può eseguire attività in background senza che Android la chiuda.\n\n",
@@ -3916,6 +3943,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "Questa pagina descrive cosa fa fisicamente ognuno e quanto sono solide le prove, ",
     "This period against the equal one before it" to "Questo periodo rispetto a quello uguale precedente",
     "This practitioner" to "Questo specialista",
+    "This practitioner is not taking appointments here." to "Questo professionista non riceve appuntamenti qui.",
     "This promo code doesn't exist." to "Questo codice promo non esiste.",
     "This promo code has expired." to "Questo codice promo è scaduto.",
     "This promo code has reached its usage limit." to "Questo codice promo ha finito gli usi.",
@@ -4495,6 +4523,9 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Dove è comparso nella tua vista? Tocca le zone come le hai viste tu.",
     "Where in your vision it shows up, as seen through your own eyes" to "Dove compare nella tua vista, come la vedi tu",
     "Where it is heading" to "Dove sta andando",
+)
+
+private fun itStrings3(): Map<String, String> = mapOf(
     "Where the pain sat" to "Dove stava il dolore",
     "Where were you?" to "Dove eri?",
     "Where you were, what you were doing, what you had to miss." to "Dove eri, cosa facevi, cosa è dovuto saltare.",
@@ -4523,9 +4554,6 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Perché le tue soglie stanno lì",
     "Wind" to "Vento",
     "Wind Speed" to "Velocità vento",
-)
-
-private fun itStrings3(): Map<String, String> = mapOf(
     "Wind Speed (m/s)" to "Vento (m/s)",
     "Wind speed" to "Velocità vento",
     "Wind speed high" to "Vento forte",
@@ -4598,6 +4626,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "Ieri",
     "Yoga" to "Yoga",
     "You are *not alone.*" to "Non sei *solo.*",
+    "You are not connected to that practitioner." to "Non sei collegato a quel professionista.",
     "You can also do this later from the menu." to "Puoi farlo anche dopo dal menu.",
     "You can log triggers manually when recording a migraine, or enable automatic " to "Puoi inserire i fattori a mano quando registri un'emicrania, oppure attivare l'automatico ",
     "You can run setup, or rerun it, anytime from Profile." to "Puoi avviare o rifare la configurazione quando vuoi dal Profilo.",

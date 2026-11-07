@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5132 entries.
+ * 5161 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -376,6 +376,9 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "A chronological feed of every migraine, trigger, prodrome, medicine, relief, activity, location and missed activity.\n\nFilter the view by type or time range, or jump straight to \"Needs attention\" to see entries with missing fields (an attack with no end time, a migraine with no severity, a quick-logged item waiting for details).\n\nTap any entry to open it in edit mode and fill in what's missing. The number badge on the tab itself shows how many entries currently need attention so you don't have to remember to come back." to "Een chronologische stroom van elke migraine, trigger, prodroom, medicijn, verlichting, activiteit, plek en gemiste activiteit.\n\nFilter op type of periode, of ga direct naar \"Aandacht nodig\" voor items met lege velden (een aanval zonder eindtijd, een migraine zonder zwaarte, iets snel genoteerd dat nog details mist).\n\nTik een item aan om het te openen en aan te vullen. Het cijfer op de tab laat zien hoeveel items aandacht nodig hebben, zodat je er niet aan hoeft te denken.",
     "A clear pull along the side or back of the neck, easing as you hold. Most days for a few weeks is where the benefit comes from. Never stretch into sharp pain." to "Een duidelijke rek langs de zijkant of achterkant van de nek, die afneemt terwijl je vasthoudt. De winst komt als je het een paar weken de meeste dagen doet. Rek nooit tot in scherpe pijn.",
     "A clear wall, a bed or a mat, a tennis ball" to "Een vrije muur, een bed of een mat, een tennisbal",
+    "A client accepted your appointment time" to "Een cliënt heeft je afspraaktijd geaccepteerd",
+    "A client declined your appointment time" to "Een cliënt heeft je afspraaktijd afgewezen",
+    "A client suggested an appointment time" to "Een cliënt heeft een afspraaktijd voorgesteld",
     "A day at a desk leaves the chest tight and the shoulders rounded forward. Your head follows them, and once it sits forward of your shoulders it hangs off the muscles at the back of your neck." to "Een dag aan een bureau maakt de borst strak en trekt de schouders rond naar voren. Je hoofd volgt, en zodra het vóór je schouders zit, hangt het aan de spieren achter in je nek.",
     "A day without an attack." to "Een dag zonder aanval.",
     "A few hours" to "Paar uur",
@@ -1054,6 +1057,11 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you." to "Goedgekeurd voor misselijkheid en braken, niet voor migraine. Handig als juist de misselijkheid je velt.",
     "Clinical assessment" to "Klinische beoordeling",
     "Clinical assessment of your profile" to "Klinische kijk op je profiel",
+    "Cliniko did not accept the API key. Check it under My info, API keys in Cliniko." to "Cliniko heeft de API-sleutel niet geaccepteerd. Controleer hem onder My info, API keys in Cliniko.",
+    "Cliniko has no appointment types yet." to "Cliniko heeft nog geen afspraaktypes.",
+    "Cliniko has no business set up yet." to "Cliniko heeft nog geen praktijk ingesteld.",
+    "Cliniko has no record with that id." to "Cliniko heeft geen record met dat id.",
+    "Cliniko is rate-limiting us. Try again in a minute." to "Cliniko beperkt ons aantal verzoeken. Probeer het over een minuut opnieuw.",
     "Close" to "Sluiten",
     "Cluster" to "Cluster",
     "Cluster headache" to "Clusterhoofdpijn",
@@ -1116,6 +1124,8 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Confusion" to "Verwardheid",
     "Connect" to "Koppelen",
     "Connect *Health Connect.*" to "Koppel *Health Connect.*",
+    "Connect Cliniko first, under Your dashboard." to "Koppel eerst Cliniko, onder Jouw dashboard.",
+    "Connect Cliniko first." to "Koppel eerst Cliniko.",
     "Connect Health Connect" to "Health Connect koppelen",
     "Connect Oura, Polar, Garmin and Health Connect." to "Koppel Oura, Polar, Garmin en Health Connect.",
     "Connect WHOOP, Oura, Polar, Garmin and Health Connect." to "Koppel WHOOP, Oura, Polar, Garmin en Health Connect.",
@@ -1507,6 +1517,9 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Enter your email and we'll send you a reset link." to "Vul je e-mail in, dan sturen we een link.",
     "Entry actions" to "Acties voor item",
     "Environment" to "Omgeving",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Environment Data" to "Omgevingsdata",
     "Environment History" to "Omgeving",
     "Environment tracking is disabled" to "Omgeving staat uit",
@@ -1517,9 +1530,6 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
     "Ergots" to "Ergotaminen",
     "Error" to "Fout",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Fout: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Vaste patronen die ook in de aanvallen van dit rapport voorkwamen.",
     "Estimate" to "Schatting",
@@ -2813,6 +2823,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Ongoing treatment" to "Lopende behandeling",
     "Ongoing treatment and your treatment story" to "Lopende behandeling en je behandelverhaal",
     "Online" to "Online",
+    "Only a request nobody has answered can be withdrawn. Ask your practitioner to cancel a confirmed session." to "Alleen een verzoek waar nog niemand op heeft gereageerd kun je intrekken. Vraag je behandelaar om een bevestigde sessie te annuleren.",
     "Only start these exercises once a physiotherapist has looked at your neck. Done the wrong way, or for the wrong problem, such as a locked or strained muscle, they can make your pain worse." to "Begin pas met deze oefeningen als een fysiotherapeut naar je nek heeft gekeken. Verkeerd gedaan, of bij het verkeerde probleem, zoals een vastzittende of verrekte spier, kunnen ze je pijn erger maken.",
     "Only your practitioner can change this goal." to "Alleen je behandelaar kan dit doel wijzigen.",
     "Only {0} weeks of data in this record" to "Slechts {0} weken data in dit dossier",
@@ -2978,7 +2989,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Triggers uit beweging en hormonen",
     "Physical health tracking is disabled" to "Lichaam staat uit",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Kies 3 waarden onder het risico op je Monitorkaart. Ze komen uit je favorieten per categorie.",
+    "Pick a calendar." to "Kies een agenda.",
     "Pick a date" to "Kies een datum",
+    "Pick a date and time." to "Kies een datum en tijd.",
+    "Pick a date range." to "Kies een periode.",
     "Pick a medicine or category to chart" to "Kies een medicijn of categorie",
     "Pick a metric" to "Kies een waarde",
     "Pick a metric first." to "Kies eerst een waarde.",
@@ -3006,6 +3020,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Please enter your information manually below." to "Vul je gegevens hieronder zelf in.",
     "Please fill in all password fields." to "Vul alle wachtwoordvelden in.",
     "Please go to Monitor to complete setup." to "Ga naar Monitor om het af te maken.",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Please type %1\$s to confirm." to "Typ %1\$s om te bevestigen.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ SpO2-meting. Vereist een geschikt toestel met SpO2-sensor.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ meet de absolute huidtemperatuur tijdens de slaap. Ruwe waarden worden intern bewaard en de afwijking ten opzichte van de vorige nacht wordt dagelijks berekend. Vereist een geschikt toestel (Vantage V3, Grit X2 Pro, enz.).",
@@ -3020,9 +3037,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Pollen",
     "Pollen and air quality" to "Pollen en luchtkwaliteit",
     "Pollen counts and air pollution." to "Pollenwaarden en luchtvervuiling.",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Pollen high" to "Pollen hoog",
     "Pollen or hay fever season" to "Pollen of hooikoortsseizoen",
     "Polyunsaturated fat" to "Meerv. onverz. vet",
@@ -3499,7 +3513,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Side effects in %1\$s of %2\$s uses" to "Bijwerkingen bij %1\$s van %2\$s toepassingen",
     "Side effects: " to "Bijwerkingen: ",
     "Sign in" to "Inloggen",
+    "Sign in first." to "Log eerst in.",
     "Sign in to continue tracking" to "Log in om verder te gaan",
+    "Sign in to see it:" to "Log in om het te bekijken:",
     "Sign out" to "Uitloggen",
     "Sign out of your account on this device.\nYour data will still be safe in the cloud." to "Log uit op dit apparaat.\nJe gegevens blijven veilig in de cloud.",
     "Sign out?" to "Uitloggen?",
@@ -3838,8 +3854,18 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Terms of Use" to "Voorwaarden",
     "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later." to "Test de knop \"Het gebeurt nu\" op de eerste wizardstap; die legt meteen vast, details vul je later aan.",
     "Thanks for letting us know. We'll review this content shortly." to "Bedankt voor de melding. We kijken er snel naar.",
+    "That Cliniko key is not allowed to book appointments." to "Die Cliniko-sleutel mag geen afspraken boeken.",
+    "That account is not set up as a practitioner." to "Dat account is niet ingesteld als behandelaar.",
+    "That client is not connected to you." to "Die cliënt is niet aan jou gekoppeld.",
     "That didn't work" to "Dat lukte niet",
+    "That does not look like a web address. Start it with https://" to "Dit lijkt niet op een webadres. Begin met https://",
     "That file could not be read as text. Export as CSV, and keep it under 6 MB." to "Dit bestand kon niet als tekst worden gelezen. Exporteer als CSV en houd het onder 6 MB.",
+    "That is no longer open." to "Dit staat niet meer open.",
+    "That range is too long." to "Die periode is te lang.",
+    "That request is no longer open." to "Dat verzoek staat niet meer open.",
+    "That request was not found." to "Dat verzoek is niet gevonden.",
+    "That suggestion is no longer open." to "Dat voorstel staat niet meer open.",
+    "That time has already passed." to "Die tijd is al geweest.",
     "The AI drafts your triggers, thresholds and pool" to "De AI schetst je triggers, drempels en pool",
     "The AI learns from what you log either way. Answering the setup questions gives it your own account of your migraines to start from — sleep, stress, food, weather, hormones and warning signs — so its first read of you is closer than a blank page." to "De AI leert hoe dan ook van wat je noteert. Door de vragen te beantwoorden krijgt die jouw eigen verhaal over je migraine als start — slaap, stress, eten, weer, hormonen en waarschuwingen — zodat de eerste inschatting dichterbij zit dan een leeg blad.",
     "The AI needs about five logged attacks before it has anything to say." to "De AI heeft ongeveer vijf gelogde aanvallen nodig voor ze iets kan zeggen.",
@@ -3898,6 +3924,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Thiamin high" to "Thiamine hoog",
     "Thiamin low" to "Thiamine laag",
     "Thirst" to "Dorst",
+    "This Cliniko login is not set up as a practitioner, so it cannot take appointments." to "Deze Cliniko-login is niet ingesteld als behandelaar, dus je kunt hiermee geen afspraken aannemen.",
     "This Week" to "Deze week",
     "This action can't be undone." to "Dit kan niet ongedaan.",
     "This allows the app to run background tasks without being killed by Android.\n\n" to "Hiermee kan de app achtergrondtaken draaien zonder dat Android ze afsluit.\n\n",
@@ -3916,6 +3943,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "This page lists what each one physically does and how solid the evidence is, " to "Deze pagina beschrijft wat elk apparaat fysiek doet en hoe stevig het bewijs is, ",
     "This period against the equal one before it" to "Deze periode tegenover de even lange ervoor",
     "This practitioner" to "Deze behandelaar",
+    "This practitioner is not taking appointments here." to "Deze behandelaar neemt hier geen afspraken aan.",
     "This promo code doesn't exist." to "Deze promocode bestaat niet.",
     "This promo code has expired." to "Deze promocode is verlopen.",
     "This promo code has reached its usage limit." to "Deze promocode is op.",
@@ -4495,6 +4523,9 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Waar in je zicht kwam het? Tik de plekken aan zoals jij ze zag.",
     "Where in your vision it shows up, as seen through your own eyes" to "Waar in je zicht het opduikt, zoals jij het ziet",
     "Where it is heading" to "Waar het heen gaat",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Where the pain sat" to "Waar de pijn zat",
     "Where were you?" to "Waar was je?",
     "Where you were, what you were doing, what you had to miss." to "Waar je was, wat je deed, wat moest afvallen.",
@@ -4523,9 +4554,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Waarom je drempels staan waar ze staan",
     "Wind" to "Wind",
     "Wind Speed" to "Windsnelheid",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Wind Speed (m/s)" to "Wind (m/s)",
     "Wind speed" to "Windkracht",
     "Wind speed high" to "Harde wind",
@@ -4598,6 +4626,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "Yesterday" to "Gisteren",
     "Yoga" to "Yoga",
     "You are *not alone.*" to "Je bent *niet alleen.*",
+    "You are not connected to that practitioner." to "Je bent niet gekoppeld aan die behandelaar.",
     "You can also do this later from the menu." to "Dit kan ook later via het menu.",
     "You can log triggers manually when recording a migraine, or enable automatic " to "Je kunt triggers zelf noteren bij een migraine, of automatisch laten ",
     "You can run setup, or rerun it, anytime from Profile." to "Je kunt de installatie altijd starten of opnieuw doen via Profiel.",
