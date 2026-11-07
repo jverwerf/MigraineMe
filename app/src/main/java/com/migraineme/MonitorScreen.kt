@@ -813,7 +813,7 @@ private fun MenstruationCard(
             val todayDate = LocalDate.now()
             val daysUntil = ChronoUnit.DAYS.between(todayDate, nextExpected)
             
-            val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale()))
+            val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale()))
             val countdown = when {
                 daysUntil < 0 -> t("%1\$s days ago", (-daysUntil).toString())
                 daysUntil == 0L -> t("Today")
@@ -834,7 +834,7 @@ private fun MenstruationCard(
                 MetricTile("${settings.avgCycleLength}d", "Avg cycle", Color(0xFF4FC3F7), Modifier.weight(1f))
             }
             Text(
-                t("Last period: %s", lastDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale()))),
+                t("Last period: %s", lastDate.format(java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale()))),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )

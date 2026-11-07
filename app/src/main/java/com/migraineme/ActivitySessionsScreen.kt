@@ -63,7 +63,7 @@ fun ActivitySessionsScreen(
     }
 
     val displayDate = try {
-        LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale()))
+        LocalDate.parse(date).format(DateTimeFormatter.ofPattern(datePattern("EEEE, MMM d", appLocale()), appLocale()))
     } catch (_: Exception) { date }
 
     Column(

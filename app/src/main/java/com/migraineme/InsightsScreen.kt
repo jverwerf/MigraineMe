@@ -629,7 +629,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         // against the steadiness it drives, so it names its target.
                         if (it.factorType == "well_done_chain")
                             CardPreviewEntry(it.factorName,
-                                tSync("steadier %s", (it.factorB ?: "").lowercase()))
+                                tSync("steadier %s", prettyLabel(it.factorB).let { b -> if (LangPrefs.get() == Lang.EN) b.lowercase() else b }))
                         else
                             CardPreviewEntry(it.factorName,
                                 if (it.isChronic) tSync("on %s%% of calmer days", it.pctControlWindows.toInt())
@@ -1408,7 +1408,7 @@ private fun MigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", rememberAppLocale()).withZone(z)
+    val df = DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", rememberAppLocale()), rememberAppLocale()).withZone(z)
     val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(rememberAppLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
@@ -1789,8 +1789,8 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
                                 style = MaterialTheme.typography.labelSmall)
                         }
                         stat.avgDurationHrs?.let { hrs ->
-                            val durText = if (hrs >= 24f) "${String.format("%.0f", hrs / 24)}d avg duration"
-                                else "${String.format("%.0f", hrs)}h avg duration"
+                            val durText = if (hrs >= 24f) t("%sd avg duration", String.format("%.0f", hrs / 24))
+                                else t("%sh avg duration", String.format("%.0f", hrs))
                             Text(durText, color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                         }
@@ -1974,8 +1974,8 @@ private fun CorrelationRowCompact(
                             style = MaterialTheme.typography.labelSmall)
                     }
                     stat.avgDurationHrs?.let { hrs ->
-                        val durText = if (hrs >= 24f) "${String.format("%.0f", hrs / 24f)}d avg duration"
-                            else "${String.format("%.0f", hrs)}h avg duration"
+                        val durText = if (hrs >= 24f) t("%sd avg duration", String.format("%.0f", hrs / 24f))
+                            else t("%sh avg duration", String.format("%.0f", hrs))
                         Text(durText, color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall)
                     }
@@ -2166,9 +2166,9 @@ private fun PatternTile(
     onToggleHide: (() -> Unit)? = null,
 ) {
     val lagText = when (stat.bestLagDays) {
-        0 -> "same day"
-        1 -> "1 day before"
-        else -> "${stat.bestLagDays} days before"
+        0 -> t("same day")
+        1 -> t("1 day before")
+        else -> t("%s days before", stat.bestLagDays)
     }
     // METRIC rows carry MEANS, not percentages (isMeanNotPercent).
     val isMean = stat.isMeanNotPercent
@@ -2210,11 +2210,11 @@ private fun PatternTile(
         Row(verticalAlignment = Alignment.CenterVertically) {
             val title = androidx.compose.ui.text.buildAnnotatedString {
                 if (icon != null) { appendInlineContent("iconA", "\u2b1c"); append(" ") }
-                append(stat.factorName)
+                append(prettyLabel(stat.factorName))
                 if (stat.factorB != null) {
                     append("  +  ")
                     if (iconB != null) { appendInlineContent("iconB", "\u2b1c"); append(" ") }
-                    append(stat.factorB)
+                    append(prettyLabel(stat.factorB))
                 }
             }
             val inlineIcons = buildMap {
@@ -2293,8 +2293,8 @@ private fun PatternTile(
                 }
                 stat.avgDurationHrs?.let { hrs ->
                     if (stat.avgSeverity != null) Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
-                    val durText = if (hrs >= 24f) "~${String.format("%.0f", hrs / 24)}d duration"
-                        else "~${String.format("%.0f", hrs)}h duration"
+                    val durText = if (hrs >= 24f) t("~%sd duration", String.format("%.0f", hrs / 24))
+                        else t("~%sh duration", String.format("%.0f", hrs))
                     Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -2504,7 +2504,7 @@ private fun ThresholdPreviewCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(stat.factorName, color = Color.White,
+                    Text(prettyLabel(stat.factorName), color = Color.White,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(2.dp))
                     ConfidenceDots(stat.pValue)
@@ -2804,8 +2804,8 @@ internal fun ContextCard(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         item.avgDurationHrs?.let { hrs ->
                             Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
-                            val durText = if (hrs >= 24f) "~${String.format("%.0f", hrs / 24f)}d avg duration"
-                                else "~${String.format("%.0f", hrs)}h avg duration"
+                            val durText = if (hrs >= 24f) t("~%sd avg duration", String.format("%.0f", hrs / 24f))
+                                else t("~%sh avg duration", String.format("%.0f", hrs))
                             Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
@@ -3191,7 +3191,7 @@ internal fun GaugeProposalRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(t(proposal.label).uppercase(), color = zoneColor,
+                Text(t(proposal.label).uppercase(appLocale()), color = zoneColor,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 Spacer(Modifier.width(6.dp))
                 Text(typeLabel, color = AppTheme.SubtleTextColor,

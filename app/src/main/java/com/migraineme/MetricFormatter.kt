@@ -202,5 +202,14 @@ fun prettyLabel(raw: String?): String {
     // chrome around them translates. The English text IS the key, so a seeded
     // name resolves and a name the user typed themselves passes through
     // unchanged — exactly the behaviour we want for custom items.
-    return Strings.tSync(pretty)
+    val found = Strings.tSync(pretty)
+    if (found != pretty) return found
+    // Saved as one string but really a list: "Regular Migraine, Light sensitivity".
+    if (", " in pretty) return pretty.split(", ").joinToString(listSeparator()) { prettyLabel(it) }
+    // Server-built factor names.
+    if (pretty.startsWith("Steady ")) {
+        val rest = prettyLabel(pretty.removePrefix("Steady "))
+        return Strings.tSync("Steady %s", if (LangPrefs.get() == Lang.EN) rest.lowercase() else rest)
+    }
+    return pretty
 }

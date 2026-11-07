@@ -673,7 +673,7 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel, startPad
     if (windowStart == null || windowEnd == null) return
 
     val zone = ZoneId.systemDefault()
-    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(zone)
+    val fmt = DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale()).withZone(zone)
     val rangeLabel = "${fmt.format(windowStart)} - ${fmt.format(windowEnd)}"
 
     // "Compare mine": overlay the reader's own line for the same metrics and dates.
@@ -784,7 +784,7 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel, startPadding
     }
     val mineShown = if (compareOn) mine else emptyList()
 
-    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
+    val fmt = DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale())
     val days = riskDays.sortedBy { it.date }
     val from = LocalDate.parse(days.first().date).format(fmt)
     val to = LocalDate.parse(days.last().date).format(fmt)
@@ -931,7 +931,7 @@ private fun formatCommentDate(isoDate: String): String {
             hours < 24 -> tSync("%sh##forumage", hours)
             days < 7 -> tSync("%sd##forumage", days)
             else -> {
-                val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(ZoneId.systemDefault())
+                val fmt = DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale()).withZone(ZoneId.systemDefault())
                 fmt.format(instant)
             }
         }

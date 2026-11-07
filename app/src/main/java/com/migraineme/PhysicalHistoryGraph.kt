@@ -124,7 +124,7 @@ fun PhysicalHistoryGraph(
     }
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val dateFmt = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
         val rangeLabel = if (historyData.isNotEmpty()) {
             val from = try { LocalDate.parse(historyData.first().date).format(dateFmt) } catch (_: Exception) { historyData.first().date }
             val to = try { LocalDate.parse(historyData.last().date).format(dateFmt) } catch (_: Exception) { historyData.last().date }
@@ -352,7 +352,7 @@ fun PhysicalHistoryGraph(
 
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    val fmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+                    val fmt = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
                     if (historyData.isNotEmpty()) {
                         val firstLabel = try { LocalDate.parse(historyData.first().date).format(fmt) } catch (_: Exception) { historyData.first().date }
                         val lastLabel = try { LocalDate.parse(historyData.last().date).format(fmt) } catch (_: Exception) { historyData.last().date }

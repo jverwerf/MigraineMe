@@ -280,7 +280,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
     var editWind by remember { mutableStateOf("") }
     var editUv by remember { mutableStateOf("") }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
+    val dateFormatter = DateTimeFormatter.ofPattern(datePattern("EEEE, MMM d", appLocale()), appLocale())
 
     val maxForecastDate = today.plusDays(7)
 

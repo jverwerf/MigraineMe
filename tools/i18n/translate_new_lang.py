@@ -41,6 +41,7 @@ CLAUDE = os.environ.get("CLAUDE_BIN", "claude")
 BATCH = 30
 
 NAMES = {
+    "de": "German", "es": "Spanish", "nl": "Dutch", "fr": "French", "it": "Italian", "pt": "Portuguese (Portugal)",
     "ja": "Japanese",
     "ko": "Korean",
     "tr": "Turkish",
@@ -49,12 +50,17 @@ NAMES = {
 }
 
 VOICE = {
+    "de": "Address the user as 'du', warm and simple.", "es": "Address the user as 'tú', warm and simple.",
+    "nl": "Address the user as 'je', warm and simple.", "fr": "Address the user as 'tu', warm and simple.",
+    "it": "Address the user as 'tu', warm and simple.", "pt": "Address the user as 'tu', warm and simple. European Portuguese, not Brazilian.",
     "ja": "Plain polite です・ます. Buttons and chips: short noun or verb forms. No katakana when a normal Japanese word exists.",
     "ko": "Polite 해요체. Buttons and chips: short noun forms. Prefer native everyday words over transliterations.",
     "tr": "Address the user as 'sen', warm and simple. Keep Turkish dotted and dotless i exact (i/İ, ı/I).",
     "pl": "Address the user as 'ty', warm and simple. Avoid gendered past-tense verbs about the user where possible, since the app does not know the user's gender.",
     "zh": "Address the user as 你. Taiwan usage: 資料 not 数据, 軟體 not 软件, 設定 not 设置, 影片 not 视频, 登入 not 登录.",
 }
+
+COMMON = "use the terms already common in this language"
 
 GLOSSARY = {
     "ja": "migraine=片頭痛; attack=発作; trigger=誘因; aura=前兆; prodrome=予兆; postdrome=後発症状; relief=緩和; symptom=症状; medicine=薬; insights=インサイト",
@@ -153,7 +159,7 @@ def prompt(lang, batch):
     return f"""Translate UI strings of MigraineMe, a migraine tracking health app, into {NAMES[lang]}.
 
 Voice: {VOICE[lang]}
-Fixed medical terms, use these exactly: {GLOSSARY[lang]}
+Fixed medical terms, use these exactly: {GLOSSARY.get(lang, COMMON)}
 Never translate: MigraineMe, Brainy, Garmin, Oura, WHOOP, Polar, Fitbit, Apple Health, Health Connect, Premium.
 The de and fr fields show how a human translated the same string: use them to settle what an ambiguous English word means here. Do not translate from them.
 'sense' says which meaning of the word is intended.
@@ -235,7 +241,7 @@ def fix_overflows(lang, spec, threads):
                 f"These {NAMES[lang]} UI strings for a migraine app are too long for their space. "
                 f"Rewrite each so its length is at most max_width.{wide} Keep the meaning and every "
                 f"placeholder (%s %1$s %d %%). Pick shorter natural words or drop filler; use "
-                f"abbreviations only if there is truly no other way. Fixed terms: {GLOSSARY[lang]}. "
+                f"abbreviations only if there is truly no other way. Fixed terms: {GLOSSARY.get(lang, COMMON)}. "
                 'Return ONLY a JSON array: [{"id":0,"out":"..."}].\n'
                 + json.dumps([{"id": i, "en": english_of(b["key"].split("|")[0]), "current": b["was"],
                                "max_width": b["max"]} for i, b in enumerate(batch)], ensure_ascii=False)

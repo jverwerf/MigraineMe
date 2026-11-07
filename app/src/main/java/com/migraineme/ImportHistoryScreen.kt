@@ -179,7 +179,7 @@ private class ImpDay(val src: JsonObject) {
 
 private fun trimNum(v: Double): String = if (v % 1.0 == 0.0) v.toInt().toString() else String.format(Locale.US, "%.1f", v)
 
-private fun fmtDate(iso: String): String = runCatching { LocalDate.parse(iso.take(10)).format(DateTimeFormatter.ofPattern("d MMM yyyy", appLocale())) }.getOrDefault(iso.take(10))
+private fun fmtDate(iso: String): String = runCatching { LocalDate.parse(iso.take(10)).format(DateTimeFormatter.ofPattern(datePattern("d MMM yyyy", appLocale()), appLocale())) }.getOrDefault(iso.take(10))
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Edge call. Same shape as EdgeFunctionsService, kept local to this feature.

@@ -136,7 +136,7 @@ private suspend fun fetchSleepEntriesForDate(
                     row.valueCount != null -> "${row.valueCount}"
                     row.valueSwsHm != null -> {
                         fun fmt(h: Double): String { val m = (h * 60).toInt(); return "${m / 60}h ${m % 60}m" }
-                        "Deep ${fmt(row.valueSwsHm)} · REM ${fmt(row.valueRemHm ?: 0.0)} · Light ${fmt(row.valueLightHm ?: 0.0)}"
+                        tSync("Deep %1\$s · REM %2\$s · Light %3\$s", fmt(row.valueSwsHm), fmt(row.valueRemHm ?: 0.0), fmt(row.valueLightHm ?: 0.0))
                     }
                     else -> "-"
                 }
@@ -215,7 +215,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
     var editEntry by remember { mutableStateOf<SleepDataEntry?>(null) }
     var editValue by remember { mutableStateOf("") }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
+    val dateFormatter = DateTimeFormatter.ofPattern(datePattern("EEEE, MMM d", appLocale()), appLocale())
 
     fun loadEntries() {
         scope.launch {

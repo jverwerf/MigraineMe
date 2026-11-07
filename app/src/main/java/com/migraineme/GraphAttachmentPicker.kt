@@ -458,7 +458,7 @@ private fun HistoryGraphTab(
         return
     }
 
-    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
+    val fmt = DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale())
     Text("${startDate.format(fmt)} \u2013 ${endDate.format(fmt)}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     Spacer(Modifier.height(4.dp))
 
@@ -655,7 +655,7 @@ private fun RiskGraphTab(
 
         // ── Date range label ──
         if (displayDays.isNotEmpty()) {
-            val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
+            val fmt = DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale())
             val from = LocalDate.parse(displayDays.first().date).format(fmt)
             val to = LocalDate.parse(displayDays.last().date).format(fmt)
             Text("$from \u2013 $to", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -977,7 +977,7 @@ private fun PickerMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val df = DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale()).withZone(z)
     val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {

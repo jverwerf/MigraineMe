@@ -154,7 +154,7 @@ private fun PickerMigraineRow(
             d == today.minusDays(1) -> "Yesterday"
             d == today.plusDays(1) -> "Tomorrow"
             d == today.minusDays(2) -> "2 days ago"
-            else -> d.format(DateTimeFormatter.ofPattern("EEE dd MMM", appLocale()))
+            else -> d.format(DateTimeFormatter.ofPattern(datePattern("EEE dd MMM", appLocale()), appLocale()))
         }
     } ?: "Unknown"
 

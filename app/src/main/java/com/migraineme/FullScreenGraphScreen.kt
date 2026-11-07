@@ -87,7 +87,7 @@ fun FullScreenGraphScreen(
     // For weather at present, extend end date to include forecast
     val isWeatherForecast = graphType == "weather" && isAtPresent && !isCustomRange
 
-    val dateFormat = DateTimeFormatter.ofPattern("MMM d", appLocale())
+    val dateFormat = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
     // Title always matches what the graph actually shows
     val dateRangeLabel = "${startDate.format(dateFormat)} – ${endDate.format(dateFormat)}"
 

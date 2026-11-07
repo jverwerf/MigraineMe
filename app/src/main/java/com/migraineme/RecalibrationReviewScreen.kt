@@ -579,7 +579,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
                     "LOW" -> Color(0xFF81C784)
                     else -> AppTheme.SubtleTextColor
                 }
-                Text(t(p.label).uppercase(), color = zoneColor,
+                Text(t(p.label).uppercase(appLocale()), color = zoneColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.width(56.dp), textAlign = TextAlign.Center)
             }

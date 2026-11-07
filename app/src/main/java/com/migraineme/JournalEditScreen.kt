@@ -601,7 +601,7 @@ fun JournalEditScreen(
                     ) {
                         Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(selectedDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", appLocale())))
+                        Text(selectedDate.format(DateTimeFormatter.ofPattern(datePattern("dd MMM yyyy", appLocale()), appLocale())))
                     }
 
                     if (showDatePicker) {
@@ -755,7 +755,7 @@ fun JournalEditScreen(
                         ) {
                             Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(selectedEndDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", appLocale())))
+                            Text(selectedEndDate.format(DateTimeFormatter.ofPattern(datePattern("dd MMM yyyy", appLocale()), appLocale())))
                         }
 
                         if (showEndDatePicker) {

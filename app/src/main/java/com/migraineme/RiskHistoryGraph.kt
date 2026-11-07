@@ -231,7 +231,7 @@ fun RiskHistoryGraph(
     val isNormalized = selectedMetrics.size >= 2
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val dateFmt = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
         val rangeLabel = if (daysWithData.isNotEmpty()) {
             val from = try { LocalDate.parse(daysWithData.first().date).format(dateFmt) } catch (_: Exception) { daysWithData.first().date }
             val to = try { LocalDate.parse(daysWithData.last().date).format(dateFmt) } catch (_: Exception) { daysWithData.last().date }
@@ -661,7 +661,7 @@ fun RiskHistoryGraph(
                 // Tooltip overlay — show actual logged items
                 tappedIcon?.let { icon ->
                     val typeLabel = tSync(hubTypeLabels.getOrElse(icon.typeIdx) { "" })
-                    val dateLabel = try { LocalDate.parse(icon.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())) } catch (_: Exception) { icon.date }
+                    val dateLabel = try { LocalDate.parse(icon.date).format(java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())) } catch (_: Exception) { icon.date }
                     // Get actual item names from the maps
                     val itemNames: List<String> = when (icon.typeIdx) {
                         0 -> migraineDates[icon.date] ?: emptyList()
@@ -696,7 +696,7 @@ fun RiskHistoryGraph(
 
                 // Tooltip for tapped contributor bar segment
                 tappedBar?.let { bar ->
-                    val dateLabel = try { LocalDate.parse(bar.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())) } catch (_: Exception) { bar.date }
+                    val dateLabel = try { LocalDate.parse(bar.date).format(java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())) } catch (_: Exception) { bar.date }
                     val sevColor = when (bar.trigger.severity.uppercase()) {
                         "HIGH" -> Color(0xFFEF5350)
                         "MILD" -> Color(0xFFFFB74D)

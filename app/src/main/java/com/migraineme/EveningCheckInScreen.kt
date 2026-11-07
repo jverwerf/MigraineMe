@@ -1030,7 +1030,7 @@ private fun SideEffectsPage(
                 Text(t("Active treatments"), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 activeRegimens.forEach { r ->
-                    val parts = listOfNotNull(r.name, r.amount, r.frequency).joinToString(" · ")
+                    val parts = listOfNotNull(r.name, r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
                     Text(parts, color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -1402,7 +1402,7 @@ private fun ReviewPage(
             HeroCard { Column(Modifier.fillMaxWidth()) {
             Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(4.dp))
-            Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(LocalDate.now().format(DateTimeFormatter.ofPattern(datePattern("EEEE d MMMM", appLocale()), appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             } }
             Spacer(Modifier.height(20.dp))
 
@@ -1684,7 +1684,7 @@ private fun TimeEditor(
     Spacer(Modifier.height(2.dp))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale())),
+            selectedDate.format(DateTimeFormatter.ofPattern(datePattern("EEE d MMM", appLocale()), appLocale())),
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(AppTheme.AccentPurple.copy(alpha = 0.1f)).clickable { showDatePicker = true }.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -2115,7 +2115,7 @@ private fun PostdromeStep(
     val isStale = (ageDays ?: 0) > 7
     // t() is composable: format the date first, translate outside the try.
     val migraineDay: String? = openMigraine?.startAt?.let {
-        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("E d MMM", appLocale())) } catch (_: Exception) { null }
+        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern(datePattern("E d MMM", appLocale()), appLocale())) } catch (_: Exception) { null }
     }
     val migraineLabel: String = migraineDay?.let { t("your migraine from %s", it) } ?: t("your open migraine")
 
@@ -2230,7 +2230,7 @@ private fun MigraineNowStep(
     val accent = Color(0xFF4DB6AC)
     // t() is composable: format the date first, translate outside the try.
     val migraineDay: String? = openMigraine?.startAt?.let {
-        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("E d MMM", appLocale())) } catch (_: Exception) { null }
+        try { OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern(datePattern("E d MMM", appLocale()), appLocale())) } catch (_: Exception) { null }
     }
     val migraineLabel: String = migraineDay?.let { t("your migraine from %s", it) } ?: t("your open migraine")
 
@@ -2511,7 +2511,7 @@ private fun SideEffectsPageV2(
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             Text(regimen.name, color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            val parts = listOfNotNull(regimen.amount, regimen.frequency).joinToString(" · ")
+            val parts = listOfNotNull(regimen.amount, frequencyLabel(regimen.frequency)).joinToString(" · ")
             if (parts.isNotEmpty()) {
                 Spacer(Modifier.height(2.dp))
                 Text(parts, color = accentColor, style = MaterialTheme.typography.labelSmall)

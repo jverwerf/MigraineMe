@@ -113,7 +113,7 @@ private fun DetailHeroCard(
     // Day label for selected day
     val dayLabel = if (selectedDay == 0) t("Risk today") else {
         val date = dayRisks.getOrNull(selectedDay)?.date
-        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM", rememberAppLocale())))
+        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern(datePattern("EEE d MMM", rememberAppLocale()), rememberAppLocale())))
         else t("Risk")
     }
 
@@ -417,7 +417,7 @@ private fun DetailTriggersCard(
 
                     // Bottom row: points + days active
                     Text(
-                        Strings.t("%1\$s%% of risk · %2\$s pts · %3\$s", pctOfTotal, t.score, if (t.daysActive == 1) Strings.t("today only") else Strings.t("%s days active", t.daysActive)),
+                        triggerFooter(pctOfTotal, t.score, t.daysActive, t.name),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
                     )

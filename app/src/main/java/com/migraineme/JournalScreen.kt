@@ -465,7 +465,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                 onSelect = { selectedSourceFilter = it }
                             )
                             val customLabel = if (selectedTimeframe == "Custom" && customFromDate != null && customToDate != null) {
-                                val fmt = DateTimeFormatter.ofPattern("dd MMM", appLocale())
+                                val fmt = DateTimeFormatter.ofPattern(datePattern("dd MMM", appLocale()), appLocale())
                                 "${LocalDate.ofEpochDay(customFromDate!! / 86400000).format(fmt)} → ${LocalDate.ofEpochDay(customToDate!! / 86400000).format(fmt)}"
                             } else t("Custom range…")
                             JournalPopupChip(
@@ -835,7 +835,7 @@ private fun durationLabel(startIso: String?, endIso: String?): String? {
 private fun journalDayTitle(day: LocalDate?): String {
     if (day == null) return tSync("No date")
     if (day == LocalDate.now()) return tSync("Today")
-    return day.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale()))
+    return day.format(DateTimeFormatter.ofPattern(datePattern("EEE d MMM", appLocale()), appLocale()))
 }
 
 /** Uppercase stream group header: "TODAY · 3 ENTRIES". */
@@ -1271,7 +1271,7 @@ private fun JournalDetail(label: String, value: String) {
 }
 
 private fun formatTimestamp(iso: String): String = try {
-    ZonedDateTime.parse(iso).format(DateTimeFormatter.ofPattern("d MMM, HH:mm", appLocale()))
+    ZonedDateTime.parse(iso).format(DateTimeFormatter.ofPattern(datePattern("d MMM, HH:mm", appLocale()), appLocale()))
 } catch (_: Exception) { iso.take(16).replace("T", " ") }
 
 @Composable

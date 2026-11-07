@@ -72,7 +72,7 @@ fun NutritionHistoryScreen(
     val searchService = remember { USDAFoodSearchService(context) }
     val nutritionDisplayKeys = remember { MetricDisplayStore.getDisplayMetrics(context, "nutrition") }
     
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
+    val dateFormatter = DateTimeFormatter.ofPattern(datePattern("EEEE, MMM d", appLocale()), appLocale())
     val today = LocalDate.now()
     
     fun loadItems() {

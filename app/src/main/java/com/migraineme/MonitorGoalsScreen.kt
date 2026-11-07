@@ -211,7 +211,7 @@ private fun GoalsReviewRegion(teaser: Boolean) {
 }
 
 private fun weekOfLabel(iso: String): String = runCatching {
-    LocalDate.parse(iso.take(10)).format(DateTimeFormatter.ofPattern("d MMM yyyy", appLocale()))
+    LocalDate.parse(iso.take(10)).format(DateTimeFormatter.ofPattern(datePattern("d MMM yyyy", appLocale()), appLocale()))
 }.getOrDefault(iso.take(10))
 
 @Composable

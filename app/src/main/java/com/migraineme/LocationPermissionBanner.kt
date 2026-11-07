@@ -161,13 +161,9 @@ fun LocationPermissionBanner(modifier: Modifier = Modifier) {
 
     val body = when (grantState) {
         LocationGrantState.BackgroundMissing ->
-            "Android limited MigraineMe to location only while the app is open. " +
-                "This happens on its own when an app hasn't been used for a while. " +
-                "Weather and risk predictions need location in the background to keep updating."
+            t("Android limited MigraineMe to location only while the app is open. This happens on its own when an app hasn't been used for a while. Weather and risk predictions need location in the background to keep updating.")
         else ->
-            "Android turned off location access for MigraineMe. This happens on its own " +
-                "when an app hasn't been opened for a while. Without it we can't fetch your " +
-                "weather, so your risk predictions and weather triggers have stopped updating."
+            t("Android turned off location access for MigraineMe. This happens on its own when an app hasn't been opened for a while. Without it we can't fetch your weather, so your risk predictions and weather triggers have stopped updating.")
     }
 
     BaseCard(modifier = modifier.fillMaxWidth()) {

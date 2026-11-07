@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.migraineme.BuildConfig
 import com.migraineme.EdgeFunctionsService
+import com.migraineme.datePattern
 import com.migraineme.R
 import com.migraineme.Routes
 import com.migraineme.SessionStore
@@ -186,7 +187,7 @@ class MigraineMeLogWidget : AppWidgetProvider() {
         when (day) {
             today -> tSync("Today")
             today.minusDays(1) -> tSync("Yesterday")
-            else -> day.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale()))
+            else -> day.format(DateTimeFormatter.ofPattern(datePattern("EEE d MMM", appLocale()), appLocale()))
         }
     } catch (_: Exception) {
         ""

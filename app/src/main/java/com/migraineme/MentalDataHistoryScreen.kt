@@ -70,7 +70,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
     val mentalConfig = remember { MentalCardConfigStore.load(context) }
     var isLoading by remember { mutableStateOf(true) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
+    val dateFormatter = DateTimeFormatter.ofPattern(datePattern("EEEE, MMM d", appLocale()), appLocale())
 
     fun loadEntries() {
         scope.launch {
@@ -398,9 +398,9 @@ private fun formatMentalEntryValue(table: String, obj: org.json.JSONObject): Str
             val low = obj.optDouble("day_min_lmean")
             if (!avg.isNaN()) {
                 val parts = mutableListOf<String>()
-                if (!low.isNaN()) parts.add("Low: ${String.format("%.0f", low)} dB")
-                parts.add("Avg: ${String.format("%.0f", avg)} dB")
-                if (!high.isNaN()) parts.add("High: ${String.format("%.0f", high)} dB")
+                if (!low.isNaN()) parts.add(tSync("Low: %s dB", String.format("%.0f", low)))
+                parts.add(tSync("Avg: %s dB", String.format("%.0f", avg)))
+                if (!high.isNaN()) parts.add(tSync("High: %s dB", String.format("%.0f", high)))
                 parts.joinToString(" • ")
             } else "-"
         }

@@ -391,7 +391,7 @@ private fun formatRange(start: String?, end: String?, allDay: Boolean): String? 
     if (start == null) return null
     return try {
         val s = OffsetDateTime.parse(start)
-        val day = s.format(DateTimeFormatter.ofPattern("E d MMM", appLocale()))
+        val day = s.format(DateTimeFormatter.ofPattern(datePattern("E d MMM", appLocale()), appLocale()))
         if (allDay) return day
         val hm = DateTimeFormatter.ofPattern("HH:mm")
         val startStr = "$day ${s.format(hm)}"

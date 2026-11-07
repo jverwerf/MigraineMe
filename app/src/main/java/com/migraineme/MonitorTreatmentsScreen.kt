@@ -145,7 +145,7 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
                         Spacer(Modifier.width(6.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                            val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
+                            val dose = listOfNotNull(r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
                             val since = t("since %s", r.startDate)
                             val sub = if (dose.isEmpty()) since else "$dose · $since"
                             Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
@@ -361,7 +361,7 @@ data class TreatmentListRowItem(
 private fun soloMeta(r: SupabaseDbService.TreatmentRegimenRow): String {
     val parts = mutableListOf<String>()
     if (!r.amount.isNullOrEmpty()) parts.add(r.amount!!)
-    if (!r.frequency.isNullOrEmpty()) parts.add(r.frequency!!)
+    if (!r.frequency.isNullOrEmpty()) parts.add(frequencyLabel(r.frequency)!!)
     parts.add(r.stopDate?.let { "${r.startDate} → $it" } ?: tSync("since %s", r.startDate))
     return parts.joinToString(" · ")
 }
@@ -467,7 +467,7 @@ private fun EmptyState() {
 }
 
 private fun doseLabel(r: SupabaseDbService.TreatmentRegimenRow): String? {
-    val parts = listOfNotNull(r.amount?.takeIf { it.isNotBlank() }, r.frequency?.takeIf { it.isNotBlank() })
+    val parts = listOfNotNull(r.amount?.takeIf { it.isNotBlank() }, frequencyLabel(r.frequency))
     return if (parts.isEmpty()) null else parts.joinToString(" · ")
 }
 
@@ -885,7 +885,7 @@ private fun treatmentFieldColors() = OutlinedTextFieldDefaults.colors(
 private fun StartDatePicker(date: LocalDate, onChange: (LocalDate) -> Unit) {
     val ctx = LocalContext.current
     val label = remember(date) {
-        date.format(DateTimeFormatter.ofPattern("d MMM yyyy", appLocale()))
+        date.format(DateTimeFormatter.ofPattern(datePattern("d MMM yyyy", appLocale()), appLocale()))
     }
     Surface(
         color = Color.White.copy(alpha = 0.10f),

@@ -304,7 +304,7 @@ fun MonitorEnvironmentScreen(
                         Spacer(Modifier.height(8.dp))
 
                         val dayFormatter = DateTimeFormatter.ofPattern("EEE", rememberAppLocale())
-                        val dateFormatter = DateTimeFormatter.ofPattern("d MMM", rememberAppLocale())
+                        val dateFormatter = DateTimeFormatter.ofPattern(datePattern("d MMM", rememberAppLocale()), rememberAppLocale())
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
                         forecastDays.forEach { day ->

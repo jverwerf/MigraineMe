@@ -348,7 +348,7 @@ private fun TourChrome(step: TourStep, pulseAlpha: Float) {
                 contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.Settings, null, tint = Color.White, modifier = Modifier.size(24.dp))
             }
-            Text(t(step.title), color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Center))
+            Text(tScreen(step.title), color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Center))
             Box(Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(44.dp)
                 .then(if (step.navHint == NavHintLocation.TOP_COMMUNITY) Modifier.border(3.dp, ring, RoundedCornerShape(12.dp)) else Modifier),
                 contentAlignment = Alignment.Center) {
@@ -848,7 +848,7 @@ fun CoachOverlay(
                                         Column(Modifier.verticalScroll(bodyScrollState)) {
                                             headerRow(step.brainy, true)
                                             Spacer(Modifier.height(if (compact) 0.dp else 4.dp))
-                                            ObHeadline(t(step.headline.ifEmpty { step.title }), Modifier.fillMaxWidth(), size = if (compact) 22.sp else 26.sp, align = TextAlign.Start)
+                                            ObHeadline(tScreen(step.headline.ifEmpty { step.title }), Modifier.fillMaxWidth(), size = if (compact) 22.sp else 26.sp, align = TextAlign.Start)
                                             if (step.sub.isNotEmpty()) ObHand(t(step.sub), Modifier.fillMaxWidth(), size = if (compact) 17.sp else 19.sp, align = TextAlign.Start)
                                             Spacer(Modifier.height(if (compact) 2.dp else 6.dp))
                                             Text(t(step.body), style = ObStyle.body(if (compact) 13.sp else 14.sp))

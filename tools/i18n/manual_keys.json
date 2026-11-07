@@ -7704,6 +7704,769 @@
         "RiskWeightsScreen.kt:decay-day-label"
       ],
       "max_len": 5
+    },
+    {
+      "en": "%s days before",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "%sd avg duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "%sh avg duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "%sx per day",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "%sx per month",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "%sx per week",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "1 day before",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "2 days ago",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Alcohol exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "All exercises",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Alt. Change",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Altitude",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Android limited MigraineMe to location only while the app is open. This happens on its own when an app hasn't been used for a while. Weather and risk predictions need location in the background to keep updating.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Android turned off location access for MigraineMe. This happens on its own when an app hasn't been opened for a while. Without it we can't fetch your weather, so your risk predictions and weather triggers have stopped updating.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Aspartame exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Aura",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Avg: %s dB",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "BP Systolic",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Bedtime",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Body Fat",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Brightness",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "By category",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "By medicine",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Coarse dust",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Coarse dust high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Cold compress",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Combination",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "D",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Dark Mode",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Deep %1$s · REM %2$s · Light %3$s",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Deep Sleep",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Disturbances",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Ditan",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Efficiency",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Ergotamine",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Fell Asleep",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Fiber",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Gluten exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Grass pollen high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "High HR Zones",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "High: %s dB",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Histamine exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Hydration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Late Screen",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Late Screen Time",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Light Sleep",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Low: %s dB",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "M",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "MSG exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Manual",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Mindfulness",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "NSAID",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Nitrates exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Ozone high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Pain",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Pain location",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Panto. Acid",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Please confirm your email first.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Pollen high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Postdrome",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "REM Sleep",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Resp rate",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Resp. Rate",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Resting HR",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Sat. Fat",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Score",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Screen Time",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Severity %s",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Severity %s/10",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Severity —",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Skin Temp",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Skin temp",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Sleep Eff.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Sleep Score",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Sleep Stages",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "SpO2",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Steady %s",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Sulfites exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Temp",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Tension type",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "The nose slides straight back, like making a double chin, then forward again. Eyes level. Hold a moment, release.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Tomorrow",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Trans Fat",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Tree pollen high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Triptan",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Tyramine exposure",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "UV Index",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Unlocks",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Unsat. Fat",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Very high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Volume",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "W",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Wake Time",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Weed pollen high",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Woke Up",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "Wrong email or password.",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "as needed",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "daily",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "every other day",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "monthly",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "once daily",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "same day",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "twice daily",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "weekly",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "~%sd avg duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "~%sd duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "~%sh avg duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
+    },
+    {
+      "en": "~%sh duration",
+      "class": "soft",
+      "sites": [
+        "walk-2026-11-07"
+      ]
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

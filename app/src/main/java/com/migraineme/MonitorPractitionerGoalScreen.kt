@@ -132,7 +132,7 @@ fun MonitorPractitionerGoalScreen(navController: NavController, goalId: String) 
             BaseCard {
                 Text(t("Last 4 weeks"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                val fmt = remember { DateTimeFormatter.ofPattern("d MMM", appLocale()) }
+                val fmt = remember { DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale()) }
                 val thisWeek = PractitionerGoalsStore.weekDays()
                 for (back in 3 downTo 0) {
                     val week = thisWeek.map { it.minusWeeks(back.toLong()) }

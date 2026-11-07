@@ -203,7 +203,7 @@ fun NutritionHistoryGraph(
     }
     
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val dateFmt = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
         val rangeLabel = if (historyData.isNotEmpty()) {
             val from = try { LocalDate.parse(historyData.first().date).format(dateFmt) } catch (_: Exception) { historyData.first().date }
             val to = try { LocalDate.parse(historyData.last().date).format(dateFmt) } catch (_: Exception) { historyData.last().date }

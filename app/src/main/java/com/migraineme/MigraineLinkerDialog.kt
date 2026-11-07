@@ -216,17 +216,17 @@ private fun MigraineRow(
     val dayLabel = migraineDate?.let {
         val d = it.toLocalDate()
         when {
-            d == today -> "Today"
-            d == today.minusDays(1) -> "Yesterday"
-            d == today.plusDays(1) -> "Tomorrow"
-            d == today.minusDays(2) -> "2 days ago"
-            else -> d.format(DateTimeFormatter.ofPattern("EEE dd MMM", appLocale()))
+            d == today -> tSync("Today")
+            d == today.minusDays(1) -> tSync("Yesterday")
+            d == today.plusDays(1) -> tSync("Tomorrow")
+            d == today.minusDays(2) -> tSync("2 days ago")
+            else -> d.format(DateTimeFormatter.ofPattern(datePattern("EEE dd MMM", appLocale()), appLocale()))
         }
-    } ?: "Unknown"
+    } ?: tSync("Unknown")
 
     val timeLabel = migraineDate?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""
-    val severityLabel = m.severity?.let { "Severity $it/10" } ?: ""
-    val typeLabel = m.type?.replaceFirstChar { it.uppercase() } ?: ""
+    val severityLabel = m.severity?.let { tSync("Severity %s/10", it) } ?: ""
+    val typeLabel = prettyLabel(m.type)
 
     Row(
         modifier = Modifier

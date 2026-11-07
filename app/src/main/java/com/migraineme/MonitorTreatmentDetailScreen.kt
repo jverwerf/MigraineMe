@@ -115,7 +115,7 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
                 val period = r.stopDate?.let { "${r.startDate} → $it" } ?: t("since %s", r.startDate)
                 val sub = listOfNotNull(
                     t(r.kind.replaceFirstChar { it.uppercase() }),
-                    r.amount, r.frequency, period
+                    r.amount, frequencyLabel(r.frequency), period
                 ).joinToString(" · ")
                 LabelPlate { Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall) }
                 // What the user remembered about life before this treatment,
@@ -587,7 +587,7 @@ private fun LeaderboardRow(row: SupabaseDbService.TreatmentLeaderboardRow, maxPc
                     }
                 }
             }
-            val sub = listOfNotNull(t(row.kind), row.amount, row.frequency).joinToString(" · ")
+            val sub = listOfNotNull(t(row.kind), row.amount, frequencyLabel(row.frequency)).joinToString(" · ")
             Text(sub, color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
         Box(modifier = Modifier.width(60.dp).height(6.dp).background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(3.dp))) {
@@ -980,7 +980,7 @@ private fun LinkRow(r: SupabaseDbService.TreatmentRegimenRow, isSelected: Boolea
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
+            val dose = listOfNotNull(r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
             val period = r.stopDate?.let { "${r.startDate} → $it" } ?: t("since %s", r.startDate)
             Text(listOfNotNull(dose.ifBlank { null }, period).joinToString(" · "),
                 color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)

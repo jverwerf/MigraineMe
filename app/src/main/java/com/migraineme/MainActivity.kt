@@ -1308,7 +1308,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         else -> ""
                                     }
                                 }
-                            Text(t(titleText))
+                            Text(tScreen(titleText))
                         },
                         navigationIcon = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
@@ -3476,18 +3476,18 @@ private fun BottomBar(
                         }
                         if (showBadge) {
                             BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
-                                Icon(item.icon, contentDescription = t(item.label))
+                                Icon(item.icon, contentDescription = tScreen(item.label))
                             }
                         } else if (showInsightsDot) {
                             BadgedBox(badge = { Badge() }) {
-                                Icon(item.icon, contentDescription = t(item.label))
+                                Icon(item.icon, contentDescription = tScreen(item.label))
                             }
                         } else {
-                            Icon(item.icon, contentDescription = t(item.label))
+                            Icon(item.icon, contentDescription = tScreen(item.label))
                         }
                     }
                 },
-                label = { NavLabel(t(item.label)) },
+                label = { NavLabel(tScreen(item.label)) },
                 alwaysShowLabel = true,
                 colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,

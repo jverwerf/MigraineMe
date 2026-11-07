@@ -715,7 +715,7 @@ fun InsightsReportScreen(
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val maxAvg = monthsWithDur.maxOf { it.second }.coerceAtLeast(1f)
-                        val durFmt = DateTimeFormatter.ofPattern("MMM", appLocale())
+                        val durFmt = DateTimeFormatter.ofPattern(datePattern("MMM", appLocale()), appLocale())
                         Row(
                             Modifier.fillMaxWidth().height(120.dp).horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1316,7 +1316,7 @@ fun InsightsReportScreen(
                                     color = Color.White.copy(alpha = 0.4f).toArgb()
                                     textSize = 18f; isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER
                                 }
-                                val xFmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM", appLocale())
+                                val xFmt = java.time.format.DateTimeFormatter.ofPattern(datePattern("dd MMM", appLocale()), appLocale())
                                 val labelCount = 5.coerceAtMost(daySpan.toInt() + 1)
                                 for (i in 0 until labelCount) {
                                     val frac = if (labelCount <= 1) 0f else i.toFloat() / (labelCount - 1)
@@ -1434,7 +1434,7 @@ private fun FilterCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (timeFrame != InsightsViewModel.TimeFrame.ALL && timeFrame != InsightsViewModel.TimeFrame.NONE) {
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
-                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())
+                        val df = java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
                     } else t(timeFrame.label)
                     Row(
@@ -1501,7 +1501,7 @@ private fun FilterCard(
 
                 // Custom date range row (shown when custom is active or being set)
                 AnimatedVisibility(visible = timeFrame == InsightsViewModel.TimeFrame.CUSTOM) {
-                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale())
+                    val df = java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale())
                     Row(
                         Modifier.fillMaxWidth().padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1917,7 +1917,7 @@ private fun DetailMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val df = DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale()).withZone(z)
     val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
@@ -2156,7 +2156,7 @@ private fun RegimenRow(
     // No before-picture: show the rate itself instead of a change.
     val rateText: String = r.rollingMmd?.let { String.format("%.1f", it) } ?: ""
 
-    val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
+    val dose = listOfNotNull(r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
     val weeks = runCatching {
         val s = java.time.LocalDate.parse(r.startDate)
         java.time.temporal.ChronoUnit.WEEKS.between(s, java.time.LocalDate.now()).coerceAtLeast(0L).toInt()
@@ -2319,7 +2319,7 @@ internal fun buildReportAttackDetail(
 internal fun offsetFromStart(start: Instant, at: Instant?): String {
     if (at == null) return ""
     val mins = Duration.between(start, at).toMinutes()
-    if (mins == 0L) return "at onset"
+    if (mins == 0L) return tSync("at onset")
     val sign = if (mins < 0) "-" else "+"
     val abs = kotlin.math.abs(mins)
     val d = abs / 1440
@@ -2338,7 +2338,7 @@ internal fun offsetFromStart(start: Instant, at: Instant?): String {
 private fun AttackLogCard(details: List<ReportAttackDetail>) {
     val zone = ZoneId.systemDefault()
     val loc = rememberAppLocale()
-    val dateFmt = remember(loc) { DateTimeFormatter.ofPattern("d MMM yyyy", loc).withZone(ZoneId.systemDefault()) }
+    val dateFmt = remember(loc) { DateTimeFormatter.ofPattern(datePattern("d MMM yyyy", loc), loc).withZone(ZoneId.systemDefault()) }
 
     BrainyWatermarkCard(resId = R.drawable.brainy_briefcase, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -2383,7 +2383,7 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
                             color = e.severity?.let { severityColor(it) } ?: AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                         )
-                        Text(e.locations.joinToString(", "),
+                        Text(e.locations.joinToString(listSeparator()) { prettyLabel(it) },
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodySmall)
                     }
@@ -2490,7 +2490,7 @@ internal fun AttackCard(
 ) {
     val zone = ZoneId.systemDefault()
     val dtLoc = rememberAppLocale()
-    val dateFmt = remember(dtLoc) { DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm", dtLoc).withZone(zone) }
+    val dateFmt = remember(dtLoc) { DateTimeFormatter.ofPattern(datePattern("d MMM yyyy · HH:mm", dtLoc), dtLoc).withZone(zone) }
     val hrs = mg.end?.let { (it.toEpochMilli() - mg.start.toEpochMilli()) / 3_600_000.0 }
 
     BaseCard {
@@ -2500,8 +2500,8 @@ internal fun AttackCard(
             Spacer(Modifier.weight(1f))
             Text(
                 buildString {
-                    append(mg.severity?.let { "Severity $it" } ?: "Severity —")
-                    append(hrs?.let { " · ${String.format("%.1f", it)}h" } ?: " · ongoing")
+                    append(mg.severity?.let { tSync("Severity %s", it) } ?: tSync("Severity —"))
+                    append(hrs?.let { " · ${String.format("%.1f", it)}h" } ?: " · ${tSync("ongoing")}")
                 },
                 color = mg.severity?.let { severityColor(it) } ?: AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -2598,7 +2598,7 @@ private fun AttackSequence(
         }
         detail?.painEntries?.forEach { e ->
             out += Row3("Pain", e.at,
-                (e.severity?.let { "$it/10 — " } ?: "") + e.locations.joinToString(", "), pain = true)
+                (e.severity?.let { "$it/10 — " } ?: "") + e.locations.joinToString(listSeparator()) { prettyLabel(it) }, pain = true)
         }
         if (detail == null && mg.painLocations.isNotEmpty()) {
             out += Row3("Pain location", null,
@@ -2644,7 +2644,7 @@ private fun AttackSequence(
         .groupBy { it.label }
         .forEach { (cat, items) ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Text(cat.uppercase(),
+                Text(tSync(cat).uppercase(appLocale()),
                     color = if (items.first().pain) AppTheme.AccentPink else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(74.dp))
                 Text(items.joinToString(", ") { it.text }, color = AppTheme.BodyTextColor,
@@ -2772,7 +2772,7 @@ internal fun AttackChart(
 ) {
     val zone = ZoneId.systemDefault()
     val dayLoc = rememberAppLocale()
-    val dayFmt = remember(dayLoc) { DateTimeFormatter.ofPattern("dd MMM", dayLoc).withZone(zone) }
+    val dayFmt = remember(dayLoc) { DateTimeFormatter.ofPattern(datePattern("dd MMM", dayLoc), dayLoc).withZone(zone) }
     val hasMetrics = metrics.any { it.points.size >= 2 }
     val density = LocalDensity.current
 
@@ -3076,5 +3076,5 @@ internal fun AttackChart(
 /** ISO instant → "12 Aug", in the app's locale. Used by the no-attack list. */
 private fun formatReportDay(iso: String): String = runCatching {
     java.time.LocalDate.ofInstant(Instant.parse(iso), java.time.ZoneId.systemDefault())
-        .format(java.time.format.DateTimeFormatter.ofPattern("d MMM", appLocale()))
+        .format(java.time.format.DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale()))
 }.getOrDefault(iso.take(10))

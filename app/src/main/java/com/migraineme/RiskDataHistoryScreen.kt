@@ -142,7 +142,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        selectedDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale())),
+                        selectedDate.format(DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale())),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )

@@ -95,7 +95,7 @@ fun EditMedicineScreen(
         return try {
             val odt = runCatching { OffsetDateTime.parse(startIso) }.getOrNull()
             val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
-            ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm", appLocale()))
+            ldt.format(DateTimeFormatter.ofPattern(datePattern("EEE, dd MMM yyyy • HH:mm", appLocale()), appLocale()))
         } catch (_: Exception) { tSync("Unknown") }
     }
     val selectedMigraineLabel = migraines

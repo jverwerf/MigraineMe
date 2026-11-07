@@ -671,7 +671,7 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                         MedicineDwmGrid(
                             medicines = s.all,
                             categories = s.categories,
-                            medicineLabel = "By medicine",
+                            medicineLabel = t("By medicine"),
                         )
                     }
 
@@ -836,13 +836,13 @@ private fun MedicineDwmGrid(
 
     data class Row3(val name: String?, val category: String?, val values: List<String>, val isHeader: Boolean)
     val rows: List<Pair<String?, Row3>> = buildList {
-        if (medicineLabel != null) add(medicineLabel to Row3(null, null, listOf("D", "W", "M"), true))
-        else add(null to Row3(null, null, listOf("D", "W", "M"), true))
+        if (medicineLabel != null) add(medicineLabel to Row3(null, null, listOf(tSync("D"), tSync("W"), tSync("M")), true))
+        else add(null to Row3(null, null, listOf(tSync("D"), tSync("W"), tSync("M")), true))
         medicines.forEach { m ->
             add(null to Row3(m.name, m.category, listOf(m.amountToday, m.amountWeek, m.amountMonth), false))
         }
         if (categories.isNotEmpty()) {
-            add("By category" to Row3(null, null, listOf("D", "W", "M"), true))
+            add(tSync("By category") to Row3(null, null, listOf(tSync("D"), tSync("W"), tSync("M")), true))
             categories.forEach { c ->
                 add(null to Row3(c.category, null, listOf(c.amountToday, c.amountWeek, c.amountMonth), false))
             }
@@ -1312,7 +1312,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                     IconButton(onClick = { selectedDate = selectedDate.minusDays(1) }) {
                         Icon(Icons.Outlined.ChevronLeft, t("Previous day"), tint = AppTheme.AccentPurple)
                     }
-                    Text(selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy", rememberAppLocale())),
+                    Text(selectedDate.format(DateTimeFormatter.ofPattern(datePattern("EEE, d MMM yyyy", rememberAppLocale()), rememberAppLocale())),
                         color = AppTheme.TitleColor, modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall)
                     IconButton(onClick = {
@@ -1383,13 +1383,13 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 e.reliefScale?.takeIf { it != "NONE" }?.let {
-                                    Text(t("relief: %s", it.lowercase().replaceFirstChar { c -> c.uppercase() }),
+                                    Text(t("relief: %s", scaleLabel(it)),
                                         color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall)
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 // Legacy rows (scale, no items) keep the short chip; items get their own line below.
                                 e.sideEffectScale?.takeIf { it != "NONE" && e.sideEffects.isEmpty() }?.let {
-                                    Text(t("SE: %s", it.lowercase().replaceFirstChar { c -> c.uppercase() }),
+                                    Text(t("SE: %s", scaleLabel(it)),
                                         color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
                                 }
                             }

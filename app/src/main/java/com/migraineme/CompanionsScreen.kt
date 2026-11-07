@@ -280,11 +280,11 @@ private fun CompanionCard(
             val displayName = companion.name.replace(" The AI", "").replace(" the AI", "")
             val description = buildString {
                 if (companion.triggers.isNotEmpty()) {
-                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(", ") { tSync(it) }))
+                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(listSeparator()) { tSync(it) }))
                 }
                 if (companion.interests.isNotEmpty()) {
                     if (isNotEmpty()) append(" ")
-                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(", ") { tSync(it) }))
+                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(listSeparator()) { tSync(it) }))
                 }
             }
             if (description.isNotBlank()) {
@@ -362,7 +362,7 @@ private fun CompanionSelectCard(
                     }
                     if (companion.triggers.isNotEmpty()) {
                         Text(
-                            companion.triggers.joinToString(", ") { tSync(it) },
+                            companion.triggers.joinToString(listSeparator()) { tSync(it) },
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelSmall
                         )
@@ -385,11 +385,11 @@ private fun CompanionSelectCard(
             val displayName = companion.name.replace(" The AI", "").replace(" the AI", "")
             val description = buildString {
                 if (companion.triggers.isNotEmpty()) {
-                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(", ") { tSync(it) }))
+                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(listSeparator()) { tSync(it) }))
                 }
                 if (companion.interests.isNotEmpty()) {
                     if (isNotEmpty()) append(" ")
-                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(", ") { tSync(it) }))
+                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(listSeparator()) { tSync(it) }))
                 }
             }
             if (description.isNotBlank()) {

@@ -976,9 +976,9 @@ private fun formatRelativeDate(isoDate: String): String {
             days == 1L -> tSync("Yesterday")
             days < 7L -> tSync("%sd ago", days)
             days < 30L -> tSync("%sw ago", days / 7)
-            days < 365L -> DateTimeFormatter.ofPattern("d MMM", appLocale())
+            days < 365L -> DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale())
                 .withZone(ZoneId.systemDefault()).format(instant)
-            else -> DateTimeFormatter.ofPattern("d MMM yy", appLocale())
+            else -> DateTimeFormatter.ofPattern(datePattern("d MMM yy", appLocale()), appLocale())
                 .withZone(ZoneId.systemDefault()).format(instant)
         }
     } catch (e: Exception) { "" }

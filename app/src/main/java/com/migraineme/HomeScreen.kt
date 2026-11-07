@@ -706,7 +706,7 @@ private fun RiskHeroCard(
     // Day label for selected day
     val dayLabel = if (selectedDay == 0) t("Risk today") else {
         val date = dayRisks.getOrNull(selectedDay)?.date
-        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM", rememberAppLocale())))
+        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern(datePattern("EEE d MMM", rememberAppLocale()), rememberAppLocale())))
         else t("Risk")
     }
 
@@ -951,6 +951,21 @@ private fun MiniGauge(
     }
 }
 
+/**
+ * Footer under a contributor row. daysActive counts distinct dates in the 7 days
+ * up to the shown day, so 1 can mean a trigger logged days ago that is still
+ * fading: never word it as "today". Predicted cycle rows aren't counted at all
+ * by the worker (always the fallback 1), so they show no count.
+ */
+@Composable
+internal fun triggerFooter(pct: Int, score: Int, daysActive: Int, name: String): String = when {
+    name.endsWith("predicted", ignoreCase = true) -> Strings.t("%1\$s%% of risk · %2\$s pts", pct, score)
+    else -> Strings.t(
+        "%1\$s%% of risk · %2\$s pts · %3\$s", pct, score,
+        if (daysActive == 1) Strings.t("1 day active") else Strings.t("%s days active", daysActive)
+    )
+}
+
 @Composable
 private fun ActiveTriggersCard(
     triggers: List<TriggerScore>,
@@ -1055,7 +1070,7 @@ private fun ActiveTriggersCard(
 
                     // Bottom row: points + days active
                     Text(
-                        Strings.t("%1\$s%% of risk · %2\$s pts · %3\$s", pctOfTotal, t.score, if (t.daysActive == 1) Strings.t("today only") else Strings.t("%s days active", t.daysActive)),
+                        triggerFooter(pctOfTotal, t.score, t.daysActive, t.name),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
                     )

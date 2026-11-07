@@ -325,7 +325,7 @@ internal fun formatSource(source: String?): String {
 private fun formatFullDate(isoDate: String): String {
     return try {
         val instant = java.time.Instant.parse(isoDate)
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", appLocale())
+        val formatter = java.time.format.DateTimeFormatter.ofPattern(datePattern("d MMMM yyyy", appLocale()), appLocale())
             .withZone(java.time.ZoneId.systemDefault())
         formatter.format(instant)
     } catch (e: Exception) {

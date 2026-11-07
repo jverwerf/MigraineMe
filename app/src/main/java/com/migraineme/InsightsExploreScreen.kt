@@ -336,7 +336,7 @@ private fun CompactMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val df = DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale()).withZone(z)
     val tf = DateTimeFormatter.ofPattern("h:mm a", appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {

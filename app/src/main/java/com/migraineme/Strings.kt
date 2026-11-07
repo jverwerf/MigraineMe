@@ -208,6 +208,56 @@ fun tSync(en: String, vararg args: Any?): String = Strings.tSync(en, *args)
  */
 fun appLocale(): java.util.Locale = java.util.Locale.forLanguageTag(LangPrefs.get().localeTag)
 
+private val datePatternCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+/**
+ * A date pattern in the order the language writes dates ("2 Nov" is 11月2日 in
+ * Japanese). [english] stays exactly as written for English, so English screens
+ * do not change; other languages keep its fields and get the local order.
+ */
+fun datePattern(english: String, locale: java.util.Locale): String {
+    if (locale.language == "en") return english
+    return datePatternCache.getOrPut("${locale.toLanguageTag()}|$english") {
+        runCatching {
+            val best = android.text.format.DateFormat.getBestDateTimePattern(locale, english.filter { it.isLetter() })
+            java.time.format.DateTimeFormatter.ofPattern(best, locale)
+            best
+        }.getOrDefault(english)
+    }
+}
+
+/** Between items of a list in running text: Japanese and Chinese use 、 not a comma. */
+fun listSeparator(): String = if (LangPrefs.get().localeTag.take(2) in setOf("ja", "zh")) "\u3001" else ", "
+
+/**
+ * A frequency saved in English or typed by the user: "daily", "3x per week".
+ * Known forms translate; anything else is the user's own words and stays as is.
+ */
+fun frequencyLabel(raw: String?): String? {
+    val s = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    val low = s.lowercase()
+    Regex("^(\\d+)\\s*x\\s*(?:per|a)\\s*(day|week|month)$").find(low)?.let { m ->
+        return Strings.tSync("%sx per ${m.groupValues[2]}", m.groupValues[1])
+    }
+    val found = Strings.tSync(low)
+    return if (found == low) s else found
+}
+
+/** A saved scale value ("HIGH", "mild") as a display word. */
+fun scaleLabel(raw: String): String = prettyLabel(raw.lowercase())
+
+/**
+ * The name of a screen, where a language needs a different word from the same
+ * English used elsewhere. "Home" the tab is not "Home" the place you were when a
+ * trigger hit. A table can hold "<key>|screen"; otherwise the plain key is used.
+ */
+@Composable
+fun tScreen(en: String): String {
+    val key = "$en|screen"
+    val v = t(key)
+    return if (v == key) t(en) else v
+}
+
 /** Composable variant: recomposes the caller when the language changes. */
 @Composable
 fun rememberAppLocale(): java.util.Locale {

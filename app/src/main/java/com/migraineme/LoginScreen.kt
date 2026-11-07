@@ -567,7 +567,11 @@ fun LoginScreen(
                                                 expiresIn = ses.expiresIn, providerHint = "email")
                                         } ?: run { error = tSync("Invalid login response.") }
                                     } catch (t: Throwable) {
-                                        error = t.message ?: tSync("Login failed.")
+                                        error = when {
+                                            t.message?.contains("invalid login credentials", ignoreCase = true) == true -> tSync("Wrong email or password.")
+                                            t.message?.contains("email not confirmed", ignoreCase = true) == true -> tSync("Please confirm your email first.")
+                                            else -> t.message ?: tSync("Login failed.")
+                                        }
                                     } finally {
                                         busy = false
                                     }

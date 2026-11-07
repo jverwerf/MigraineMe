@@ -413,7 +413,7 @@ private fun FilterCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (timeFrame != InsightsViewModel.TimeFrame.ALL) {
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
-                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())
+                        val df = java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
                     } else t(timeFrame.label)
                     Row(
@@ -470,7 +470,7 @@ private fun FilterCard(
 
                 // Custom date range row (shown when custom is active or being set)
                 AnimatedVisibility(visible = timeFrame == InsightsViewModel.TimeFrame.CUSTOM) {
-                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale())
+                    val df = java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale())
                     Row(
                         Modifier.fillMaxWidth().padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -695,7 +695,7 @@ internal fun buildEventMarkers(
         parseInstant(row.startAt)?.let { t ->
             val d = listOfNotNull(
                 row.amount,
-                row.reliefScale?.takeIf { it != "NONE" }?.let { "Relief: $it" }
+                row.reliefScale?.takeIf { it != "NONE" }?.let { tSync("Relief: %s", scaleLabel(it)) }
             ).joinToString(" • ")
             ev += EventMarker(t, null, row.name ?: "Medicine", "Medicine",
                 d.ifEmpty { null }, EventCategoryColors["Medicine"]!!, row.source == "system")
@@ -705,7 +705,7 @@ internal fun buildEventMarkers(
         parseInstant(row.startAt)?.let { s ->
             val e = row.endAt?.let { parseInstant(it) }
                 ?: row.durationMinutes?.let { s.plusSeconds(it.toLong() * 60) }
-            val d = row.reliefScale?.takeIf { it != "NONE" }?.let { "Relief: $it" }
+            val d = row.reliefScale?.takeIf { it != "NONE" }?.let { tSync("Relief: %s", scaleLabel(it)) }
             ev += EventMarker(s, e, row.type ?: "Relief", "Relief", d,
                 EventCategoryColors["Relief"]!!, row.source == "system")
         }
@@ -746,7 +746,7 @@ private fun DetailMigraineSelector(
     displayTitle: String? = null
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val df = DateTimeFormatter.ofPattern(datePattern("MMM d, yyyy", appLocale()), appLocale()).withZone(z)
     val tf = DateTimeFormatter.ofPattern("h:mm a", appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {

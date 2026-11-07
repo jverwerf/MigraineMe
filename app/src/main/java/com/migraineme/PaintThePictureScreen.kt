@@ -596,7 +596,7 @@ fun PaintThePictureScreen(
                                             val odt = OffsetDateTime.parse(iso)
                                             val isToday = odt.toLocalDate() == java.time.LocalDate.now()
                                             if (isToday) odt.format(DateTimeFormatter.ofPattern("HH:mm"))
-                                            else odt.format(DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", appLocale()))
+                                            else odt.format(DateTimeFormatter.ofPattern(datePattern("EEE d MMM, HH:mm", appLocale()), appLocale()))
                                         } catch (_: Exception) { null }
                                     }
                                     val detailParts = mutableListOf<String>()
@@ -1063,7 +1063,7 @@ private fun ItemEditorPill(
         Spacer(Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale())),
+                selectedDate.format(DateTimeFormatter.ofPattern(datePattern("EEE d MMM", appLocale()), appLocale())),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier

@@ -239,7 +239,7 @@ fun MetricChecklist(
     groups.forEach { (group, rows) ->
         if (rows.isEmpty()) return@forEach
         Text(
-            t(group).uppercase(),
+            t(group).uppercase(appLocale()),
             color = AppTheme.SubtleTextColor.copy(alpha = 0.68f),
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(top = 12.dp, bottom = 3.dp)

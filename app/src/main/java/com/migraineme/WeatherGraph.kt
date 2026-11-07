@@ -148,7 +148,7 @@ fun WeatherHistoryGraph(
     val title = if (forecastStartDate != null) t("History + Forecast") else t("%s-Day History", days)
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        val dateFmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
+        val dateFmt = DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale())
         val rangeLabel = if (historyData.isNotEmpty()) {
             val from = LocalDate.parse(historyData.first().date).format(dateFmt)
             val to = LocalDate.parse(historyData.last().date).format(dateFmt)

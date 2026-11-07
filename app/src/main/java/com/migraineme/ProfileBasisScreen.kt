@@ -198,7 +198,7 @@ private fun BasisContent(
     // ── Divider: the answers ──
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
         HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.12f))
-        LabelPlate { Text(t("What you told us").uppercase(), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall) }
+        LabelPlate { Text(t("What you told us").uppercase(appLocale()), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall) }
         HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.12f))
     }
     BaseCard {
@@ -696,7 +696,7 @@ private fun toneForSeverity(v: String?): PillTone = when (v?.uppercase()) {
 }
 
 private fun fmtDate(iso: String?): String? = try {
-    iso?.let { Instant.parse(it.replace(" ", "T").let { s -> if (s.endsWith("Z") || s.contains("+")) s else "${s}Z" }).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("d MMMM yyyy", appLocale())) }
+    iso?.let { Instant.parse(it.replace(" ", "T").let { s -> if (s.endsWith("Z") || s.contains("+")) s else "${s}Z" }).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern(datePattern("d MMMM yyyy", appLocale()), appLocale())) }
 } catch (_: Exception) { null }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -897,7 +897,7 @@ private fun formatForumDate(isoDate: String): String {
             minutes < 60 -> tSync("%sm##forumage", minutes)
             hours < 24 -> tSync("%sh##forumage", hours)
             days < 7 -> tSync("%sd##forumage", days)
-            else -> DateTimeFormatter.ofPattern("d MMM", appLocale())
+            else -> DateTimeFormatter.ofPattern(datePattern("d MMM", appLocale()), appLocale())
                 .withZone(ZoneId.systemDefault()).format(instant)
         }
     } catch (_: Exception) { "" }

@@ -540,7 +540,7 @@ private fun WhatWorkedTile(
                     .background(AppTheme.AccentPurple.copy(alpha = 0.35f)))
                 Spacer(Modifier.width(8.dp))
                 Column {
-                    Text(t("Timing").uppercase(), color = Color(0xFFC9BCDA),
+                    Text(t("Timing").uppercase(appLocale()), color = Color(0xFFC9BCDA),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     Text(timingText(it), color = metaColor,
                         style = MaterialTheme.typography.labelSmall)
