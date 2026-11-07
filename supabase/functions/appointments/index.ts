@@ -43,7 +43,6 @@
 //
 // Deploy: supabase functions deploy appointments
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { asLang, translatorFor } from "../_shared/i18n.ts";
 
@@ -213,7 +212,7 @@ const NOTICE: Record<string, [string, string]> = {
   cancelled: ["Appointment cancelled", "Your practitioner cancelled this appointment."],
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     if (req.method !== "POST") throw new UserError("POST only", 405);
