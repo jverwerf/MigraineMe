@@ -257,19 +257,7 @@ fun PractitionerPanel(
                         lastViewedIso = lastViewed[link.practitioner_id] ?: link.last_viewed_at,
                         onChange = { editing = link },
                         onRevoke = { confirmRevoke = link },
-                        aiAllowed = aiOverride[link.id] ?: link.ai_summary_allowed,
                         token = { authVm.getValidAccessToken(context) },
-                        onAiChange = { on ->
-                            aiOverride[link.id] = on
-                            scope.launch {
-                                val token = authVm.getValidAccessToken(context) ?: return@launch
-                                runCatching {
-                                    withContext(Dispatchers.IO) {
-                                        SupabasePractitionerService.setAiSummaryAllowed(token, link.id, on)
-                                    }
-                                }.onFailure { aiOverride.remove(link.id); error = it.message }
-                            }
-                        },
                     )
                 }
             }
@@ -333,6 +321,18 @@ fun PractitionerPanel(
             asked = if (link.requested.isNotEmpty()) link.requested else Scope.entries.toSet(),
             alreadyGranted = link.granted,
             isFirstAnswer = false,
+            aiAllowed = aiOverride[link.id] ?: link.ai_summary_allowed,
+            onAiChange = { on ->
+                aiOverride[link.id] = on
+                scope.launch {
+                    val token = authVm.getValidAccessToken(context) ?: return@launch
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            SupabasePractitionerService.setAiSummaryAllowed(token, link.id, on)
+                        }
+                    }.onFailure { aiOverride.remove(link.id); error = it.message }
+                }
+            },
             onDismiss = { editing = null },
             onConfirm = { chosen ->
                 editing = null
@@ -451,8 +451,6 @@ private fun ActiveCard(
     lastViewedIso: String?,
     onChange: () -> Unit,
     onRevoke: () -> Unit,
-    aiAllowed: Boolean = link.ai_summary_allowed,
-    onAiChange: (Boolean) -> Unit = {},
     token: suspend () -> String? = { null },
 ) {
     val p = link.practitioners
@@ -515,18 +513,6 @@ private fun ActiveCard(
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text(t("Allow AI summaries"), style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                    Text(
-                        t("Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.", name),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = AppTheme.SubtleTextColor,
-                    )
-                }
-                Switch(checked = aiAllowed, onCheckedChange = onAiChange)
-            }
-
             PractitionerAppointments(practitionerId = link.practitioner_id, practitionerName = name, token = token)
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -552,9 +538,13 @@ fun ConsentSheet(
     asked: Set<Scope>,
     alreadyGranted: Set<Scope>,
     isFirstAnswer: Boolean,
+    /** Null where the choice does not apply yet: before a first share. */
+    aiAllowed: Boolean? = null,
+    onAiChange: (Boolean) -> Unit = {},
     onDismiss: () -> Unit,
     onConfirm: (Set<Scope>) -> Unit,
 ) {
+    var aiInfo by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(!isFirstAnswer) }
     // Everything they asked for is ticked when the sheet opens, so the
     // question is what to hold back rather than starting from nothing and
@@ -624,6 +614,24 @@ fun ConsentSheet(
                                 picked = if (sc in picked) picked - sc else picked + sc
                             },
                         )
+                    }
+                    aiAllowed?.let { on ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = on,
+                                onCheckedChange = onAiChange,
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = AppTheme.AccentPurple,
+                                    uncheckedColor = AppTheme.SubtleTextColor,
+                                    checkmarkColor = Color.White,
+                                ),
+                            )
+                            Text(t("Allow AI summaries"), style = MaterialTheme.typography.bodyMedium, color = AppTheme.BodyTextColor, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { aiInfo = !aiInfo }) {
+                                Icon(Icons.Outlined.Info, contentDescription = null, tint = AppTheme.SubtleTextColor)
+                            }
+                        }
+                        if (aiInfo) Text(t("Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.", practitionerName), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
                     }
                 } else {
                     TextButton(onClick = { choosing = true }, colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.AccentPurple)) { Text(t("Choose what to share")) }
