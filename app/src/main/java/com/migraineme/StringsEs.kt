@@ -4881,6 +4881,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "coach de migraña",
     "migraine days" to "días migraña",
     "migraine days/week" to "días de migraña/sem.",
+    "days per 4 weeks" to "días/4 semanas",
     "migraine specialist" to "especialista migraña",
     "migraines" to "migrañas",
     "mild" to "leve",

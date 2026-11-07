@@ -4881,6 +4881,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "migrainecoach",
     "migraine days" to "migrainedagen",
     "migraine days/week" to "migrainedagen/week",
+    "days per 4 weeks" to "dagen/4 weken",
     "migraine specialist" to "migrainespecialist",
     "migraines" to "migraine",
     "mild" to "licht",

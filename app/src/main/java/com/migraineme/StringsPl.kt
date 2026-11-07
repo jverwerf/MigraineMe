@@ -5154,6 +5154,7 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "coach migrenowy",
     "migraine days" to "dni migreny",
     "migraine days/week" to "dni migreny/tydzień",
+    "days per 4 weeks" to "dni/4 tygodnie",
     "migraine specialist" to "specjalista od migreny",
     "migraines" to "migreny",
     "mild" to "lekki",

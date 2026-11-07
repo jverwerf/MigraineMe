@@ -4882,6 +4882,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "片頭痛の助言",
     "migraine days" to "片頭痛の日",
     "migraine days/week" to "片頭痛の日数/週",
+    "days per 4 weeks" to "日数/4週間",
     "migraine specialist" to "片頭痛の専門医",
     "migraines" to "片頭痛",
     "mild" to "軽度",

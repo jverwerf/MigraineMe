@@ -4881,6 +4881,7 @@ private fun ptStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "coach enxaqueca",
     "migraine days" to "dias enxaqueca",
     "migraine days/week" to "dias de enxaqueca/sem.",
+    "days per 4 weeks" to "dias/4 semanas",
     "migraine specialist" to "especialista enxaqueca",
     "migraines" to "crises",
     "mild" to "leve",

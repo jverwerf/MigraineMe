@@ -4883,6 +4883,7 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "migren koçu",
     "migraine days" to "migren günleri",
     "migraine days/week" to "migren günü/hafta",
+    "days per 4 weeks" to "gün/4 hafta",
     "migraine specialist" to "migren uzmanı",
     "migraines" to "migrenler",
     "mild" to "hafif",

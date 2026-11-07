@@ -4881,6 +4881,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "coach emicrania",
     "migraine days" to "giorni emicrania",
     "migraine days/week" to "giorni di emicrania/sett.",
+    "days per 4 weeks" to "giorni/4 sett.",
     "migraine specialist" to "specialista emicrania",
     "migraines" to "emicranie",
     "mild" to "lieve",

@@ -355,13 +355,15 @@ private fun ClinicalBandScale(pct: Double?, hasData: Boolean) {
 
 @Composable
 private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoint>, monthlyBaseline: Double?) {
-    // The points are days per WEEK; the baseline arrives as days per 28 days. On one axis they
-    // must share a unit, or the line sits flat under a baseline four times too high.
-    val baseline = monthlyBaseline?.div(4.0)
+    // The server sends days per WEEK; the baseline is days per 28 days. Each dot is the sum of
+    // its week and the three before it, so the two share a unit. The first dot needs 4 whole
+    // weeks, so it is the baseline period itself and sits on the baseline line.
+    val baseline = monthlyBaseline
     // The server pads short runs out to 16 weeks, which reaches past today: weeks that have
     // not started yet are not zero-day weeks.
     val today = LocalDate.now()
     val series = allWeeks.filter { p -> runCatching { !LocalDate.parse(p.weekStart.take(10)).isAfter(today) }.getOrDefault(true) }
+        .windowed(4) { w -> w.last().copy(mmd = w.sumOf { it.mmd }) }
     val dateFmt = java.time.format.DateTimeFormatter.ofPattern("d MMM", appLocale())
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -371,7 +373,7 @@ private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoin
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(t("Weekly migraine days"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Monthly migraine days"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             Text(t("last %s wks", series.size), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
@@ -385,7 +387,7 @@ private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoin
             val plotH = h - topPad - bottomPad
 
             val rawMax = kotlin.math.ceil(maxOf(2.0, (series.maxOfOrNull { it.mmd } ?: 2).toDouble(), baseline ?: 0.0)).toInt()
-            val yStep = if (rawMax > 4) 2 else 1
+            val yStep = when { rawMax <= 4 -> 1; rawMax <= 8 -> 2; rawMax <= 20 -> 5; else -> 10 }
             val maxMmd = (((rawMax + yStep - 1) / yStep) * yStep).toDouble()
             fun yFor(v: Double): Float = topPad + plotH - (v / maxMmd).toFloat() * plotH
             fun xFor(i: Int): Float = if (series.size <= 1) leftPad
@@ -397,7 +399,7 @@ private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoin
                 textSize = 10.sp.toPx()
             }
 
-            // Y axis: whole days per week, with a gridline at each label
+            // Y axis: whole days per 4 weeks, with a gridline at each label
             var tick = 0
             while (tick <= maxMmd.toInt()) {
                 val y = yFor(tick.toDouble())
@@ -482,7 +484,7 @@ private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoin
         }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            LegendDot(Color(0xFFB97BFF), "migraine days/week")
+            LegendDot(Color(0xFFB97BFF), "days per 4 weeks")
             LegendDot(Color.White.copy(alpha = 0.4f), "baseline")
             LegendDot(Color(0xFF6ED69E), "working-well line")
         }

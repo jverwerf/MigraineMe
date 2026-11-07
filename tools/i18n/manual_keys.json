@@ -7050,6 +7050,14 @@
       "max_len": 48
     },
     {
+      "en": "days per 4 weeks",
+      "class": "soft",
+      "sites": [
+        "MonitorTreatmentDetailScreen.kt:treatment-labels"
+      ],
+      "max_len": 16
+    },
+    {
       "en": "mindfulness",
       "class": "soft",
       "sites": [

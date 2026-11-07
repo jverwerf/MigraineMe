@@ -37931,6 +37931,15 @@
     "count": 1
   },
   {
+    "en": "days per 4 weeks",
+    "class": "soft",
+    "sites": [
+      "MonitorTreatmentDetailScreen.kt:treatment-labels"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
     "en": "migraine specialist",
     "class": "hard",
     "sites": [

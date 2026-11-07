@@ -4882,6 +4882,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "편두통 코치",
     "migraine days" to "편두통 일수",
     "migraine days/week" to "편두통 일수/주",
+    "days per 4 weeks" to "일수/4주",
     "migraine specialist" to "편두통 전문의",
     "migraines" to "편두통",
     "mild" to "가벼움",

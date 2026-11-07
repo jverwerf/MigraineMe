@@ -4882,6 +4882,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "偏頭痛教練",
     "migraine days" to "偏頭痛天數",
     "migraine days/week" to "偏頭痛天數/週",
+    "days per 4 weeks" to "天數/4週",
     "migraine specialist" to "偏頭痛專科醫師",
     "migraines" to "偏頭痛",
     "mild" to "輕微",

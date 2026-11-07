@@ -4881,6 +4881,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "Migräne-Coach",
     "migraine days" to "Migränetage",
     "migraine days/week" to "Migränetage/Woche",
+    "days per 4 weeks" to "Tage/4 Wochen",
     "migraine specialist" to "Migräne-Fachpraxis",
     "migraines" to "Migränen",
     "mild" to "leicht",
