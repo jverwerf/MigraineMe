@@ -968,6 +968,10 @@ object SupabasePractitionerService {
             contentType(ContentType.Application.Json)
             setBody(body)
         }
+        // Tells the practitioner by email. The request is saved either way.
+        runCatching {
+            appointmentsCall(accessToken, buildJsonObject { put("action", "client_asked"); put("practitioner_id", practitionerId) })
+        }
     }
 
     private suspend fun logConsent(

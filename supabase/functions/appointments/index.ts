@@ -25,6 +25,9 @@
 //   client_suggest  suggest a time to a linked practitioner
 //   client_respond  accept or decline what the practitioner suggested
 //   client_cancel   withdraw a request that nobody has answered yet
+//   client_asked    the app just saved a first intro call request: email the
+//                   practitioner. At most 3 per person per practitioner per hour,
+//                   and only with a fresh request on file.
 //
 // CALENDAR CHOICE: practitioners.plugins.calendar, set under Plugins. "none" means
 // no calendar and no appointments, "me" means only what is agreed here, "cliniko"
@@ -387,6 +390,15 @@ Deno.serve(async (req) => {
             } catch (e) { console.warn("sessions skipped", e); }
           }
           return json({ requests: (rows || []).map((r: any) => ({ ...r, practitioner_name: nameOf[r.practitioner_id] || null })), sessions, closed, meet_urls });
+        }
+        case "client_asked": {
+          const pid = String(body.practitioner_id || "");
+          const hourAgo = new Date(Date.now() - 36e5).toISOString();
+          const { data: recent } = await db.from("practitioner_appointment_requests").select("id,created_at").eq("practitioner_id", pid).eq("user_id", user.id).eq("status", "requested").gte("created_at", hourAgo);
+          const rows = recent || [];
+          const fresh = rows.some((r: any) => Date.parse(r.created_at) > Date.now() - 5 * 60000);
+          if (fresh && rows.length <= 3) await emailPractitioner(pid, "A client suggested an appointment time");
+          return json({ ok: true });
         }
         case "client_suggest": {
           const pid = String(body.practitioner_id || "");
