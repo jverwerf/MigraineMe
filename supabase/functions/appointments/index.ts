@@ -469,17 +469,26 @@ serve(async (req) => {
         if (!["none", "me", "cliniko"].includes(choice)) throw new UserError("Pick a calendar.");
         const custom = body.custom_url === undefined ? undefined : String(body.custom_url || "").trim();
         if (custom && !/^https?:\/\/\S+\.\S+/i.test(custom)) throw new UserError("That does not look like a web address. Start it with https://");
-        let clinikoUrl: string | null = null, onlineBooking: boolean | null = null;
+        let clinikoUrl: string | null = null, onlineBooking: boolean | null = null, clinikoHost: string | null = null;
         if (choice === "cliniko") {
           const { data } = await db.from("practitioner_integrations").select("id,api_key,shard,web_base").eq("user_id", user.id).eq("provider", PROVIDER).limit(1);
           const integ: any = data?.[0];
           if (!integ) throw new UserError("Connect Cliniko first.", 412);
+          clinikoHost = integ.web_base ? new URL(integ.web_base).host.toLowerCase() : null;
           const settings = await ck(integ, "/settings").catch(() => null);
           onlineBooking = settings?.online_bookings?.enabled === true;
           if (onlineBooking && integ.web_base) clinikoUrl = `${integ.web_base}/bookings`;
         }
         const { data: rows } = await db.from("practitioners").select("id,plugins,booking_url,booking_urls").in("id", myIds);
-        let shown: string | null = null;
+        // A booking link they already have into this same Cliniko is more exact than the
+        // plain /bookings page (it can name their business and practitioner), so it stays.
+        const ownCliniko = (u: unknown): boolean => {
+          try {
+            const x = new URL(String(u || ""));
+            return !!clinikoHost && x.host.toLowerCase() === clinikoHost && x.pathname.startsWith("/bookings");
+          } catch { return false; }
+        };
+        let shown: string | null = null, live: string | null = choice === "cliniko" ? clinikoUrl : null;
         for (const r of rows || []) {
           const plugins: any = { ...(r.plugins || {}) };
           // First time through: what they already had is their own link.
@@ -487,12 +496,14 @@ serve(async (req) => {
           if (custom !== undefined) plugins.own_booking = { url: custom || null, urls: null };
           plugins.calendar = choice;
           const own = plugins.own_booking || { url: null, urls: null };
-          const patch = choice === "none" ? { booking_url: own.url, booking_urls: own.urls } : { booking_url: clinikoUrl, booking_urls: null };
+          const keepOwn = choice === "cliniko" && ownCliniko(own.url);
+          const patch = choice === "none" || keepOwn ? { booking_url: own.url, booking_urls: own.urls } : { booking_url: clinikoUrl, booking_urls: null };
+          if (keepOwn) { live = own.url; onlineBooking = true; }
           const { error } = await db.from("practitioners").update({ plugins, ...patch }).eq("id", r.id);
           if (error) throw error;
           shown = own.url;
         }
-        return json({ choice, own_url: shown, booking_url: choice === "none" ? shown : clinikoUrl, online_booking: onlineBooking });
+        return json({ choice, own_url: shown, booking_url: choice === "none" ? shown : live, online_booking: onlineBooking });
       }
       case "pending": {
         const { data: rows } = await db.from("practitioner_appointment_requests").select("id,practitioner_id,user_id,status,message,preferred_times,proposed_start,kind,proposed_by").in("practitioner_id", myIds).eq("status", "requested").eq("proposed_by", "client");
