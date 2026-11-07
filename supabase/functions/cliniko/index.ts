@@ -82,7 +82,12 @@ async function ck(integ: { api_key: string; shard: string }, path: string, init:
     },
   });
   if (res.status === 401) throw new UserError("Cliniko did not accept the API key. Check it under My info, API keys in Cliniko.", 401);
-  if (res.status === 403) throw new UserError("That Cliniko key is not allowed to do this. It needs a user with access to patients and treatment notes.", 403);
+  if (res.status === 403) {
+    // Cliniko also answers 403 when an account's file storage is full; say what it said.
+    const why = await res.clone().json().then((j) => String(j?.message || "")).catch(() => "");
+    if (/file size limit/i.test(why)) throw new UserError("Cliniko says this account has reached its file size limit, so nothing more can be filed. Free up space in Cliniko or upgrade the account.", 403);
+    throw new UserError("That Cliniko key is not allowed to do this. It needs a user with access to patients and treatment notes.", 403);
+  }
   if (res.status === 404) throw new UserError("Cliniko has no record with that id.", 404);
   if (res.status === 429) throw new UserError("Cliniko is rate-limiting us. Try again in a minute.", 429);
   if (!res.ok) {
