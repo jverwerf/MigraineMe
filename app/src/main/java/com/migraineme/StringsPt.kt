@@ -2457,6 +2457,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Duração no mês",
     "Monthly Frequency" to "Vezes por mês",
     "Monthly migraine days" to "Dias com enxaqueca por mês",
+    "Weekly migraine days" to "Dias de enxaqueca por semana",
     "Mood" to "Ânimo",
     "Mood change" to "Mudança de humor",
     "Mood changes" to "Ânimo muda",

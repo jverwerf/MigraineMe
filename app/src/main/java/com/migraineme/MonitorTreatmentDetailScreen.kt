@@ -19,10 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -352,7 +354,15 @@ private fun ClinicalBandScale(pct: Double?, hasData: Boolean) {
 }
 
 @Composable
-private fun MmdChartCard(series: List<SupabaseDbService.TreatmentMmdSeriesPoint>, baseline: Double?) {
+private fun MmdChartCard(allWeeks: List<SupabaseDbService.TreatmentMmdSeriesPoint>, monthlyBaseline: Double?) {
+    // The points are days per WEEK; the baseline arrives as days per 28 days. On one axis they
+    // must share a unit, or the line sits flat under a baseline four times too high.
+    val baseline = monthlyBaseline?.div(4.0)
+    // The server pads short runs out to 16 weeks, which reaches past today: weeks that have
+    // not started yet are not zero-day weeks.
+    val today = LocalDate.now()
+    val series = allWeeks.filter { p -> runCatching { !LocalDate.parse(p.weekStart.take(10)).isAfter(today) }.getOrDefault(true) }
+    val dateFmt = java.time.format.DateTimeFormatter.ofPattern("d MMM", appLocale())
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
@@ -361,7 +371,7 @@ private fun MmdChartCard(series: List<SupabaseDbService.TreatmentMmdSeriesPoint>
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(t("Monthly migraine days"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Weekly migraine days"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             Text(t("last %s wks", series.size), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
@@ -369,32 +379,59 @@ private fun MmdChartCard(series: List<SupabaseDbService.TreatmentMmdSeriesPoint>
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxWidth().height(170.dp)) {
             val w = size.width
             val h = size.height
-            val topPad = 22f; val bottomPad = 22f
+            val leftPad = 24.dp.toPx(); val rightPad = 8.dp.toPx()
+            val topPad = 10.dp.toPx(); val bottomPad = 22.dp.toPx()
+            val plotW = w - leftPad - rightPad
             val plotH = h - topPad - bottomPad
 
-            val maxMmd = maxOf(2.0, (series.maxOfOrNull { it.mmd } ?: 2).toDouble(), baseline ?: 0.0) * 1.15
+            val rawMax = kotlin.math.ceil(maxOf(2.0, (series.maxOfOrNull { it.mmd } ?: 2).toDouble(), baseline ?: 0.0)).toInt()
+            val yStep = if (rawMax > 4) 2 else 1
+            val maxMmd = (((rawMax + yStep - 1) / yStep) * yStep).toDouble()
             fun yFor(v: Double): Float = topPad + plotH - (v / maxMmd).toFloat() * plotH
-            fun xFor(i: Int): Float = if (series.size <= 1) 0f
-                else 6f + (w - 12f) * i / (series.size - 1).toFloat()
+            fun xFor(i: Int): Float = if (series.size <= 1) leftPad
+                else leftPad + plotW * i / (series.size - 1).toFloat()
 
-            // Subtle grid (3 horizontal gridlines)
-            for (g in 1..3) {
-                val y = topPad + plotH * g / 4f
-                drawLine(Color.White.copy(alpha = 0.05f),
-                    start = androidx.compose.ui.geometry.Offset(0f, y),
-                    end = androidx.compose.ui.geometry.Offset(w, y),
+            val labelPaint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.argb(170, 255, 255, 255)
+                textSize = 10.sp.toPx()
+            }
+
+            // Y axis: whole days per week, with a gridline at each label
+            var tick = 0
+            while (tick <= maxMmd.toInt()) {
+                val y = yFor(tick.toDouble())
+                drawLine(Color.White.copy(alpha = 0.08f),
+                    start = androidx.compose.ui.geometry.Offset(leftPad, y),
+                    end = androidx.compose.ui.geometry.Offset(w - rightPad, y),
                     strokeWidth = 1f)
+                labelPaint.textAlign = android.graphics.Paint.Align.RIGHT
+                drawContext.canvas.nativeCanvas.drawText(tick.toString(), leftPad - 6.dp.toPx(), y + 3.5.dp.toPx(), labelPaint)
+                tick += yStep
+            }
+
+            // X axis: up to five real week dates
+            val xCount = minOf(5, series.size)
+            for (n in 0 until xCount) {
+                val i = if (xCount < 2) 0 else Math.round(n * (series.size - 1) / (xCount - 1).toFloat())
+                val label = runCatching { LocalDate.parse(series[i].weekStart.take(10)).format(dateFmt) }.getOrDefault("")
+                labelPaint.textAlign = when (n) {
+                    0 -> android.graphics.Paint.Align.LEFT
+                    xCount - 1 -> android.graphics.Paint.Align.RIGHT
+                    else -> android.graphics.Paint.Align.CENTER
+                }
+                drawContext.canvas.nativeCanvas.drawText(label, xFor(i), h - 5.dp.toPx(), labelPaint)
             }
 
             if (baseline != null) {
                 drawLine(Color.White.copy(alpha = 0.40f),
-                    start = androidx.compose.ui.geometry.Offset(0f, yFor(baseline)),
-                    end = androidx.compose.ui.geometry.Offset(w, yFor(baseline)),
+                    start = androidx.compose.ui.geometry.Offset(leftPad, yFor(baseline)),
+                    end = androidx.compose.ui.geometry.Offset(w - rightPad, yFor(baseline)),
                     strokeWidth = 1.5f,
                     pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
                 drawLine(Color(0xFF6ED69E).copy(alpha = 0.60f),
-                    start = androidx.compose.ui.geometry.Offset(0f, yFor(baseline / 2)),
-                    end = androidx.compose.ui.geometry.Offset(w, yFor(baseline / 2)),
+                    start = androidx.compose.ui.geometry.Offset(leftPad, yFor(baseline / 2)),
+                    end = androidx.compose.ui.geometry.Offset(w - rightPad, yFor(baseline / 2)),
                     strokeWidth = 1.5f,
                     pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
             }

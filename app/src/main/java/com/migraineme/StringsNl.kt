@@ -2457,6 +2457,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Duur per maand",
     "Monthly Frequency" to "Keer per maand",
     "Monthly migraine days" to "Migrainedagen per maand",
+    "Weekly migraine days" to "Migrainedagen per week",
     "Mood" to "Stemming",
     "Mood change" to "Stemmingswisseling",
     "Mood changes" to "Stemming",

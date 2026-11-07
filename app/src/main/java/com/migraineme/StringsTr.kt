@@ -2459,6 +2459,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Aylık süre",
     "Monthly Frequency" to "Aylık sıklık",
     "Monthly migraine days" to "Aylık migren günleri",
+    "Weekly migraine days" to "Haftalık migren günleri",
     "Mood" to "Ruh hali",
     "Mood change" to "Ruh hali değişimi",
     "Mood changes" to "Ruh hali değişimleri",

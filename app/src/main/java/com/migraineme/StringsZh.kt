@@ -2458,6 +2458,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "每月持續時間",
     "Monthly Frequency" to "每月頻率",
     "Monthly migraine days" to "每月偏頭痛天數",
+    "Weekly migraine days" to "每週偏頭痛天數",
     "Mood" to "情緒",
     "Mood change" to "情緒變化",
     "Mood changes" to "情緒變化",

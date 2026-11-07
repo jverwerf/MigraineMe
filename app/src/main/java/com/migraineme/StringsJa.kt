@@ -2458,6 +2458,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "月間の継続時間",
     "Monthly Frequency" to "月あたりの回数",
     "Monthly migraine days" to "月の片頭痛日数",
+    "Weekly migraine days" to "週あたりの片頭痛日数",
     "Mood" to "気分",
     "Mood change" to "気分の変化",
     "Mood changes" to "気分の変化",

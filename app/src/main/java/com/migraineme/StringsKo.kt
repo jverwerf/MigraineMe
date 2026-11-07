@@ -2458,6 +2458,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "월간 지속 시간",
     "Monthly Frequency" to "월간 빈도",
     "Monthly migraine days" to "월간 편두통 일수",
+    "Weekly migraine days" to "주간 편두통 일수",
     "Mood" to "기분",
     "Mood change" to "기분 변화",
     "Mood changes" to "기분 변화",

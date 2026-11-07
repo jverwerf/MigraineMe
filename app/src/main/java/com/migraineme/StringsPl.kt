@@ -2692,6 +2692,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Czas w miesiącu",
     "Monthly Frequency" to "Częstość miesięczna",
     "Monthly migraine days" to "Dni migreny w miesiącu",
+    "Weekly migraine days" to "Dni migreny w tygodniu",
     "Mood" to "Nastrój",
     "Mood change" to "Zmiana nastroju",
     "Mood changes" to "Zmiany nastroju",

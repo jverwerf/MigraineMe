@@ -2457,6 +2457,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Dauer im Monat",
     "Monthly Frequency" to "Häufigkeit/Monat",
     "Monthly migraine days" to "Migränetage im Monat",
+    "Weekly migraine days" to "Migränetage pro Woche",
     "Mood" to "Stimmung",
     "Mood change" to "Stimmungswechsel",
     "Mood changes" to "Stimmung anders",

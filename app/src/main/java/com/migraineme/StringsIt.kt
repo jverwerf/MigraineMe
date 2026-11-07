@@ -2457,6 +2457,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Durata al mese",
     "Monthly Frequency" to "Volte al mese",
     "Monthly migraine days" to "Giorni con emicrania al mese",
+    "Weekly migraine days" to "Giorni di emicrania a settimana",
     "Mood" to "Umore",
     "Mood change" to "Cambio d'umore",
     "Mood changes" to "Umore vario",
