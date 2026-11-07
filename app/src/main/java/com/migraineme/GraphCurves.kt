@@ -4,6 +4,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 
 /**
+ * The handles of a smooth curve through unevenly spaced readings can reach past the next reading,
+ * which draws the line backwards in time. Each is limited to the gap it spans, tilt kept, so a
+ * line with even spacing is drawn exactly as before.
+ */
+private fun curveControls(p0: androidx.compose.ui.geometry.Offset, p1: androidx.compose.ui.geometry.Offset, p2: androidx.compose.ui.geometry.Offset, p3: androidx.compose.ui.geometry.Offset): FloatArray {
+    val dx = p2.x - p1.x
+    val a = (p2.x - p0.x) / 6f
+    val b = (p3.x - p1.x) / 6f
+    val s1 = if (a > dx && a > 0f) dx / a else 1f
+    val s2 = if (b > dx && b > 0f) dx / b else 1f
+    return floatArrayOf(p1.x + a * s1, p1.y + (p2.y - p0.y) / 6f * s1, p2.x - b * s2, p2.y - (p3.y - p1.y) / 6f * s2)
+}
+
+/**
  * The app's curve.
  *
  * The Migraine Timeline has always drawn its metric lines as Catmull-Rom
@@ -39,10 +53,7 @@ internal fun curveYAt(points: List<Offset>, targetX: Float): Float {
         }
         val p0 = points.getOrElse(i - 1) { p1 }
         val p3 = points.getOrElse(i + 2) { p2 }
-        val c1x = p1.x + (p2.x - p0.x) / 6f
-        val c1y = p1.y + (p2.y - p0.y) / 6f
-        val c2x = p2.x - (p3.x - p1.x) / 6f
-        val c2y = p2.y - (p3.y - p1.y) / 6f
+        val (c1x, c1y, c2x, c2y) = curveControls(p0, p1, p2, p3)
         fun at(t: Float, a: Float, b: Float, c: Float, d: Float): Float {
             val u = 1f - t
             return u * u * u * a + 3f * u * u * t * b + 3f * u * t * t * c + t * t * t * d
@@ -72,11 +83,8 @@ internal fun smoothPath(points: List<Offset>): Path {
         val p1 = points[i]
         val p2 = points[i + 1]
         val p3 = points.getOrElse(i + 2) { p2 }
-        path.cubicTo(
-            p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f,
-            p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f,
-            p2.x, p2.y,
-        )
+        val (c1x, c1y, c2x, c2y) = curveControls(p0, p1, p2, p3)
+        path.cubicTo(c1x, c1y, c2x, c2y, p2.x, p2.y)
     }
     return path
 }
@@ -102,10 +110,7 @@ internal fun smoothSegment(points: List<Offset>, i: Int): Path {
     }
     val p0 = points.getOrElse(i - 1) { p1 }
     val p3 = points.getOrElse(i + 2) { p2 }
-    path.cubicTo(
-        p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f,
-        p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f,
-        p2.x, p2.y,
-    )
+    val (c1x, c1y, c2x, c2y) = curveControls(p0, p1, p2, p3)
+    path.cubicTo(c1x, c1y, c2x, c2y, p2.x, p2.y)
     return path
 }

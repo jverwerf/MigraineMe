@@ -662,6 +662,13 @@ function attackCard(m: Migraine, d: ReportData): string {
 
 /** Catmull-Rom through the points, converted to cubic beziers — a data line
  *  that curves rather than kinks reads as a trend instead of a zigzag. */
+/* The handles of a smooth curve through unevenly spaced readings can reach past the next reading,
+   which draws the line backwards in time. Each is limited to the gap it spans, tilt kept, so a line
+   with even spacing is drawn exactly as before. */
+function curveControls(x0: number,y0: number,x1: number,y1: number,x2: number,y2: number,x3: number,y3: number): {c1x:number;c1y:number;c2x:number;c2y:number}{
+  const dx=x2-x1, a=(x2-x0)/6, b=(x3-x1)/6, s1=a>dx&&a>0?dx/a:1, s2=b>dx&&b>0?dx/b:1;
+  return {c1x:x1+a*s1,c1y:y1+(y2-y0)/6*s1,c2x:x2-b*s2,c2y:y2-(y3-y1)/6*s2};
+}
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length < 2) return "";
   if (pts.length === 2) {
@@ -670,8 +677,7 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   let dpath = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+    const { c1x, c1y, c2x, c2y } = curveControls(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
     dpath += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
   }
   return dpath;
