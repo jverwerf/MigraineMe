@@ -183,7 +183,7 @@ fun PractitionerAppointments(
                 }) { Text(date?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: t("Pick a date"), maxLines = 1) }
                 OutlinedButton(modifier = Modifier.weight(1f), onClick = {
                     val c = time ?: LocalTime.of(10, 0)
-                    TimePickerDialog(context, { _, h, m -> time = LocalTime.of(h, m) }, c.hour, c.minute, android.text.format.DateFormat.is24HourFormat(context)).show()
+                    TimePickerDialog(context, { _, h, m -> time = LocalTime.of(h, m) }, c.hour, c.minute, deviceUses24Hour(context)).show()
                 }) { Text(time?.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)) ?: t("Pick a time"), maxLines = 1) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

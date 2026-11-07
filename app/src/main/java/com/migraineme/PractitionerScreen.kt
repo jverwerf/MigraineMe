@@ -1527,7 +1527,7 @@ fun AskForPlaceDialog(
                     }) { Text(date?.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)) ?: t("Pick a date"), maxLines = 1) }
                     OutlinedButton(modifier = Modifier.weight(1f), onClick = {
                         val c = time ?: java.time.LocalTime.of(10, 0)
-                        android.app.TimePickerDialog(context, { _, h, m -> time = java.time.LocalTime.of(h, m) }, c.hour, c.minute, android.text.format.DateFormat.is24HourFormat(context)).show()
+                        android.app.TimePickerDialog(context, { _, h, m -> time = java.time.LocalTime.of(h, m) }, c.hour, c.minute, deviceUses24Hour(context)).show()
                     }) { Text(time?.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)) ?: t("Pick a time"), maxLines = 1) }
                 }
                 OutlinedTextField(

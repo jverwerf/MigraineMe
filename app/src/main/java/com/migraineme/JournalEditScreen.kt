@@ -633,6 +633,7 @@ fun JournalEditScreen(
                     val timePickerState = rememberTimePickerState(
                         initialHour = selectedTime.hour,
                         initialMinute = selectedTime.minute,
+                        is24Hour = deviceUses24Hour(androidx.compose.ui.platform.LocalContext.current),
                     )
                     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -786,6 +787,7 @@ fun JournalEditScreen(
                         val endTimePickerState = rememberTimePickerState(
                             initialHour = selectedEndTime.hour,
                             initialMinute = selectedEndTime.minute,
+                            is24Hour = deviceUses24Hour(androidx.compose.ui.platform.LocalContext.current),
                         )
                         var showEndTimePicker by remember { mutableStateOf(false) }
 

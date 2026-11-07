@@ -227,6 +227,20 @@ fun datePattern(english: String, locale: java.util.Locale): String {
 }
 
 /**
+ * 12 or 24 hour, from the phone: its own switch if the user set one, otherwise
+ * what the phone's locale writes. DateFormat.is24HourFormat(context) can't be used
+ * here, because applyAppLocaleToResources points the context at the app language,
+ * and app language "en" reads as 12 hour on a UK phone.
+ */
+fun deviceUses24Hour(context: android.content.Context): Boolean {
+    android.provider.Settings.System.getString(context.contentResolver, android.provider.Settings.System.TIME_12_24)
+        ?.let { return it == "24" }
+    val locale = android.content.res.Resources.getSystem().configuration.locales[0]
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "jm")
+    return pattern.contains('H') || pattern.contains('k')
+}
+
+/**
  * Library text we do not own (Material's "Close sheet" and "Drag handle", the
  * video player's controls) reads the activity's resources, which follow the
  * device, not the app language. Pointing those resources at the app language
