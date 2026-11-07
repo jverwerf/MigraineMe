@@ -5091,5 +5091,12 @@
  "Nitrates exposure": "질산염 노출",
  "Please confirm your email first.": "먼저 이메일을 확인해 주세요.",
  "Resp rate": "호흡수",
- "Severity %s": "강도 %s"
+ "Severity %s": "강도 %s",
+ "1-3 days a month": "한 달에 1~3일",
+ "15+ days a month": "한 달에 15일 이상",
+ "4-7 days a month": "한 달에 4~7일",
+ "8-14 days a month": "한 달에 8~14일",
+ "Improving": "개선 중",
+ "Stable": "안정",
+ "Worsening": "악화 중"
 }

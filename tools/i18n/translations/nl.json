@@ -5090,5 +5090,12 @@
  "Low: %s dB": "Laag: %s dB",
  "MSG exposure": "Blootstelling aan MSG",
  "NSAID": "NSAID",
- "Nitrates exposure": "Blootstelling aan nitraten"
+ "Nitrates exposure": "Blootstelling aan nitraten",
+ "1-3 days a month": "1-3 dagen per maand",
+ "15+ days a month": "15+ dagen per maand",
+ "4-7 days a month": "4-7 dagen per maand",
+ "8-14 days a month": "8-14 dagen per maand",
+ "Improving": "Verbeterend",
+ "Stable": "Stabiel",
+ "Worsening": "Verslechterend"
 }

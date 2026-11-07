@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5099 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -309,6 +309,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1-2 jours après",
     "1-2 days before" to "1-2 jours avant",
     "1-3 days" to "1-3 jours",
+    "1-3 days a month" to "1 à 3 jours par mois",
     "1-3 per month" to "1-3 par mois",
     "1-5 years" to "1-5 ans",
     "1. Permissions" to "1. Autorisations",
@@ -318,6 +319,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 jours",
     "14-DAY FREE TRIAL" to "14 JOURS OFFERTS",
     "14-Day Medicines History" to "Médicaments, 14 jours",
+    "15+ days a month" to "15 jours ou plus par mois",
     "2 Days" to "2 jours",
     "2 Weeks" to "2 semaines",
     "2 days" to "2 jours",
@@ -341,6 +343,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 jours",
     "3d ago" to "il y a 3 j",
     "4-12 hours" to "4-12 heures",
+    "4-7 days a month" to "4 à 7 jours par mois",
     "4. AI Personalisation" to "4. Personnalisation IA",
     "5 days" to "5 jours",
     "5+ cups" to "5+ tasses",
@@ -356,6 +359,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "Prévision de risque à 7 jours",
     "7-day risk outlook" to "Risque, 7 jours",
     "70–85 dB: vacuum, busy street" to "70–85 dB : aspirateur, rue passante",
+    "8-14 days a month" to "8 à 14 jours par mois",
     "85 dB+: NIOSH hazard threshold" to "85 dB+ : seuil de danger NIOSH",
     "< 25 days" to "< 25 jours",
     "< 4 hours" to "< 4 heures",
@@ -1513,13 +1517,13 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "Point du soir",
     "Evening check-in by voice" to "Point du soir à la voix",
     "Evening check-in reminders" to "Rappels du point du soir",
+)
+
+private fun frStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "Tous les 1-2 mois",
     "Every Monday\nit *learns* you." to "Chaque lundi,\nil *t'apprend.*",
     "Every Monday it *learns.*" to "Chaque lundi, il *apprend.*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Chaque lundi, l'IA te propose des objectifs avec ton recalibrage, comme plus de sommeil ou moins d'écran. Ton bilan de la semaine montre s'ils marchent.",
-)
-
-private fun frStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "Chaque crise de la période, dans l'ordre",
     "Every attack in the period, in the order things happened" to "Chaque crise de la période, dans l'ordre des événements",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Chaque crise enregistrée est comparée à celle-ci sur tout ce que tu as noté : déclencheurs, sommeil, météo, symptômes, ce que tu as pris et quand. Plus une crise passée partage avec celle-ci, plus elle compte, et tout ce qui précède est la moyenne pondérée de ces crises. Avec trop peu de crises similaires, rien ne s'affiche plutôt qu'une supposition.",
@@ -2011,6 +2015,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Import them too" to "Les importer aussi",
     "Imported" to "Importé",
     "Importing your history is part of the paid subscription." to "L'import de l'historique fait partie de l'abonnement payant.",
+    "Improving" to "En amélioration",
     "Improving — down {0}%" to "Mieux — en baisse de {0}%",
     "In %1\$s days" to "Dans %1\$s jours",
     "In %s days" to "Dans %s jours",
@@ -3015,14 +3020,14 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Posture and deep neck" to "Posture et nuque profonde",
     "Potassium" to "Potassium",
     "Potassium high" to "Potassium élevé",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Potassium low" to "Potassium bas",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Du matériel pour les aspects de la migraine sur lesquels on peut agir : lumière, bruit, sommeil et la crise elle-même. Chaque objet a d'abord traversé nos propres mauvais jours.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Cabinets près de chez toi. Ils ne font pas partie de MigraineMe et ne voient pas ton journal.",
     "Practitioner" to "Praticien",
     "Practitioners" to "Praticiens",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Les praticiens listés ici sont indépendants. MigraineMe ne les emploie pas et n'intervient pas dans ce que tu conviens avec eux.",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Des praticiens avec qui partager ton journal, des articles choisis pour toi, et un forum de gens comme toi.",
     "Predict ovulation" to "Prédire l'ovulation",
@@ -3598,6 +3603,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "Repère les journées de réunions tendues",
     "Spreads" to "S'étend",
     "Spring" to "Printemps",
+    "Stable" to "Stable",
     "Stable — consistent frequency" to "Stable — fréquence constante",
     "Star" to "Étoile",
     "Start" to "Début",
@@ -4517,15 +4523,15 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Work pressure, anxiety, conflict" to "Pression au travail, anxiété, conflit",
     "Work pressure, deadlines" to "Pression, échéances",
     "Worked out for you, not answered" to "Calculé pour toi, pas répondu",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Working" to "Travailler",
     "Working from home" to "Télétravail",
     "Working well" to "Marche bien",
     "Workout HR zones" to "Zones de FC à l'effort",
     "Works Best When" to "Marche mieux si",
     "Works Best When…" to "Marche mieux si…",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Works best when" to "Marche mieux quand",
     "Works well" to "Efficace",
     "Worse in spring" to "Pire au printemps",
@@ -4533,6 +4539,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "Pire en hiver",
     "Worse — every time" to "Pire — à chaque fois",
     "Worse — sometimes" to "Pire parfois",
+    "Worsening" to "En aggravation",
     "Worsening — up {0}%" to "Pire — en hausse de {0}%",
     "Worst" to "Le pire",
     "Worst day" to "Pire jour",

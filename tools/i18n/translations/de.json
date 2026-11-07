@@ -5090,5 +5090,12 @@
  "Low: %s dB": "Min: %s dB",
  "MSG exposure": "Glutamat-Aufnahme",
  "NSAID": "NSAR",
- "Nitrates exposure": "Nitrat-Aufnahme"
+ "Nitrates exposure": "Nitrat-Aufnahme",
+ "1-3 days a month": "1–3 Tage pro Monat",
+ "15+ days a month": "15+ Tage pro Monat",
+ "4-7 days a month": "4–7 Tage pro Monat",
+ "8-14 days a month": "8–14 Tage pro Monat",
+ "Improving": "Besser werdend",
+ "Stable": "Stabil",
+ "Worsening": "Schlechter werdend"
 }

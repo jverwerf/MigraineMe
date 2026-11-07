@@ -1331,7 +1331,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                     categoryTotals.forEach { (cat, total) ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Text(cat, color = Color.White, style = MaterialTheme.typography.labelMedium,
+                            Text(prettyLabel(cat), color = Color.White, style = MaterialTheme.typography.labelMedium,
                                 modifier = Modifier.weight(1f))
                             FitText(total, color = Color(0xFF81C784),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),

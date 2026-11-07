@@ -76,7 +76,7 @@ fun RiskConfigScreen(onBack: () -> Unit) {
                 BaseCard {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(Modifier.size(10.dp).background(color, CircleShape))
-                        Text(category, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(prettyLabel(category), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     }
                     Spacer(Modifier.height(10.dp))
 

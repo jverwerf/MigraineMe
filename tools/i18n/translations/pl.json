@@ -5386,5 +5386,12 @@
  "Nitrates exposure": "Ekspozycja na azotany",
  "Please confirm your email first.": "Najpierw potwierdź swój adres e-mail.",
  "Resp rate": "Tempo oddechu",
- "Severity %s": "Nasilenie: %s"
+ "Severity %s": "Nasilenie: %s",
+ "1-3 days a month": "1–3 dni w miesiącu",
+ "15+ days a month": "15+ dni w miesiącu",
+ "4-7 days a month": "4–7 dni w miesiącu",
+ "8-14 days a month": "8–14 dni w miesiącu",
+ "Improving": "Poprawa",
+ "Stable": "Stabilnie",
+ "Worsening": "Pogorszenie"
 }

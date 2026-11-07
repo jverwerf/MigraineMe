@@ -311,7 +311,7 @@ private fun InsightsGraphTab(
 
             val groups = available.groupBy { it.group }
             groups.forEach { (group, defs) ->
-                Text(group, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                Text(prettyLabel(group), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
                 Row(

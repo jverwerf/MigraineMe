@@ -2509,7 +2509,7 @@ private fun SideEffectsPageV2(
             HeroCard { Column(Modifier.fillMaxWidth()) {
             Text(t("Side effects"), color = Color.White,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-            Text(regimen.name, color = Color.White,
+            Text(prettyLabel(regimen.name), color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             val parts = listOfNotNull(regimen.amount, frequencyLabel(regimen.frequency)).joinToString(" · ")
             if (parts.isNotEmpty()) {

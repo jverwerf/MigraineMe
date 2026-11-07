@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5094 entries.
+ * 5101 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -309,6 +309,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1-2 gün sonra",
     "1-2 days before" to "1-2 gün önce",
     "1-3 days" to "1-3 gün",
+    "1-3 days a month" to "Ayda 1-3 gün",
     "1-3 per month" to "ayda 1-3",
     "1-5 years" to "1-5 yıl",
     "1. Permissions" to "1. İzinler",
@@ -318,6 +319,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 Gün",
     "14-DAY FREE TRIAL" to "14 GÜN ÜCRETSİZ",
     "14-Day Medicines History" to "14 Günlük İlaç Geçmişi",
+    "15+ days a month" to "Ayda 15+ gün",
     "2 Days" to "2 Gün",
     "2 Weeks" to "2 Hafta",
     "2 days" to "2 gün",
@@ -341,6 +343,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 gün",
     "3d ago" to "3 gün önce",
     "4-12 hours" to "4-12 saat",
+    "4-7 days a month" to "Ayda 4-7 gün",
     "4. AI Personalisation" to "4. Yapay Zeka Kişiselleştirme",
     "5 days" to "5 gün",
     "5+ cups" to "5+ fincan",
@@ -356,6 +359,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "7 günlük risk tahmini",
     "7-day risk outlook" to "7 günlük risk özeti",
     "70–85 dB: vacuum, busy street" to "70–85 dB: süpürge, işlek cadde",
+    "8-14 days a month" to "Ayda 8-14 gün",
     "85 dB+: NIOSH hazard threshold" to "85 dB+: NIOSH tehlike eşiği",
     "< 25 days" to "< 25 gün",
     "< 4 hours" to "< 4 saat",
@@ -1513,13 +1517,13 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "Akşam kontrolü",
     "Evening check-in by voice" to "Sesle akşam kontrolü",
     "Evening check-in reminders" to "Akşam kontrolü hatırlatıcıları",
+)
+
+private fun trStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "1-2 ayda bir",
     "Every Monday\nit *learns* you." to "Her pazartesi\nseni *öğrenir.*",
     "Every Monday it *learns.*" to "Her pazartesi *öğrenir.*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Her pazartesi yapay zekâ, yeniden kalibrasyonunla birlikte daha çok uyku ya da daha az ekran süresi gibi hedefler önerir. Haftalık özetin bu hedeflerin işe yarayıp yaramadığını gösterir.",
-)
-
-private fun trStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "Aralıktaki her atak, olayların gerçekleşme sırasıyla",
     "Every attack in the period, in the order things happened" to "Dönemdeki her atak, olayların gerçekleşme sırasıyla",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Kaydettiğin her atak, bu atakla kaydettiğin her şey üzerinden karşılaştırılır: tetikleyiciler, uyku, hava durumu, belirtiler, aldığın ilaçlar ve ne zaman aldığın. Geçmiş bir atak bununla ne kadar çok ortak noktaya sahipse o kadar çok ağırlık taşır ve yukarıdaki her şey bu ataklar arasındaki ağırlıklı ortalamadır. Benzer atak çok azsa tahmin göstermek yerine hiçbir şey göstermez.",
@@ -2012,6 +2016,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Import them too" to "Bunları da al",
     "Imported" to "Alındı",
     "Importing your history is part of the paid subscription." to "Geçmişini içe aktarmak ücretli aboneliğe dahildir.",
+    "Improving" to "İyileşiyor",
     "Improving — down {0}%" to "İyileşiyor: %{0} düştü",
     "In %1\$s days" to "%1\$s gün sonra",
     "In %s days" to "%s gün sonra",
@@ -3015,14 +3020,14 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Postdrome (after attack)" to "Postdrom (atak sonrası)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Buradaki gönderileri başka yetişkinler yazıyor. Böyle kalması için girmeden önce lütfen yaşını onayla.",
     "Posture and deep neck" to "Duruş ve derin boyun",
+)
+
+private fun trStrings2(): Map<String, String> = mapOf(
     "Potassium" to "Potasyum",
     "Potassium high" to "Potasyum yüksek",
     "Potassium low" to "Potasyum düşük",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Migrenin üzerinde bir şey yapabileceğin yönler için pratik araçlar: ışık, gürültü, uyku ve atağın kendisi. Her biri önce bizim kendi kötü günlerimizden geçti.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Yakınında bulduğumuz muayenehaneler. MigraineMe'nin parçası değiller ve günlüğünü göremezler.",
-)
-
-private fun trStrings2(): Map<String, String> = mapOf(
     "Practitioner" to "Uzman",
     "Practitioners" to "Uzmanlar",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Burada listelenen uzmanlar bağımsızdır. MigraineMe onları çalıştırmaz ve onlarla vardığın anlaşmalara karışmaz.",
@@ -3600,6 +3605,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "Stresli toplantı günlerini fark et",
     "Spreads" to "Yayılır",
     "Spring" to "İlkbahar",
+    "Stable" to "Sabit",
     "Stable — consistent frequency" to "Stabil — tutarlı sıklık",
     "Star" to "Yıldız",
     "Start" to "Başlangıç",
@@ -4517,15 +4523,15 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Words" to "Kelimeler",
     "Work" to "İş",
     "Work pressure, anxiety, conflict" to "İş baskısı, kaygı, çatışma",
+)
+
+private fun trStrings3(): Map<String, String> = mapOf(
     "Work pressure, deadlines" to "İş baskısı, teslim tarihleri",
     "Worked out for you, not answered" to "Senin için hesaplandı, yanıtlanmadı",
     "Working" to "Çalışma",
     "Working from home" to "Evden çalışma",
     "Working well" to "İyi çalışıyor",
     "Workout HR zones" to "Antrenman nabız bölgeleri",
-)
-
-private fun trStrings3(): Map<String, String> = mapOf(
     "Works Best When" to "En İyi Etki Ettiği Durum",
     "Works Best When…" to "En iyi şu durumda…",
     "Works best when" to "En iyi şu durumda işe yarar",
@@ -4535,6 +4541,7 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "Kışın daha kötü",
     "Worse — every time" to "Daha kötü — her seferinde",
     "Worse — sometimes" to "Daha kötü — bazen",
+    "Worsening" to "Kötüleşiyor",
     "Worsening — up {0}%" to "Kötüleşiyor — %{0} arttı",
     "Worst" to "En kötü",
     "Worst day" to "En kötü gün",

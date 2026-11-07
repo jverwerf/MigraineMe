@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5093 entries.
+ * 5100 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -309,6 +309,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1〜2日後",
     "1-2 days before" to "1〜2日前",
     "1-3 days" to "1〜3日",
+    "1-3 days a month" to "月に1〜3日",
     "1-3 per month" to "月に1〜3回",
     "1-5 years" to "1〜5年",
     "1. Permissions" to "1. 権限",
@@ -318,6 +319,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14日間",
     "14-DAY FREE TRIAL" to "14日間無料体験",
     "14-Day Medicines History" to "14日間の薬の履歴",
+    "15+ days a month" to "月に15日以上",
     "2 Days" to "2日間",
     "2 Weeks" to "2週間",
     "2 days" to "2日",
@@ -341,6 +343,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32〜35日",
     "3d ago" to "3日前",
     "4-12 hours" to "4〜12時間",
+    "4-7 days a month" to "月に4〜7日",
     "4. AI Personalisation" to "4. AIによる個別設定",
     "5 days" to "5日",
     "5+ cups" to "5杯以上",
@@ -356,6 +359,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "7日間のリスク予報",
     "7-day risk outlook" to "7日間のリスク見通し",
     "70–85 dB: vacuum, busy street" to "70–85 dB: 掃除機、交通量の多い道",
+    "8-14 days a month" to "月に8〜14日",
     "85 dB+: NIOSH hazard threshold" to "85 dB+: NIOSHの危険基準",
     "< 25 days" to "25日未満",
     "< 4 hours" to "4時間未満",
@@ -1513,13 +1517,13 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "夕方の記録",
     "Evening check-in by voice" to "音声で夕方の記録",
     "Evening check-in reminders" to "夕方の記録のお知らせ",
+)
+
+private fun jaStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "1〜2か月ごと",
     "Every Monday\nit *learns* you." to "毎週月曜日、\nあなたを*学びます。*",
     "Every Monday it *learns.*" to "毎週月曜日に*学びます。*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "毎週月曜日に、再調整の結果とあわせて、睡眠を増やす、画面を見る時間を減らすなどの目標をAIが提案します。週間レビューで、効果が出ているかを確認できます。",
-)
-
-private fun jaStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "期間内のすべての発作を、起きた順に",
     "Every attack in the period, in the order things happened" to "期間内のすべての発作を、起きた順に表示します",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "記録したすべての発作を、この発作と比較します。比べる項目は、誘因、睡眠、天気、症状、服用した薬とその時刻など、記録したすべてです。過去の発作がこの発作と共通する点が多いほど重く扱い、上の内容はそれらの発作の加重平均です。似た発作が少なすぎる場合は、推測を示さず何も表示しません。",
@@ -2012,6 +2016,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Import them too" to "こちらも取り込む",
     "Imported" to "取り込み済み",
     "Importing your history is part of the paid subscription." to "履歴の取り込みは有料の購読に含まれます。",
+    "Improving" to "改善中",
     "Improving — down {0}%" to "改善中 — {0}%減少",
     "In %1\$s days" to "%1\$s日後",
     "In %s days" to "%s日後",
@@ -3015,14 +3020,14 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "ここでの投稿は、他の成人が書いたものです。そのため、入る前に年齢を確認してください。",
     "Posture and deep neck" to "姿勢と首の深部",
     "Potassium" to "カリウム",
+)
+
+private fun jaStrings2(): Map<String, String> = mapOf(
     "Potassium high" to "カリウムが高い",
     "Potassium low" to "カリウムが低い",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "片頭痛のうち、自分で対処できる部分のための実用的な道具です。光、音、睡眠、そして発作そのものに対応します。どれも、まず私たち自身のつらい日々で試したものです。",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "近くで見つかった診療所です。MigraineMeとは関係がなく、あなたの日記は見られません。",
     "Practitioner" to "医療者",
-)
-
-private fun jaStrings2(): Map<String, String> = mapOf(
     "Practitioners" to "医療者",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "ここに載っている施術者は独立しています。MigraineMeが雇用しているわけではなく、あなたとの取り決めにも関与しません。",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "日記を共有できる施術者、あなたに合わせて選んだ記事、同じ悩みを持つ人たちのフォーラムが使えます。",
@@ -3599,6 +3604,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "ストレスの多い会議の日を把握",
     "Spreads" to "広がる",
     "Spring" to "春",
+    "Stable" to "安定",
     "Stable — consistent frequency" to "安定 — 頻度は一定",
     "Star" to "星",
     "Start" to "開始",
@@ -4517,15 +4523,15 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Work" to "仕事",
     "Work pressure, anxiety, conflict" to "仕事のプレッシャー、不安、対立",
     "Work pressure, deadlines" to "仕事のプレッシャー、締め切り",
+)
+
+private fun jaStrings3(): Map<String, String> = mapOf(
     "Worked out for you, not answered" to "回答ではなく、計算した結果",
     "Working" to "仕事",
     "Working from home" to "在宅勤務",
     "Working well" to "効果あり",
     "Workout HR zones" to "運動中の心拍ゾーン",
     "Works Best When" to "効きやすい条件",
-)
-
-private fun jaStrings3(): Map<String, String> = mapOf(
     "Works Best When…" to "効きやすい条件",
     "Works best when" to "効きやすい条件",
     "Works well" to "効果あり",
@@ -4534,6 +4540,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "冬に悪化",
     "Worse — every time" to "悪化 — 毎回",
     "Worse — sometimes" to "悪化 — ときどき",
+    "Worsening" to "悪化中",
     "Worsening — up {0}%" to "悪化 — {0}%増",
     "Worst" to "最も重い",
     "Worst day" to "最もつらい日",

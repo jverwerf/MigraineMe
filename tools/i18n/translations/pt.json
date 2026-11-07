@@ -5090,5 +5090,12 @@
  "Low: %s dB": "Mín.: %s dB",
  "MSG exposure": "Exposição a MSG",
  "NSAID": "AINE",
- "Nitrates exposure": "Exposição a nitratos"
+ "Nitrates exposure": "Exposição a nitratos",
+ "1-3 days a month": "1 a 3 dias por mês",
+ "15+ days a month": "Mais de 15 dias por mês",
+ "4-7 days a month": "4 a 7 dias por mês",
+ "8-14 days a month": "8 a 14 dias por mês",
+ "Improving": "A melhorar",
+ "Stable": "Estável",
+ "Worsening": "A piorar"
 }

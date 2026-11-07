@@ -5090,5 +5090,12 @@
  "Low: %s dB": "Min: %s dB",
  "MSG exposure": "Esposizione a MSG",
  "NSAID": "FANS",
- "Nitrates exposure": "Esposizione ai nitrati"
+ "Nitrates exposure": "Esposizione ai nitrati",
+ "1-3 days a month": "1-3 giorni al mese",
+ "15+ days a month": "15+ giorni al mese",
+ "4-7 days a month": "4-7 giorni al mese",
+ "8-14 days a month": "8-14 giorni al mese",
+ "Improving": "In miglioramento",
+ "Stable": "Stabile",
+ "Worsening": "In peggioramento"
 }

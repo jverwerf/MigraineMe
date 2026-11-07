@@ -5091,5 +5091,12 @@
  "Nitrates exposure": "硝酸鹽攝取",
  "Please confirm your email first.": "請先確認你的電子郵件。",
  "Resp rate": "呼吸速率",
- "Severity %s": "嚴重程度 %s"
+ "Severity %s": "嚴重程度 %s",
+ "1-3 days a month": "每月 1-3 天",
+ "15+ days a month": "每月 15 天以上",
+ "4-7 days a month": "每月 4-7 天",
+ "8-14 days a month": "每月 8-14 天",
+ "Improving": "改善中",
+ "Stable": "穩定",
+ "Worsening": "惡化中"
 }

@@ -5091,5 +5091,12 @@
  "Nitrates exposure": "硝酸塩の摂取",
  "Please confirm your email first.": "先にメールアドレスを確認してください。",
  "Resp rate": "呼吸数",
- "Severity %s": "重症度 %s"
+ "Severity %s": "重症度 %s",
+ "1-3 days a month": "月に1〜3日",
+ "15+ days a month": "月に15日以上",
+ "4-7 days a month": "月に4〜7日",
+ "8-14 days a month": "月に8〜14日",
+ "Improving": "改善中",
+ "Stable": "安定",
+ "Worsening": "悪化中"
 }

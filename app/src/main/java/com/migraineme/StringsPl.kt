@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5388 entries.
+ * 5395 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -494,6 +494,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1-2 dni później",
     "1-2 days before" to "1-2 dni wcześniej",
     "1-3 days" to "1-3 dni",
+    "1-3 days a month" to "1–3 dni w miesiącu",
     "1-3 per month" to "1-3 razy w miesiącu",
     "1-5 years" to "1-5 lat",
     "1. Permissions" to "1. Uprawnienia",
@@ -503,6 +504,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 dni",
     "14-DAY FREE TRIAL" to "14 DNI ZA DARMO",
     "14-Day Medicines History" to "Historia leków z 14 dni",
+    "15+ days a month" to "15+ dni w miesiącu",
     "2 Days" to "2 dni",
     "2 Weeks" to "2 tygodnie",
     "2 days" to "2 dni",
@@ -526,6 +528,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 dni",
     "3d ago" to "3 dni temu",
     "4-12 hours" to "4-12 godz.",
+    "4-7 days a month" to "4–7 dni w miesiącu",
     "4. AI Personalisation" to "4. Personalizacja AI",
     "5 days" to "5 dni",
     "5+ cups" to "5+ filiżanek",
@@ -541,6 +544,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "Prognoza ryzyka na 7 dni",
     "7-day risk outlook" to "Ryzyko na 7 dni",
     "70–85 dB: vacuum, busy street" to "70–85 dB: odkurzacz, ruchliwa ulica",
+    "8-14 days a month" to "8–14 dni w miesiącu",
     "85 dB+: NIOSH hazard threshold" to "85 dB+: próg zagrożenia wg NIOSH",
     "< 25 days" to "< 25 dni",
     "< 4 hours" to "< 4 godz.",
@@ -1513,13 +1517,13 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Digital wellness correlation" to "Korelacja z cyfrowym dobrostanem",
     "Dihydroergotamine (DHE)" to "Dihydroergotamina (DHE)",
     "Dinner" to "Kolacja",
+)
+
+private fun plStrings1(): Map<String, String> = mapOf(
     "Directions" to "Trasa",
     "Disable Battery Optimization" to "Wyłącz optymalizację baterii",
     "Discard" to "Odrzuć",
     "Disconnect" to "Odłącz",
-)
-
-private fun plStrings1(): Map<String, String> = mapOf(
     "Disconnect Garmin?" to "Odłączyć Garmin?",
     "Disconnect Oura?" to "Odłączyć Oura?",
     "Disconnect Polar?" to "Odłączyć Polar?",
@@ -2231,6 +2235,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Import them too" to "Importuj je też",
     "Imported" to "Zaimportowano",
     "Importing your history is part of the paid subscription." to "Import historii jest częścią płatnej subskrypcji.",
+    "Improving" to "Poprawa",
     "Improving — down {0}%" to "Poprawa — spadek o {0}%",
     "In %1\$s days" to "Za %1\$s dni",
     "In %1\$s days|few" to "Za %1\$s dni",
@@ -3015,14 +3020,14 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Once a day, %s days a week" to "Raz dziennie, %s dni w tygodniu",
     "Once a day, %s days a week|few" to "Raz dziennie, %s dni w tygodniu",
     "Once a day, %s days a week|one" to "Raz dziennie, %s dzień w tygodniu",
+)
+
+private fun plStrings2(): Map<String, String> = mapOf(
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Raz w tygodniu AI proponuje zmiany, np. przesunięcie linii na wskaźnikach. Zaznacz te, na które się zgadzasz.",
     "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere." to "Raz w tygodniu, razem z rekalibracją, MigraineMe analizuje twoje dane i podpowiada cele, które mogą pomóc, np. picie wody, sen albo trening tętna. Cele może też ustawiać twój specjalista. Wyłącz, aby ukryć cele wszędzie.",
     "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth." to "Gdy atak już się rozpoczął. Przyciemniony, cichy pokój, przyciszone dźwięki i zimny kompres owinięty w ściereczkę.",
     "Once you own one, logging it is the point: MigraineMe compares how your attacks go " to "Gdy już go masz, zapisywanie to cały sens: MigraineMe porównuje, jak przebiegają twoje ataki ",
     "Ondansetron" to "Ondansetron",
-)
-
-private fun plStrings2(): Map<String, String> = mapOf(
     "One tap to confirm or skip" to "Dotknij, by potwierdzić lub pominąć",
     "One thing at a time — what happened today?" to "Po kolei – co się dziś wydarzyło?",
     "One-tap doctor-ready PDF of everything you've logged." to "Jednym dotknięciem: PDF dla lekarza ze wszystkim, co zapisano.",
@@ -3853,6 +3858,7 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "Wypatruj dni pełnych stresujących spotkań",
     "Spreads" to "Rozprzestrzenia się",
     "Spring" to "Wiosna",
+    "Stable" to "Stabilnie",
     "Stable — consistent frequency" to "Stabilnie — stała częstotliwość",
     "Star" to "Gwiazdka",
     "Start" to "Początek",
@@ -4517,15 +4523,15 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Wake time late" to "Późna pora wstawania",
     "Wake-ups and restlessness" to "Wybudzenia i niepokój",
     "Walk" to "Spacer",
+)
+
+private fun plStrings3(): Map<String, String> = mapOf(
     "Walking" to "Spacerowanie",
     "Warm compress" to "Ciepły kompres",
     "Warned & it happened" to "Ostrzeżenie trafne",
     "Warned, nothing came" to "Ostrzeżenie, bez ataku",
     "Warning Signs" to "Zwiastuny",
     "Warning sign: %1\$s" to "Sygnał ostrzegawczy: %1\$s",
-)
-
-private fun plStrings3(): Map<String, String> = mapOf(
     "Warning signs" to "Zwiastuny",
     "Warning signs before" to "Zwiastuny wcześniej",
     "Warning signs first" to "Najpierw ostrzeżenia",
@@ -4796,6 +4802,7 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "Gorzej zimą",
     "Worse — every time" to "Gorzej — za każdym razem",
     "Worse — sometimes" to "Gorzej — czasami",
+    "Worsening" to "Pogorszenie",
     "Worsening — up {0}%" to "Pogorszenie — o {0}% więcej",
     "Worst" to "Najgorsze",
     "Worst day" to "Najgorszy dzień",

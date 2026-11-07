@@ -8467,6 +8467,55 @@
       "sites": [
         "walk-2026-11-07"
       ]
+    },
+    {
+      "en": "Worsening",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "Improving",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "Stable",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "1-3 days a month",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "4-7 days a month",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "8-14 days a month",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
+    },
+    {
+      "en": "15+ days a month",
+      "class": "soft",
+      "sites": [
+        "ProfileScreen:profile-chip"
+      ]
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",

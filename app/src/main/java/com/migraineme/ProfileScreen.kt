@@ -679,17 +679,17 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
 
                     // Quick stats row
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (frequency != null) ProfileStatChip(Icons.Outlined.CalendarMonth, t(frequency), Modifier.weight(1f))
-                        if (duration != null) ProfileStatChip(Icons.Outlined.Timer, t(duration), Modifier.weight(1f))
+                        if (frequency != null) ProfileStatChip(Icons.Outlined.CalendarMonth, prettyLabel(frequency), Modifier.weight(1f))
+                        if (duration != null) ProfileStatChip(Icons.Outlined.Timer, prettyLabel(duration), Modifier.weight(1f))
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (experience != null) ProfileStatChip(Icons.Outlined.History, t(experience), Modifier.weight(1f))
-                        if (trajectory != null) ProfileStatChip(Icons.Outlined.TrendingUp, t(trajectory), Modifier.weight(1f))
+                        if (experience != null) ProfileStatChip(Icons.Outlined.History, prettyLabel(experience), Modifier.weight(1f))
+                        if (trajectory != null) ProfileStatChip(Icons.Outlined.TrendingUp, prettyLabel(trajectory), Modifier.weight(1f))
                     }
 
                     // Demographics
                     val demoItems = listOfNotNull(
-                        gender?.let { "Gender" to it },
+                        gender?.let { "Gender" to prettyLabel(it) },
                         ageRange?.let { "Age" to it },
                         if (tracksCycle == true) "Cycle" to "Tracking" else null,
                     )

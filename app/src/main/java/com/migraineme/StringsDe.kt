@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5099 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -309,6 +309,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1-2 Tage danach",
     "1-2 days before" to "1-2 Tage davor",
     "1-3 days" to "1-3 Tage",
+    "1-3 days a month" to "1–3 Tage pro Monat",
     "1-3 per month" to "1-3 pro Monat",
     "1-5 years" to "1-5 Jahre",
     "1. Permissions" to "1. Berechtigungen",
@@ -318,6 +319,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 Tage",
     "14-DAY FREE TRIAL" to "14 TAGE GRATIS",
     "14-Day Medicines History" to "Medikamente, 14 Tage",
+    "15+ days a month" to "15+ Tage pro Monat",
     "2 Days" to "2 Tage",
     "2 Weeks" to "2 Wochen",
     "2 days" to "2 Tage",
@@ -341,6 +343,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 Tage",
     "3d ago" to "vor 3 Tagen",
     "4-12 hours" to "4-12 Std.",
+    "4-7 days a month" to "4–7 Tage pro Monat",
     "4. AI Personalisation" to "4. KI-Anpassung",
     "5 days" to "5 Tage",
     "5+ cups" to "5+ Tassen",
@@ -356,6 +359,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "7-Tage-Risikoprognose",
     "7-day risk outlook" to "7-Tage-Risikoblick",
     "70–85 dB: vacuum, busy street" to "70–85 dB: Staubsauger, laute Straße",
+    "8-14 days a month" to "8–14 Tage pro Monat",
     "85 dB+: NIOSH hazard threshold" to "85 dB+: NIOSH-Gefahrenschwelle",
     "< 25 days" to "< 25 Tage",
     "< 4 hours" to "< 4 Std.",
@@ -1513,13 +1517,13 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "Abend-Check",
     "Evening check-in by voice" to "Abend-Check per Sprache",
     "Evening check-in reminders" to "Erinnerungen an den Abend-Check",
+)
+
+private fun deStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "Alle 1-2 Monate",
     "Every Monday\nit *learns* you." to "Jeden Montag\n*lernt* es dich.",
     "Every Monday it *learns.*" to "Jeden Montag *lernt* es.",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Jeden Montag schlägt die KI mit deiner Neujustierung Ziele vor, etwa mehr Schlaf oder weniger Bildschirmzeit. Dein Wochenrückblick zeigt, ob sie wirken.",
-)
-
-private fun deStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "Jede Attacke im Zeitraum, in ihrer Reihenfolge",
     "Every attack in the period, in the order things happened" to "Jede Attacke im Zeitraum, in der Reihenfolge der Ereignisse",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Jede erfasste Attacke wird mit dieser verglichen, auf allem, was du festgehalten hast: Auslöser, Schlaf, Wetter, Symptome, was du wann genommen hast. Je mehr eine frühere Attacke mit dieser teilt, desto stärker zählt sie, und alles oben ist die gewichtete Mitte dieser Attacken. Bei zu wenigen ähnlichen Attacken zeigen wir lieber nichts als eine Vermutung.",
@@ -2011,6 +2015,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Import them too" to "Auch importieren",
     "Imported" to "Importiert",
     "Importing your history is part of the paid subscription." to "Der Import deines Verlaufs gehört zum bezahlten Abo.",
+    "Improving" to "Besser werdend",
     "Improving — down {0}%" to "Bessert sich — minus {0}%",
     "In %1\$s days" to "In %1\$s Tagen",
     "In %s days" to "In %s Tagen",
@@ -3015,14 +3020,14 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Posture and deep neck" to "Haltung und tiefer Nacken",
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoch",
+)
+
+private fun deStrings2(): Map<String, String> = mapOf(
     "Potassium low" to "Kalium niedrig",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Praktisches für die Seiten der Migräne, gegen die sich etwas tun lässt: Licht, Lärm, Schlaf und die Attacke selbst. Jedes Stück hat unsere eigenen schlechten Tage zuerst überstanden.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praxen in deiner Nähe. Sie gehören nicht zu MigraineMe und sehen dein Tagebuch nicht.",
     "Practitioner" to "Fachperson",
     "Practitioners" to "Fachpersonen",
-)
-
-private fun deStrings2(): Map<String, String> = mapOf(
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "Die hier gelisteten Fachpersonen sind unabhängig. MigraineMe beschäftigt sie nicht und ist an euren Vereinbarungen nicht beteiligt.",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Fachpersonen, mit denen du dein Tagebuch teilen kannst, Artikel für dich, und ein Forum mit Menschen wie dir.",
     "Predict ovulation" to "Eisprung schätzen",
@@ -3598,6 +3603,7 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "Stressige Meeting-Tage erkennen",
     "Spreads" to "Breitet sich aus",
     "Spring" to "Frühling",
+    "Stable" to "Stabil",
     "Stable — consistent frequency" to "Stabil — gleichbleibende Häufigkeit",
     "Star" to "Stern",
     "Start" to "Start",
@@ -4517,15 +4523,15 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Work pressure, anxiety, conflict" to "Arbeitsdruck, Angst, Konflikt",
     "Work pressure, deadlines" to "Arbeitsdruck, Fristen",
     "Worked out for you, not answered" to "Für dich berechnet, nicht beantwortet",
+)
+
+private fun deStrings3(): Map<String, String> = mapOf(
     "Working" to "Arbeiten",
     "Working from home" to "Homeoffice",
     "Working well" to "Wirkt gut",
     "Workout HR zones" to "HF-Zonen im Training",
     "Works Best When" to "Wirkt am besten",
     "Works Best When…" to "Wirkt am besten…",
-)
-
-private fun deStrings3(): Map<String, String> = mapOf(
     "Works best when" to "Wirkt am besten, wenn",
     "Works well" to "Wirkt gut",
     "Worse in spring" to "Schlimmer Frühling",
@@ -4533,6 +4539,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "Schlimmer Winter",
     "Worse — every time" to "Schlimmer — jedes Mal",
     "Worse — sometimes" to "Schlimmer — manchmal",
+    "Worsening" to "Schlechter werdend",
     "Worsening — up {0}%" to "Schlechter — plus {0}%",
     "Worst" to "Am schlimmsten",
     "Worst day" to "Schlimmster Tag",

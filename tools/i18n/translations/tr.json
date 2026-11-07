@@ -5092,5 +5092,12 @@
  "Nitrates exposure": "Nitrat maruziyeti",
  "Please confirm your email first.": "Lütfen önce e-postanı onayla.",
  "Resp rate": "Solunum hızı",
- "Severity %s": "Şiddet %s"
+ "Severity %s": "Şiddet %s",
+ "1-3 days a month": "Ayda 1-3 gün",
+ "15+ days a month": "Ayda 15+ gün",
+ "4-7 days a month": "Ayda 4-7 gün",
+ "8-14 days a month": "Ayda 8-14 gün",
+ "Improving": "İyileşiyor",
+ "Stable": "Sabit",
+ "Worsening": "Kötüleşiyor"
 }

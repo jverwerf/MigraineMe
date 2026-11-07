@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5092 entries.
+ * 5099 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -309,6 +309,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "1-2 dagen erna",
     "1-2 days before" to "1-2 dagen ervoor",
     "1-3 days" to "1-3 dagen",
+    "1-3 days a month" to "1-3 dagen per maand",
     "1-3 per month" to "1-3 per maand",
     "1-5 years" to "1-5 jaar",
     "1. Permissions" to "1. Rechten",
@@ -318,6 +319,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 dagen",
     "14-DAY FREE TRIAL" to "14 DAGEN GRATIS",
     "14-Day Medicines History" to "Medicijnen, 14 dagen",
+    "15+ days a month" to "15+ dagen per maand",
     "2 Days" to "2 dagen",
     "2 Weeks" to "2 weken",
     "2 days" to "2 dagen",
@@ -341,6 +343,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 dagen",
     "3d ago" to "3 d terug",
     "4-12 hours" to "4-12 uur",
+    "4-7 days a month" to "4-7 dagen per maand",
     "4. AI Personalisation" to "4. AI op maat",
     "5 days" to "5 dagen",
     "5+ cups" to "5+ kopjes",
@@ -356,6 +359,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "7-daagse risicovoorspelling",
     "7-day risk outlook" to "Risico 7 dagen",
     "70–85 dB: vacuum, busy street" to "70–85 dB: stofzuiger, drukke straat",
+    "8-14 days a month" to "8-14 dagen per maand",
     "85 dB+: NIOSH hazard threshold" to "85 dB+: NIOSH-grens voor schade",
     "< 25 days" to "< 25 dagen",
     "< 4 hours" to "< 4 uur",
@@ -1513,13 +1517,13 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "Avondcheck",
     "Evening check-in by voice" to "Avondcheck met je stem",
     "Evening check-in reminders" to "Herinnering avondcheck",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "Elke 1-2 maanden",
     "Every Monday\nit *learns* you." to "Elke maandag\n*leert* het jou.",
     "Every Monday it *learns.*" to "Elke maandag *leert* het.",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "Elke maandag stelt de AI met je herijking doelen voor, zoals meer slaap of minder schermtijd. Je weekoverzicht laat zien of ze werken.",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "Elke aanval in de periode, op volgorde",
     "Every attack in the period, in the order things happened" to "Elke aanval in de periode, in volgorde van gebeurtenis",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "Elke gelogde aanval wordt met deze vergeleken op alles wat je vastlegde: triggers, slaap, weer, symptomen, wat je nam en wanneer. Hoe meer een eerdere aanval met deze deelt, hoe zwaarder die telt, en alles hierboven is het gewogen midden van die aanvallen. Bij te weinig vergelijkbare aanvallen tonen we liever niets dan een gok.",
@@ -2011,6 +2015,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Import them too" to "Ook importeren",
     "Imported" to "Geïmporteerd",
     "Importing your history is part of the paid subscription." to "Je geschiedenis importeren hoort bij het betaalde abonnement.",
+    "Improving" to "Verbeterend",
     "Improving — down {0}%" to "Verbetert — {0}% omlaag",
     "In %1\$s days" to "Over %1\$s dagen",
     "In %s days" to "Over %s dagen",
@@ -3015,14 +3020,14 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Posture and deep neck" to "Houding en diepe nekspieren",
     "Potassium" to "Kalium",
     "Potassium high" to "Kalium hoog",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Potassium low" to "Kalium laag",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Praktische spullen voor de kanten van migraine waar je iets aan kunt doen: licht, geluid, slaap en de aanval zelf. Alles is eerst door onze eigen slechte dagen gegaan.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praktijken bij jou in de buurt. Ze horen niet bij MigraineMe en zien je dagboek niet.",
     "Practitioner" to "Behandelaar",
     "Practitioners" to "Behandelaars",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "De behandelaars hier zijn zelfstandig. MigraineMe heeft hen niet in dienst en staat buiten wat je met hen afspreekt.",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "Zorgverleners om je dagboek mee te delen, artikelen voor jou, en een forum met mensen zoals jij.",
     "Predict ovulation" to "Eisprong schatten",
@@ -3598,6 +3603,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "Zie dagen vol stressvolle afspraken",
     "Spreads" to "Breidt uit",
     "Spring" to "Lente",
+    "Stable" to "Stabiel",
     "Stable — consistent frequency" to "Stabiel — constante frequentie",
     "Star" to "Ster",
     "Start" to "Begin",
@@ -4517,15 +4523,15 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",
     "Work pressure, deadlines" to "Werkdruk, deadlines",
     "Worked out for you, not answered" to "Voor je berekend, niet beantwoord",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Working" to "Werken",
     "Working from home" to "Thuiswerken",
     "Working well" to "Werkt goed",
     "Workout HR zones" to "HR-zones bij training",
     "Works Best When" to "Werkt best als",
     "Works Best When…" to "Werkt best als…",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Works best when" to "Werkt het best als",
     "Works well" to "Werkt goed",
     "Worse in spring" to "Erger in de lente",
@@ -4533,6 +4539,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "Erger in de winter",
     "Worse — every time" to "Erger — elke keer",
     "Worse — sometimes" to "Erger — soms",
+    "Worsening" to "Verslechterend",
     "Worsening — up {0}%" to "Verslechtert — {0}% omhoog",
     "Worst" to "Ergst",
     "Worst day" to "Ergste dag",

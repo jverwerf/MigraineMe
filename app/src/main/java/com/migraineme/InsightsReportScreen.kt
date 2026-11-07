@@ -2167,7 +2167,7 @@ private fun RegimenRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             BrainyRowIcon(r.name, category = r.kind, size = 20.dp)
             Column(modifier = Modifier.weight(1f)) {
-                Text(r.name, color = androidx.compose.ui.graphics.Color.White,
+                Text(prettyLabel(r.name), color = androidx.compose.ui.graphics.Color.White,
                     fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
                 Text(sub, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
                     style = MaterialTheme.typography.labelSmall)

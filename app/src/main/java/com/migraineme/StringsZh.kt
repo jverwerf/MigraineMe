@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5093 entries.
+ * 5100 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -309,6 +309,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "1-2 days after" to "之後 1-2 天",
     "1-2 days before" to "之前 1-2 天",
     "1-3 days" to "1-3 天",
+    "1-3 days a month" to "每月 1-3 天",
     "1-3 per month" to "每月 1-3 次",
     "1-5 years" to "1-5 年",
     "1. Permissions" to "1. 權限",
@@ -318,6 +319,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "14 Days" to "14 天",
     "14-DAY FREE TRIAL" to "14 天免費試用",
     "14-Day Medicines History" to "14 天藥物紀錄",
+    "15+ days a month" to "每月 15 天以上",
     "2 Days" to "2 天",
     "2 Weeks" to "2 週",
     "2 days" to "2 天",
@@ -341,6 +343,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "32-35 days" to "32-35 天",
     "3d ago" to "3天前",
     "4-12 hours" to "4-12 小時",
+    "4-7 days a month" to "每月 4-7 天",
     "4. AI Personalisation" to "4. AI 個人化",
     "5 days" to "5 天",
     "5+ cups" to "5 杯以上",
@@ -356,6 +359,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "7-day risk forecast" to "7 天風險預報",
     "7-day risk outlook" to "未來 7 天風險",
     "70–85 dB: vacuum, busy street" to "70–85 dB:吸塵器、繁忙街道",
+    "8-14 days a month" to "每月 8-14 天",
     "85 dB+: NIOSH hazard threshold" to "85 dB+:NIOSH 危害門檻",
     "< 25 days" to "< 25 天",
     "< 4 hours" to "< 4 小時",
@@ -1513,13 +1517,13 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Evening check-in" to "晚間記錄",
     "Evening check-in by voice" to "用語音進行晚間記錄",
     "Evening check-in reminders" to "晚間記錄提醒",
+)
+
+private fun zhStrings1(): Map<String, String> = mapOf(
     "Every 1-2 months" to "每 1-2 個月",
     "Every Monday\nit *learns* you." to "每週一\n它都會*更了解*你。",
     "Every Monday it *learns.*" to "每週一它都會*學習。*",
     "Every Monday the AI suggests goals with your recalibration, like more sleep or less screen time. Your weekly review shows if they're working." to "每週一,AI 會連同你的重新校準建議目標,例如多睡一點或減少螢幕時間。你的每週回顧會顯示這些目標是否有效。",
-)
-
-private fun zhStrings1(): Map<String, String> = mapOf(
     "Every attack in range, in the order things happened" to "範圍內每次發作，依發生順序排列",
     "Every attack in the period, in the order things happened" to "這段期間的每次發作，依發生順序排列",
     "Every attack you have logged is checked against this one on everything you recorded: triggers, sleep, weather, symptoms, what you took and when. The more a past attack shares with this one, the harder it counts, and everything above is the weighted middle of those attacks. With too few similar attacks it shows nothing rather than a guess." to "你記錄過的每次發作，都會就你記下的所有內容與這次發作比對：誘因、睡眠、天氣、症狀、你服用了什麼以及何時服用。過去的發作與這次越相似，權重就越高，上面顯示的一切都是這些發作的加權中間值。如果相似的發作太少，我們寧可不顯示，也不做猜測。",
@@ -2012,6 +2016,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Import them too" to "也一併匯入",
     "Imported" to "已匯入",
     "Importing your history is part of the paid subscription." to "匯入歷史紀錄屬於付費訂閱的功能。",
+    "Improving" to "改善中",
     "Improving — down {0}%" to "改善中 — 下降 {0}%",
     "In %1\$s days" to "%1\$s 天後",
     "In %s days" to "%s 天後",
@@ -3015,14 +3020,14 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "這裡的貼文由其他成年人撰寫。為了維持這樣的環境，進入前請先確認你的年齡。",
     "Posture and deep neck" to "姿勢與頸部深層肌群",
     "Potassium" to "鉀",
+)
+
+private fun zhStrings2(): Map<String, String> = mapOf(
     "Potassium high" to "鉀偏高",
     "Potassium low" to "鉀偏低",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "針對偏頭痛中你能著力的部分，提供實用好物：光線、噪音、睡眠，以及發作本身。每一樣都先陪我們自己度過了難熬的日子。",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "我們在你附近找到的診所。它們不屬於 MigraineMe，也看不到你的日記。",
     "Practitioner" to "醫療人員",
-)
-
-private fun zhStrings2(): Map<String, String> = mapOf(
     "Practitioners" to "醫療人員",
     "Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them." to "這裡列出的執業人員皆為獨立個體。MigraineMe 不僱用他們，也不參與你與他們之間的約定。",
     "Practitioners you can share your diary with, articles picked for you, and a forum of people like you." to "可分享日記的專業人員、為你精選的文章，以及與你有相同經歷的人所組成的論壇。",
@@ -3599,6 +3604,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Spot stress-heavy meeting days" to "找出壓力大的會議日",
     "Spreads" to "擴散",
     "Spring" to "春季",
+    "Stable" to "穩定",
     "Stable — consistent frequency" to "穩定 — 頻率一致",
     "Star" to "星號",
     "Start" to "開始",
@@ -4517,15 +4523,15 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Work" to "工作",
     "Work pressure, anxiety, conflict" to "工作壓力、焦慮、衝突",
     "Work pressure, deadlines" to "工作壓力、截止期限",
+)
+
+private fun zhStrings3(): Map<String, String> = mapOf(
     "Worked out for you, not answered" to "為你計算而得,非你回答",
     "Working" to "工作",
     "Working from home" to "在家工作",
     "Working well" to "效果良好",
     "Workout HR zones" to "運動心率區間",
     "Works Best When" to "最有效的時機",
-)
-
-private fun zhStrings3(): Map<String, String> = mapOf(
     "Works Best When…" to "效果最佳的時機…",
     "Works best when" to "效果最佳的時機",
     "Works well" to "效果良好",
@@ -4534,6 +4540,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "Worse in winter" to "冬季更嚴重",
     "Worse — every time" to "更嚴重——每次都是",
     "Worse — sometimes" to "更嚴重——有時會",
+    "Worsening" to "惡化中",
     "Worsening — up {0}%" to "惡化中 — 上升 {0}%",
     "Worst" to "最嚴重",
     "Worst day" to "最嚴重的一天",

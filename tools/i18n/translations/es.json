@@ -5090,5 +5090,12 @@
  "Low: %s dB": "Mín.: %s dB",
  "MSG exposure": "Consumo de glutamato",
  "NSAID": "AINE",
- "Nitrates exposure": "Consumo de nitratos"
+ "Nitrates exposure": "Consumo de nitratos",
+ "1-3 days a month": "1-3 días al mes",
+ "15+ days a month": "15+ días al mes",
+ "4-7 days a month": "4-7 días al mes",
+ "8-14 days a month": "8-14 días al mes",
+ "Improving": "Mejorando",
+ "Stable": "Estable",
+ "Worsening": "Empeorando"
 }
