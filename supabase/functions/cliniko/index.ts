@@ -295,6 +295,28 @@ serve(async (req) => {
         return json({ appointments: out, total: appts?.total_entries ?? out.length });
       }
 
+      case "calendar": {
+        // The Calendar plugin: the connected person's own sessions for the next two weeks.
+        const integ = await needInteg();
+        const from = new Date().toISOString(), to = new Date(Date.now() + 14 * 864e5).toISOString();
+        const [cliUser, pracs, types] = await Promise.all([
+          ck(integ, "/user").catch(() => null),
+          ck(integ, "/practitioners?per_page=100").catch(() => null),
+          ck(integ, "/appointment_types?per_page=100").catch(() => null),
+        ]);
+        const typeName: Record<string, string> = {}; for (const t of types?.appointment_types || []) typeName[String(t.id)] = t.name;
+        const own = (pracs?.practitioners || []).find((p: any) => idFromLink(p.user) === String(cliUser?.id));
+        const q = [`starts_at:>=${from}`, `starts_at:<=${to}`, ...(own ? [`practitioner_id:=${own.id}`] : [])]
+          .map((x) => "q[]=" + encodeURIComponent(x)).join("&");
+        const appts = await ck(integ, `/individual_appointments?per_page=100&sort=starts_at:asc&${q}`);
+        const out = (appts?.individual_appointments || []).filter((a: any) => !a.cancelled_at).map((a: any) => ({
+          id: String(a.id), starts_at: a.starts_at, ends_at: a.ends_at, patient: a.patient_name || null,
+          type: typeName[idFromLink(a.appointment_type) || ""] || null,
+        }));
+        await touch(integ);
+        return json({ appointments: out });
+      }
+
       case "send": {
         const integ = await needInteg();
         const link = await needLink();
@@ -363,6 +385,7 @@ serve(async (req) => {
           const section = (type: string, answer: string) => ({
             patient_id: row.external_id, title: String(n.title || "Dashboard report").slice(0, 255), draft: true,
             content: { sections: [{ name: String(n.section || "Summary"), description: null, questions: [
+              ...(n.summary ? [{ name: String(n.summary_label || "Summary"), type: "text", answer: String(n.summary).slice(0, 4000) }] : []),
               { name: String(n.question || "Key numbers"), type, answer },
               ...(n.shared ? [{ name: String(n.shared_label || "Shared data"), type: "text", answer: String(n.shared) }] : []),
               { name: String(n.attachment_label || "Attachment"), type: "text", answer: b64 ? filename : String(body.zip_filename || "") },

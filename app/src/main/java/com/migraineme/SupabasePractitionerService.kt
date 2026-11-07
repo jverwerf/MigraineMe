@@ -228,6 +228,7 @@ object SupabasePractitionerService {
         val initiated_by: String = "client",
         val requested_scopes: List<String> = emptyList(),
         val scopes: List<String> = emptyList(),
+        val ai_summary_allowed: Boolean = false,
         val connected_at: String? = null,
         val revoked_at: String? = null,
         val last_viewed_at: String? = null,
@@ -488,7 +489,7 @@ object SupabasePractitionerService {
         // up as a card she could not stop sharing (Jordy, 10-01).
         val uid = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
         val url = "$baseUrl/rest/v1/practitioner_clients?user_id=eq.$uid&" +
-            "select=id,practitioner_id,user_id,status,initiated_by,requested_scopes,scopes," +
+            "select=id,practitioner_id,user_id,status,initiated_by,requested_scopes,scopes,ai_summary_allowed," +
             "connected_at,revoked_at,last_viewed_at,created_at,practitioners($PRAC_SELECT)" +
             "&order=created_at.desc"
         return client.get(url) {
@@ -816,6 +817,20 @@ object SupabasePractitionerService {
 
     /** Answer a practitioner's request. Granting nothing is a decline, and is
      *  recorded as one rather than left as a request nobody ever answered. */
+
+    /** The client's own yes or no to AI summaries by this practitioner. */
+    suspend fun setAiSummaryAllowed(accessToken: String, linkId: String, allowed: Boolean) {
+        val body = buildJsonObject {
+            put("ai_summary_allowed", allowed)
+            put("updated_at", nowIso())
+        }
+        client.patch("$baseUrl/rest/v1/practitioner_clients?id=eq.$linkId") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }
+    }
 
     /** Change what an already-connected practitioner may see. */
     suspend fun updateScopes(accessToken: String, link: LinkRow, scopes: Set<Scope>) {

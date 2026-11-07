@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5105 entries.
+ * 5107 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -603,6 +603,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alergias",
     "Allergies or hayfever" to "Alergias ou pólen",
     "Allow" to "Permitir",
+    "Allow AI summaries" to "Permitir resumos com IA",
     "Allow Calendar Access" to "Permitir calendário",
     "Allow Location Access" to "Permitir localização",
     "Allow Microphone Access" to "Permitir microfone",
@@ -1516,10 +1517,10 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Os avisos do ponto da noite estão desligados no sistema. Toca para abrir as definições.",
     "Evening Check-in — %1\$s of %2\$s" to "Ponto da noite — %1\$s de %2\$s",
     "Evening check-in" to "Ponto da noite",
-    "Evening check-in by voice" to "Ponto da noite por voz",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "Ponto da noite por voz",
     "Evening check-in reminders" to "Lembretes do ponto da noite",
     "Every 1-2 months" to "Cada 1-2 meses",
     "Every Monday\nit *learns* you." to "Todas as segundas\n*aprende* contigo.",
@@ -2158,6 +2159,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Let's go" to "Vamos",
     "Let-down" to "Relaxamento pós-stress",
     "Let-down effect" to "Pós-stress",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Permite que %1\$s peça um resumo com IA do que partilha. É enviado à OpenAI sem o seu nome, mas pode incluir notas que escreveu.",
     "Level" to "Nível",
     "Level %s" to "Nível %s",
     "Lie down" to "Deitar-se",
@@ -3018,11 +3020,11 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Valores da população. Não houve respostas para calibrar, por isso o teu medidor de risco e as suas curvas estão definidos para uma pessoa comum com enxaquecas comuns. Vão-se ajustando a ti à medida que registas.",
     "Portion" to "Porção",
     "Portion is a guess" to "Porção estimada",
-    "Post" to "Publicar",
-    "Postdrome" to "Pós-crise",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Post" to "Publicar",
+    "Postdrome" to "Pós-crise",
     "Postdrome (%s)" to "Pósdromo (%s)",
     "Postdrome (after attack)" to "Pós-crise (depois)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "As publicações aqui são feitas por outros adultos. Para manter assim, confirma a tua idade antes de entrar.",
@@ -4521,11 +4523,11 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Without aura" to "Sem aura",
     "Woke Up" to "Acordou",
     "Woke up" to "Acordou",
-    "Woke up time" to "Hora de acordar",
-    "Word-finding trouble" to "Dificuldade em achar palavras",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Woke up time" to "Hora de acordar",
+    "Word-finding trouble" to "Dificuldade em achar palavras",
     "Words" to "Palavras",
     "Work" to "Trabalho",
     "Work pressure, anxiety, conflict" to "Pressão no trabalho, ansiedade, conflito",

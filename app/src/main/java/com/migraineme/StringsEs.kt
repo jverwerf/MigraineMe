@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5105 entries.
+ * 5107 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -603,6 +603,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alergias",
     "Allergies or hayfever" to "Alergias o polen",
     "Allow" to "Permitir",
+    "Allow AI summaries" to "Permitir resúmenes con IA",
     "Allow Calendar Access" to "Permitir calendario",
     "Allow Location Access" to "Permitir ubicación",
     "Allow Microphone Access" to "Permitir micrófono",
@@ -1516,10 +1517,10 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Los avisos del repaso están desactivados en el sistema. Toca para abrir los ajustes.",
     "Evening Check-in — %1\$s of %2\$s" to "Repaso de noche — %1\$s de %2\$s",
     "Evening check-in" to "Repaso de tarde",
-    "Evening check-in by voice" to "Repaso de tarde por voz",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "Repaso de tarde por voz",
     "Evening check-in reminders" to "Avisos del repaso de tarde",
     "Every 1-2 months" to "Cada 1-2 meses",
     "Every Monday\nit *learns* you." to "Cada lunes\nte *aprende.*",
@@ -2158,6 +2159,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Let's go" to "Vamos",
     "Let-down" to "Relajación tras estrés",
     "Let-down effect" to "Tras el estrés",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Permite a %1\$s pedir un resumen con IA de lo que compartes. Se envía a OpenAI sin tu nombre, pero puede incluir notas que hayas escrito.",
     "Level" to "Nivel",
     "Level %s" to "Nivel %s",
     "Lie down" to "Tumbarse",
@@ -3018,11 +3020,11 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Valores de población. No hubo respuestas para calibrar, así que tu indicador de riesgo y sus curvas están ajustados a una persona típica con migrañas típicas. Se irán afinando contigo a medida que registres.",
     "Portion" to "Ración",
     "Portion is a guess" to "Porción estimada",
-    "Post" to "Publicar",
-    "Postdrome" to "Posdromo",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Post" to "Publicar",
+    "Postdrome" to "Posdromo",
     "Postdrome (%s)" to "Postdromo (%s)",
     "Postdrome (after attack)" to "Posdromo (después)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Las publicaciones aquí son de otros adultos. Para mantenerlo así, confirma tu edad antes de entrar.",
@@ -4521,11 +4523,11 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Without aura" to "Sin aura",
     "Woke Up" to "Despertar",
     "Woke up" to "Despertar",
-    "Woke up time" to "Hora de despertar",
-    "Word-finding trouble" to "Dificultad con las palabras",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Woke up time" to "Hora de despertar",
+    "Word-finding trouble" to "Dificultad con las palabras",
     "Words" to "Palabras",
     "Work" to "Trabajo",
     "Work pressure, anxiety, conflict" to "Presión laboral, ansiedad, conflicto",

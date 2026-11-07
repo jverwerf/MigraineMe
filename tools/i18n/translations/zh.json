@@ -5104,5 +5104,7 @@
  "Worsening": "惡化中",
  "Barcode": "條碼",
  "Photo": "照片",
- "Weekly migraine days": "每週偏頭痛天數"
+ "Weekly migraine days": "每週偏頭痛天數",
+ "Allow AI summaries": "允許 AI 摘要",
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "讓 %1$s 可以要求為你分享的內容產生 AI 摘要。內容會在移除姓名後傳送給 OpenAI,但可能包含你寫的筆記。"
 }

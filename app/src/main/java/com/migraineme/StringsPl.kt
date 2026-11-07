@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5401 entries.
+ * 5403 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -796,6 +796,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alergie",
     "Allergies or hayfever" to "Alergie lub katar sienny",
     "Allow" to "Zezwól",
+    "Allow AI summaries" to "Zezwól na podsumowania AI",
     "Allow Calendar Access" to "Zezwól na kalendarz",
     "Allow Location Access" to "Zezwól na lokalizację",
     "Allow Microphone Access" to "Zezwól na mikrofon",
@@ -1516,10 +1517,10 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Difficulty speaking" to "Trudności z mówieniem",
     "Digestive" to "Trawienne",
     "Digital wellness correlation" to "Korelacja z cyfrowym dobrostanem",
-    "Dihydroergotamine (DHE)" to "Dihydroergotamina (DHE)",
 )
 
 private fun plStrings1(): Map<String, String> = mapOf(
+    "Dihydroergotamine (DHE)" to "Dihydroergotamina (DHE)",
     "Dinner" to "Kolacja",
     "Directions" to "Trasa",
     "Disable Battery Optimization" to "Wyłącz optymalizację baterii",
@@ -2387,6 +2388,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Let's go" to "Zaczynamy",
     "Let-down" to "Odprężenie po stresie",
     "Let-down effect" to "Efekt odprężenia",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Pozwala %1\$s poprosić o podsumowanie AI tego, co udostępniasz. Trafia do OpenAI bez Twojego imienia, ale może zawierać Twoje notatki.",
     "Level" to "Poziom",
     "Level %s" to "Poziom %s",
     "Lie down" to "Połóż się",
@@ -3018,11 +3020,11 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1\$s." to "Na Androidzie: otwórz MigraineMe, przejdź do ekranu ulepszenia i wpisz kod %1\$s.",
     "On calmer days" to "Spokojniejsze dni",
     "On flare days" to "W dni z atakiem",
-    "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Tylko w dobre dni. Potrzebujesz wolnego kawałka ściany, łóżka lub maty oraz piłki tenisowej do rozluźnienia na końcu.",
-    "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "W dobre dni lub gdy kark jest napięty po długim siedzeniu przy biurku. Nie podczas ataku, jeśli ruch głową nasila ból.",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "On good days only. You need a clear bit of wall, a bed or a mat, and a tennis ball for the release at the end." to "Tylko w dobre dni. Potrzebujesz wolnego kawałka ściany, łóżka lub maty oraz piłki tenisowej do rozluźnienia na końcu.",
+    "On good days, or when the neck feels tight after a long stretch at the desk. Not during an attack if moving the head makes the pain worse." to "W dobre dni lub gdy kark jest napięty po długim siedzeniu przy biurku. Nie podczas ataku, jeśli ruch głową nasila ból.",
     "On track" to "Według planu",
     "Once a day" to "Raz dziennie",
     "Once a day, %s days a week" to "Raz dziennie, %s dni w tygodniu",
@@ -4521,11 +4523,11 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP nie udostępnia tętna, więc ten cel nie może wypełnić się sam. Połącz Garmin, Oura, Polar lub Health Connect.",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "Integracja z WHOOP jest obecnie dostępna tylko na zaproszenie. Poproś o dostęp, a włączymy ją dla twojego konta.",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
-    "Wake Time" to "Pobudka",
-    "Wake time" to "Godzina pobudki",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Wake Time" to "Pobudka",
+    "Wake time" to "Godzina pobudki",
     "Wake time early" to "Wczesna pobudka",
     "Wake time late" to "Późna pora wstawania",
     "Wake-ups and restlessness" to "Wybudzenia i niepokój",

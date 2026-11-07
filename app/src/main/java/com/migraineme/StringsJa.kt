@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5106 entries.
+ * 5108 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -603,6 +603,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Allergies" to "アレルギー",
     "Allergies or hayfever" to "アレルギーや花粉症",
     "Allow" to "許可",
+    "Allow AI summaries" to "AI要約を許可",
     "Allow Calendar Access" to "カレンダーを許可",
     "Allow Location Access" to "位置情報を許可",
     "Allow Microphone Access" to "マイクを許可",
@@ -1516,10 +1517,10 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "夕方の記録の通知は、システム設定でオフになっています。スイッチをタップすると設定を開きます。",
     "Evening Check-in — %1\$s of %2\$s" to "夕方の記録 — %1\$s/%2\$s",
     "Evening check-in" to "夕方の記録",
-    "Evening check-in by voice" to "音声で夕方の記録",
 )
 
 private fun jaStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "音声で夕方の記録",
     "Evening check-in reminders" to "夕方の記録のお知らせ",
     "Every 1-2 months" to "1〜2か月ごと",
     "Every Monday\nit *learns* you." to "毎週月曜日、\nあなたを*学びます。*",
@@ -2159,6 +2160,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Let's go" to "始めましょう",
     "Let-down" to "ストレス後の緩み",
     "Let-down effect" to "ストレス後の反動",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "%1\$sが、共有内容のAI要約を依頼できるようにします。名前を除いてOpenAIに送信されますが、ご自身のメモが含まれる場合があります。",
     "Level" to "段階",
     "Level %s" to "段階 %s",
     "Lie down" to "横になる",
@@ -3018,11 +3020,11 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Population default thresholds for {0} active triggers." to "有効な誘因{0}件の、母集団の標準しきい値です。",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "母集団の標準設定です。調整に使える回答がなかったため、リスクゲージと減衰曲線は、一般的な片頭痛のある一般的な人向けに設定されています。記録を続けると、あなたに合わせて調整されます。",
     "Portion" to "分量",
-    "Portion is a guess" to "量は推定です",
-    "Post" to "投稿",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Portion is a guess" to "量は推定です",
+    "Post" to "投稿",
     "Postdrome" to "後発症状",
     "Postdrome (%s)" to "後発症状(%s)",
     "Postdrome (after attack)" to "後発症状(発作の後)",
@@ -4521,11 +4523,11 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Without a subscription, imported data only goes into your journal." to "購読していない場合、取り込んだデータは日記にのみ保存されます。",
     "Without aura" to "前兆なし",
     "Woke Up" to "起床",
-    "Woke up" to "起床",
-    "Woke up time" to "起床時刻",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Woke up" to "起床",
+    "Woke up time" to "起床時刻",
     "Word-finding trouble" to "言葉が出にくい",
     "Words" to "言葉",
     "Work" to "仕事",

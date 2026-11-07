@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5106 entries.
+ * 5108 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -603,6 +603,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Allergies" to "過敏",
     "Allergies or hayfever" to "過敏或花粉熱",
     "Allow" to "允許",
+    "Allow AI summaries" to "允許 AI 摘要",
     "Allow Calendar Access" to "允許存取行事曆",
     "Allow Location Access" to "允許存取位置",
     "Allow Microphone Access" to "允許存取麥克風",
@@ -1516,10 +1517,10 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "系統設定中已關閉晚間記錄通知。點一下開關即可開啟設定。",
     "Evening Check-in — %1\$s of %2\$s" to "晚間記錄 — %1\$s／%2\$s",
     "Evening check-in" to "晚間記錄",
-    "Evening check-in by voice" to "用語音進行晚間記錄",
 )
 
 private fun zhStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "用語音進行晚間記錄",
     "Evening check-in reminders" to "晚間記錄提醒",
     "Every 1-2 months" to "每 1-2 個月",
     "Every Monday\nit *learns* you." to "每週一\n它都會*更了解*你。",
@@ -2159,6 +2160,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Let's go" to "開始吧",
     "Let-down" to "壓力解除後的放鬆",
     "Let-down effect" to "壓力解除效應",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "讓 %1\$s 可以要求為你分享的內容產生 AI 摘要。內容會在移除姓名後傳送給 OpenAI,但可能包含你寫的筆記。",
     "Level" to "等級",
     "Level %s" to "等級 %s",
     "Lie down" to "躺下來",
@@ -3018,11 +3020,11 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Population default thresholds for {0} active triggers." to "{0} 個啟用中誘因的族群預設閾值。",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "預設為一般族群數值。目前沒有可用來校準的回答,所以你的風險指標與其衰減曲線,是依一般偏頭痛患者來設定的。隨著你持續記錄,它們會逐漸調整成適合你。",
     "Portion" to "份量",
-    "Portion is a guess" to "份量為估計值",
-    "Post" to "發佈",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Portion is a guess" to "份量為估計值",
+    "Post" to "發佈",
     "Postdrome" to "後期症狀",
     "Postdrome (%s)" to "後期症狀（%s）",
     "Postdrome (after attack)" to "後期症狀（發作後）",
@@ -4521,11 +4523,11 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Without a subscription, imported data only goes into your journal." to "沒有訂閱的話,匯入的資料只會存入你的日記。",
     "Without aura" to "無預兆",
     "Woke Up" to "醒來",
-    "Woke up" to "醒來",
-    "Woke up time" to "起床時間",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Woke up" to "醒來",
+    "Woke up time" to "起床時間",
     "Word-finding trouble" to "找字困難",
     "Words" to "找字",
     "Work" to "工作",

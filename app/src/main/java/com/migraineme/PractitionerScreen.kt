@@ -158,6 +158,7 @@ fun PractitionerPanel(
 ) {
     val auth by authVm.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val aiOverride = remember { mutableStateMapOf<String, Boolean>() }
     val context = LocalContext.current
 
     var links by remember { mutableStateOf<List<SupabasePractitionerService.LinkRow>>(emptyList()) }
@@ -256,6 +257,18 @@ fun PractitionerPanel(
                         lastViewedIso = lastViewed[link.practitioner_id] ?: link.last_viewed_at,
                         onChange = { editing = link },
                         onRevoke = { confirmRevoke = link },
+                        aiAllowed = aiOverride[link.id] ?: link.ai_summary_allowed,
+                        onAiChange = { on ->
+                            aiOverride[link.id] = on
+                            scope.launch {
+                                val token = authVm.getValidAccessToken(context) ?: return@launch
+                                runCatching {
+                                    withContext(Dispatchers.IO) {
+                                        SupabasePractitionerService.setAiSummaryAllowed(token, link.id, on)
+                                    }
+                                }.onFailure { aiOverride.remove(link.id); error = it.message }
+                            }
+                        },
                     )
                 }
             }
@@ -437,6 +450,8 @@ private fun ActiveCard(
     lastViewedIso: String?,
     onChange: () -> Unit,
     onRevoke: () -> Unit,
+    aiAllowed: Boolean = link.ai_summary_allowed,
+    onAiChange: (Boolean) -> Unit = {},
 ) {
     val p = link.practitioners
     val name = p?.display_name ?: t("Practitioner")
@@ -496,6 +511,18 @@ private fun ActiveCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.SubtleTextColor,
                 )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text(t("Allow AI summaries"), style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                    Text(
+                        t("Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.", name),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.SubtleTextColor,
+                    )
+                }
+                Switch(checked = aiAllowed, onCheckedChange = onAiChange)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

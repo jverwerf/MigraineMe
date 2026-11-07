@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5105 entries.
+ * 5107 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -603,6 +603,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Allergieën",
     "Allergies or hayfever" to "Allergie of hooikoorts",
     "Allow" to "Toestaan",
+    "Allow AI summaries" to "AI-samenvattingen toestaan",
     "Allow Calendar Access" to "Agenda toestaan",
     "Allow Location Access" to "Locatie toestaan",
     "Allow Microphone Access" to "Microfoon toestaan",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Meldingen voor de avondcheck staan uit in het systeem. Tik om de instellingen te openen.",
     "Evening Check-in — %1\$s of %2\$s" to "Avondcheck — %1\$s van %2\$s",
     "Evening check-in" to "Avondcheck",
-    "Evening check-in by voice" to "Avondcheck met je stem",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "Avondcheck met je stem",
     "Evening check-in reminders" to "Herinnering avondcheck",
     "Every 1-2 months" to "Elke 1-2 maanden",
     "Every Monday\nit *learns* you." to "Elke maandag\n*leert* het jou.",
@@ -2158,6 +2159,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Let's go" to "We gaan",
     "Let-down" to "Ontspanning na stress",
     "Let-down effect" to "Na stress",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "Laat %1\$s een AI-samenvatting vragen van wat je deelt. Die gaat zonder je naam naar OpenAI, maar kan notities bevatten die je zelf schreef.",
     "Level" to "Niveau",
     "Level %s" to "Niveau %s",
     "Lie down" to "Gaan liggen",
@@ -3018,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Populatiestandaard. Er waren geen antwoorden om op te kalibreren, dus je risicometer en afbouwcurves staan ingesteld op een gemiddeld persoon met gemiddelde migraine. Ze worden op jou afgestemd terwijl je logt.",
     "Portion" to "Portie",
     "Portion is a guess" to "Portie geschat",
-    "Post" to "Plaatsen",
-    "Postdrome" to "Nawee",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Post" to "Plaatsen",
+    "Postdrome" to "Nawee",
     "Postdrome (%s)" to "Postdroom (%s)",
     "Postdrome (after attack)" to "Nawee (erna)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Berichten hier zijn geschreven door andere volwassenen. Bevestig je leeftijd voordat je verder gaat.",
@@ -4521,11 +4523,11 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Without aura" to "Zonder aura",
     "Woke Up" to "Wakker",
     "Woke up" to "Wakker",
-    "Woke up time" to "Wektijd",
-    "Word-finding trouble" to "Woordvindproblemen",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Woke up time" to "Wektijd",
+    "Word-finding trouble" to "Woordvindproblemen",
     "Words" to "Woorden",
     "Work" to "Werk",
     "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",

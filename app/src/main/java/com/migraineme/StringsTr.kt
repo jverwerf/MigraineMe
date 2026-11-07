@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5107 entries.
+ * 5109 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -603,6 +603,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Allergies" to "Alerjiler",
     "Allergies or hayfever" to "Alerji veya saman nezlesi",
     "Allow" to "İzin ver",
+    "Allow AI summaries" to "Yapay zekâ özetlerine izin ver",
     "Allow Calendar Access" to "Takvime izin ver",
     "Allow Location Access" to "Konum erişimine izin ver",
     "Allow Microphone Access" to "Mikrofona izin ver",
@@ -1516,10 +1517,10 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Akşam Kontrolü bildirimleri sistem ayarlarında kapalı. Ayarları açmak için anahtara dokun.",
     "Evening Check-in — %1\$s of %2\$s" to "Akşam Kontrolü — %1\$s / %2\$s",
     "Evening check-in" to "Akşam kontrolü",
-    "Evening check-in by voice" to "Sesle akşam kontrolü",
 )
 
 private fun trStrings1(): Map<String, String> = mapOf(
+    "Evening check-in by voice" to "Sesle akşam kontrolü",
     "Evening check-in reminders" to "Akşam kontrolü hatırlatıcıları",
     "Every 1-2 months" to "1-2 ayda bir",
     "Every Monday\nit *learns* you." to "Her pazartesi\nseni *öğrenir.*",
@@ -2159,6 +2160,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Let's go" to "Başlayalım",
     "Let-down" to "Stres sonrası gevşeme",
     "Let-down effect" to "Etki sonrası düşüş",
+    "Lets %1\$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote." to "%1\$s, paylaştıklarının yapay zekâ özetini isteyebilir. Adın olmadan OpenAI'a gönderilir ama yazdığın notları içerebilir.",
     "Level" to "Seviye",
     "Level %s" to "Seviye %s",
     "Lie down" to "Uzan",
@@ -3018,11 +3020,11 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Nüfus varsayılanı azalma eğrisi.",
     "Population default thresholds for {0} active triggers." to "{0} etkin tetikleyici için nüfus varsayılan eşikleri.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Nüfus varsayılanları. Kalibre edecek yanıt olmadığı için risk göstergen ve azalma eğrileri, sıradan migreni olan sıradan biri için ayarlandı. Kayıt tuttukça sana göre ayarlanır.",
-    "Portion" to "Porsiyon",
-    "Portion is a guess" to "Porsiyon tahmini",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Portion" to "Porsiyon",
+    "Portion is a guess" to "Porsiyon tahmini",
     "Post" to "Paylaş",
     "Postdrome" to "Postdrom",
     "Postdrome (%s)" to "Postdrom (%s)",
@@ -4521,11 +4523,11 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "{0} içinde",
     "Without a subscription, imported data only goes into your journal." to "Abonelik olmadan, içe aktarılan veriler yalnızca günlüğüne eklenir.",
     "Without aura" to "Aurasız",
-    "Woke Up" to "Uyandın",
-    "Woke up" to "Uyanma",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Woke Up" to "Uyandın",
+    "Woke up" to "Uyanma",
     "Woke up time" to "Uyanma saati",
     "Word-finding trouble" to "Kelime bulma güçlüğü",
     "Words" to "Kelimeler",
