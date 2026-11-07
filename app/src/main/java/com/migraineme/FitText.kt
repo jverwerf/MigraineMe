@@ -86,7 +86,15 @@ private const val MIN_SCALE_ONE_LINE = 0.6f
 private fun TextLayoutResult.breaksAWord(text: String): Boolean {
     for (line in 0 until lineCount - 1) {
         val end = getLineEnd(line)
-        if (end in 1 until text.length && text[end - 1].isLetter() && text[end].isLetter()) return true
+        if (end in 1 until text.length && text[end - 1].isWordLetter() && text[end].isWordLetter()) return true
     }
     return false
 }
+
+/** Chinese, Japanese and Korean lines may correctly end between any two characters. */
+private fun Char.isWordLetter(): Boolean = isLetter() && code !in CJK_FROM..CJK_TO && code !in HANGUL_FROM..HANGUL_TO
+
+private const val CJK_FROM = 0x2E80 // radicals, kana, ideographs
+private const val CJK_TO = 0x9FFF
+private const val HANGUL_FROM = 0xAC00
+private const val HANGUL_TO = 0xD7FF
