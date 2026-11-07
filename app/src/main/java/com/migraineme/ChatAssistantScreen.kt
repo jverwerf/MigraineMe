@@ -539,7 +539,7 @@ private fun WelcomeCard(onSuggestionTap: (String) -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                t("I can help you understand your migraine patterns using your last 7 days of data \u2014 sleep, HRV, recovery, triggers, and more."),
+                t("I can help you understand your migraine patterns using your tracked data \u2014 sleep, HRV, recovery, triggers, and more."),
                 color = Color.White.copy(alpha = 0.65f),
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,

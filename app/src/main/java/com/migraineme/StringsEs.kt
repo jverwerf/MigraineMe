@@ -2001,7 +2001,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Hidratación",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Acepto los Términos de uso y la Política de privacidad. En la comunidad no se toleran los usuarios abusivos ni el contenido ofensivo.",
     "I am 18 or over" to "Tengo 18 o más",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Puedo ayudarte a entender tus patrones con los datos de los últimos 7 días: sueño, VFC, recuperación, factores y más.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Puedo ayudarte a entender tus patrones con los datos que registras: sueño, VFC, recuperación, factores y más.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "He visto que tu prueba de MigraineMe terminó hace un tiempo y no seguiste, lo cual está perfectamente bien. Solo quería escribirte antes de que perdamos el contacto.",
     "I suspect so" to "Creo que sí",
     "I'll log everything manually" to "Lo anotaré todo a mano",

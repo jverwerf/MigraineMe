@@ -2002,7 +2002,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Hydration" to "수분 섭취",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "이용약관과 개인정보 처리방침에 동의해요. 커뮤니티에서는 악의적인 사용자와 부적절한 콘텐츠를 허용하지 않아요.",
     "I am 18 or over" to "18세 이상이에요",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "최근 7일간의 데이터(수면, HRV, 회복, 유발 요인 등)로 편두통 패턴을 이해하도록 도와드릴게요.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "기록한 데이터(수면, HRV, 회복, 유발 요인 등)로 편두통 패턴을 이해하도록 도와드릴게요.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "MigraineMe 체험 기간이 얼마 전에 끝났는데 계속 이용하지 않으셨더라고요. 전혀 괜찮아요. 연락이 끊기기 전에 한마디 드리고 싶었어요.",
     "I suspect so" to "그런 것 같아요",
     "I'll log everything manually" to "모두 직접 기록할게요",

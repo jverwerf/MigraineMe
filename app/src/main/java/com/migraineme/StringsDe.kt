@@ -2001,7 +2001,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Flüssigkeit",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ich akzeptiere die Nutzungsbedingungen und Datenschutzerklärung. Missbrauch und anstößige Inhalte sind in der Community tabu.",
     "I am 18 or over" to "Ich bin 18+",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Ich helfe dir, deine Muster zu verstehen, mit den Daten der letzten 7 Tage — Schlaf, HRV, Erholung, Auslöser und mehr.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Ich helfe dir, deine Muster zu verstehen, mit deinen erfassten Daten: Schlaf, HRV, Erholung, Auslöser und mehr.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Mir ist aufgefallen, dass dein MigraineMe-Test vor einer Weile ausgelaufen ist und du nicht weitergemacht hast, was völlig okay ist. Ich wollte mich nur melden, bevor wir uns aus den Augen verlieren.",
     "I suspect so" to "Vermutlich ja",
     "I'll log everything manually" to "Ich erfasse alles von Hand",

@@ -2219,7 +2219,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Nawodnienie",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Akceptuję Warunki korzystania i Politykę prywatności. W społeczności nie tolerujemy nadużyć ani niewłaściwych treści.",
     "I am 18 or over" to "Mam 18+ lat",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Pomogę ci zrozumieć twoje wzorce migreny na podstawie danych z ostatnich 7 dni — snu, HRV, regeneracji, wyzwalaczy i nie tylko.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Pomogę ci zrozumieć twoje wzorce migreny na podstawie zapisanych danych: snu, HRV, regeneracji, wyzwalaczy i nie tylko.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Widzę, że twój okres próbny MigraineMe skończył się jakiś czas temu i nie został przedłużony, co jest zupełnie w porządku. Chcę się tylko odezwać, zanim stracimy kontakt.",
     "I suspect so" to "Chyba tak",
     "I'll log everything manually" to "Wszystko zapiszę ręcznie",

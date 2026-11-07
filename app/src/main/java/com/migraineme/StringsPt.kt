@@ -2001,7 +2001,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Hidratação",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Aceito os Termos de utilização e a Política de privacidade. Abusos e conteúdos ofensivos não são tolerados na comunidade.",
     "I am 18 or over" to "Tenho 18 ou mais",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Posso ajudar-te a perceber os teus padrões com os dados dos últimos 7 dias: sono, VFC, recuperação, fatores e mais.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Posso ajudar-te a perceber os teus padrões com os dados que registas: sono, VFC, recuperação, fatores e mais.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Reparei que o teu período de teste do MigraineMe terminou há algum tempo e não continuaste, o que não faz mal nenhum. Só queria dar notícias antes de perdermos o contacto.",
     "I suspect so" to "Acho que sim",
     "I'll log everything manually" to "Eu anoto tudo à mão",

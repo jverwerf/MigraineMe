@@ -2002,7 +2002,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Hydration" to "水分攝取",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "我同意使用條款與隱私權政策。社群內不容許濫用行為的使用者及不當內容。",
     "I am 18 or over" to "我已年滿 18 歲",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "我可以根據你最近 7 天的資料,幫你了解偏頭痛的規律,包括睡眠、HRV、恢復狀態、誘因等。",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "我可以根據你記錄的資料,幫你了解偏頭痛的規律,包括睡眠、HRV、恢復狀態、誘因等。",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "我注意到你的 MigraineMe 試用期不久前結束了,你也沒有繼續使用,這完全沒問題。我只是想在我們失去聯繫之前,先跟你打聲招呼。",
     "I suspect so" to "我猜是的",
     "I'll log everything manually" to "我會手動記錄所有內容",

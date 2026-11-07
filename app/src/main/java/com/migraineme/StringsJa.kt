@@ -2002,7 +2002,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Hydration" to "水分補給",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "利用規約とプライバシーポリシーに同意します。コミュニティでは、迷惑行為や不適切な内容は認められません。",
     "I am 18 or over" to "18歳以上です",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "直近7日間のデータ(睡眠、HRV、回復、誘因など)をもとに、片頭痛のパターンを理解するお手伝いをします。",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "記録したデータ(睡眠、HRV、回復、誘因など)をもとに、片頭痛のパターンを理解するお手伝いをします。",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "MigraineMeのお試し期間が少し前に終わり、そのまま続けなかったことに気づきました。それはまったく問題ありません。連絡が途絶える前に、一言お伝えしたくてご連絡しました。",
     "I suspect so" to "そう思います",
     "I'll log everything manually" to "すべて手動で記録します",

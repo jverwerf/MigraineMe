@@ -2001,7 +2001,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Hydratatie",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ik ga akkoord met de voorwaarden en het privacybeleid. Misbruik en aanstootgevende inhoud zijn in de community niet toegestaan.",
     "I am 18 or over" to "Ik ben 18 of ouder",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Ik help je je patronen te snappen met je gegevens van de laatste 7 dagen: slaap, HRV, herstel, triggers en meer.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Ik help je je patronen te snappen met wat je bijhoudt: slaap, HRV, herstel, triggers en meer.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "Ik zag dat je proefperiode van MigraineMe een tijdje geleden afliep en dat je niet bent doorgegaan, wat helemaal prima is. Ik wilde alleen even van me laten horen voordat we elkaar uit het oog verliezen.",
     "I suspect so" to "Ik denk het",
     "I'll log everything manually" to "Ik noteer alles zelf",

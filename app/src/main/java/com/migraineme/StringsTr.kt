@@ -2002,7 +2002,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Hydration" to "Su dengesi",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul ediyorum. Toplulukta kötüye kullanıma ve uygunsuz içeriğe izin verilmez.",
     "I am 18 or over" to "18 yaşındayım",
-    "I can help you understand your migraine patterns using your last 7 days of data — sleep, HRV, recovery, triggers, and more." to "Son 7 günlük verilerini kullanarak migren örüntülerini anlamana yardımcı olabilirim: uyku, HRV, toparlanma, tetikleyiciler ve daha fazlası.",
+    "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Kaydettiğin verileri kullanarak migren örüntülerini anlamana yardımcı olabilirim: uyku, HRV, toparlanma, tetikleyiciler ve daha fazlası.",
     "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch." to "MigraineMe deneme sürenin bir süre önce bittiğini ve devam etmediğini fark ettim, bu gayet normal. Bağlantımız kopmadan sana bir ulaşmak istedim.",
     "I suspect so" to "Sanırım öyle",
     "I'll log everything manually" to "Her şeyi elle kaydedeceğim",
