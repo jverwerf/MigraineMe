@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5457 entries.
+ * 5459 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -2239,6 +2239,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Wysoka wilgotność",
     "Humidity low" to "Niska wilgotność",
     "Hydration" to "Nawodnienie",
+    "I agree to my health data being used as described in the Privacy Policy." to "Zgadzam się na wykorzystywanie moich danych o zdrowiu w sposób opisany w Polityce prywatności.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Akceptuję Warunki korzystania i Politykę prywatności. W społeczności nie tolerujemy nadużyć ani niewłaściwych treści.",
     "I am 18 or over" to "Mam 18+ lat",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Pomogę ci zrozumieć twoje wzorce migreny na podstawie zapisanych danych: snu, HRV, regeneracji, wyzwalaczy i nie tylko.",
@@ -3019,10 +3020,10 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Now" to "Teraz",
     "Now (tap to change)" to "Teraz (stuknij, zmień)",
     "Now let's set up\nyour *data*" to "Teraz ustawmy\nTwoje *dane*",
-    "Now let's set up\nyour data" to "Teraz skonfigurujmy\ntwoje dane",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "Now let's set up\nyour data" to "Teraz skonfigurujmy\ntwoje dane",
     "Numbness" to "Drętwienie",
     "Nutrition (%s g)" to "Odżywianie (%s g)",
     "Nutrition (per serving × %s)" to "Odżywianie (na porcję × %s)",
@@ -4522,10 +4523,10 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "View and manage your food log" to "Zobacz i edytuj dziennik posiłków",
     "View →" to "Zobacz →",
     "Vinegar" to "Ocet",
-    "Vinegar or pickled foods" to "Ocet lub marynaty",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Vinegar or pickled foods" to "Ocet lub marynaty",
     "Vision loss in one eye" to "Utrata wzroku w jednym oku",
     "Visit %s" to "Otwórz %s",
     "Visual" to "Wzrokowe",
@@ -4955,6 +4956,7 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Przypomnienie o celu",
     "Your goals" to "Twoje cele",
     "Your goals have been updated." to "Twoje cele zostały zaktualizowane.",
+    "Your health data" to "Twoje dane o zdrowiu",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Twoja historia trafia do dziennika. We wnioskach liczy się tylko przy płatnej subskrypcji, nie w bezpłatnym okresie próbnym.",
     "Your history is still imported into the journal today." to "Twoja historia i tak zostanie dziś zaimportowana do dziennika.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Twoje zaimportowane leki i ulgi są teraz ulubionymi w kreatorze wpisów.",

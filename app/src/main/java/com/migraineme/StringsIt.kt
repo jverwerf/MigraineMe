@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5161 entries.
+ * 5163 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -2021,6 +2021,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Umidità alta",
     "Humidity low" to "Umidità bassa",
     "Hydration" to "Idratazione",
+    "I agree to my health data being used as described in the Privacy Policy." to "Acconsento all'uso dei miei dati sanitari come descritto nell'Informativa sulla privacy.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Accetto i Termini d'uso e l'Informativa sulla privacy. Abusi e contenuti offensivi non sono tollerati nella community.",
     "I am 18 or over" to "Ho 18 anni o più",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Posso aiutarti a capire i tuoi schemi con i dati che registri: sonno, HRV, recupero, fattori e altro.",
@@ -3019,10 +3020,10 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "Inserisci la password attuale.",
     "Please enter your information manually below." to "Scrivi qui sotto i tuoi dati.",
     "Please fill in all password fields." to "Compila tutti i campi.",
-    "Please go to Monitor to complete setup." to "Vai nel Monitor per finire.",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Please go to Monitor to complete setup." to "Vai nel Monitor per finire.",
     "Please type %1\$s to confirm." to "Scrivi %1\$s per confermare.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Misura puntuale SpO2 di Polar Elixir™. Serve un dispositivo compatibile con sensore SpO2.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ misura la temperatura assoluta della pelle nel sonno. I valori grezzi restano interni e lo scarto dalla notte prima è calcolato ogni giorno. Serve un dispositivo compatibile (Vantage V3, Grit X2 Pro, ecc.).",
@@ -4522,10 +4523,10 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "Dove si trova tutto, scheda per scheda",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Dove è comparso nella tua vista? Tocca le zone come le hai viste tu.",
     "Where in your vision it shows up, as seen through your own eyes" to "Dove compare nella tua vista, come la vedi tu",
-    "Where it is heading" to "Dove sta andando",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Where it is heading" to "Dove sta andando",
     "Where the pain sat" to "Dove stava il dolore",
     "Where were you?" to "Dove eri?",
     "Where you were, what you were doing, what you had to miss." to "Dove eri, cosa facevi, cosa è dovuto saltare.",
@@ -4690,6 +4691,7 @@ private fun itStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Promemoria del tuo obiettivo",
     "Your goals" to "Obiettivi",
     "Your goals have been updated." to "I tuoi obiettivi sono stati aggiornati.",
+    "Your health data" to "I tuoi dati sanitari",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Il tuo storico va nel diario. Conta nelle analisi solo con un abbonamento a pagamento, non con la prova gratuita.",
     "Your history is still imported into the journal today." to "Il tuo storico viene comunque importato nel diario oggi.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "I farmaci e i sollievi importati ora sono preferiti nella procedura di registrazione.",

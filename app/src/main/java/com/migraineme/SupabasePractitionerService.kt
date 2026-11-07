@@ -869,6 +869,28 @@ object SupabasePractitionerService {
         logConsent(accessToken, link.id, "revoked", link.granted, emptySet())
     }
 
+    // ---- the separate yes to health data ----
+
+    suspend fun healthConsentExists(accessToken: String, userId: String): Boolean {
+        val res: HttpResponse = client.get("$baseUrl/rest/v1/health_consents?select=user_id&user_id=eq.$userId&limit=1") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+        }
+        if (!res.status.isSuccess()) throw IllegalStateException("consent check failed")
+        return res.bodyAsText().contains("user_id")
+    }
+
+    suspend fun recordHealthConsent(accessToken: String, userId: String, policyVersion: String) {
+        val res: HttpResponse = client.post("$baseUrl/rest/v1/health_consents") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            header("Prefer", "resolution=ignore-duplicates")
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("user_id", userId); put("policy_version", policyVersion) })
+        }
+        if (!res.status.isSuccess()) throw IllegalStateException("consent save failed")
+    }
+
     // ---- two-way appointment suggestions (the appointments edge function) ----
 
     @Serializable

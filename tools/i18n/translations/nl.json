@@ -5159,5 +5159,7 @@
  "That time has already passed.": "Die tijd is al geweest.",
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Deze Cliniko-login is niet ingesteld als behandelaar, dus je kunt hiermee geen afspraken aannemen.",
  "This practitioner is not taking appointments here.": "Deze behandelaar neemt hier geen afspraken aan.",
- "You are not connected to that practitioner.": "Je bent niet gekoppeld aan die behandelaar."
+ "You are not connected to that practitioner.": "Je bent niet gekoppeld aan die behandelaar.",
+ "I agree to my health data being used as described in the Privacy Policy.": "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt zoals beschreven in het privacybeleid.",
+ "Your health data": "Je gezondheidsgegevens"
 }

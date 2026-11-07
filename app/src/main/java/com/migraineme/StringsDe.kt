@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5161 entries.
+ * 5163 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -2021,6 +2021,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luftfeuchte hoch",
     "Humidity low" to "Luftfeuchte niedrig",
     "Hydration" to "Flüssigkeit",
+    "I agree to my health data being used as described in the Privacy Policy." to "Ich stimme zu, dass meine Gesundheitsdaten wie in der Datenschutzerklärung beschrieben verwendet werden.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ich akzeptiere die Nutzungsbedingungen und Datenschutzerklärung. Missbrauch und anstößige Inhalte sind in der Community tabu.",
     "I am 18 or over" to "Ich bin 18+",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Ich helfe dir, deine Muster zu verstehen, mit deinen erfassten Daten: Schlaf, HRV, Erholung, Auslöser und mehr.",
@@ -3019,10 +3020,10 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "Gib dein aktuelles Passwort ein.",
     "Please enter your information manually below." to "Bitte trage deine Angaben unten selbst ein.",
     "Please fill in all password fields." to "Fülle alle Passwortfelder aus.",
-    "Please go to Monitor to complete setup." to "Bitte im Monitor die Einrichtung abschließen.",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Please go to Monitor to complete setup." to "Bitte im Monitor die Einrichtung abschließen.",
     "Please type %1\$s to confirm." to "Tippe %1\$s zur Bestätigung.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ SpO2-Stichprobe. Braucht ein passendes Gerät mit SpO2-Sensor.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ misst die absolute Hauttemperatur im Schlaf. Rohwerte werden intern gespeichert, die Abweichung zur Vornacht wird täglich berechnet. Braucht ein passendes Gerät (Vantage V3, Grit X2 Pro usw.).",
@@ -4522,10 +4523,10 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "Wo alles liegt, Tab für Tab",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Wo im Blickfeld trat es auf? Tippe die Bereiche an, wie du sie gesehen hast.",
     "Where in your vision it shows up, as seen through your own eyes" to "Wo im Blickfeld es auftaucht, aus deiner eigenen Sicht",
-    "Where it is heading" to "Wohin es geht",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Where it is heading" to "Wohin es geht",
     "Where the pain sat" to "Wo der Schmerz saß",
     "Where were you?" to "Wo warst du?",
     "Where you were, what you were doing, what you had to miss." to "Wo du warst, was du getan hast, was ausfallen musste.",
@@ -4690,6 +4691,7 @@ private fun deStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Deine Ziel-Erinnerung",
     "Your goals" to "Deine Ziele",
     "Your goals have been updated." to "Deine Ziele wurden aktualisiert.",
+    "Your health data" to "Deine Gesundheitsdaten",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Dein Verlauf kommt in dein Tagebuch. In den Analysen zählt er nur mit einem bezahlten Abo, nicht im Gratis-Test.",
     "Your history is still imported into the journal today." to "Dein Verlauf landet trotzdem heute im Tagebuch.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Deine importierten Medikamente und Linderungen sind jetzt Favoriten im Eintrags-Assistenten.",

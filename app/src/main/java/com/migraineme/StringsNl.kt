@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5161 entries.
+ * 5163 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2021,6 +2021,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Luchtvochtigheid hoog",
     "Humidity low" to "Luchtvochtigheid laag",
     "Hydration" to "Hydratatie",
+    "I agree to my health data being used as described in the Privacy Policy." to "Ik ga ermee akkoord dat mijn gezondheidsgegevens worden gebruikt zoals beschreven in het privacybeleid.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Ik ga akkoord met de voorwaarden en het privacybeleid. Misbruik en aanstootgevende inhoud zijn in de community niet toegestaan.",
     "I am 18 or over" to "Ik ben 18 of ouder",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Ik help je je patronen te snappen met wat je bijhoudt: slaap, HRV, herstel, triggers en meer.",
@@ -3019,10 +3020,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "Vul je huidige wachtwoord in.",
     "Please enter your information manually below." to "Vul je gegevens hieronder zelf in.",
     "Please fill in all password fields." to "Vul alle wachtwoordvelden in.",
-    "Please go to Monitor to complete setup." to "Ga naar Monitor om het af te maken.",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Please go to Monitor to complete setup." to "Ga naar Monitor om het af te maken.",
     "Please type %1\$s to confirm." to "Typ %1\$s om te bevestigen.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ SpO2-meting. Vereist een geschikt toestel met SpO2-sensor.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ meet de absolute huidtemperatuur tijdens de slaap. Ruwe waarden worden intern bewaard en de afwijking ten opzichte van de vorige nacht wordt dagelijks berekend. Vereist een geschikt toestel (Vantage V3, Grit X2 Pro, enz.).",
@@ -4522,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "Waar alles zit, tab voor tab",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Waar in je zicht kwam het? Tik de plekken aan zoals jij ze zag.",
     "Where in your vision it shows up, as seen through your own eyes" to "Waar in je zicht het opduikt, zoals jij het ziet",
-    "Where it is heading" to "Waar het heen gaat",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Where it is heading" to "Waar het heen gaat",
     "Where the pain sat" to "Waar de pijn zat",
     "Where were you?" to "Waar was je?",
     "Where you were, what you were doing, what you had to miss." to "Waar je was, wat je deed, wat moest afvallen.",
@@ -4690,6 +4691,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Je doelherinnering",
     "Your goals" to "Je doelen",
     "Your goals have been updated." to "Je doelen zijn bijgewerkt.",
+    "Your health data" to "Je gezondheidsgegevens",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Je geschiedenis komt in je dagboek. Die telt alleen mee in inzichten met een betaald abonnement, niet in de gratis proefperiode.",
     "Your history is still imported into the journal today." to "Je geschiedenis komt vandaag toch in je dagboek.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Je geïmporteerde medicijnen en verlichting zijn nu favorieten in de logwizard.",

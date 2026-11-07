@@ -5159,5 +5159,7 @@
  "That time has already passed.": "Diese Zeit ist schon vorbei.",
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Dieser Cliniko-Login ist nicht als Praxisperson eingerichtet und kann daher keine Termine annehmen.",
  "This practitioner is not taking appointments here.": "Diese Praxisperson nimmt hier keine Termine an.",
- "You are not connected to that practitioner.": "Du bist nicht mit dieser Praxisperson verbunden."
+ "You are not connected to that practitioner.": "Du bist nicht mit dieser Praxisperson verbunden.",
+ "I agree to my health data being used as described in the Privacy Policy.": "Ich stimme zu, dass meine Gesundheitsdaten wie in der Datenschutzerklärung beschrieben verwendet werden.",
+ "Your health data": "Deine Gesundheitsdaten"
 }

@@ -5161,5 +5161,7 @@
  "That time has already passed.": "Bu saat çoktan geçti.",
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "Bu Cliniko girişi uzman olarak ayarlanmamış, bu yüzden randevu alamaz.",
  "This practitioner is not taking appointments here.": "Bu uzman burada randevu almıyor.",
- "You are not connected to that practitioner.": "Bu uzmanla bağlantın yok."
+ "You are not connected to that practitioner.": "Bu uzmanla bağlantın yok.",
+ "I agree to my health data being used as described in the Privacy Policy.": "Sağlık verilerimin Gizlilik Politikası’nda açıklandığı şekilde kullanılmasını kabul ediyorum.",
+ "Your health data": "Sağlık verilerin"
 }

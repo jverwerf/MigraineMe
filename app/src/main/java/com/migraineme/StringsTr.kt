@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5163 entries.
+ * 5165 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -2022,6 +2022,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Nem yüksek",
     "Humidity low" to "Nem düşük",
     "Hydration" to "Su dengesi",
+    "I agree to my health data being used as described in the Privacy Policy." to "Sağlık verilerimin Gizlilik Politikası’nda açıklandığı şekilde kullanılmasını kabul ediyorum.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul ediyorum. Toplulukta kötüye kullanıma ve uygunsuz içeriğe izin verilmez.",
     "I am 18 or over" to "18 yaşındayım",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Kaydettiğin verileri kullanarak migren örüntülerini anlamana yardımcı olabilirim: uyku, HRV, toparlanma, tetikleyiciler ve daha fazlası.",
@@ -3019,10 +3020,10 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Please enable these metrics first, then you can enable Stress Index." to "Önce bu ölçümleri etkinleştir, sonra Stres İndeksi'ni açabilirsin.",
     "Please enter a promo code." to "Lütfen bir promosyon kodu gir.",
     "Please enter your current password." to "Lütfen mevcut şifreni gir.",
-    "Please enter your information manually below." to "Lütfen bilgilerini aşağıya elle gir.",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Please enter your information manually below." to "Lütfen bilgilerini aşağıya elle gir.",
     "Please fill in all password fields." to "Tüm şifre alanlarını doldur.",
     "Please go to Monitor to complete setup." to "Kurulumu tamamlamak için lütfen Monitor'e git.",
     "Please type %1\$s to confirm." to "Onaylamak için %1\$s yaz.",
@@ -4522,10 +4523,10 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Where They Hit" to "Nereye Vuruyor",
     "Where did you feel the pain?" to "Ağrıyı nerede hissettin?",
     "Where everything lives, tab by tab" to "Her şey nerede, sekme sekme",
-    "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Görüşünün neresinde belirdi? Alanlara kendi gözünle gördüğün gibi dokun.",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Görüşünün neresinde belirdi? Alanlara kendi gözünle gördüğün gibi dokun.",
     "Where in your vision it shows up, as seen through your own eyes" to "Görüşünün neresinde ortaya çıkıyor, kendi gözlerinle gördüğün gibi",
     "Where it is heading" to "Nereye gidiyor",
     "Where the pain sat" to "Ağrı neredeydi",
@@ -4692,6 +4693,7 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Hedef hatırlatıcın",
     "Your goals" to "Hedeflerin",
     "Your goals have been updated." to "Hedeflerin güncellendi.",
+    "Your health data" to "Sağlık verilerin",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Geçmişin günlüğüne eklenir. İçgörülerde yalnızca ücretli abonelikle sayılır, ücretsiz denemede sayılmaz.",
     "Your history is still imported into the journal today." to "Geçmişin yine de bugün günlüğe aktarılıyor.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "İçe aktardığın ilaçlar ve rahatlama yöntemleri artık kayıt sihirbazında favorilerin.",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5162 entries.
+ * 5164 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -2022,6 +2022,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "湿度が高い",
     "Humidity low" to "湿度が低い",
     "Hydration" to "水分補給",
+    "I agree to my health data being used as described in the Privacy Policy." to "プライバシーポリシーに記載のとおり、私の健康データが使用されることに同意します。",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "利用規約とプライバシーポリシーに同意します。コミュニティでは、迷惑行為や不適切な内容は認められません。",
     "I am 18 or over" to "18歳以上です",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "記録したデータ(睡眠、HRV、回復、誘因など)をもとに、片頭痛のパターンを理解するお手伝いをします。",
@@ -3019,10 +3020,10 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Please enter a promo code." to "プロモコードを入力してください。",
     "Please enter your current password." to "現在のパスワードを入力してください。",
     "Please enter your information manually below." to "下に情報を手動で入力してください。",
-    "Please fill in all password fields." to "パスワードの欄をすべて入力してください。",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Please fill in all password fields." to "パスワードの欄をすべて入力してください。",
     "Please go to Monitor to complete setup." to "設定を完了するには、モニターに移動してください。",
     "Please type %1\$s to confirm." to "%1\$s と入力して確認",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™によるSpO2のスポット測定結果です。SpO2センサー搭載の対応機器が必要です。",
@@ -4522,10 +4523,10 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Where did you feel the pain?" to "どこが痛みましたか?",
     "Where everything lives, tab by tab" to "どこに何があるか、タブごとに",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "視界のどこに現れましたか?自分の目で見たとおりに、その部分をタップしてください。",
-    "Where in your vision it shows up, as seen through your own eyes" to "視界のどこに現れるか(自分の目で見た位置)",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Where in your vision it shows up, as seen through your own eyes" to "視界のどこに現れるか(自分の目で見た位置)",
     "Where it is heading" to "これからの方向",
     "Where the pain sat" to "痛んだ場所",
     "Where were you?" to "どこにいましたか?",
@@ -4691,6 +4692,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "目標のリマインダー",
     "Your goals" to "あなたの目標",
     "Your goals have been updated." to "目標を更新しました。",
+    "Your health data" to "あなたの健康データ",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "履歴は日記に入ります。インサイトに反映されるのは有料プランのみで、無料体験では反映されません。",
     "Your history is still imported into the journal today." to "それでも、履歴は今日ジャーナルに取り込まれます。",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "取り込んだ薬と緩和方法が、記録ガイドのお気に入りになりました。",

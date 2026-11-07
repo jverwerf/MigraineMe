@@ -593,6 +593,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val insightsVm: InsightsViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
+    HealthConsentGate(authVm, authState.userId) {
+        nav.navigate(Routes.LOGOUT) { launchSingleTop = true }
+    }
     // Keep BOTH the stored token and the in-memory auth state fresh: legacy
     // callers read SessionStore synchronously, screens read authState — an
     // expired token in either place hangs fetches on PGRST303.

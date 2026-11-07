@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5161 entries.
+ * 5163 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -2021,6 +2021,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Humidité élevée",
     "Humidity low" to "Humidité faible",
     "Hydration" to "Hydratation",
+    "I agree to my health data being used as described in the Privacy Policy." to "J'accepte que mes données de santé soient utilisées comme décrit dans la Politique de confidentialité.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "J'accepte les conditions d'utilisation et la confidentialité. Abus et contenus répréhensibles sont interdits dans la communauté.",
     "I am 18 or over" to "J'ai 18 ans+",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Je peux t'aider à comprendre tes tendances avec tes données : sommeil, VFC, récupération, facteurs et plus.",
@@ -3019,10 +3020,10 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "Saisis ton mot de passe actuel.",
     "Please enter your information manually below." to "Saisis tes informations ci-dessous.",
     "Please fill in all password fields." to "Remplis tous les champs.",
-    "Please go to Monitor to complete setup." to "Va dans Moniteur pour terminer.",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Please go to Monitor to complete setup." to "Va dans Moniteur pour terminer.",
     "Please type %1\$s to confirm." to "Tape %1\$s pour confirmer.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Mesure ponctuelle SpO2 Polar Elixir™. Nécessite un appareil compatible avec capteur SpO2.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ mesure la température absolue de la peau pendant le sommeil. Les valeurs brutes sont gardées en interne et l'écart avec la nuit précédente est calculé chaque jour. Nécessite un appareil compatible (Vantage V3, Grit X2 Pro, etc.).",
@@ -4522,10 +4523,10 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "Où tout se trouve, onglet par onglet",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "Où dans ta vision est-ce apparu ? Touche les zones telles que tu les as vues.",
     "Where in your vision it shows up, as seen through your own eyes" to "Où ça apparaît dans ta vision, vue de tes propres yeux",
-    "Where it is heading" to "Où ça va",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Where it is heading" to "Où ça va",
     "Where the pain sat" to "Où était la douleur",
     "Where were you?" to "Où étais-tu ?",
     "Where you were, what you were doing, what you had to miss." to "Où tu étais, ce que tu faisais, ce qui a dû sauter.",
@@ -4690,6 +4691,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Rappel de ton objectif",
     "Your goals" to "Tes objectifs",
     "Your goals have been updated." to "Tes objectifs ont été mis à jour.",
+    "Your health data" to "Tes données de santé",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Ton historique va dans ton journal. Il ne compte dans les analyses qu'avec un abonnement payant, pas pendant l'essai gratuit.",
     "Your history is still imported into the journal today." to "Votre historique est quand même importé dans le journal aujourd'hui.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Vos médicaments et soulagements importés sont maintenant des favoris dans l'assistant.",

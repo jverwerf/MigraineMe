@@ -5160,5 +5160,7 @@
  "That time has already passed.": "這個時間已經過了。",
  "This Cliniko login is not set up as a practitioner, so it cannot take appointments.": "這個 Cliniko 登入帳號尚未設定為執業者,因此無法接受預約。",
  "This practitioner is not taking appointments here.": "這位執業者目前不在此接受預約。",
- "You are not connected to that practitioner.": "你尚未與這位執業者連結。"
+ "You are not connected to that practitioner.": "你尚未與這位執業者連結。",
+ "I agree to my health data being used as described in the Privacy Policy.": "我同意依照隱私權政策所述使用我的健康資料。",
+ "Your health data": "你的健康資料"
 }

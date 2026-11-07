@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5161 entries.
+ * 5163 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -2021,6 +2021,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "Humedad alta",
     "Humidity low" to "Humedad baja",
     "Hydration" to "Hidratación",
+    "I agree to my health data being used as described in the Privacy Policy." to "Acepto que mis datos de salud se usen como se describe en la Política de privacidad.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "Acepto los Términos de uso y la Política de privacidad. En la comunidad no se toleran los usuarios abusivos ni el contenido ofensivo.",
     "I am 18 or over" to "Tengo 18 o más",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "Puedo ayudarte a entender tus patrones con los datos que registras: sueño, VFC, recuperación, factores y más.",
@@ -3019,10 +3020,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Please enter your current password." to "Introduce tu contraseña actual.",
     "Please enter your information manually below." to "Escribe tus datos abajo.",
     "Please fill in all password fields." to "Rellena todos los campos.",
-    "Please go to Monitor to complete setup." to "Ve al Monitor para terminar.",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Please go to Monitor to complete setup." to "Ve al Monitor para terminar.",
     "Please type %1\$s to confirm." to "Escribe %1\$s para confirmar.",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Resultado puntual de SpO2 de Polar Elixir™. Requiere un equipo compatible con sensor de SpO2.",
     "Polar Elixir™ records absolute skin temperature during sleep. Raw values are stored internally and deviation from the previous night is computed daily. Requires compatible device (Vantage V3, Grit X2 Pro, etc.)." to "Polar Elixir™ mide la temperatura absoluta de la piel al dormir. Los valores brutos se guardan dentro y la desviación respecto a la noche anterior se calcula cada día. Requiere un equipo compatible (Vantage V3, Grit X2 Pro, etc.).",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Where everything lives, tab by tab" to "Dónde está cada cosa, pestaña a pestaña",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "¿Dónde apareció en tu visión? Toca las zonas tal como las viste.",
     "Where in your vision it shows up, as seen through your own eyes" to "Dónde aparece en tu visión, tal como tú la ves",
-    "Where it is heading" to "Hacia dónde va",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Where it is heading" to "Hacia dónde va",
     "Where the pain sat" to "Dónde dolía",
     "Where were you?" to "¿Dónde estabas?",
     "Where you were, what you were doing, what you had to miss." to "Dónde estabas, qué hacías, qué tuviste que dejar.",
@@ -4690,6 +4691,7 @@ private fun esStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "Aviso de tu meta",
     "Your goals" to "Tus metas",
     "Your goals have been updated." to "Tus metas se han actualizado.",
+    "Your health data" to "Tus datos de salud",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "Tu historial va a tu diario. Solo cuenta en los análisis con una suscripción de pago, no con la prueba gratuita.",
     "Your history is still imported into the journal today." to "Tu historial se importa igualmente al diario hoy.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "Tus medicinas y alivios importados ya son favoritos en el asistente de registro.",

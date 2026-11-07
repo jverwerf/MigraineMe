@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5162 entries.
+ * 5164 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -2022,6 +2022,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "濕度偏高",
     "Humidity low" to "濕度偏低",
     "Hydration" to "水分攝取",
+    "I agree to my health data being used as described in the Privacy Policy." to "我同意依照隱私權政策所述使用我的健康資料。",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "我同意使用條款與隱私權政策。社群內不容許濫用行為的使用者及不當內容。",
     "I am 18 or over" to "我已年滿 18 歲",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "我可以根據你記錄的資料,幫你了解偏頭痛的規律,包括睡眠、HRV、恢復狀態、誘因等。",
@@ -3019,10 +3020,10 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Please enter a promo code." to "請輸入優惠碼。",
     "Please enter your current password." to "請輸入你目前的密碼。",
     "Please enter your information manually below." to "請在下方手動輸入你的資料。",
-    "Please fill in all password fields." to "請填寫所有密碼欄位。",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Please fill in all password fields." to "請填寫所有密碼欄位。",
     "Please go to Monitor to complete setup." to "請前往監測完成設定。",
     "Please type %1\$s to confirm." to "請輸入 %1\$s 以確認。",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ 血氧 (SpO2) 單次檢測結果。需搭配具備 SpO2 感測器的相容裝置。",
@@ -4522,10 +4523,10 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Where did you feel the pain?" to "疼痛的位置在哪裡?",
     "Where everything lives, tab by tab" to "各項功能的位置,依分頁介紹",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "預兆出現在視野的哪裡?請依你親眼所見的樣子點選區域。",
-    "Where in your vision it shows up, as seen through your own eyes" to "出現在視野的哪個位置,以你自己的視角呈現",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Where in your vision it shows up, as seen through your own eyes" to "出現在視野的哪個位置,以你自己的視角呈現",
     "Where it is heading" to "發展方向",
     "Where the pain sat" to "疼痛的位置",
     "Where were you?" to "你在哪裡?",
@@ -4691,6 +4692,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "你的目標提醒",
     "Your goals" to "你的目標",
     "Your goals have been updated." to "你的目標已更新。",
+    "Your health data" to "你的健康資料",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "你的歷史紀錄會存入日誌。只有付費訂閱才會計入洞察,免費試用不會。",
     "Your history is still imported into the journal today." to "你的歷史記錄今天仍會匯入日誌。",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "你匯入的藥物和緩解方式,現在已成為記錄精靈中的我的最愛。",

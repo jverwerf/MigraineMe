@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5162 entries.
+ * 5164 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -2022,6 +2022,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Humidity high" to "습도 높음",
     "Humidity low" to "습도 낮음",
     "Hydration" to "수분 섭취",
+    "I agree to my health data being used as described in the Privacy Policy." to "개인정보 처리방침에 설명된 대로 내 건강 데이터가 사용되는 데 동의합니다.",
     "I agree to the Terms of Use and Privacy Policy. Abusive users and objectionable content are not tolerated in the community." to "이용약관과 개인정보 처리방침에 동의해요. 커뮤니티에서는 악의적인 사용자와 부적절한 콘텐츠를 허용하지 않아요.",
     "I am 18 or over" to "18세 이상이에요",
     "I can help you understand your migraine patterns using your tracked data — sleep, HRV, recovery, triggers, and more." to "기록한 데이터(수면, HRV, 회복, 유발 요인 등)로 편두통 패턴을 이해하도록 도와드릴게요.",
@@ -3019,10 +3020,10 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Please enter a promo code." to "프로모션 코드를 입력해 주세요.",
     "Please enter your current password." to "현재 비밀번호를 입력해 주세요.",
     "Please enter your information manually below." to "아래에 정보를 직접 입력해 주세요.",
-    "Please fill in all password fields." to "비밀번호를 모두 입력해 주세요.",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Please fill in all password fields." to "비밀번호를 모두 입력해 주세요.",
     "Please go to Monitor to complete setup." to "설정을 완료하려면 모니터로 이동해 주세요.",
     "Please type %1\$s to confirm." to "확인하려면 %1\$s 입력",
     "Polar Elixir™ SpO2 spot-check result. Requires compatible device with SpO2 sensor." to "Polar Elixir™ SpO2 즉시 측정 결과예요. SpO2 센서가 있는 호환 기기가 필요해요.",
@@ -4522,10 +4523,10 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Where did you feel the pain?" to "어디가 아팠어요?",
     "Where everything lives, tab by tab" to "탭별로 보는 기능 위치",
     "Where in your vision did it appear? Tap the areas as you saw them through your own eyes." to "시야의 어디에 나타났나요? 직접 본 모습대로 해당 영역을 눌러 주세요.",
-    "Where in your vision it shows up, as seen through your own eyes" to "직접 본 것처럼, 시야의 어디에 나타나는지",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Where in your vision it shows up, as seen through your own eyes" to "직접 본 것처럼, 시야의 어디에 나타나는지",
     "Where it is heading" to "향하는 방향",
     "Where the pain sat" to "통증이 있던 곳",
     "Where were you?" to "어디에 있었나요?",
@@ -4691,6 +4692,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "Your goal reminder" to "목표 알림",
     "Your goals" to "내 목표",
     "Your goals have been updated." to "목표가 업데이트되었어요.",
+    "Your health data" to "내 건강 데이터",
     "Your history goes into your journal. It only counts in insights with a paid subscription, not the free trial." to "기록은 일지에 담겨요. 인사이트에는 유료 구독에서만 반영되고, 무료 체험에서는 반영되지 않아요.",
     "Your history is still imported into the journal today." to "기록은 그래도 오늘 일지로 가져와요.",
     "Your imported medicines and reliefs are now favourites in the log wizard." to "가져온 약과 완화 방법이 이제 기록 마법사의 즐겨찾기가 됐어요.",

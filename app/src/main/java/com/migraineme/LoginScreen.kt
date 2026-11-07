@@ -67,6 +67,7 @@ fun LoginScreen(
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
     val snackbarHostState = remember { SnackbarHostState() }
+    var healthOk by remember { mutableStateOf(false) }
 
     // Two different people land on this screen. Someone who has just watched the
     // how-it-works deck has never had an account, and "Welcome back / Sign in to
@@ -394,12 +395,14 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        HealthConsentTick(healthOk) { healthOk = it; HealthConsent.markTicked(appCtx, it) }
+
                         AuthButton(
                             onClick = {
                                 error = null
                                 if (isFirstTime) onNavigateToSignUp() else showEmailForm = true
                             },
-                            enabled = !busy,
+                            enabled = !busy && healthOk,
                             icon = {
                                 Icon(Icons.Default.Email, contentDescription = t("Email"),
                                     modifier = Modifier.size(18.dp), tint = AppTheme.TitleColor)
@@ -409,7 +412,7 @@ fun LoginScreen(
 
                         AuthButton(
                             onClick = { signInWithFacebook() },
-                            enabled = !busy,
+                            enabled = !busy && healthOk,
                             icon = {
                                 Image(
                                     painter = painterResource(id = R.drawable.facebook_logo_primary),
@@ -422,7 +425,7 @@ fun LoginScreen(
 
                         AuthButton(
                             onClick = { signInWithGoogle() },
-                            enabled = !busy,
+                            enabled = !busy && healthOk,
                             icon = {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_google_logo),
