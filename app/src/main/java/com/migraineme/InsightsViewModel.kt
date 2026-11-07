@@ -1818,15 +1818,67 @@ class InsightsViewModel : ViewModel() {
         userId: String, table: String, select: String, cutoff: String
     ): JSONArray? {
         return try {
-            val url = "$base/rest/v1/$table?user_id=eq.$userId&date=gte.$cutoff&select=$select&order=date.desc&limit=365"
-            val req = Request.Builder().url(url).get()
+            fun read(sel: String): JSONArray? {
+                val url = "$base/rest/v1/$table?user_id=eq.$userId&date=gte.$cutoff&select=$sel&order=date.desc&limit=365"
+                val req = Request.Builder().url(url).get()
+                    .addHeader("apikey", key)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+                val resp = client.newCall(req).execute()
+                val body = resp.body?.string()
+                return if (resp.isSuccessful && !body.isNullOrBlank()) JSONArray(body) else null
+            }
+            // Not every table has a source column; those read as before.
+            val withSource = read("$select,source")
+            if (withSource != null) preferSource(withSource, sourcePrefs(client, base, key, token, userId)[table])
+            else read(select)
+        } catch (_: Exception) { null }
+    }
+
+    @Volatile private var sourcePrefsCache: Pair<String, Map<String, String>>? = null
+
+    /** The source this person chose per metric in Data settings. */
+    private fun sourcePrefs(client: OkHttpClient, base: String, key: String, token: String, userId: String): Map<String, String> {
+        sourcePrefsCache?.takeIf { it.first == userId }?.let { return it.second }
+        val out = mutableMapOf<String, String>()
+        try {
+            val req = Request.Builder().url("$base/rest/v1/metric_settings?user_id=eq.$userId&select=metric,preferred_source").get()
                 .addHeader("apikey", key)
                 .addHeader("Authorization", "Bearer $token")
                 .build()
-            val resp = client.newCall(req).execute()
-            val body = resp.body?.string()
-            if (resp.isSuccessful && !body.isNullOrBlank()) JSONArray(body) else null
-        } catch (_: Exception) { null }
+            val body = client.newCall(req).execute().body?.string()
+            if (!body.isNullOrBlank() && body.trimStart().startsWith("[")) {
+                val arr = JSONArray(body)
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    val s = o.optString("preferred_source", "")
+                    if (s.isNotBlank() && s != "null") out[o.getString("metric")] = s
+                }
+            }
+        } catch (_: Exception) { return out }
+        sourcePrefsCache = userId to out
+        return out
+    }
+
+    /**
+     * Two sources can hold a value for one day. The person's choice decides; a day without that
+     * source keeps what it has. Apple Health rows answer to the health_connect setting.
+     */
+    private fun preferSource(arr: JSONArray, want: String?): JSONArray {
+        if (want.isNullOrBlank() || arr.length() < 2) return arr
+        fun norm(s: String) = s.lowercase().let { if (it == "healthkit") "health_connect" else it }
+        val w = norm(want)
+        val has = mutableSetOf<String>()
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            if (norm(o.optString("source", "")) == w) has += o.optString("date", "")
+        }
+        val out = JSONArray()
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            if (o.optString("date", "") !in has || norm(o.optString("source", "")) == w) out.put(o)
+        }
+        return out
     }
 
     private fun parseDoubleCol(arr: JSONArray, col: String): List<DailyValue> {
@@ -1843,7 +1895,8 @@ class InsightsViewModel : ViewModel() {
             if (!v.isNaN()) list += DailyValue(o.getString("date"), v)
         }
         // Two sources can hold a value for the same day (Garmin and Health Connect, say).
-        // A chart line gets one point per day, their average, or it draws a vertical spike.
+        // preferSource has already applied their chosen source; anything left is averaged so a
+        // chart line gets one point per day and never draws a vertical spike.
         return list.groupBy { it.date }.map { (date, rows) -> DailyValue(date, rows.map { it.value }.average()) }
     }
 

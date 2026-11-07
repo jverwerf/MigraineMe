@@ -300,6 +300,19 @@ async function childrenFor(
   return out;
 }
 
+/**
+ * Two sources can hold a value for one day. The person's choice in Data settings decides; a day
+ * without that source keeps what it has. Apple Health rows answer to the health_connect setting,
+ * which is the same choice on iPhone.
+ */
+const srcNorm = (s: unknown) => { const v = String(s ?? "").toLowerCase(); return v === "healthkit" ? "health_connect" : v; };
+function preferSource(rows: Record<string, unknown>[], want: string | undefined): Record<string, unknown>[] {
+  if (!want || rows.length < 2) return rows;
+  const w = srcNorm(want);
+  const has = new Set(rows.filter((r) => srcNorm(r.source) === w).map((r) => String(r.date)));
+  return rows.filter((r) => !has.has(String(r.date)) || srcNorm(r.source) === w);
+}
+
 export async function loadReportData(
   authHeader: string, params: ReportParams,
 ): Promise<ReportData> {
@@ -321,6 +334,11 @@ export async function loadReportData(
 
   const { data: authUser } = await readerSb.auth.getUser();
   const readerId = authUser?.user?.id ?? null;
+  const sourcePrefs: Record<string, string> = {};
+  {
+    const { data: prefRows } = await readerSb.rpc("metric_preferred_sources", { p_user: params.subject ?? readerId });
+    for (const r of (prefRows ?? []) as { metric: string; preferred_source: string }[]) sourcePrefs[r.metric] = r.preferred_source;
+  }
   let lang: Lang = "en";
   if (readerId) {
     // The reader's language, not the subject's: the practitioner has to be
@@ -602,12 +620,14 @@ export async function loadReportData(
 
     await Promise.all([
       ...dailyDefs.map(async (def) => {
-        const { data, error } = await sb.from(def.table)
-          .select(`date,${def.column}`)
+        const read = (sel: string) => sb.from(def.table).select(sel)
           .gte("date", winFrom).lte("date", winTo)
           .order("date", { ascending: true });
+        let res = await read(`date,source,${def.column}`);
+        if (res.error) res = await read(`date,${def.column}`);   // not every table has a source
+        const { data, error } = res;
         if (error || !data) return;                 // metric simply isn't tracked
-        const points = (data as unknown as Record<string, unknown>[])
+        const points = preferSource(data as unknown as Record<string, unknown>[], sourcePrefs[def.table])
           .map((r) => ({
             date: String(r.date),
             value: def.kind === "time"
