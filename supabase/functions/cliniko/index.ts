@@ -410,6 +410,8 @@ serve(async (req) => {
           const html = (n.lines as any[]).map((l) => Array.isArray(l) ? `<p><b>${esc(l[0])}</b>: ${esc(l[1])}</p>` : `<p>${esc(l)}</p>`).join("");
           const plain = (n.lines as any[]).map((l) => Array.isArray(l) ? `${l[0]}: ${l[1]}` : String(l)).join("\n");
           const section = (type: string, answer: string) => ({
+            // Links the draft to a session when one was picked. Digits only: it goes straight to Cliniko.
+            ...(/^\d+$/.test(String(n.booking_id || "")) ? { booking_id: String(n.booking_id) } : {}),
             patient_id: row.external_id, title: String(n.title || "Dashboard report").slice(0, 255), draft: true,
             content: { sections: [{ name: String(n.section || "Summary"), description: null, questions: [
               ...(n.summary ? [{ name: String(n.summary_label || "Summary"), type: "text", answer: String(n.summary).slice(0, 4000) }] : []),
