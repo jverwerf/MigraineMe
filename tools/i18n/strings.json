@@ -39783,5 +39783,14 @@
     ],
     "max_len": 17,
     "count": 1
+  },
+  {
+    "en": "Remove download",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/ExercisePlayerScreen.kt:250"
+    ],
+    "max_len": 18,
+    "count": 1
   }
 ]

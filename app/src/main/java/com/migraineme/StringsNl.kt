@@ -1193,6 +1193,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Aantal losse WAKKER-fasen tijdens de slaap, zoals je slaapapp ze in Health Connect vastlegt.",
     "Countdown" to "Aftellen",
     "Counted toward your goal." to "Telt mee voor je doel.",
+    "Remove download" to "Download weghalen",
     "Counting imports in insights is part of the subscription" to "Imports meetellen in inzichten hoort bij het abonnement",
     "Counts are the total times you logged the activity as missed." to "Dit telt hoe vaak je de activiteit als gemist noteerde.",
     "Covers scalp, temples and eyes" to "Dekt hoofd, slapen en ogen",

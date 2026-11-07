@@ -1193,6 +1193,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "수면 앱이 Health Connect에 기록한 수면 중 깨어 있던 단계의 개별 횟수예요.",
     "Countdown" to "카운트다운",
     "Counted toward your goal." to "목표에 반영됐어요.",
+    "Remove download" to "다운로드 삭제",
     "Counting imports in insights is part of the subscription" to "인사이트에서 가져온 데이터 집계는 구독에 포함돼요",
     "Counts are the total times you logged the activity as missed." to "횟수는 해당 활동을 놓친 것으로 기록한 총 횟수예요.",
     "Covers scalp, temples and eyes" to "두피, 관자놀이, 눈을 덮어요",

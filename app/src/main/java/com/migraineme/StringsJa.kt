@@ -1193,6 +1193,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "睡眠中に目が覚めた回数です。お使いの睡眠アプリがHealth Connectに記録したものです。",
     "Countdown" to "残り時間",
     "Counted toward your goal." to "目標に数えられます。",
+    "Remove download" to "ダウンロードを削除",
     "Counting imports in insights is part of the subscription" to "インサイトでの取り込み件数の集計は、サブスクリプションに含まれます",
     "Counts are the total times you logged the activity as missed." to "回数は、その活動を「できなかった」と記録した合計回数です。",
     "Covers scalp, temples and eyes" to "頭皮、こめかみ、目を覆います",

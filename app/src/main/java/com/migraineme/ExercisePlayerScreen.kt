@@ -3,6 +3,7 @@ package com.migraineme
 import kotlinx.coroutines.launch
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,11 +16,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -43,7 +46,9 @@ import androidx.media3.ui.PlayerView
  *
  * The film is requested in the app language and falls back to English if that
  * file fails to load (only English films exist today). Playback reads through
- * ExerciseVideoCache, so a film watched once plays offline afterwards.
+ * ExerciseVideoCache, and leaving the screen after a play saves the rest of the
+ * film, so a film played once plays offline afterwards. While the whole film is
+ * on the phone, "Remove download" deletes that copy.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -83,6 +88,18 @@ fun ExercisePlayerScreen(
         }
     }
 
+    // Played on this screen, so leaving saves the whole film. Survives rotation.
+    var playedOnce by rememberSaveable(routine.id) { mutableStateOf(false) }
+
+    // The whole film is on the phone: only then is "Remove download" shown.
+    var filmSaved by remember(routine.id) { mutableStateOf(false) }
+    val cacheChanges by ExerciseVideoCache.changes.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(routine.id, cacheChanges) {
+        filmSaved = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            ExerciseVideoCache.isSaved(context, routine)
+        }
+    }
+
     val player = remember(routine.id) {
         var usingFallback = langCode == ExerciseCatalogue.FALLBACK_LANG
         var endCounted = false
@@ -115,10 +132,12 @@ fun ExercisePlayerScreen(
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         // Keep the screen awake while the film is actually playing.
                         view.keepScreenOn = isPlaying
-                        if (isPlaying) { showNoConnection = false; endCounted = false }
+                        if (isPlaying) { showNoConnection = false; endCounted = false; playedOnce = true }
                     }
 
                     override fun onPlaybackStateChanged(playbackState: Int) {
+                        // Played to the end without skipping: the whole film is on the phone now.
+                        if (playbackState == Player.STATE_ENDED) ExerciseVideoCache.notifyChanged()
                         // The film ran to its end: that is one set done. Count it toward
                         // every active goal linked to this exercise (Jordy 2026-10-03:
                         // "chin tucks done in exercise should auto top it up"). Once per
@@ -159,7 +178,9 @@ fun ExercisePlayerScreen(
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             view.keepScreenOn = false
+            val url = player.currentMediaItem?.localConfiguration?.uri?.toString()
             player.release()
+            if (playedOnce && url != null) ExerciseVideoCache.saveAfterPlay(context, routine, url)
         }
     }
 
@@ -206,6 +227,28 @@ fun ExercisePlayerScreen(
                     Text(
                         t("No connection. This routine plays offline once it has been downloaded."),
                         color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            if (filmSaved) {
+                LabelPlate(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .clickable {
+                            // Stops the player first and leaves it idle: its play button
+                            // prepares it again, from the stream, only when asked.
+                            if (player.playbackState == Player.STATE_ENDED) player.seekTo(0L)
+                            player.stop()
+                            playedOnce = false
+                            filmSaved = false
+                            ExerciseVideoCache.removeFilm(context, routine)
+                        }
+                ) {
+                    Text(
+                        t("Remove download"),
+                        color = AppTheme.AccentPink,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

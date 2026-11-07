@@ -1193,6 +1193,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Nombre de phases d'ÉVEIL distinctes pendant le sommeil, telles que ton appli de sommeil les enregistre dans Health Connect.",
     "Countdown" to "Décompte",
     "Counted toward your goal." to "Compté dans ton objectif.",
+    "Remove download" to "Retirer le fichier",
     "Counting imports in insights is part of the subscription" to "Compter les imports dans les analyses fait partie de l'abonnement",
     "Counts are the total times you logged the activity as missed." to "On compte le nombre de fois où tu as noté l'activité comme manquée.",
     "Covers scalp, temples and eyes" to "Couvre crâne, tempes et yeux",

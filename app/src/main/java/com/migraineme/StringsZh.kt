@@ -1193,6 +1193,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "睡眠期間「清醒」階段事件的獨立次數,由你的睡眠應用程式記錄在 Health Connect 中。",
     "Countdown" to "倒數計時",
     "Counted toward your goal." to "已計入你的目標。",
+    "Remove download" to "移除下載",
     "Counting imports in insights is part of the subscription" to "在洞察中計入匯入的資料,屬於訂閱方案的一部分",
     "Counts are the total times you logged the activity as missed." to "次數是你將該活動記錄為已錯過的總次數。",
     "Covers scalp, temples and eyes" to "覆蓋頭皮、太陽穴和眼睛",

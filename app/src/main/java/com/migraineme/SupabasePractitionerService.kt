@@ -538,8 +538,10 @@ object SupabasePractitionerService {
         val lang: String? = null,
     )
 
+    /** video_path and poster_path hold a storage path, or a full URL when the file is one shared copy. */
     fun practitionerFilmUrl(path: String): String =
-        "$baseUrl/storage/v1/object/public/practitioner-exercises/$path"
+        if (path.startsWith("http")) path
+        else "$baseUrl/storage/v1/object/public/practitioner-exercises/$path"
 
     suspend fun practitionerExercises(accessToken: String, ids: List<String>): List<PractitionerExerciseRow> {
         if (ids.isEmpty()) return emptyList()

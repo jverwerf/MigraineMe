@@ -1193,6 +1193,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect." to "Uyku uygulamanın Health Connect'e kaydettiği, uyku sırasındaki ayrı UYANIK evresi olaylarının sayısı.",
     "Countdown" to "Geri sayım",
     "Counted toward your goal." to "Hedefine sayıldı.",
+    "Remove download" to "İndirmeyi kaldır",
     "Counting imports in insights is part of the subscription" to "İçgörülerde içe aktarılanları saymak abonelikte yer alır",
     "Counts are the total times you logged the activity as missed." to "Sayılar, etkinliği kaçırıldı olarak kaydettiğin toplam sayıdır.",
     "Covers scalp, temples and eyes" to "Kafa derisini, şakakları ve gözleri kaplar",
