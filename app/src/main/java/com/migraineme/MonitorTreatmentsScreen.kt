@@ -144,7 +144,7 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
                         )
                         Spacer(Modifier.width(6.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                            Text(prettyLabel(r.name), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
                             val dose = listOfNotNull(r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
                             val since = t("since %s", r.startDate)
                             val sub = if (dose.isEmpty()) since else "$dose · $since"
@@ -600,7 +600,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
 @Composable
 private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold,
+        Text(prettyLabel(r.name), color = Color.White, fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         val pct = r.pctChangeMmd
         val (label, color) = when {

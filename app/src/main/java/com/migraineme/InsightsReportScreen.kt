@@ -1588,7 +1588,7 @@ private fun FilterCard(
                     orderedCats.forEach { cat ->
                         val labels = availableTags[cat] ?: return@forEach
                         val color = FilterCatColors[cat] ?: AppTheme.AccentPurple
-                        Text(cat, color = color.copy(alpha = 0.8f),
+                        Text(prettyLabel(cat), color = color.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
                         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -1636,7 +1636,7 @@ private fun FilterCard(
                         Spacer(Modifier.height(4.dp))
                         val metricGroups = availableMetrics.groupBy { it.group }
                         metricGroups.forEach { (group, defs) ->
-                            Text(group, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                            Text(prettyLabel(group), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                 modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
                             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),

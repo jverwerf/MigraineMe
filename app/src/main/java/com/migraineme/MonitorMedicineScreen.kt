@@ -783,11 +783,11 @@ private fun MedicineHubTable(
         HorizontalDivider(color = Color.White.copy(alpha = 0.055f))
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                Text(name, color = AppTheme.TitleColor,
+                Text(prettyLabel(name), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 if (category != null) {
                     Spacer(Modifier.width(5.dp))
-                    Text(category, color = AppTheme.SubtleTextColor,
+                    Text(prettyLabel(category), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier
                             .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(7.dp))
@@ -986,11 +986,11 @@ fun MedicineDWMHeaderRow() {
 @Composable
 fun MedicineDWMRow(name: String, category: String?, today: String, week: String, month: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(name, color = Color.White,
+        Text(prettyLabel(name), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
         if (!category.isNullOrBlank()) {
             Spacer(Modifier.width(4.dp))
-            Text(category, color = AppTheme.SubtleTextColor,
+            Text(prettyLabel(category), color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -1093,7 +1093,7 @@ fun MedicineStackedBarGraph(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(color))
                     Spacer(Modifier.width(4.dp))
-                    Text(name, color = AppTheme.SubtleTextColor,
+                    Text(prettyLabel(name), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                     pts.firstOrNull()?.unit?.let {
                         Text(" (${DoseUnits.suffix(it)})", color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
@@ -1360,7 +1360,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                             .background(Color.White.copy(alpha = 0.04f))
                             .padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(e.name ?: t("Unknown"), color = Color.White,
+                                Text(e.name?.let { prettyLabel(it) } ?: t("Unknown"), color = Color.White,
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                                 e.category?.let {
                                     Spacer(Modifier.width(4.dp))

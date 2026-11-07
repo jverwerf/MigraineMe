@@ -579,7 +579,7 @@ private fun LeaderboardRow(row: SupabaseDbService.TreatmentLeaderboardRow, maxPc
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(row.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+                Text(prettyLabel(row.name), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
                 if (isCurrent) {
                     Spacer(Modifier.width(4.dp))
                     Surface(shape = RoundedCornerShape(10.dp), color = Color(0xFFB97BFF).copy(alpha = 0.20f)) {
@@ -979,7 +979,7 @@ private fun LinkRow(r: SupabaseDbService.TreatmentRegimenRow, isSelected: Boolea
         )
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(prettyLabel(r.name), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             val dose = listOfNotNull(r.amount, frequencyLabel(r.frequency)).joinToString(" · ")
             val period = r.stopDate?.let { "${r.startDate} → $it" } ?: t("since %s", r.startDate)
             Text(listOfNotNull(dose.ifBlank { null }, period).joinToString(" · "),
