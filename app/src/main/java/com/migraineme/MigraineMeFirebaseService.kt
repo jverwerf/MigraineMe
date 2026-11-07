@@ -144,6 +144,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     startsAt = message.data["starts_at"],
                     endsAt = message.data["ends_at"],
                     practitionerName = message.data["practitioner_name"],
+                    meetUrl = message.data["meet_url"],
                 )
             }
             "goal_suggestions" -> {
@@ -475,6 +476,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         startsAt: String? = null,
         endsAt: String? = null,
         practitionerName: String? = null,
+        meetUrl: String? = null,
     ) {
         val channelId = "practitioner_appointment"
         val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
@@ -494,7 +496,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         )
         // A confirmed session, and the client connected their calendar in the app: offer to add it.
         val calendarIntent = if (startsAt != null && CalendarService.hasReadPermission(this)) {
-            appointmentCalendarIntent(startsAt, endsAt, tSync("Appointment with %1\$s", practitionerName.orEmpty()))
+            appointmentCalendarIntent(startsAt, endsAt, tSync("Appointment with %1\$s", practitionerName.orEmpty()), meetUrl)
                 ?.apply { flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK }
         } else null
         val text = body.orEmpty() + if (calendarIntent != null) " " + tSync("Add it to your calendar?") else ""

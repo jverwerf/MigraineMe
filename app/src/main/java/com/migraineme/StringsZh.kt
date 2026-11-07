@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5132 entries.
+ * 5133 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -2090,6 +2090,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "進度也會一併移除。",
     "Jaw or face pain" to "下顎或臉部疼痛",
     "Jet lag" to "時差",
+    "Join Google Meet" to "加入 Google Meet",
     "Journal" to "日誌",
     "Journal only" to "僅限日誌",
     "Journal only. Subscribe to count it in insights." to "僅供日誌使用。訂閱後才會納入洞察。",
@@ -3019,10 +3020,10 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar 的睡眠連續性(1.0–5.0 分)會換算為百分比:(連續性 − 1) ÷ 4 × 100。",
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉與空氣品質",
-    "Pollen counts and air pollution." to "花粉濃度與空氣污染。",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Pollen counts and air pollution." to "花粉濃度與空氣污染。",
     "Pollen high" to "花粉偏高",
     "Pollen or hay fever season" to "花粉或花粉症季節",
     "Polyunsaturated fat" to "多元不飽和脂肪",
@@ -4522,10 +4523,10 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "為什麼建議這個",
     "Why your thresholds are set where they are" to "你的閾值為何設在這裡",
     "Wind" to "風",
-    "Wind Speed" to "風速",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Wind Speed" to "風速",
     "Wind Speed (m/s)" to "風速(m/s)",
     "Wind speed" to "風速",
     "Wind speed high" to "風速偏高",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5132 entries.
+ * 5133 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -2090,6 +2090,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "経過も一緒に消えます。",
     "Jaw or face pain" to "あごや顔の痛み",
     "Jet lag" to "時差ぼけ",
+    "Join Google Meet" to "Google Meetに参加",
     "Journal" to "日誌",
     "Journal only" to "日記のみ",
     "Journal only. Subscribe to count it in insights." to "記録のみです。購読するとインサイトに反映されます。",
@@ -3019,10 +3020,10 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polarの睡眠の連続性(1.0〜5.0の尺度)は、(連続性 − 1) ÷ 4 × 100 でパーセントに換算されます。",
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉と大気の状態",
-    "Pollen counts and air pollution." to "花粉の飛散量と大気汚染です。",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Pollen counts and air pollution." to "花粉の飛散量と大気汚染です。",
     "Pollen high" to "花粉が多い",
     "Pollen or hay fever season" to "花粉または花粉症の季節",
     "Polyunsaturated fat" to "多価不飽和脂肪酸",
@@ -4522,10 +4523,10 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "この提案の理由",
     "Why your thresholds are set where they are" to "しきい値がこの値になっている理由",
     "Wind" to "風",
-    "Wind Speed" to "風速",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Wind Speed" to "風速",
     "Wind Speed (m/s)" to "風速（m/s）",
     "Wind speed" to "風速",
     "Wind speed high" to "風が強い",

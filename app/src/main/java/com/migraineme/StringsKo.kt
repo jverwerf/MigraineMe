@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5132 entries.
+ * 5133 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -2090,6 +2090,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "진행 기록도 함께 사라져요.",
     "Jaw or face pain" to "턱 또는 얼굴 통증",
     "Jet lag" to "시차증",
+    "Join Google Meet" to "Google Meet 참여",
     "Journal" to "일지",
     "Journal only" to "일기만",
     "Journal only. Subscribe to count it in insights." to "일지에만 기록돼요. 구독하면 인사이트에 반영돼요.",
@@ -3019,10 +3020,10 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar의 수면 연속성(1.0~5.0 척도)은 백분율로 환산해요: (연속성 − 1) ÷ 4 × 100.",
     "Pollen" to "꽃가루",
     "Pollen and air quality" to "꽃가루와 대기질",
-    "Pollen counts and air pollution." to "꽃가루 수치와 대기 오염 정보예요.",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Pollen counts and air pollution." to "꽃가루 수치와 대기 오염 정보예요.",
     "Pollen high" to "꽃가루 높음",
     "Pollen or hay fever season" to "꽃가루 또는 건초열 시즌",
     "Polyunsaturated fat" to "다가불포화지방",
@@ -4522,10 +4523,10 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "이렇게 제안한 이유",
     "Why your thresholds are set where they are" to "기준값이 이렇게 정해진 이유",
     "Wind" to "바람",
-    "Wind Speed" to "풍속",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Wind Speed" to "풍속",
     "Wind Speed (m/s)" to "풍속 (m/s)",
     "Wind speed" to "풍속",
     "Wind speed high" to "풍속 높음",

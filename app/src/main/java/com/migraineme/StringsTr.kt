@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5133 entries.
+ * 5134 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -2090,6 +2090,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "İlerlemesi de onunla gider.",
     "Jaw or face pain" to "Çene veya yüz ağrısı",
     "Jet lag" to "Jet lag",
+    "Join Google Meet" to "Google Meet’e katıl",
     "Journal" to "Günlük",
     "Journal only" to "Sadece günlük",
     "Journal only. Subscribe to count it in insights." to "Yalnızca günlükte. İçgörülerde sayılması için abone ol.",
@@ -3019,10 +3020,10 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Polar's Nightly Recharge status (1–5 stars) is converted to a percentage: status × 20. So 5★ → 100%, 4★ → 80%, etc." to "Polar'ın Nightly Recharge durumu (1–5 yıldız) yüzdeye çevrilir: durum × 20. Yani 5★ → %100, 4★ → %80 vb.",
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar'ın uyku sürekliliği (1,0–5,0 ölçeği) yüzdeye çevrilir: (süreklilik − 1) ÷ 4 × 100.",
     "Pollen" to "Polen",
-    "Pollen and air quality" to "Polen ve hava kalitesi",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Pollen and air quality" to "Polen ve hava kalitesi",
     "Pollen counts and air pollution." to "Polen değerleri ve hava kirliliği.",
     "Pollen high" to "Polen yüksek",
     "Pollen or hay fever season" to "Polen veya saman nezlesi mevsimi",
@@ -4522,10 +4523,10 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Why this helps" to "Neden işe yarar",
     "Why we suggested this" to "Bunu neden önerdik",
     "Why your thresholds are set where they are" to "Eşiklerin neden bu seviyelerde",
-    "Wind" to "Rüzgâr",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Wind" to "Rüzgâr",
     "Wind Speed" to "Rüzgâr hızı",
     "Wind Speed (m/s)" to "Rüzgâr hızı (m/s)",
     "Wind speed" to "Rüzgar hızı",

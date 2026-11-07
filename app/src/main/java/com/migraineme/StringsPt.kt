@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5131 entries.
+ * 5132 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -2089,6 +2089,7 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "O progresso vai com ela.",
     "Jaw or face pain" to "Dor no maxilar ou rosto",
     "Jet lag" to "Jet lag",
+    "Join Google Meet" to "Entrar no Google Meet",
     "Journal" to "Diário",
     "Journal only" to "Só diário",
     "Journal only. Subscribe to count it in insights." to "Só diário. Subscreva para contar nos insights.",
@@ -3019,10 +3020,10 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Pólen",
     "Pollen and air quality" to "Pólen e qualidade do ar",
     "Pollen counts and air pollution." to "Níveis de pólen e poluição do ar.",
-    "Pollen high" to "Pólen alto",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "Pólen alto",
     "Pollen or hay fever season" to "Pólen ou época de febre dos fenos",
     "Polyunsaturated fat" to "Gordura polinsat.",
     "Pool" to "Lista",
@@ -4522,10 +4523,10 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Porque os teus limiares estão ali",
     "Wind" to "Vento",
     "Wind Speed" to "Vento",
-    "Wind Speed (m/s)" to "Vento (m/s)",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "Vento (m/s)",
     "Wind speed" to "Vento",
     "Wind speed high" to "Vento forte",
     "Wind speed low" to "Vento fraco",

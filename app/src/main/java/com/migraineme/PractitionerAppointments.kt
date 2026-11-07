@@ -45,7 +45,7 @@ private fun whenText(iso: String?): String = runCatching {
 private fun instant(iso: String?) = runCatching { OffsetDateTime.parse(iso).toInstant() }.getOrNull()
 
 /** Opens the phone's calendar with the session filled in; the client presses save there. Needs no permission. */
-fun appointmentCalendarIntent(startIso: String?, endIso: String?, title: String): android.content.Intent? {
+fun appointmentCalendarIntent(startIso: String?, endIso: String?, title: String, meetUrl: String? = null): android.content.Intent? {
     val start = instant(startIso) ?: return null
     val end = instant(endIso) ?: start.plusSeconds(1800)
     return android.content.Intent(android.content.Intent.ACTION_INSERT)
@@ -53,6 +53,7 @@ fun appointmentCalendarIntent(startIso: String?, endIso: String?, title: String)
         .putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, start.toEpochMilli())
         .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, end.toEpochMilli())
         .putExtra(android.provider.CalendarContract.Events.TITLE, title)
+        .apply { meetUrl?.takeIf { it.isNotBlank() }?.let { putExtra(android.provider.CalendarContract.Events.EVENT_LOCATION, it) } }
 }
 
 /**
@@ -111,6 +112,7 @@ fun PractitionerAppointments(
     val past = all.filter { instant(it.first)?.isAfter(now) == false }.sortedByDescending { instant(it.first) }.take(5)
     // Only for someone who connected their calendar in the app.
     val calendarConnected = CalendarService.hasReadPermission(context)
+    val meetUrl = data?.meet_urls?.get(practitionerId)
 
     Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(t("Appointments"), style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
@@ -145,11 +147,14 @@ fun PractitionerAppointments(
         if (upcoming.isNotEmpty()) {
             Text(t("Upcoming"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
             upcoming.forEach { s ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(whenText(s.first) + (s.second?.let { ty -> " · $ty" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Color.White, modifier = Modifier.weight(1f))
+                Text(whenText(s.first) + (s.second?.let { ty -> " · $ty" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Color.White)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (meetUrl != null) {
+                        TextButton(onClick = { runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(meetUrl))) } }) { Text(t("Join Google Meet")) }
+                    }
                     if (calendarConnected) {
                         val title = t("Appointment with %1\$s", practitionerName)
-                        TextButton(onClick = { appointmentCalendarIntent(s.first, s.third, title)?.let { context.startActivity(it) } }) { Text(t("Add to calendar")) }
+                        TextButton(onClick = { appointmentCalendarIntent(s.first, s.third, title, meetUrl)?.let { context.startActivity(it) } }) { Text(t("Add to calendar")) }
                     }
                 }
             }

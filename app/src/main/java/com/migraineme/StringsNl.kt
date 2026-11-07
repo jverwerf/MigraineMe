@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5131 entries.
+ * 5132 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -2089,6 +2089,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "De voortgang gaat mee.",
     "Jaw or face pain" to "Kaak- of gezichtspijn",
     "Jet lag" to "Jetlag",
+    "Join Google Meet" to "Deelnemen via Google Meet",
     "Journal" to "Dagboek",
     "Journal only" to "Alleen dagboek",
     "Journal only. Subscribe to count it in insights." to "Alleen dagboek. Abonneer om het mee te tellen.",
@@ -3019,10 +3020,10 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Pollen",
     "Pollen and air quality" to "Pollen en luchtkwaliteit",
     "Pollen counts and air pollution." to "Pollenwaarden en luchtvervuiling.",
-    "Pollen high" to "Pollen hoog",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "Pollen hoog",
     "Pollen or hay fever season" to "Pollen of hooikoortsseizoen",
     "Polyunsaturated fat" to "Meerv. onverz. vet",
     "Pool" to "Lijst",
@@ -4522,10 +4523,10 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Waarom je drempels staan waar ze staan",
     "Wind" to "Wind",
     "Wind Speed" to "Windsnelheid",
-    "Wind Speed (m/s)" to "Wind (m/s)",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "Wind (m/s)",
     "Wind speed" to "Windkracht",
     "Wind speed high" to "Harde wind",
     "Wind speed low" to "Weinig wind",

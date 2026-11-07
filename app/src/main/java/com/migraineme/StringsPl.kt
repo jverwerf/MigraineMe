@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5427 entries.
+ * 5428 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -2314,6 +2314,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Postęp znika razem z nim.",
     "Jaw or face pain" to "Ból szczęki lub twarzy",
     "Jet lag" to "Jet lag",
+    "Join Google Meet" to "Dołącz do Google Meet",
     "Journal" to "Dziennik",
     "Journal only" to "Tylko dziennik",
     "Journal only. Subscribe to count it in insights." to "Tylko dziennik. Subskrypcja pozwoli uwzględnić to we wnioskach.",
@@ -3019,10 +3020,10 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "OR Continue and answer manually" to "LUB dalej i odpowiedz sam",
     "Occasionally" to "Czasami",
     "Occipital Center" to "Potylica, środek",
-    "Occurrences on your attacks, last 30 days vs the 30 before." to "Wystąpienia podczas Twoich ataków: ostatnie 30 dni vs 30 dni wcześniej.",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "Occurrences on your attacks, last 30 days vs the 30 before." to "Wystąpienia podczas Twoich ataków: ostatnie 30 dni vs 30 dni wcześniej.",
     "Occurrences over the last 30 days vs the 30 days before them." to "Wystąpienia w ostatnich 30 dniach vs 30 dni wcześniej.",
     "Occurrences per period, this report's range vs the equal period before it." to "Wystąpienia w okresie: zakres tego raportu vs równy okres wcześniej.",
     "Ocular migraine" to "Migrena oczna",
@@ -4522,10 +4523,10 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Vivid dreams" to "Wyraziste sny",
     "Voice" to "Głos",
     "Voice input" to "Wprowadzanie głosem",
-    "Voice input not available" to "Głos niedostępny",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Voice input not available" to "Głos niedostępny",
     "Voice-powered migraine logging" to "Zapisuj migrenę głosem",
     "Volume" to "Głośność",
     "Volume high" to "Głośność – wysoka",

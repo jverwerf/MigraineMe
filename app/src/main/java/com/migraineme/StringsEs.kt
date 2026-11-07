@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5131 entries.
+ * 5132 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -2089,6 +2089,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Su progreso se va con ella.",
     "Jaw or face pain" to "Dolor de mandíbula o cara",
     "Jet lag" to "Jet lag",
+    "Join Google Meet" to "Unirse a Google Meet",
     "Journal" to "Diario",
     "Journal only" to "Solo diario",
     "Journal only. Subscribe to count it in insights." to "Solo diario. Suscríbete para contarlo en Insights.",
@@ -3019,10 +3020,10 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Polen",
     "Pollen and air quality" to "Polen y calidad del aire",
     "Pollen counts and air pollution." to "Niveles de polen y contaminación del aire.",
-    "Pollen high" to "Polen alto",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "Polen alto",
     "Pollen or hay fever season" to "Polen o temporada de alergia",
     "Polyunsaturated fat" to "Grasa poliinsaturada",
     "Pool" to "Lista",
@@ -4522,10 +4523,10 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Por qué tus umbrales están donde están",
     "Wind" to "Viento",
     "Wind Speed" to "Vel. viento",
-    "Wind Speed (m/s)" to "Viento (m/s)",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "Viento (m/s)",
     "Wind speed" to "Viento",
     "Wind speed high" to "Viento fuerte",
     "Wind speed low" to "Viento flojo",

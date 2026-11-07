@@ -900,6 +900,8 @@ object SupabasePractitionerService {
         val sessions: List<AppointmentSession> = emptyList(),
         /** Practitioners whose calendar is set to None: no appointments with them. */
         val closed: List<String> = emptyList(),
+        /** Practitioner id to their Google Meet link. */
+        val meet_urls: Map<String, String> = emptyMap(),
     )
 
     private suspend fun appointmentsCall(accessToken: String, body: JsonObject): String {

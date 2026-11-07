@@ -30,6 +30,10 @@
 // no calendar and no appointments, "me" means only what is agreed here, "cliniko"
 // adds Cliniko's sessions and booking. Unset: cliniko when connected, otherwise me.
 //
+// VIDEO CALL: practitioners.plugins.meet_url, one link saved under Plugins, shown on
+// upcoming sessions to both sides. Only Google Meet, Microsoft Teams, Zoom and Webex
+// addresses are ever passed on.
+//
 // OPEN TIMES: Cliniko's available_times answers 404 unless the practice has
 // online booking on, so when it does we work the times out from Cliniko's own
 // working hours minus appointments, group appointments and unavailable blocks.
@@ -227,6 +231,11 @@ serve(async (req) => {
 
     const COLS = "id,practitioner_id,user_id,kind,proposed_by,status,message,preferred_times,response_note,proposed_start,proposed_end,scheduled_for,external_provider,external_id,external_type_id,created_at,responded_at";
 
+    const meetOf = async (practitionerId: string): Promise<string | null> => {
+      const { data } = await db.from("practitioners").select("plugins").eq("id", practitionerId).limit(1);
+      const u = String(data?.[0]?.plugins?.meet_url || "").trim();
+      return /^https:\/\/([a-z0-9-]+\.)*(meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|zoom\.us|webex\.com)\/\S*$/i.test(u) ? u : null;
+    };
     const calendarChoice = async (practitionerId: string): Promise<string | null> => {
       const { data } = await db.from("practitioners").select("plugins").eq("id", practitionerId).limit(1);
       return data?.[0]?.plugins?.calendar || null;
@@ -336,6 +345,8 @@ serve(async (req) => {
           const nameOf: Record<string, string> = {}; for (const p of prs || []) nameOf[p.id] = p.display_name;
           const sessions: any[] = [];
           const closed: string[] = [];
+          const meet_urls: Record<string, string> = {};
+          for (const l of links || []) { const u = await meetOf(l.practitioner_id); if (u) meet_urls[l.practitioner_id] = u; }
           for (const id of ids) if ((await calendarChoice(id as string)) === "none") closed.push(id as string);
           for (const l of links || []) {
             try {
@@ -344,7 +355,7 @@ serve(async (req) => {
               if (integ && patient) for (const s of await sessionsFor(integ, patient)) sessions.push({ ...s, practitioner_id: l.practitioner_id, practitioner_name: nameOf[l.practitioner_id] || null });
             } catch (e) { console.warn("sessions skipped", e); }
           }
-          return json({ requests: (rows || []).map((r: any) => ({ ...r, practitioner_name: nameOf[r.practitioner_id] || null })), sessions, closed });
+          return json({ requests: (rows || []).map((r: any) => ({ ...r, practitioner_name: nameOf[r.practitioner_id] || null })), sessions, closed, meet_urls });
         }
         case "client_suggest": {
           const pid = String(body.practitioner_id || "");
@@ -411,7 +422,7 @@ serve(async (req) => {
             if (patient) sessions = await sessionsFor(integ, patient);
           } catch (e) { cliniko_error = (e as Error).message; }
         }
-        return json({ requests: rows || [], sessions, calendar: await calendarChoice(link.practitioner_id), cliniko: { connected: !!integ, matched: !!patient, types, error: cliniko_error } });
+        return json({ requests: rows || [], sessions, calendar: await calendarChoice(link.practitioner_id), meet_url: await meetOf(link.practitioner_id), cliniko: { connected: !!integ, matched: !!patient, types, error: cliniko_error } });
       }
       case "slots": {
         const link = await needLink();
@@ -449,6 +460,7 @@ serve(async (req) => {
         await notify(row.user_id, "accepted", row.id, {
           starts_at: String(done.scheduled_for), ends_at: String(done.proposed_end || new Date(Date.parse(done.scheduled_for) + 30 * 60000).toISOString()),
           practitioner_name: String(who?.[0]?.display_name || ""),
+          meet_url: (await meetOf(row.practitioner_id)) || "",
         });
         return json({ request: done });
       }

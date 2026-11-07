@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5131 entries.
+ * 5132 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -2089,6 +2089,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Sein Verlauf geht mit.",
     "Jaw or face pain" to "Kiefer- oder Gesichtsschmerz",
     "Jet lag" to "Jetlag",
+    "Join Google Meet" to "Google Meet beitreten",
     "Journal" to "Journal",
     "Journal only" to "Nur Tagebuch",
     "Journal only. Subscribe to count it in insights." to "Nur Tagebuch. Mit Abo zählt es in Insights.",
@@ -3019,10 +3020,10 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pollen" to "Pollen",
     "Pollen and air quality" to "Pollen und Luftqualität",
     "Pollen counts and air pollution." to "Pollenwerte und Luftverschmutzung.",
-    "Pollen high" to "Pollen hoch",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "Pollen hoch",
     "Pollen or hay fever season" to "Pollen oder Heuschnupfenzeit",
     "Polyunsaturated fat" to "Mehrf. ungesätt. Fett",
     "Pool" to "Liste",
@@ -4522,10 +4523,10 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "Warum deine Schwellen dort liegen",
     "Wind" to "Wind",
     "Wind Speed" to "Windstärke",
-    "Wind Speed (m/s)" to "Wind (m/s)",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "Wind (m/s)",
     "Wind speed" to "Windstärke",
     "Wind speed high" to "Wind stark",
     "Wind speed low" to "Wind schwach",
