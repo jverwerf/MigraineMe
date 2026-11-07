@@ -54,7 +54,26 @@ const pretty = (raw: unknown): string => {
   if (!s) return "";
   // Counterpart to the app's prettyLabel: seeded names translate, names the
   // patient typed themselves pass through unchanged, because English is the key.
-  return rt(s[0].toUpperCase() + s.slice(1));
+  const cap = s[0].toUpperCase() + s.slice(1);
+  const found = rt(cap);
+  if (found !== cap) return found;
+  // Saved as one string but really a list: "Regular Migraine, Light sensitivity".
+  if (cap.includes(", ")) return cap.split(", ").map(pretty).join(", ");
+  // Server-built factor names.
+  if (cap.startsWith("Steady ")) return rt("steady {0}", pretty(cap.slice(7)).toLowerCase());
+  return cap;
+};
+
+// A frequency saved in English or typed by the patient: known forms translate,
+// anything else is the patient's own words and stays as is.
+const frequencyLabel = (raw: unknown): string => {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+  const low = s.toLowerCase();
+  const m = low.match(/^(\d+)\s*x\s*(?:per|a)\s*(day|week|month)$/);
+  if (m) return rt(`{0}x per ${m[2]}`, m[1]);
+  const found = rt(low);
+  return found === low ? s : found;
 };
 
 const rgba = (hex: string, a: number): string => {
@@ -2458,7 +2477,7 @@ function treatments(d: ReportData, pageNo: number): string {
               : bandLabel[band] ? rt(bandLabel[band])
               : (pct != null ? `${pct > 0 ? "+" : ""}${num(pct, 0)}%` : rt("Not enough data")))}
         </div>
-        <div class="meta">${esc([t.kind ?? t.category, t.amount ?? t.dose, t.frequency].filter(Boolean).join(" · "))}
+        <div class="meta">${esc([pretty(t.kind ?? t.category), t.amount ?? t.dose, frequencyLabel(t.frequency)].filter(Boolean).join(" · "))}
           ${t.start_date ? esc(rt("· started {0}", String(t.start_date))) : ""}</div>
         ${band === "no_baseline" ? `<div class="meta">${esc(rt("Nothing logged before this started, so there is nothing to compare it with."))}</div>` : ""}
         ${prior ? `<div class="meta" style="font-style:italic">${esc(rt("Before this: {0}", prior))}</div>` : ""}
@@ -2889,7 +2908,7 @@ function profile(d: ReportData, pageNo: number): string {
   if (!pr) return "";
   const val = (k: string) => {
     const v = pr[k];
-    return typeof v === "string" && v.trim() ? v.trim() : "";
+    return typeof v === "string" && v.trim() ? pretty(v) : "";
   };
   const rows: [string, string][] = ([
     ["Frequency", val("frequency")],

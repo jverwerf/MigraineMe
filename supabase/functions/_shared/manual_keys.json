@@ -3814,6 +3814,162 @@
     {
       "en": "Less nausea",
       "why": "seeded side-effect pool label (user_treatment_side_effects): the report's pretty() translates it in the What Worked side-effect line, reaching rt() as a runtime value"
+    },
+    {
+      "en": "10+ years",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "12-24 hours",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Aspartame",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Aspartame exposure high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Coarse dust high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Cold compress",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Consistent sleep disturbances",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Consistent sleep duration",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Consistent sleep score",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Drug",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Feeling low",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Female",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Grass pollen high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "MSG",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Male",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Nitrates",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Nitrates exposure high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Ozone high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Pollen high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Poor sleep",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Sulfites",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Sulfites exposure high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Tension type",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Tree pollen high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Very high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Weed pollen high",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Worse in summer",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "Worse in winter",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "as needed",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "daily",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "every other day",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "monthly",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "once daily",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "steady {0}",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "twice daily",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "weekly",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "{0}x per day",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "{0}x per month",
+      "why": "report prints it through pretty()"
+    },
+    {
+      "en": "{0}x per week",
+      "why": "report prints it through pretty()"
     }
   ]
 }
