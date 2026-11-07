@@ -147,7 +147,7 @@ fun SignupScreen(
                         Button(
                             onClick = onNavigateToLogin,
                             shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                         ) {
                             Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -312,7 +312,7 @@ fun SignupScreen(
                         },
                         enabled = !busy && email.isNotBlank() && password.isNotBlank() && confirm.isNotBlank() && passwordsMatch && passwordStrong,
                         shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppTheme.AccentPurple,
                             disabledContainerColor = AppTheme.AccentPurple.copy(alpha = 0.4f)

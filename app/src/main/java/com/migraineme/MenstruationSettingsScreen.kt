@@ -515,7 +515,7 @@ private fun MDecayCurveCard(
                         },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
+                    FitText(
                         if (v > 0) "${"%.1f".format(v)}" else "",
                         color = if (isSelected) barColor else if (v > 0) Color.White else Color.Transparent,
                         style = MaterialTheme.typography.labelSmall,
@@ -537,7 +537,7 @@ private fun MDecayCurveCard(
                                 else Modifier
                             )
                     )
-                    Text(
+                    FitText(
                         dayLabels[i],
                         color = if (isSelected) barColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,

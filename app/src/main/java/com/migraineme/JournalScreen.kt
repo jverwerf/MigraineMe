@@ -1134,15 +1134,13 @@ private fun JournalEntryRow(
             Text(
                 t(info.title),   // pool labels are English keys
                 color = Color.White,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
             )
             if (!info.sub.isNullOrBlank()) {
                 Text(
                     info.sub,
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }
@@ -1314,19 +1312,22 @@ private fun JournalDaySummaryCard(
         elevation = CardDefaults.cardElevation(0.dp),
         border = AppTheme.BaseCardBorder
     ) {
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+        // A Box, not a Row at IntrinsicSize.Min: the intrinsic height under-measures the
+        // wrapping counts below and cut the "+n more" line off the bottom of the card.
+        Box(Modifier.fillMaxWidth()) {
             if (isAttack) {
                 // Inset attack stripe.
-                Box(
-                    Modifier
-                        .padding(start = 5.dp, top = 10.dp, bottom = 10.dp)
-                        .width(3.dp)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(AttackRed)
-                )
+                Box(Modifier.matchParentSize().padding(start = 5.dp, top = 10.dp, bottom = 10.dp)) {
+                    Box(
+                        Modifier
+                            .width(3.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(AttackRed)
+                    )
+                }
             }
-            Column(Modifier.weight(1f).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.fillMaxWidth().padding(start = if (isAttack) 16.dp else 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Day blob: same soft gradient shape as the Brainy row icons.
                     Box(

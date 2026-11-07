@@ -156,7 +156,7 @@ fun MigraineQuickAddSection(onAdd: (QuickAddKind) -> Unit) {
                     ) {
                         QuickAddIconChip(kind, circle = 20.dp, icon = 11.dp)
                         Spacer(Modifier.width(5.dp))
-                        Text(t(kind.label), color = Color.White, fontSize = 10.sp, maxLines = 1)
+                        FitText(t(kind.label), color = Color.White, fontSize = 10.sp, maxLines = 1)
                     }
                 }
             }
@@ -849,7 +849,6 @@ fun MigraineInProgressCard(
                             withStyle(SpanStyle(color = AppTheme.AccentPurple)) { append(" ›") }
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
                         modifier = Modifier.clickable { showForecast = true }
                     )
                     else -> Text(started, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -907,7 +906,7 @@ fun MigraineInProgressCard(
                     ) {
                         QuickAddIconChip(kind, circle = 20.dp, icon = 11.dp)
                         Spacer(Modifier.width(6.dp))
-                        Text(t(kind.label), color = Color.White, fontSize = 11.sp, maxLines = 1)
+                        FitText(t(kind.label), color = Color.White, fontSize = 11.sp, maxLines = 1)
                     }
                 }
             }
@@ -938,7 +937,7 @@ private fun InProgressTile(label: String, onClick: () -> Unit, chip: @Composable
             .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         chip()
-        Text(label, color = AppTheme.SubtleTextColor, fontSize = 10.sp, maxLines = 1)
+        FitText(label, color = AppTheme.SubtleTextColor, fontSize = 10.sp, maxLines = 1)
     }
 }
 

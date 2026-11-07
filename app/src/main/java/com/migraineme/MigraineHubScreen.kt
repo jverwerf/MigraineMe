@@ -510,14 +510,12 @@ private fun QuickLogCard(
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
 
-            Text(
+            FitText(
                 subtitle,
                 color = if (enabled) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                 textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Visible,
-                softWrap = false
+                maxLines = 1
             )
         }
     }
@@ -594,8 +592,7 @@ private fun SplitHalf(
         Text(
             title,
             color = AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 1
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
         )
         Text(
             subtitle,
@@ -604,8 +601,6 @@ private fun SplitHalf(
             textAlign = TextAlign.Center,
             // Half the width of a normal card, so this one wraps rather than
             // bleeding past its own edge.
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
         )
     }
 }

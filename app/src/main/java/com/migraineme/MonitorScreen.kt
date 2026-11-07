@@ -598,9 +598,9 @@ private fun EnvironmentCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            Text(t(label), color = AppTheme.SubtleTextColor,
+                            FitText(t(label), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                            Text("$value$unit",
+                            FitText("$value$unit",
                                 color = slotColors.getOrElse(index) { slotColors.last() },
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 maxLines = 1)
@@ -922,18 +922,17 @@ internal fun MetricTile(value: String, label: String, valueColor: Color, modifie
             .padding(vertical = 7.dp, horizontal = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(value, color = valueColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), maxLines = 1)
+        FitText(value, color = valueColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), maxLines = 1)
         // A third of the card's width is not enough for "avg sev this week" on
         // one line, and a single clipped line cut it mid-word. The label wraps
         // to two and only then ellipsises, which also covers the longer
         // translations of the same labels.
-        Text(
+        FitText(
             t(label),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
-            maxLines = labelMaxLines,
-            overflow = TextOverflow.Ellipsis
+            maxLines = labelMaxLines
         )
     }
 }

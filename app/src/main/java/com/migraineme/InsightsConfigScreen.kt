@@ -159,8 +159,9 @@ private fun InsightsCardConfigItem(
             Spacer(Modifier.width(12.dp))
 
             // Card name
-            Text(
+            FitText(
                 text = label,
+                maxLines = 2,
                 color = if (isVisible) AppTheme.TitleColor else AppTheme.TitleColor.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 modifier = Modifier.weight(1f)

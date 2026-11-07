@@ -707,7 +707,7 @@ private fun AiMigraineProfileCard(data: JsonObject, onNavigateProfileBasis: () -
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(t(value), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
+                                        FitText(t(value), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
                                         Text(t(label), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
@@ -1021,7 +1021,7 @@ private fun ProfileStatChip(icon: ImageVector, text: String, modifier: Modifier 
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
-        Text(text, color = Color.White, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        FitText(text, color = Color.White, style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }
 

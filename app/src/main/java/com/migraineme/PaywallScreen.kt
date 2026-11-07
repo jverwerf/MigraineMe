@@ -346,7 +346,7 @@ fun PaywallScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .heightIn(min = 52.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppTheme.AccentPurple,
                             contentColor = Color.White

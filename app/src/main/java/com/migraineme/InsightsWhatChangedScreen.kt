@@ -239,7 +239,6 @@ private fun AttackTrendRow(t: InsightsViewModel.AttackTrend) {
     ) {
         Text(t(t.label), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(122.dp))
         Spacer(Modifier.width(8.dp))
         DivergingTrendBar(fill = spec.fill, positive = spec.positive, color = spec.color,
@@ -311,7 +310,6 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
         BrainyRowIcon(h.label, size = 18.dp)
         Text(t(h.label), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(104.dp))
         Spacer(Modifier.width(8.dp))
         DivergingTrendBar(fill = spec.fill, positive = spec.positive, color = spec.color,
@@ -408,7 +406,6 @@ private fun WhatChangedTrendRow(t: InsightsViewModel.ItemTrend, maxDelta: Int) {
         BrainyRowIcon(t.name, size = 18.dp)
         Text(prettyLabel(t.name), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(104.dp))
         Spacer(Modifier.width(8.dp))
         DivergingTrendBar(fill = frac, positive = more, color = color, modifier = Modifier.weight(1f))

@@ -117,7 +117,7 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
                     t(r.kind.replaceFirstChar { it.uppercase() }),
                     r.amount, r.frequency, period
                 ).joinToString(" · ")
-                LabelPlate { Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall, maxLines = 2) }
+                LabelPlate { Text(sub, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall) }
                 // What the user remembered about life before this treatment,
                 // given when they added one they were already on. Their words,
                 // shown as context; nothing here is counted anywhere.
@@ -344,7 +344,7 @@ private fun ClinicalBandScale(pct: Double?, hasData: Boolean) {
         Spacer(Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             labels.forEach { l ->
-                Text(t(l), color = Color.White.copy(alpha = 0.60f),
+                FitText(t(l), color = Color.White.copy(alpha = 0.60f),
                     style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
         }

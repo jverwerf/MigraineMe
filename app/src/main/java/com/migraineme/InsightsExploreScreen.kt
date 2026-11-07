@@ -347,8 +347,7 @@ private fun CompactMigraineSelector(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
             Text(sel?.label ?: t("Migraine"), color = Color.White,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             if (sel != null) {
                 Text(df.format(sel.start) + " \u2022 " + tf.format(sel.start),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -463,7 +462,6 @@ fun RecommendationsCard(
                         BrainyRowIcon(row.name, size = 18.dp)
                         Text(prettyLabel(row.name), color = Color.White,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f))
                         Spacer(Modifier.width(8.dp))
                         Icon(section.icon, contentDescription = null,
@@ -471,12 +469,11 @@ fun RecommendationsCard(
                         Spacer(Modifier.width(4.dp))
                         Text(t(section.title), color = section.color,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.End,
                             modifier = Modifier.weight(0.8f))
                     }
                     Spacer(Modifier.height(3.dp))
-                    Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium,
-                        maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
                 }
                 if (onDismiss != null) {
                     Spacer(Modifier.width(6.dp))
@@ -552,8 +549,9 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                     BrainyBlobIcon(R.drawable.brainy_recs_small)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(t("Recommendations"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        FitText(t("Recommendations"), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            maxLines = 1)
                         Text(t("Built from your Insights patterns, with a next step for each"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
@@ -671,7 +669,6 @@ private fun RecommendationDetailRow(
                 BrainyRowIcon(row.name, size = 18.dp)
                 Text(prettyLabel(row.name), color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f))
                 if (showTag) {
                     Spacer(Modifier.width(8.dp))

@@ -191,11 +191,9 @@ internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalC
             BrainyRowIcon(e.label, iconKey = e.iconKey, category = e.category, size = 18.dp)
             Column(Modifier.weight(1f)) {
                 Text(prettyLabel(e.label), color = Color.White,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                 e.sub?.let {
-                    Text(it, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(it, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
             Spacer(Modifier.width(8.dp))
@@ -204,7 +202,7 @@ internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalC
             // on long lift strings ("about 5 times as likely · 46% of attacks").
             // 0.8 against the label's 1f caps the stat at ~44% of the row.
             Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium,
-                textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.End,
                 modifier = Modifier.weight(0.8f))
         }
     }
@@ -1422,8 +1420,7 @@ private fun MigraineSelector(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
             Text(sel?.label ?: t("Migraine"), color = Color.White,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             if (sel != null) {
                 Text(df.format(sel.start) + " • " + tf.format(sel.start),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -1753,24 +1750,18 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
                     Text(
                         stat.factorName,
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
                         stat.factorB,
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                 } else {
                     Text(
                         stat.factorName,
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
                 Spacer(Modifier.height(2.dp))
@@ -1880,8 +1871,7 @@ internal fun IntradayResponseCard(
                 BrainyRowIcon(row.label, size = 18.dp)
                 Column(Modifier.weight(1f)) {
                     Text(prettyLabel(row.label), color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     if (row.caution) {
                         Text(t("pain rose after this"), color = amber,
                             style = MaterialTheme.typography.labelSmall)
@@ -1945,21 +1935,18 @@ private fun CorrelationRowCompact(
                 Text(
                     prettyLabel(stat.factorName),
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
                     prettyLabel(stat.factorB),
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
             } else {
                 Text(
                     prettyLabel(stat.factorName),
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
             Spacer(Modifier.height(1.dp))
@@ -1998,8 +1985,7 @@ private fun CorrelationRowCompact(
             usuallyStartsLine(stat, locationRows)?.let { line ->
                 Spacer(Modifier.height(1.dp))
                 Text(line, color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    style = MaterialTheme.typography.labelSmall)
             }
         }
         PatternBadge(stat)
@@ -2250,8 +2236,6 @@ private fun PatternTile(
                 inlineContent = inlineIcons,
                 color = Color(0xFFF3EAFB),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
             // A pair title ("A  +  B") needs the whole row: sharing it with the
@@ -2363,13 +2347,13 @@ internal fun PatternsPreviewCard(
             symptomOutcomes.take(2).forEach { stat ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${prettyLabel(stat.factorName)} \u2192 ${prettyLabel(stat.symptomOutcome)}", color = Color.White,
-                        style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                     // The two rates, undivided — same as the Patterns detail card.
                     Text(t("%1\$s%% of days vs %2\$s%% usually",
                         stat.pctMigraineWindows.toInt(), stat.pctControlWindows.toInt()),
                         color = if (stat.pctMigraineWindows >= stat.pctControlWindows * 2f) Color(0xFFE57373) else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.End,
                         modifier = Modifier.weight(0.8f))
                 }
             }
@@ -2521,8 +2505,7 @@ private fun ThresholdPreviewCard(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(stat.factorName, color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(2.dp))
                     ConfidenceDots(stat.pValue)
                 }
@@ -2791,15 +2774,13 @@ internal fun ContextCard(
                             inlineContent = inlineIcons,
                             color = Color(0xFFF3EAFB),
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(t("%1\$s migraines (%2\$s%%)", item.count, item.pctOfMigraines.toInt()),
                             color = cyan,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.End,
                             modifier = Modifier.weight(0.8f))
                         if (onClick == null) {
                             Spacer(Modifier.width(8.dp))
@@ -2954,7 +2935,7 @@ internal fun ImpactCard(
                     Text(t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), timed),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.End,
                         modifier = Modifier.weight(0.8f))
                 }
             }
@@ -2985,14 +2966,13 @@ internal fun ImpactCard(
                     BrainyRowIcon(item.name, size = 20.dp)
                     Column(Modifier.weight(1f)) {
                         Text(prettyLabel(item.name), color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                         Text(t("missed during %s%% of migraines", item.pctOfMigraines.toInt()),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     Text(t("%s times", item.totalMissed), color = Color(0xFFE57373),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.End,
                         modifier = Modifier.weight(0.8f))
                 }
             }
@@ -3013,8 +2993,7 @@ private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomSta
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             BrainyRowIcon(s.symptomLabel, size = 18.dp)
             Text(prettyLabel(s.symptomLabel), color = Color.White,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
             val sev = s.avgSeverity
             if (sev != null) {
                 Text(t("sev %s", String.format("%.1f", sev)),
@@ -3084,7 +3063,7 @@ internal fun PainHeatMap(
                         .background(Color(0xFFE57373).copy(alpha = alpha)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
+                    FitText(
                         "$pct",
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -3230,8 +3209,7 @@ internal fun GaugeProposalRow(
             }
             if (!proposal.reasoning.isNullOrBlank()) {
                 Text(proposal.reasoning, color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    style = MaterialTheme.typography.labelSmall)
             }
         }
 
@@ -3557,8 +3535,7 @@ internal fun WhatChangedCard(
             ) {
                 BrainyRowIcon(tr.name, size = 18.dp)
                 Text(prettyLabel(tr.name), color = Color.White,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(8.dp))
                 Text("${tr.prior}→${tr.current}", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelMedium)
@@ -3588,8 +3565,7 @@ internal fun WhatChangedCard(
                 ) {
                     BrainyRowIcon(h.label, size = 18.dp)
                     Text(t(h.label), color = Color.White,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                     Spacer(Modifier.width(8.dp))
                     Text(t(spec.caption), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelMedium)

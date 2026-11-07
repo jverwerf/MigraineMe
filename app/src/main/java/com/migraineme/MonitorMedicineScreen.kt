@@ -783,7 +783,7 @@ private fun MedicineHubTable(
         HorizontalDivider(color = Color.White.copy(alpha = 0.055f))
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                Text(name, color = AppTheme.TitleColor, maxLines = 1,
+                Text(name, color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 if (category != null) {
                     Spacer(Modifier.width(5.dp))
@@ -795,7 +795,7 @@ private fun MedicineHubTable(
                 }
             }
             values.forEachIndexed { i, v ->
-                Text(v, color = colors.getOrElse(i) { colors.last() }, textAlign = TextAlign.End, maxLines = 1,
+                FitText(v, color = colors.getOrElse(i) { colors.last() }, textAlign = TextAlign.End, maxLines = 1,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.width(colWidth))
             }
@@ -865,7 +865,7 @@ private fun MedicineDwmGrid(
                 androidx.compose.foundation.layout.Box {
                     androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
                         if (row.name != null) {
-                            Text(t(row.name), color = Color.White, style = nameStyle, maxLines = 1)
+                            Text(t(row.name), color = Color.White, style = nameStyle)
                             if (!row.category.isNullOrBlank()) {
                                 Spacer(Modifier.width(4.dp))
                                 Text(prettyLabel(row.category), color = AppTheme.SubtleTextColor,
@@ -881,7 +881,7 @@ private fun MedicineDwmGrid(
                 // 3 value cells (D, W, M)
                 val style = if (row.isHeader) headerStyle else valueStyle
                 row.values.forEachIndexed { i, v ->
-                    Text(v, color = colors[i], style = style, maxLines = 1)
+                    FitText(v, color = colors[i], style = style, maxLines = 1)
                 }
             }
         }
@@ -987,8 +987,7 @@ fun MedicineDWMHeaderRow() {
 fun MedicineDWMRow(name: String, category: String?, today: String, week: String, month: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(name, color = Color.White,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
         if (!category.isNullOrBlank()) {
             Spacer(Modifier.width(4.dp))
             Text(category, color = AppTheme.SubtleTextColor,
@@ -999,15 +998,15 @@ fun MedicineDWMRow(name: String, category: String?, today: String, week: String,
                     .padding(horizontal = 5.dp, vertical = 1.dp))
         }
         Spacer(Modifier.weight(1f))
-        Text(today, color = Color(0xFFFFB74D),
+        FitText(today, color = Color(0xFFFFB74D),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.End, maxLines = 1,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
-        Text(week, color = Color(0xFF4FC3F7),
+        FitText(week, color = Color(0xFF4FC3F7),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.End, maxLines = 1,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
-        Text(month, color = Color(0xFF81C784),
+        FitText(month, color = Color(0xFF81C784),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.End, maxLines = 1,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
@@ -1140,10 +1139,10 @@ fun MedicineStackedBarGraph(
         // history graphs (Physical, Sleep, etc).
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(monthDayLabel(days.first()), color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
-            Text(monthDayLabel(days.last()), color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+            FitText(monthDayLabel(days.first()), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            FitText(monthDayLabel(days.last()), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, maxLines = 1)
         }
     }
 }
@@ -1334,7 +1333,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically) {
                             Text(cat, color = Color.White, style = MaterialTheme.typography.labelMedium,
                                 modifier = Modifier.weight(1f))
-                            Text(total, color = Color(0xFF81C784),
+                            FitText(total, color = Color(0xFF81C784),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                                 textAlign = TextAlign.End, maxLines = 1,
                                 modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))

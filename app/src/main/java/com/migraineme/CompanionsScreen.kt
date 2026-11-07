@@ -195,7 +195,7 @@ fun CompanionsOnboardingScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .heightIn(min = 52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
@@ -364,9 +364,7 @@ private fun CompanionSelectCard(
                         Text(
                             companion.triggers.joinToString(", ") { tSync(it) },
                             color = AppTheme.AccentPurple,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }

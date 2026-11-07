@@ -506,9 +506,7 @@ private fun WhatWorkedTile(
                 prettyLabel(row.name),
                 color = Color(0xFFF3EAFB),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(10.dp))
             // The verdict leads this column on every row. The hide control sits
@@ -599,9 +597,7 @@ internal fun TreatmentTrailingText(text: String, color: Color) {
         text,
         color = color,
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-        textAlign = TextAlign.End,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.End
     )
 }
 
@@ -649,8 +645,7 @@ fun PainResponseCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BrainyRowIcon(row.label, size = 20.dp)
                     Text(prettyLabel(row.label), color = Color(0xFFF3EAFB),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                     Spacer(Modifier.width(10.dp))
                     TreatmentTrailingText(painPointsText(row.medianEffect), color)
                 }
@@ -744,8 +739,7 @@ fun UsedTogetherCard(
                     BrainyRowIcon(stat.factorName, size = 20.dp)
                     Text("${prettyLabel(stat.factorName)}  +  ${prettyLabel(stat.factorB)}",
                         color = Color(0xFFF3EAFB),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -840,8 +834,7 @@ fun WorksBestWhenCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BrainyRowIcon(stat.factorName, size = 20.dp)
                     Text(prettyLabel(stat.factorName), color = Color(0xFFF3EAFB),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                     Spacer(Modifier.width(10.dp))
                     TreatmentTrailingText(verdict, color)
                 }

@@ -373,8 +373,6 @@ private fun DetailTriggersCard(
                             prettyLabel(t.name),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
 

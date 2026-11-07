@@ -185,8 +185,7 @@ fun InsightsImpactScreen(
                                 BrainyRowIcon(label, iconKey = "migraine_starburst", size = 18.dp)
                                 Text(t(label), color = Color.White,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    modifier = Modifier.weight(1f))
                                 Text("$pct%", color = pctColor,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                             }
@@ -212,8 +211,7 @@ fun InsightsImpactScreen(
                                         t(row.factorName), t(locLabel), row.withHits, row.withTotal),
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(vertical = 2.dp),
+                                    modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             }
                         }
@@ -271,8 +269,7 @@ fun InsightsImpactScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text(AuraZones.label(zoneId), color = Color.White,
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        modifier = Modifier.weight(1f))
                                     Text("$pct%", color = pctColor,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
@@ -288,8 +285,7 @@ fun InsightsImpactScreen(
                                     t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), count),
                                     color = AppTheme.AccentPurple,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    textAlign = TextAlign.End, maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.End,
                                     modifier = Modifier.weight(0.8f)
                                 )
                             }
@@ -409,12 +405,11 @@ fun InsightsImpactScreen(
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 BrainyRowIcon(s.symptomLabel, size = 20.dp)
                                 Text(prettyLabel(s.symptomLabel), color = Color(0xFFF3EAFB),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    overflow = TextOverflow.Ellipsis, maxLines = 1, modifier = Modifier.weight(1f))
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                                 Text(t("%1\$s%% · %2\$s attacks", pct, s.totalCount),
                                     color = Color(0xFFCE93D8),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.End,
                                     modifier = Modifier.weight(0.8f))
                             }
                             Spacer(Modifier.height(6.dp))
@@ -509,11 +504,10 @@ fun InsightsImpactScreen(
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 BrainyRowIcon(item.name, size = 20.dp)
                                 Text(prettyLabel(item.name), color = Color(0xFFF3EAFB),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                                 Text(t("%s\u00D7 missed", item.totalMissed), color = Color(0xFFE8A0A0),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.End,
                                     modifier = Modifier.weight(0.8f))
                             }
                             Spacer(Modifier.height(4.dp))
@@ -540,8 +534,7 @@ fun InsightsImpactScreen(
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     BrainyRowIcon(item.name, size = 20.dp)
                                     Text(prettyLabel(item.name), color = Color(0xFFF3EAFB),
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                                     Text(t("%s×", item.count), color = Color(0xFFE8A0A0),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
@@ -857,7 +850,7 @@ private fun SeveritySideBox(
         Text(
             title, color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis
+            textAlign = TextAlign.Center
         )
         Text(
             String.format("%.1f", value),

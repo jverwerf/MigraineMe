@@ -187,7 +187,6 @@ fun MigrainesMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit = {}) {
                                     t("How similar migraines went"),
                                     color = Color.White,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text("\u203a", color = AttackRed, style = MaterialTheme.typography.bodyMedium)
@@ -201,7 +200,6 @@ fun MigrainesMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit = {}) {
                                     inline,
                                     color = Color.White,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text("\u203a", color = AttackRed, style = MaterialTheme.typography.bodyMedium)

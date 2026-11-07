@@ -323,7 +323,7 @@ fun GoalsMonitorCard(
                             label = goal.title,
                             valueColor = slotColors[index % slotColors.size],
                             modifier = Modifier.weight(1f),
-                            labelMaxLines = 1
+                            labelMaxLines = 2
                         )
                     }
                     repeat(perRow - rowGoals.size) { Spacer(Modifier.weight(1f)) }

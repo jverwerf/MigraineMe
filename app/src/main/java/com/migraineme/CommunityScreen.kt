@@ -690,11 +690,12 @@ private fun SegmentedTabRow(
                     .clickable { onSelect(index) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(t(label),
+                FitText(t(label),
                     color = if (selected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                    )
+                    ),
+                    maxLines = 1
                 )
             }
         }

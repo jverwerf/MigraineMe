@@ -379,7 +379,7 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
                                 .clickable { editingIndex = i; editText = fmt(v) }
                         )
                         // Day label
-                        Text(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        FitText(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     }
                 }
             }

@@ -391,8 +391,8 @@ private fun NavRow(title: String, sub: String, onClick: () -> Unit) {
     BaseCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), contentPadding = 14.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(sub, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium)
+                Text(sub, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = AppTheme.AccentPurple)
         }
@@ -401,14 +401,14 @@ private fun NavRow(title: String, sub: String, onClick: () -> Unit) {
 
 @Composable
 private fun PrimaryButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple, contentColor = Color(0xFF20062F))) {
+    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple, contentColor = Color(0xFF20062F))) {
         Text(text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }
 
 @Composable
 private fun GhostButton(text: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)), colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPink)) {
+    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)), colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = AppTheme.AccentPink)) {
         Text(text, fontWeight = FontWeight.SemiBold)
     }
 }
@@ -671,7 +671,7 @@ private fun Picker(options: List<String>, value: String, onPick: (String) -> Uni
     var open by remember { mutableStateOf(false) }
     Box {
         Row(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Edge, RoundedCornerShape(10.dp)).clickable { open = true }.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(value, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 150.dp))
+            Text(value, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.widthIn(max = 150.dp))
             Text(" ▾", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -691,7 +691,7 @@ private fun ListScreen(attacks: List<ImpAttack>, days: List<ImpDay>, onAttack: (
                 Spacer(Modifier.width(8.dp))
                 SevBadge(a.severity)
                 Spacer(Modifier.width(6.dp))
-                Text(if (a.removed) t("Removed") else a.summary(), color = if (a.removed) AppTheme.SubtleTextColor else AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text(if (a.removed) t("Removed") else a.summary(), color = if (a.removed) AppTheme.SubtleTextColor else AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                 Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = AppTheme.SubtleTextColor)
             }
         }
@@ -704,7 +704,7 @@ private fun ListScreen(attacks: List<ImpAttack>, days: List<ImpDay>, onAttack: (
                 if (i > 0) HorizontalDivider(color = Edge)
                 Row(Modifier.fillMaxWidth().clickable { onDay(i) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDate(d.date), color = AppTheme.TitleColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(74.dp))
-                    Text(d.summary(), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(d.summary(), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                     Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = AppTheme.SubtleTextColor)
                 }
             }

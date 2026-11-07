@@ -331,8 +331,7 @@ private fun HistoryLogItem(
             Text(
                 item.foodName,
                 color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2
+                style = MaterialTheme.typography.bodyMedium
             )
             Row {
                 item.calories?.let {

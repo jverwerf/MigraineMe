@@ -320,9 +320,7 @@ fun SideEffectPicker(
                 color = if (summaryScale == SideEffectScale.NONE) AppTheme.BodyTextColor else summaryScale.color,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.End,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             Icon(
                 if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,

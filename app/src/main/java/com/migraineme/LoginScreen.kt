@@ -575,7 +575,7 @@ fun LoginScreen(
                             },
                             enabled = !busy && email.isNotBlank() && password.isNotBlank(),
                             shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppTheme.AccentPurple,
                                 disabledContainerColor = AppTheme.AccentPurple.copy(alpha = 0.4f)
@@ -620,7 +620,7 @@ private fun AuthButton(
             containerColor = Color(0xFF2A0C3C).copy(alpha = 0.65f),
             disabledContainerColor = Color(0xFF2A0C3C).copy(alpha = 0.3f)
         ),
-        modifier = Modifier.fillMaxWidth().height(52.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

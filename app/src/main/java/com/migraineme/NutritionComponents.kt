@@ -42,8 +42,7 @@ fun FoodSearchResultItem(
             Text(
                 food.description,
                 color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                maxLines = 2
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
             )
             if (food.brandName != null) {
                 Text(
@@ -115,7 +114,7 @@ fun TodayLogItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(item.foodName, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+            Text(item.foodName, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodyMedium)
             Row {
                 Text(item.mealType.replaceFirstChar { it.uppercase() }, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 item.calories?.let {

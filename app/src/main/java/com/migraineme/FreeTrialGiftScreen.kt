@@ -83,7 +83,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
                 onClick = onContinue,
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                 shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
             ) {
                 Text(t("Let's go"), fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.width(6.dp))

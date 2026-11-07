@@ -918,18 +918,18 @@ fun EveningCheckInScreen(
             // Continues the page's WizardSheet under the nav row, so the sheet runs to the bottom edge.
             Row(Modifier.fillMaxWidth().background(AppTheme.FadeColor).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (currentPage == CheckInPage.Note) {
-                    LabelPlate { TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
+                    LabelPlate { TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.heightIn(min = 36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
                 } else {
-                    LabelPlate { TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
+                    LabelPlate { TextButton(onClick = { goBack() }, modifier = Modifier.heightIn(min = 36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) } }
                 }
                 when (currentPage) {
-                    CheckInPage.Review -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                    CheckInPage.Review -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.heightIn(min = 36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         if (saving) { CircularProgressIndicator(Modifier.size(14.dp), Color.White, strokeWidth = 2.dp) } else { Icon(Icons.Outlined.Check, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text(t("Save"), style = MaterialTheme.typography.bodySmall) }
                     }
-                    CheckInPage.Note -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                    CheckInPage.Note -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.heightIn(min = 36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         Text(if (noteText.isNotBlank() && !aiParsed) t("Match & continue") else if (noteText.isBlank()) t("Skip") else t("Next"), style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
-                    else -> Button(onClick = { goNext() }, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                    else -> Button(onClick = { goNext() }, modifier = Modifier.heightIn(min = 36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         Text(t("Next"), style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
                 }
@@ -1221,7 +1221,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
                     onClick = { launchVoice() },
-                    modifier = Modifier.height(40.dp),
+                    modifier = Modifier.heightIn(min = 40.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
                     border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
@@ -1234,7 +1234,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
                 if (noteText.isNotBlank() && !aiParsed) {
                     Button(
                         onClick = onParse, enabled = !aiLoading,
-                        modifier = Modifier.weight(1f).height(40.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 40.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -1936,7 +1936,7 @@ internal fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolea
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label), color = txt, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
+        TileLabel(t(label), color = txt, style = MaterialTheme.typography.labelSmall)
     }
 }
 

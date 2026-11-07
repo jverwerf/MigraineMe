@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -436,7 +437,7 @@ fun PaintThePictureScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
                             onClick = { launchVoice() },
-                            modifier = Modifier.height(40.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
                             border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
@@ -451,7 +452,7 @@ fun PaintThePictureScreen(
                                 Button(
                                     onClick = { runAiParse() },
                                     enabled = !aiLoading,
-                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    modifier = Modifier.weight(1f).heightIn(min = 40.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
@@ -468,7 +469,7 @@ fun PaintThePictureScreen(
                                 Button(
                                     onClick = { runAiParse() },
                                     enabled = !aiLoading,
-                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    modifier = Modifier.weight(1f).heightIn(min = 40.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {

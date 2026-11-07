@@ -124,7 +124,7 @@ fun GraphAttachmentPicker(
                                     .padding(vertical = 9.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(t(tile.label),
+                                FitText(t(tile.label),
                                     color = if (isSel) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium),
                                     maxLines = 1
@@ -344,7 +344,7 @@ private fun InsightsGraphTab(
                 }
             },
             enabled = wStart != null && wEnd != null && (windowMigs.isNotEmpty() || windowEvents.isNotEmpty() || enabledSeries.isNotEmpty()),
-            modifier = Modifier.fillMaxWidth().height(44.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
@@ -499,7 +499,7 @@ private fun HistoryGraphTab(
     Button(
         onClick = { onAttach(serializeInsightsGraphToJson(wStart, wEnd, migs, emptyList(), series, graph = tile.id)) },
         enabled = series.isNotEmpty() || migs.isNotEmpty(),
-        modifier = Modifier.fillMaxWidth().height(44.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
     ) {
@@ -717,7 +717,7 @@ private fun RiskGraphTab(
                 onAttach(json)
             },
             enabled = displayDays.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth().height(44.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
@@ -989,8 +989,7 @@ private fun PickerMigraineSelector(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
             Text(sel?.label ?: t("Migraine"), color = Color.White,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             if (sel != null) {
                 Text(df.format(sel.start) + " \u2022 " + tf.format(sel.start),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)

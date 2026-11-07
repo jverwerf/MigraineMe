@@ -3,6 +3,7 @@ package com.migraineme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -165,7 +166,7 @@ fun LanguagePickerRow() {
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
-                .height(52.dp)
+                .heightIn(min = 52.dp)
         )
 
         ExposedDropdownMenu(

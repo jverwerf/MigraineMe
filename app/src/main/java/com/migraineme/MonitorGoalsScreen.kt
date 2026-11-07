@@ -148,8 +148,7 @@ private fun ColumnScope.GoalsListRegion(
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(t(goal.title), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Text(goalProgressText(goal, rows), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall)
                         goalTodayReadingText(goal, rows)?.let {
@@ -247,8 +246,7 @@ private fun GoalReviewCard(report: SupabasePractitionerService.GoalReportRow) {
             HorizontalDivider(color = AppTheme.TrackColor, modifier = Modifier.padding(vertical = 4.dp))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(t(a.title), color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(8.dp))
                 GoalStatusChip(a.status)
             }

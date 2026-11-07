@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.migraineme
 
 import androidx.compose.foundation.background
@@ -335,9 +336,7 @@ private fun GoalIdeaRow(
             Text(
                 t(s.title),
                 color = Color.White,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Text(
                 goalAskText(s.asGoal()),
@@ -384,13 +383,10 @@ private fun ProposalRow(
 
         Column(modifier = Modifier.weight(1f)) {
             // Label + change
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(verticalArrangement = Arrangement.Center) {
                 Text(t(proposal.label),
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
 
                 if (proposal.fromValue != null && proposal.toValue != null &&
@@ -497,7 +493,7 @@ private fun AnswerProposalRow(
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             )
             Spacer(Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(verticalArrangement = Arrangement.Center) {
                 Text(t("You said"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.width(6.dp))
                 Text(show(proposal.fromValue), color = AppTheme.SubtleTextColor,

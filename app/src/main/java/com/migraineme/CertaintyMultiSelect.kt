@@ -255,8 +255,7 @@ fun SingleCertaintySelect(
                     color = textColor,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
+                    textAlign = TextAlign.Center
                 )
             }
         }

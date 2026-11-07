@@ -392,14 +392,14 @@ private fun ExposureMeter(spec: ExposureSpec, level: String, modifier: Modifier)
                 modifier = Modifier.size(20.dp)
             )
             Spacer(Modifier.width(6.dp))
-            Text(
+            FitText(
                 t(spec.label),
                 color = if (none) AppTheme.SubtleTextColor.copy(alpha = 0.6f) else AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 modifier = Modifier.weight(1f)
             )
-            Text(
+            FitText(
                 t(levelWord),
                 color = color,
                 style = MaterialTheme.typography.labelSmall.copy(

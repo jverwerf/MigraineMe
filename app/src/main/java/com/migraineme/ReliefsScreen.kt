@@ -658,13 +658,7 @@ private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = 
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label),
-            color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth()
-        )
+        TileLabel(t(label), color = textColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 

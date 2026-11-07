@@ -248,7 +248,7 @@ private fun StartCard(
                     onClick = onClick,
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                     shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) {
                     Icon(buttonIcon, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -260,7 +260,7 @@ private fun StartCard(
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) {
                     Icon(buttonIcon, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -435,7 +435,7 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
@@ -447,7 +447,7 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Allow Location Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
@@ -522,7 +522,7 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
@@ -533,7 +533,7 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Allow Notifications"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
@@ -606,14 +606,14 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.RECORD_AUDIO) },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Allow Microphone Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
@@ -697,14 +697,14 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.READ_CALENDAR) },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Allow Calendar Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
@@ -788,7 +788,7 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
@@ -799,7 +799,7 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Open Settings"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
@@ -874,7 +874,7 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     onClick = onGrant,
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 @Suppress("BatteryLife")
@@ -889,7 +889,7 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text(t("Disable Battery Optimization"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {

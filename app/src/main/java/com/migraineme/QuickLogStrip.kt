@@ -453,12 +453,11 @@ private fun QuickLogButton(
             )
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(category.label),
+        FitText(t(category.label),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            maxLines = 1
         )
     }
 }
@@ -680,12 +679,6 @@ private fun FavoriteCircleButton(
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label),
-            color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth()
-        )
+        TileLabel(t(label), color = textColor, style = MaterialTheme.typography.labelSmall)
     }
 }

@@ -1,7 +1,9 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -105,7 +107,7 @@ fun FullScreenGraphScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Time range toggles — 4 presets
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -118,7 +120,7 @@ fun FullScreenGraphScreen(
                         selectedDays = days
                         periodOffset = 0
                     },
-                    label = { Text(text = t(label), style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(text = t(label), style = MaterialTheme.typography.labelSmall, softWrap = false) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.3f).compositeOver(AppTheme.FadeColor),
                         selectedLabelColor = AppTheme.AccentPurple,
@@ -142,8 +144,7 @@ fun FullScreenGraphScreen(
             label = {
                 Text(
                     text = if (isCustomRange) t("Custom: %1\$s – %2\$s", startDate.format(dateFormat), endDate.format(dateFormat)) else t("Custom range…"),
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1
+                    style = MaterialTheme.typography.labelSmall
                 )
             },
             colors = FilterChipDefaults.filterChipColors(

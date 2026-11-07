@@ -137,7 +137,7 @@ fun LogoutScreen(
                 Button(
                     onClick = { showConfirmDialog = true },
                     shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373))
                 ) {
                     Icon(

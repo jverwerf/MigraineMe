@@ -537,11 +537,12 @@ fun AuraHeatMap(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         if (pct > 0 && showPercentages) {
-                                            Text(
+                                            FitText(
                                                 "$pct%",
                                                 color = Color.White,
                                                 fontSize = 8.sp,
-                                                fontWeight = FontWeight.Bold
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1
                                             )
                                         }
                                     }

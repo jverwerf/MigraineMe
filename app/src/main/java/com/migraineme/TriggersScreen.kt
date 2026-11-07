@@ -502,13 +502,7 @@ private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Bo
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label),
-            color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth()
-        )
+        TileLabel(t(label), color = textColor, style = MaterialTheme.typography.labelSmall)
         if (isSelected && daysAgo != null && daysAgo > 0) {
             Text(
                 when (daysAgo) {

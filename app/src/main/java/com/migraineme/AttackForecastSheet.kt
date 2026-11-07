@@ -294,8 +294,7 @@ fun AttackForecastSheet(
                                 factorLabel(f),
                                 color = if (f.usable) Color.White else AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f)
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
@@ -304,8 +303,7 @@ fun AttackForecastSheet(
                                 color = if (f.usable) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 textAlign = TextAlign.End,
-                                maxLines = 1,
-                                modifier = Modifier.weight(0.8f),
+                                modifier = Modifier.weight(0.8f)
                             )
                         }
                     }
@@ -445,8 +443,7 @@ private fun FactorRow(title: String, sub: String, right: @Composable () -> Unit)
     ) {
         Column(Modifier.weight(1f)) {
             Text(title, color = Color.White,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
             Text(sub, color = MetaColor, style = MaterialTheme.typography.labelSmall)
         }
         Spacer(Modifier.width(10.dp))

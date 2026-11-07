@@ -434,7 +434,7 @@ fun InsightsReportScreen(
                     onClick = { vm.setReportGenerated(true) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .heightIn(min = 48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppTheme.AccentPurple
                     ),
@@ -558,7 +558,7 @@ fun InsightsReportScreen(
                     }
                 },
                 enabled = !isGeneratingPdf && !spiderLoading,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -1102,8 +1102,7 @@ fun InsightsReportScreen(
                                 why.ifBlank { row.notes?.takeIf { it != "evening check-in" } ?: "" },
                                 color = Color(0xFF9C8BB0),
                                 style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.weight(1.2f),
-                                maxLines = 2, overflow = TextOverflow.Ellipsis
+                                modifier = Modifier.weight(1.2f)
                             )
                         }
                     }
@@ -1780,9 +1779,9 @@ private fun ActiveFilterChip(
     ) {
         Box(Modifier.size(6.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(4.dp))
-        Text(t(tag.label), color = color,
+        FitText(t(tag.label), color = color,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+            maxLines = 1)
         Spacer(Modifier.width(4.dp))
         Text("✕", color = color.copy(alpha = 0.6f),
             style = MaterialTheme.typography.labelSmall)
@@ -1806,9 +1805,9 @@ private fun FilterOptionChip(
         Box(Modifier.size(6.dp).clip(CircleShape)
             .background(if (active) color else color.copy(alpha = 0.3f)))
         Spacer(Modifier.width(4.dp))
-        Text(t(label), color = tc,
+        FitText(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+            maxLines = 1)
     }
 }
 
@@ -1930,8 +1929,7 @@ private fun DetailMigraineSelector(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
             Text(sel?.label ?: t("Migraine"), color = Color.White,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             if (sel != null) {
                 Text(df.format(sel.start) + " • " + tf.format(sel.start),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -2207,7 +2205,7 @@ private fun RegimenRow(
         }
         if (!narrative.isNullOrBlank()) {
             Text(narrative, color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodySmall, maxLines = 4,
+                style = MaterialTheme.typography.bodySmall,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
         if (logs.isNotEmpty()) {
@@ -2221,7 +2219,7 @@ private fun RegimenRow(
                         color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
                         style = MaterialTheme.typography.labelSmall)
                     Text(line, color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.labelSmall, maxLines = 1,
+                        style = MaterialTheme.typography.labelSmall,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
             }

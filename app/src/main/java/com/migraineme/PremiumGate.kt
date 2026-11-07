@@ -603,13 +603,12 @@ fun FoodRiskGatedMetricTile(
                 modifier = Modifier.size(16.dp)
             )
         }
-        Text(
+        FitText(
             t(label),
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            maxLines = 2
         )
     }
 }

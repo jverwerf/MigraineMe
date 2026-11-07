@@ -199,8 +199,7 @@ private fun CircleButton(label: String, isSelected: Boolean, accent: Color, icon
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label), color = if (isSelected) Color.White else AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
+        TileLabel(t(label), color = if (isSelected) Color.White else AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 

@@ -767,7 +767,7 @@ fun CoachOverlay(
                                             }
                                             Column {
                                                 Text(t(f.title), style = ObStyle.body(14.sp).copy(fontWeight = FontWeight.SemiBold, color = Color.White))
-                                                Text(t(f.desc), style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender), maxLines = 1)
+                                                Text(t(f.desc), style = ObStyle.body(11.5.sp).copy(color = ObStyle.Lavender))
                                             }
                                         }
                                     }

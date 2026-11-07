@@ -197,7 +197,7 @@ private fun TriggerSymptomProfileCard(
                     Row(Modifier.fillMaxWidth().padding(top = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                         BrainyRowIcon(stat.symptomOutcome, size = 16.dp, gap = 5.dp)
                         Text(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
-                            style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                            style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(1f))
                         // The two rates, undivided. Dividing them gave a bare
                         // "2.4×" that read as an amount rather than a comparison,
@@ -205,7 +205,7 @@ private fun TriggerSymptomProfileCard(
                         Text(t("%1\$s%% of days vs %2\$s%% usually", condPct.toInt(), baselinePct.toInt()),
                             color = if (condPct >= baselinePct * 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            textAlign = TextAlign.End, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.End,
                             modifier = Modifier.weight(0.8f))
                     }
                 }

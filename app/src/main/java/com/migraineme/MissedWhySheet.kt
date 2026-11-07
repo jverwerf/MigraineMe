@@ -1,6 +1,7 @@
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -191,7 +192,7 @@ internal fun MissedWhySheet(
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = onDismiss,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
             shape = RoundedCornerShape(12.dp),
         ) { Text(t("Done"), fontWeight = FontWeight.SemiBold) }

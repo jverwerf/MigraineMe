@@ -176,8 +176,7 @@ internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             BrainyRowIcon(stat.factorName)
             Text(prettyLabel(stat.factorName), color = Color.White,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
             ConfidenceDotsGreen(stat.pValue)
         }
         Text(if (stat.isChronic) t("On %s%% of your calmer days.", stat.pctControlWindows.toInt())

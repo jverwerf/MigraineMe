@@ -235,7 +235,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                             launchSingleTop = true
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = AppTheme.BaseCardShape
                 ) {

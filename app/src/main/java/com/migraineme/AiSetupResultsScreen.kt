@@ -504,7 +504,7 @@ fun AiSetupResultsScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Box(Modifier.fillMaxWidth().height((frac * 36).dp.coerceAtLeast(2.dp)).background(barColor.copy(alpha = 0.6f), RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)))
-                                    Text(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                    FitText(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
                                 }
                             }
                         }
@@ -535,7 +535,7 @@ fun AiSetupResultsScreen(
                 }
             }
         } else {
-            Button(onClick = { onApply(currentConfig()) }, modifier = Modifier.fillMaxWidth().height(52.dp),
+            Button(onClick = { onApply(currentConfig()) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.Check, null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
@@ -599,8 +599,8 @@ private fun SeverityGroup(severity: String, color: Color, items: List<TDI>, icon
             }
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
-                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall)
+                if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
             if (item.threshold != null) {
                 Text("⚡${String.format("%.1f", item.threshold)}", color = color.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
@@ -620,7 +620,7 @@ private fun ItemChip(label: String, severity: String, isFavorite: Boolean, reaso
         if (isFavorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         Column(Modifier.weight(1f)) {
             Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
-            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
         Box(Modifier.background(color.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
             Text(t(severity), color = color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -635,7 +635,7 @@ private fun FavoriteChip(label: String, reasoning: String) {
         Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         Column(Modifier.weight(1f)) {
             Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
-            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -656,8 +656,8 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
             if (brainyId != null || icon != null) LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 22.dp else 16.dp, tint = color.copy(alpha = 0.7f))
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
-                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall)
+                if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
             if (item.threshold != null) {
                 var editingThreshold by remember { mutableStateOf(false) }
@@ -725,7 +725,7 @@ private fun DeletableFavoriteChip(label: String, reasoning: String, icon: ImageV
         }
         Column(Modifier.weight(1f)) {
             Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
-            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+            if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
             Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
@@ -748,7 +748,7 @@ private fun EditableThresholdBadge(label: String, value: Int, color: Color, onCh
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = color, unfocusedBorderColor = color.copy(alpha = 0.4f)),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
-            TextButton(onClick = { text.toIntOrNull()?.let { onChange(it) }; editing = false }, modifier = Modifier.height(24.dp), contentPadding = PaddingValues(0.dp)) {
+            TextButton(onClick = { text.toIntOrNull()?.let { onChange(it) }; editing = false }, modifier = Modifier.heightIn(min = 24.dp), contentPadding = PaddingValues(0.dp)) {
                 Text(t("Done"), color = color, style = MaterialTheme.typography.labelSmall)
             }
         } else {

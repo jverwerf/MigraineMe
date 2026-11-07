@@ -790,12 +790,12 @@ fun RowScope.PractitionerTab(
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
+            FitText(
                 t("Practitioners"),
                 color = if (selected) Color.White else AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                maxLines = 1,
+                maxLines = 1
             )
         }
     }
@@ -1034,7 +1034,7 @@ fun PractitionerCard(
 
                 if (showActions) Button(
                     onClick = onRequestPlace,
-                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppTheme.AccentPurple,
@@ -1049,7 +1049,7 @@ fun PractitionerCard(
                 if (showActions) PremiumGate(compact = true, message = t("Premium"), onUpgrade = onShareData) {
                     OutlinedButton(
                         onClick = onShareData,
-                        modifier = Modifier.fillMaxWidth().height(38.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 38.dp),
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, Color(0xFF3E1D55)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
@@ -1305,7 +1305,7 @@ fun PractitionerDetailSheet(
                 ) {
                     Button(
                         onClick = onRequestPlace,
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppTheme.AccentPurple,
@@ -1315,7 +1315,7 @@ fun PractitionerDetailSheet(
                     PremiumGate(compact = true, message = t("Premium"), onUpgrade = onShareData) {
                         OutlinedButton(
                             onClick = onShareData,
-                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, Color(0xFF3E1D55)),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
@@ -1439,7 +1439,7 @@ private fun SectionCard(sec: SupabasePractitionerService.Section) {
                             .background(AppTheme.AccentPurple.copy(alpha = 0.18f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("${i + 1}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AppTheme.AccentPurple)
+                        Text("${i + 1}", fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.Bold, color = AppTheme.AccentPurple)
                     }
                     Text(item, fontSize = 12.5.sp, color = AppTheme.BodyTextColor, lineHeight = 18.sp)
                 }

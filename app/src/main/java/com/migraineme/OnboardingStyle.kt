@@ -114,14 +114,14 @@ fun ObPillButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifi
             colors = ButtonDefaults.buttonColors(containerColor = ObStyle.Pink, contentColor = ObStyle.Ink,
                 disabledContainerColor = ObStyle.Pink.copy(alpha = 0.35f), disabledContentColor = ObStyle.Ink.copy(alpha = 0.6f)),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = vPad), modifier = modifier
-        ) { Text(label, style = ObStyle.button(textSize), maxLines = 1) }
+        ) { FitText(label, style = ObStyle.button(textSize), maxLines = 1) }
     } else {
         OutlinedButton(
             onClick = onClick, enabled = enabled, shape = RoundedCornerShape(50),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
             border = BorderStroke(1.5.dp, ObStyle.CardLine),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = vPad), modifier = modifier
-        ) { Text(label, style = ObStyle.button(textSize), maxLines = 1) }
+        ) { FitText(label, style = ObStyle.button(textSize), maxLines = 1) }
     }
 }
 

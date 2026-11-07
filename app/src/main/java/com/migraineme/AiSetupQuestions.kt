@@ -130,7 +130,7 @@ private fun QSingleChips(options: List<String>, selected: String?, onSelect: (St
                 for (option in row) {
                     val sel = option == selected
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (sel) ObStyle.Pink else Color.Transparent).border(1.dp, if (sel) ObStyle.Pink else ObStyle.CardLine.copy(alpha = 0.6f), RoundedCornerShape(50)).clickable { onSelect(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center, maxLines = 2)
+                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -148,7 +148,7 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
                 for (option in row) {
                     val sel = option in selected
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (sel) ObStyle.Pink else Color.Transparent).border(1.dp, if (sel) ObStyle.Pink else ObStyle.CardLine.copy(alpha = 0.6f), RoundedCornerShape(50)).clickable { onToggle(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center, maxLines = 2)
+                        Text(t(option), style = ObStyle.label(12.sp).copy(color = if (sel) ObStyle.Ink else ObStyle.Body, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium), textAlign = TextAlign.Center)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -260,13 +260,7 @@ private fun QPoolChipGrid(poolItems: List<AiSetupService.PoolLabel>, selected: S
                                 }
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(t(item.label),
-                                color = textColor,
-                                style = MaterialTheme.typography.labelSmall,
-                                textAlign = TextAlign.Center,
-                                maxLines = 2,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            TileLabel(t(item.label), color = textColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -320,7 +314,7 @@ private fun QFreeText(value: String, onValueChange: (String) -> Unit, hint: Stri
     Spacer(Modifier.height(8.dp))
     OutlinedButton(
         onClick = { launchVoice() },
-        modifier = Modifier.height(40.dp),
+        modifier = Modifier.heightIn(min = 40.dp),
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
         border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))

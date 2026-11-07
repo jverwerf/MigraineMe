@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.migraineme
 
 import androidx.compose.foundation.BorderStroke
@@ -409,12 +410,12 @@ private fun MedicineAddDialog(
 
                 // Relief scale
                 Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall, softWrap = false) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -525,12 +526,12 @@ private fun MedicineEditDialog(
                 AppDateTimePicker(label = t("Select time"), onDateTimeSelected = { iso -> pickedIso = iso })
 
                 Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall, softWrap = false) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -614,13 +615,7 @@ private fun MedicineButton(label: String, isSelected: Boolean, category: String?
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(t(label),
-            color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth()
-        )
+        TileLabel(t(label), color = textColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 

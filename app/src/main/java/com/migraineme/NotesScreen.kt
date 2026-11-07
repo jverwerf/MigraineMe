@@ -2,6 +2,7 @@ package com.migraineme
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -162,7 +163,7 @@ fun NotesScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
                             onClick = { launchVoice() },
-                            modifier = Modifier.height(40.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
                             border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))

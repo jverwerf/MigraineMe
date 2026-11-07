@@ -224,13 +224,13 @@ fun NearbyCard(place: SupabaseNearbyService.Place) {
 private fun NearbyAction(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.height(38.dp),
+        modifier = modifier.heightIn(min = 38.dp),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, Color(0xFF3E1D55)),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
         contentPadding = PaddingValues(horizontal = 4.dp),
     ) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        FitText(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 

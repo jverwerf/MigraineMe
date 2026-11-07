@@ -601,7 +601,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit, onUpgrade: () -> Unit) {
 private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1)
+            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         val pct = r.pctChangeMmd
         val (label, color) = when {
             r.band == "no_baseline" && r.rollingMmd != null ->
