@@ -1842,7 +1842,9 @@ class InsightsViewModel : ViewModel() {
             }
             if (!v.isNaN()) list += DailyValue(o.getString("date"), v)
         }
-        return list
+        // Two sources can hold a value for the same day (Garmin and Health Connect, say).
+        // A chart line gets one point per day, their average, or it draws a vertical spike.
+        return list.groupBy { it.date }.map { (date, rows) -> DailyValue(date, rows.map { it.value }.average()) }
     }
 
     private fun parseIntCol(arr: JSONArray, col: String): List<DailyValue> {

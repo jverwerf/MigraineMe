@@ -810,8 +810,11 @@ function attackChart(
   const added = series.some((s) => !flaggedAnywhere(d).has(s.key));
   const colorFor = (sr: typeof series[number]) => sr.color ?? C.accent;
   const metricSvg = series.map((s) => {
-    const pts = s.points
-      .map((p) => ({ t: new Date(`${p.date}T12:00:00Z`), v: p.value }))
+    // Two sources can hold a value for the same day; a line gets one point per day, their average.
+    const byDay = new Map<string, number[]>();
+    for (const p of s.points) byDay.set(p.date, [...(byDay.get(p.date) ?? []), p.value]);
+    const pts = [...byDay.entries()]
+      .map(([date, vs]) => ({ t: new Date(`${date}T12:00:00Z`), v: vs.reduce((a, b) => a + b, 0) / vs.length }))
       .filter((p) => p.t >= winStart && p.t <= winEnd);
     if (pts.length < 2) return null;
     const vals = pts.map((p) => p.v);
