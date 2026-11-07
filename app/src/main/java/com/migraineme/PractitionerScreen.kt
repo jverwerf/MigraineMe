@@ -1008,10 +1008,10 @@ fun PractitionerCard(
                                     .background(Color(0xFF220C33))
                                     .padding(horizontal = 10.dp, vertical = 8.dp),
                             ) {
-                                Text(
+                                FitText(
                                     f.k.uppercase(),
                                     fontSize = 9.sp,
-                                    letterSpacing = 0.8.sp,
+                                    style = androidx.compose.material3.LocalTextStyle.current.copy(letterSpacing = 0.8.sp),
                                     color = Color(0xFFA991C4),
                                 )
                                 Text(

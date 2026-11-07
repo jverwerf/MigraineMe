@@ -196,7 +196,7 @@ private fun TriggerSymptomProfileCard(
                     val baselinePct = stat.pctControlWindows
                     Row(Modifier.fillMaxWidth().padding(top = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                         BrainyRowIcon(stat.symptomOutcome, size = 16.dp, gap = 5.dp)
-                        Text(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
+                        FitText(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(1f))
                         // The two rates, undivided. Dividing them gave a bare

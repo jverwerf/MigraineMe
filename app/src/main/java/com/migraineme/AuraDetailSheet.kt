@@ -541,6 +541,7 @@ fun AuraHeatMap(
                                                 "$pct%",
                                                 color = Color.White,
                                                 fontSize = 8.sp,
+                                                style = MaterialTheme.typography.labelSmall.copy(lineHeight = 9.sp, letterSpacing = 0.sp),
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1
                                             )

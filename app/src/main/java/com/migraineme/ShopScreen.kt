@@ -283,7 +283,7 @@ private fun ShopCard(item: ShopCatalogue.Item, onOpenLink: (String) -> Unit) {
                             Row {
                                 Text("+", color = Color(0xFF81C784), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                                 Spacer(Modifier.width(6.dp))
-                                Text(line, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                                FitText(line, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
                             }
                             Spacer(Modifier.height(4.dp))
                         }
@@ -293,7 +293,7 @@ private fun ShopCard(item: ShopCatalogue.Item, onOpenLink: (String) -> Unit) {
                             Row {
                                 Text("–", color = AppTheme.AccentPink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                                 Spacer(Modifier.width(6.dp))
-                                Text(line, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                                FitText(line, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
                             }
                             Spacer(Modifier.height(4.dp))
                         }

@@ -405,7 +405,7 @@ private fun SymptomRow(
             }
         }
         // Label
-        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        FitText(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         // Star
         IconButton(onClick = onToggleFavorite, modifier = Modifier.size(32.dp)) {
             Icon(
