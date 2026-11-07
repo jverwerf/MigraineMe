@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -510,6 +510,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Come trattamento",
     "Add aura details" to "Dettagli aura",
     "Add failed: %1\$s" to "Errore: %1\$s",
+    "Add it to your calendar?" to "Aggiungerlo al tuo calendario?",
     "Add locations to your migraines to spot hotspots" to "Aggiungi luoghi alle emicranie per vedere i punti caldi",
     "Add medicine" to "Farmaco",
     "Add medicines you've taken" to "Aggiungi i farmaci che hai preso",
@@ -523,6 +524,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Add time" to "Aggiungi ora",
     "Add to Frequent" to "In Frequenti",
     "Add to Pool" to "Nella lista",
+    "Add to calendar" to "Aggiungi al calendario",
     "Add to frequent" to "Tra i frequenti",
     "Add to list" to "Nella lista",
     "Add to this migraine" to "Aggiungi all'emicrania",
@@ -691,6 +693,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Appuntamento annullato",
     "Appointment confirmed" to "Appuntamento confermato",
     "Appointment time declined" to "Orario rifiutato",
+    "Appointment with %1\$s" to "Appuntamento con %1\$s",
     "Appointments" to "Appuntamenti",
     "Are specific drinks worse?" to "Certe bevande sono peggiori?",
     "Are you sensitive to any of these?" to "Sei sensibile a qualcuno di questi?",
@@ -1514,12 +1517,12 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamina (Cafergot)",
     "Ergots" to "Ergotaminici",
     "Error" to "Errore",
-    "Error: %1\$s" to "Errore: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Pattern consolidati apparsi anche negli attacchi di questo report.",
-    "Estimate" to "Stima",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Errore: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Pattern consolidati apparsi anche negli attacchi di questo report.",
+    "Estimate" to "Stima",
     "Euphoria" to "Euforia",
     "Evaluating your triggers..." to "Valutazione dei fattori...",
     "Even a one-line reply genuinely helps shape what we build next." to "Anche una risposta di una riga aiuta davvero a decidere cosa costruiremo dopo.",
@@ -3017,12 +3020,12 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Pollini e qualità dell'aria",
     "Pollen counts and air pollution." to "Livelli di pollini e inquinamento.",
     "Pollen high" to "Polline alto",
-    "Pollen or hay fever season" to "Polline o stagione del raffreddore da fieno",
-    "Polyunsaturated fat" to "Grassi polinsaturi",
-    "Pool" to "Lista",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Polline o stagione del raffreddore da fieno",
+    "Polyunsaturated fat" to "Grassi polinsaturi",
+    "Pool" to "Lista",
     "Poor" to "Scarso",
     "Poor deep sleep" to "Poco profondo",
     "Poor recovery score from your wearable" to "Punteggio di recupero basso dal wearable",
@@ -4520,12 +4523,12 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Wind" to "Vento",
     "Wind Speed" to "Velocità vento",
     "Wind Speed (m/s)" to "Vento (m/s)",
-    "Wind speed" to "Velocità vento",
-    "Wind speed high" to "Vento forte",
-    "Wind speed low" to "Vento debole",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Velocità vento",
+    "Wind speed high" to "Vento forte",
+    "Wind speed low" to "Vento debole",
     "Window around migraine" to "Finestra dell'emicrania",
     "Windy or gusty conditions" to "Vento o raffiche",
     "Wine, beer, spirits" to "Vino, birra, superalcolici",

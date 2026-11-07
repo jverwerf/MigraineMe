@@ -5126,5 +5126,8 @@
  "Appointment time declined": "Voorgestelde tijd afgewezen",
  "Your practitioner could not do that time. You can suggest another.": "Je behandelaar kan niet op die tijd. Je kunt een andere voorstellen.",
  "Appointment cancelled": "Afspraak geannuleerd",
- "Your practitioner cancelled this appointment.": "Je behandelaar heeft deze afspraak geannuleerd."
+ "Your practitioner cancelled this appointment.": "Je behandelaar heeft deze afspraak geannuleerd.",
+ "Add to calendar": "Toevoegen aan agenda",
+ "Add it to your calendar?": "In je agenda zetten?",
+ "Appointment with %1$s": "Afspraak met %1$s"
 }

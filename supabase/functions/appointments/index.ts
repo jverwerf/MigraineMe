@@ -273,7 +273,8 @@ serve(async (req) => {
       for (const r of old) r.status = "expired";
       return rows;
     };
-    const notify = async (userId: string, what: keyof typeof NOTICE, requestId: string) => {
+    /** FCM data values must be strings. Times let the app offer to add a confirmed session to the phone's calendar. */
+    const notify = async (userId: string, what: keyof typeof NOTICE, requestId: string, extra: Record<string, string> = {}) => {
       const [title, text] = NOTICE[what];
       try {
         if (APP_SCOPED) {
@@ -284,12 +285,12 @@ serve(async (req) => {
           const t = translatorFor(asLang(p.lang));
           await db.functions.invoke("send-fcm-push", { body: {
             type: "practitioner_appointment", app_id: appId, tokens: [p.fcm_token],
-            notification: { title: t(title), body: t(text) }, data: { request_id: requestId },
+            notification: { title: t(title), body: t(text) }, data: { request_id: requestId, ...extra },
           } });
         } else {
           await db.functions.invoke("send-fcm-push", { body: {
             type: "practitioner_appointment", user_ids: [userId], ios_alert: true,
-            notification_key: { title, body_parts: [{ key: text }] }, data: { request_id: requestId },
+            notification_key: { title, body_parts: [{ key: text }] }, data: { request_id: requestId, ...extra },
           } });
         }
       } catch (e) { console.warn("appointment push failed", e); }
@@ -444,7 +445,11 @@ serve(async (req) => {
         const start = body.start ? validStart(body.start) : row.proposed_start;
         if (!start) throw new UserError("Pick a date and time.");
         const done = await acceptRow(row, start, body.type_id ? String(body.type_id) : null, link?.id || null);
-        await notify(row.user_id, "accepted", row.id);
+        const { data: who } = await db.from("practitioners").select("display_name").eq("id", row.practitioner_id).limit(1);
+        await notify(row.user_id, "accepted", row.id, {
+          starts_at: String(done.scheduled_for), ends_at: String(done.proposed_end || new Date(Date.parse(done.scheduled_for) + 30 * 60000).toISOString()),
+          practitioner_name: String(who?.[0]?.display_name || ""),
+        });
         return json({ request: done });
       }
       case "cancel": {

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5130 entries.
+ * 5133 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -510,6 +510,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Tedavi olarak ekle",
     "Add aura details" to "Aura detayı ekle",
     "Add failed: %1\$s" to "Eklenemedi: %1\$s",
+    "Add it to your calendar?" to "Takvimine eklensin mi?",
     "Add locations to your migraines to spot hotspots" to "Yoğun bölgeleri görmek için migrenlerine yer ekle",
     "Add medicine" to "İlaç ekle",
     "Add medicines you've taken" to "Aldığın ilaçları ekle",
@@ -523,6 +524,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Add time" to "Saat ekle",
     "Add to Frequent" to "Sık Kullanılanlara ekle",
     "Add to Pool" to "Havuza ekle",
+    "Add to calendar" to "Takvime ekle",
     "Add to frequent" to "Sık kullanılanlara ekle",
     "Add to list" to "Listeye ekle",
     "Add to this migraine" to "Bu migrene ekle",
@@ -691,6 +693,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Randevu iptal edildi",
     "Appointment confirmed" to "Randevu onaylandı",
     "Appointment time declined" to "Randevu saati reddedildi",
+    "Appointment with %1\$s" to "%1\$s ile randevu",
     "Appointments" to "Randevular",
     "Are specific drinks worse?" to "Bazı içecekler daha mı kötü?",
     "Are you sensitive to any of these?" to "Bunlardan herhangi birine duyarlı mısın?",
@@ -1514,12 +1517,12 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamin (Cafergot)",
     "Ergots" to "Ergotlar",
     "Error" to "Hata",
-    "Error: %1\$s" to "Hata: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Bu rapordaki ataklarda da görülen yerleşik örüntüler.",
-    "Estimate" to "Tahmin",
 )
 
 private fun trStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Hata: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Bu rapordaki ataklarda da görülen yerleşik örüntüler.",
+    "Estimate" to "Tahmin",
     "Euphoria" to "Öfori",
     "Evaluating your triggers..." to "Tetikleyicilerin değerlendiriliyor...",
     "Even a one-line reply genuinely helps shape what we build next." to "Tek satırlık bir yanıt bile sıradaki geliştirmelerimizi şekillendirmeye gerçekten yardımcı olur.",
@@ -3017,12 +3020,12 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Polar's sleep continuity (1.0–5.0 scale) is converted to a percentage: (continuity − 1) ÷ 4 × 100." to "Polar'ın uyku sürekliliği (1,0–5,0 ölçeği) yüzdeye çevrilir: (süreklilik − 1) ÷ 4 × 100.",
     "Pollen" to "Polen",
     "Pollen and air quality" to "Polen ve hava kalitesi",
-    "Pollen counts and air pollution." to "Polen değerleri ve hava kirliliği.",
-    "Pollen high" to "Polen yüksek",
-    "Pollen or hay fever season" to "Polen veya saman nezlesi mevsimi",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Pollen counts and air pollution." to "Polen değerleri ve hava kirliliği.",
+    "Pollen high" to "Polen yüksek",
+    "Pollen or hay fever season" to "Polen veya saman nezlesi mevsimi",
     "Polyunsaturated fat" to "Çoklu doymamış yağ",
     "Pool" to "Liste",
     "Poor" to "Kötü",
@@ -4520,12 +4523,12 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Why we suggested this" to "Bunu neden önerdik",
     "Why your thresholds are set where they are" to "Eşiklerin neden bu seviyelerde",
     "Wind" to "Rüzgâr",
-    "Wind Speed" to "Rüzgâr hızı",
-    "Wind Speed (m/s)" to "Rüzgâr hızı (m/s)",
-    "Wind speed" to "Rüzgar hızı",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Wind Speed" to "Rüzgâr hızı",
+    "Wind Speed (m/s)" to "Rüzgâr hızı (m/s)",
+    "Wind speed" to "Rüzgar hızı",
     "Wind speed high" to "Rüzgâr hızı yüksek",
     "Wind speed low" to "Rüzgâr hızı düşük",
     "Window around migraine" to "Migren çevresi aralık",

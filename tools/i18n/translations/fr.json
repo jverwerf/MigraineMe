@@ -5126,5 +5126,8 @@
  "Appointment time declined": "Horaire refusé",
  "Your practitioner could not do that time. You can suggest another.": "Ton praticien n'est pas disponible à cet horaire. Tu peux en proposer un autre.",
  "Appointment cancelled": "Rendez-vous annulé",
- "Your practitioner cancelled this appointment.": "Ton praticien a annulé ce rendez-vous."
+ "Your practitioner cancelled this appointment.": "Ton praticien a annulé ce rendez-vous.",
+ "Add to calendar": "Ajouter au calendrier",
+ "Add it to your calendar?": "L’ajouter à ton calendrier ?",
+ "Appointment with %1$s": "Rendez-vous avec %1$s"
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5424 entries.
+ * 5427 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -703,6 +703,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Dodaj jako leczenie",
     "Add aura details" to "Szczegóły aury",
     "Add failed: %1\$s" to "Nie dodano: %1\$s",
+    "Add it to your calendar?" to "Dodać do kalendarza?",
     "Add locations to your migraines to spot hotspots" to "Dodaj miejsca do migren, by zobaczyć, gdzie występują najczęściej",
     "Add medicine" to "Dodaj lek",
     "Add medicines you've taken" to "Dodaj przyjęte leki",
@@ -716,6 +717,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Add time" to "Dodaj godzinę",
     "Add to Frequent" to "Dodaj do Częstych",
     "Add to Pool" to "Dodaj do puli",
+    "Add to calendar" to "Dodaj do kalendarza",
     "Add to frequent" to "Dodaj do częstych",
     "Add to list" to "Dodaj do listy",
     "Add to this migraine" to "Dodaj do tej migreny",
@@ -885,6 +887,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Wizyta odwołana",
     "Appointment confirmed" to "Wizyta potwierdzona",
     "Appointment time declined" to "Termin odrzucony",
+    "Appointment with %1\$s" to "Wizyta: %1\$s",
     "Appointments" to "Wizyty",
     "Are specific drinks worse?" to "Czy niektóre napoje są gorsze?",
     "Are you sensitive to any of these?" to "Czy reagujesz na któreś z nich?",
@@ -1514,12 +1517,12 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Diarrhoea" to "Biegunka",
     "Diclofenac" to "Diklofenak",
     "Did aura appear or come back?" to "Czy aura pojawiła się lub wróciła?",
-    "Didn't do" to "Nie zrobiono",
-    "Diet" to "Dieta",
-    "Diet & Substances" to "Dieta i substancje",
 )
 
 private fun plStrings1(): Map<String, String> = mapOf(
+    "Didn't do" to "Nie zrobiono",
+    "Diet" to "Dieta",
+    "Diet & Substances" to "Dieta i substancje",
     "Diet History" to "Historia diety",
     "Diet drinks, sugar-free sweets" to "Napoje dietetyczne, słodycze bez cukru",
     "Diet — What You're Eating" to "Dieta — co jesz",
@@ -3017,12 +3020,12 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Occasionally" to "Czasami",
     "Occipital Center" to "Potylica, środek",
     "Occurrences on your attacks, last 30 days vs the 30 before." to "Wystąpienia podczas Twoich ataków: ostatnie 30 dni vs 30 dni wcześniej.",
-    "Occurrences over the last 30 days vs the 30 days before them." to "Wystąpienia w ostatnich 30 dniach vs 30 dni wcześniej.",
-    "Occurrences per period, this report's range vs the equal period before it." to "Wystąpienia w okresie: zakres tego raportu vs równy okres wcześniej.",
-    "Ocular migraine" to "Migrena oczna",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "Occurrences over the last 30 days vs the 30 days before them." to "Wystąpienia w ostatnich 30 dniach vs 30 dni wcześniej.",
+    "Occurrences per period, this report's range vs the equal period before it." to "Wystąpienia w okresie: zakres tego raportu vs równy okres wcześniej.",
+    "Ocular migraine" to "Migrena oczna",
     "Off" to "Wyłączone",
     "Office" to "Biuro",
     "Older" to "Starsze",
@@ -4520,12 +4523,12 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Voice" to "Głos",
     "Voice input" to "Wprowadzanie głosem",
     "Voice input not available" to "Głos niedostępny",
-    "Voice-powered migraine logging" to "Zapisuj migrenę głosem",
-    "Volume" to "Głośność",
-    "Volume high" to "Głośność – wysoka",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Voice-powered migraine logging" to "Zapisuj migrenę głosem",
+    "Volume" to "Głośność",
+    "Volume high" to "Głośność – wysoka",
     "Volume low" to "Głośność – niska",
     "Vomiting" to "Wymioty",
     "W" to "T",

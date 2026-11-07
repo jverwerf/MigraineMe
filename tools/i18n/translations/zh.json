@@ -5127,5 +5127,8 @@
  "Appointment time declined": "建議的時間已被婉拒",
  "Your practitioner could not do that time. You can suggest another.": "你的醫療人員在該時間無法安排。你可以建議其他時間。",
  "Appointment cancelled": "預約已取消",
- "Your practitioner cancelled this appointment.": "你的醫療人員已取消此預約。"
+ "Your practitioner cancelled this appointment.": "你的醫療人員已取消此預約。",
+ "Add to calendar": "加入行事曆",
+ "Add it to your calendar?": "要加入行事曆嗎?",
+ "Appointment with %1$s": "與 %1$s 的預約"
 }

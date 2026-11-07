@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5129 entries.
+ * 5132 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -510,6 +510,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "治療として追加",
     "Add aura details" to "前兆の詳細を追加",
     "Add failed: %1\$s" to "追加失敗: %1\$s",
+    "Add it to your calendar?" to "カレンダーに追加しますか?",
     "Add locations to your migraines to spot hotspots" to "片頭痛に場所を追加すると、多く発生する場所が分かります",
     "Add medicine" to "薬を追加",
     "Add medicines you've taken" to "服用した薬を追加",
@@ -523,6 +524,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Add time" to "時刻を追加",
     "Add to Frequent" to "よく使うに追加",
     "Add to Pool" to "リストに追加",
+    "Add to calendar" to "カレンダーに追加",
     "Add to frequent" to "よく使うに追加",
     "Add to list" to "リストに追加",
     "Add to this migraine" to "この片頭痛に追加",
@@ -691,6 +693,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "予約がキャンセルされました",
     "Appointment confirmed" to "予約が確定しました",
     "Appointment time declined" to "提案した日時は辞退されました",
+    "Appointment with %1\$s" to "%1\$sさんとの予約",
     "Appointments" to "予約",
     "Are specific drinks worse?" to "特に悪い飲み物はありますか?",
     "Are you sensitive to any of these?" to "次のうち、敏感なものはありますか?",
@@ -1514,12 +1517,12 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "エルゴタミン(Cafergot)",
     "Ergots" to "エルゴタミン類",
     "Error" to "エラー",
-    "Error: %1\$s" to "失敗:%1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "このレポートの発作にも見られた、確立されたパターンです。",
-    "Estimate" to "推定",
 )
 
 private fun jaStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "失敗:%1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "このレポートの発作にも見られた、確立されたパターンです。",
+    "Estimate" to "推定",
     "Euphoria" to "多幸感",
     "Evaluating your triggers..." to "誘因を評価しています...",
     "Even a one-line reply genuinely helps shape what we build next." to "一行だけの返信でも、今後の開発の参考に本当に役立ちます。",
@@ -3017,12 +3020,12 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉と大気の状態",
     "Pollen counts and air pollution." to "花粉の飛散量と大気汚染です。",
-    "Pollen high" to "花粉が多い",
-    "Pollen or hay fever season" to "花粉または花粉症の季節",
-    "Polyunsaturated fat" to "多価不飽和脂肪酸",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "花粉が多い",
+    "Pollen or hay fever season" to "花粉または花粉症の季節",
+    "Polyunsaturated fat" to "多価不飽和脂肪酸",
     "Pool" to "一覧",
     "Poor" to "悪い",
     "Poor deep sleep" to "深い睡眠が少ない",
@@ -4520,12 +4523,12 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "しきい値がこの値になっている理由",
     "Wind" to "風",
     "Wind Speed" to "風速",
-    "Wind Speed (m/s)" to "風速（m/s）",
-    "Wind speed" to "風速",
-    "Wind speed high" to "風が強い",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "風速（m/s）",
+    "Wind speed" to "風速",
+    "Wind speed high" to "風が強い",
     "Wind speed low" to "風が弱い",
     "Window around migraine" to "片頭痛の前後の期間",
     "Windy or gusty conditions" to "風が強い、または突風のある天気",

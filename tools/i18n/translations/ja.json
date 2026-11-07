@@ -5127,5 +5127,8 @@
  "Appointment time declined": "提案した日時は辞退されました",
  "Your practitioner could not do that time. You can suggest another.": "担当の専門家はその日時の都合がつきません。別の日時を提案できます。",
  "Appointment cancelled": "予約がキャンセルされました",
- "Your practitioner cancelled this appointment.": "担当の専門家がこの予約をキャンセルしました。"
+ "Your practitioner cancelled this appointment.": "担当の専門家がこの予約をキャンセルしました。",
+ "Add to calendar": "カレンダーに追加",
+ "Add it to your calendar?": "カレンダーに追加しますか?",
+ "Appointment with %1$s": "%1$sさんとの予約"
 }

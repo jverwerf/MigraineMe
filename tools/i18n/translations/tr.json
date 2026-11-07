@@ -5128,5 +5128,8 @@
  "Appointment time declined": "Randevu saati reddedildi",
  "Your practitioner could not do that time. You can suggest another.": "Uzmanın o saatte müsait değil. Başka bir saat önerebilirsin.",
  "Appointment cancelled": "Randevu iptal edildi",
- "Your practitioner cancelled this appointment.": "Uzmanın bu randevuyu iptal etti."
+ "Your practitioner cancelled this appointment.": "Uzmanın bu randevuyu iptal etti.",
+ "Add to calendar": "Takvime ekle",
+ "Add it to your calendar?": "Takvimine eklensin mi?",
+ "Appointment with %1$s": "%1$s ile randevu"
 }

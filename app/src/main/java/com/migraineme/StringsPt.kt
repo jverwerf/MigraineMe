@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val PT_STRINGS: Map<String, String> =
     ptStrings0() + ptStrings1() + ptStrings2() + ptStrings3()
@@ -510,6 +510,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Como tratamento",
     "Add aura details" to "Detalhes da aura",
     "Add failed: %1\$s" to "Falhou: %1\$s",
+    "Add it to your calendar?" to "Adicionar ao teu calendário?",
     "Add locations to your migraines to spot hotspots" to "Junta locais às tuas enxaquecas para veres os pontos quentes",
     "Add medicine" to "Medicamento",
     "Add medicines you've taken" to "Junta os medicamentos que tomaste",
@@ -523,6 +524,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Add time" to "Adicionar hora",
     "Add to Frequent" to "Para Frequentes",
     "Add to Pool" to "Para a lista",
+    "Add to calendar" to "Adicionar ao calendário",
     "Add to frequent" to "Juntar aos frequentes",
     "Add to list" to "Para a lista",
     "Add to this migraine" to "Juntar a esta enxaqueca",
@@ -691,6 +693,7 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Consulta cancelada",
     "Appointment confirmed" to "Consulta confirmada",
     "Appointment time declined" to "Hora de consulta recusada",
+    "Appointment with %1\$s" to "Consulta com %1\$s",
     "Appointments" to "Consultas",
     "Are specific drinks worse?" to "Há bebidas piores que outras?",
     "Are you sensitive to any of these?" to "És sensível a algum destes?",
@@ -1514,12 +1517,12 @@ private fun ptStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamina (Cafergot)",
     "Ergots" to "Ergotaminas",
     "Error" to "Erro",
-    "Error: %1\$s" to "Erro: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Padrões estabelecidos que também surgiram nas crises deste relatório.",
-    "Estimate" to "Estimativa",
 )
 
 private fun ptStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Erro: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Padrões estabelecidos que também surgiram nas crises deste relatório.",
+    "Estimate" to "Estimativa",
     "Euphoria" to "Euforia",
     "Evaluating your triggers..." to "A avaliar os teus fatores...",
     "Even a one-line reply genuinely helps shape what we build next." to "Mesmo uma resposta de uma linha ajuda genuinamente a definir o que construímos a seguir.",
@@ -3017,12 +3020,12 @@ private fun ptStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Pólen e qualidade do ar",
     "Pollen counts and air pollution." to "Níveis de pólen e poluição do ar.",
     "Pollen high" to "Pólen alto",
-    "Pollen or hay fever season" to "Pólen ou época de febre dos fenos",
-    "Polyunsaturated fat" to "Gordura polinsat.",
-    "Pool" to "Lista",
 )
 
 private fun ptStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Pólen ou época de febre dos fenos",
+    "Polyunsaturated fat" to "Gordura polinsat.",
+    "Pool" to "Lista",
     "Poor" to "Mau",
     "Poor deep sleep" to "Pouco profundo",
     "Poor recovery score from your wearable" to "Má recuperação segundo o teu wearable",
@@ -4520,12 +4523,12 @@ private fun ptStrings2(): Map<String, String> = mapOf(
     "Wind" to "Vento",
     "Wind Speed" to "Vento",
     "Wind Speed (m/s)" to "Vento (m/s)",
-    "Wind speed" to "Vento",
-    "Wind speed high" to "Vento forte",
-    "Wind speed low" to "Vento fraco",
 )
 
 private fun ptStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Vento",
+    "Wind speed high" to "Vento forte",
+    "Wind speed low" to "Vento fraco",
     "Window around migraine" to "Janela à volta da crise",
     "Windy or gusty conditions" to "Vento ou rajadas",
     "Wine, beer, spirits" to "Vinho, cerveja, bebidas",

@@ -5126,5 +5126,8 @@
  "Appointment time declined": "Terminvorschlag abgelehnt",
  "Your practitioner could not do that time. You can suggest another.": "Deine Fachperson kann zu dieser Zeit nicht. Du kannst eine andere vorschlagen.",
  "Appointment cancelled": "Termin abgesagt",
- "Your practitioner cancelled this appointment.": "Deine Fachperson hat diesen Termin abgesagt."
+ "Your practitioner cancelled this appointment.": "Deine Fachperson hat diesen Termin abgesagt.",
+ "Add to calendar": "Zum Kalender hinzufügen",
+ "Add it to your calendar?": "In deinen Kalender eintragen?",
+ "Appointment with %1$s": "Termin mit %1$s"
 }

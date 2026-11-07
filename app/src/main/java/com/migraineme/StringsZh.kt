@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5129 entries.
+ * 5132 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -510,6 +510,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "新增為治療",
     "Add aura details" to "新增預兆詳情",
     "Add failed: %1\$s" to "新增失敗:%1\$s",
+    "Add it to your calendar?" to "要加入行事曆嗎?",
     "Add locations to your migraines to spot hotspots" to "為偏頭痛新增地點,找出好發地點",
     "Add medicine" to "新增藥物",
     "Add medicines you've taken" to "新增你服用過的藥物",
@@ -523,6 +524,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Add time" to "新增時間",
     "Add to Frequent" to "加入常用",
     "Add to Pool" to "加入清單",
+    "Add to calendar" to "加入行事曆",
     "Add to frequent" to "加入常用",
     "Add to list" to "加入清單",
     "Add to this migraine" to "加入此偏頭痛",
@@ -691,6 +693,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "預約已取消",
     "Appointment confirmed" to "預約已確認",
     "Appointment time declined" to "建議的時間已被婉拒",
+    "Appointment with %1\$s" to "與 %1\$s 的預約",
     "Appointments" to "預約",
     "Are specific drinks worse?" to "特定飲料會更糟嗎?",
     "Are you sensitive to any of these?" to "你對下列任何一項會敏感嗎?",
@@ -1514,12 +1517,12 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
     "Ergots" to "麥角類藥物",
     "Error" to "錯誤",
-    "Error: %1\$s" to "錯誤:%1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "同時也出現在本報告各次發作中的既有規律。",
-    "Estimate" to "估計值",
 )
 
 private fun zhStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "錯誤:%1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "同時也出現在本報告各次發作中的既有規律。",
+    "Estimate" to "估計值",
     "Euphoria" to "欣快感",
     "Evaluating your triggers..." to "正在評估你的誘因⋯⋯",
     "Even a one-line reply genuinely helps shape what we build next." to "哪怕只回覆一行，也能真正幫助我們決定接下來要做什麼。",
@@ -3017,12 +3020,12 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Pollen" to "花粉",
     "Pollen and air quality" to "花粉與空氣品質",
     "Pollen counts and air pollution." to "花粉濃度與空氣污染。",
-    "Pollen high" to "花粉偏高",
-    "Pollen or hay fever season" to "花粉或花粉症季節",
-    "Polyunsaturated fat" to "多元不飽和脂肪",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "花粉偏高",
+    "Pollen or hay fever season" to "花粉或花粉症季節",
+    "Polyunsaturated fat" to "多元不飽和脂肪",
     "Pool" to "清單",
     "Poor" to "差",
     "Poor deep sleep" to "深層睡眠不足",
@@ -4520,12 +4523,12 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "你的閾值為何設在這裡",
     "Wind" to "風",
     "Wind Speed" to "風速",
-    "Wind Speed (m/s)" to "風速(m/s)",
-    "Wind speed" to "風速",
-    "Wind speed high" to "風速偏高",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "風速(m/s)",
+    "Wind speed" to "風速",
+    "Wind speed high" to "風速偏高",
     "Wind speed low" to "風速偏低",
     "Window around migraine" to "偏頭痛前後時段",
     "Windy or gusty conditions" to "有風或陣風",

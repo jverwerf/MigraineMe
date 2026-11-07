@@ -880,6 +880,7 @@ object SupabasePractitionerService {
         val status: String = "requested",
         val message: String? = null,
         val proposed_start: String? = null,
+        val proposed_end: String? = null,
         val scheduled_for: String? = null,
         val external_id: String? = null,
     )
@@ -889,6 +890,7 @@ object SupabasePractitionerService {
         val id: String,
         val practitioner_id: String,
         val starts_at: String? = null,
+        val ends_at: String? = null,
         val type: String? = null,
     )
 

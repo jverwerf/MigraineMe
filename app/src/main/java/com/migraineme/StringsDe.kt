@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val DE_STRINGS: Map<String, String> =
     deStrings0() + deStrings1() + deStrings2() + deStrings3()
@@ -510,6 +510,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Als Behandlung",
     "Add aura details" to "Aura-Details",
     "Add failed: %1\$s" to "Fehler: %1\$s",
+    "Add it to your calendar?" to "In deinen Kalender eintragen?",
     "Add locations to your migraines to spot hotspots" to "Ergänze Orte an deinen Migränen, um Hotspots zu erkennen",
     "Add medicine" to "Medikament",
     "Add medicines you've taken" to "Genommene Medikamente erfassen",
@@ -523,6 +524,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Add time" to "Uhrzeit dazu",
     "Add to Frequent" to "Zu Häufig",
     "Add to Pool" to "Zur Liste",
+    "Add to calendar" to "Zum Kalender hinzufügen",
     "Add to frequent" to "Zu den Häufigen",
     "Add to list" to "Zur Liste",
     "Add to this migraine" to "Zu dieser Migräne",
@@ -691,6 +693,7 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Termin abgesagt",
     "Appointment confirmed" to "Termin bestätigt",
     "Appointment time declined" to "Terminvorschlag abgelehnt",
+    "Appointment with %1\$s" to "Termin mit %1\$s",
     "Appointments" to "Termine",
     "Are specific drinks worse?" to "Sind bestimmte Getränke schlimmer?",
     "Are you sensitive to any of these?" to "Reagierst du empfindlich auf eines davon?",
@@ -1514,12 +1517,12 @@ private fun deStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamin (Cafergot)",
     "Ergots" to "Ergotamine",
     "Error" to "Fehler",
-    "Error: %1\$s" to "Fehler: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Etablierte Muster, die auch in den Attacken dieses Berichts auftraten.",
-    "Estimate" to "Schätzung",
 )
 
 private fun deStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Fehler: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Etablierte Muster, die auch in den Attacken dieses Berichts auftraten.",
+    "Estimate" to "Schätzung",
     "Euphoria" to "Euphorie",
     "Evaluating your triggers..." to "Bewerte deine Auslöser...",
     "Even a one-line reply genuinely helps shape what we build next." to "Schon eine Antwort in einer Zeile hilft wirklich dabei, was wir als Nächstes bauen.",
@@ -3017,12 +3020,12 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Pollen und Luftqualität",
     "Pollen counts and air pollution." to "Pollenwerte und Luftverschmutzung.",
     "Pollen high" to "Pollen hoch",
-    "Pollen or hay fever season" to "Pollen oder Heuschnupfenzeit",
-    "Polyunsaturated fat" to "Mehrf. ungesätt. Fett",
-    "Pool" to "Liste",
 )
 
 private fun deStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Pollen oder Heuschnupfenzeit",
+    "Polyunsaturated fat" to "Mehrf. ungesätt. Fett",
+    "Pool" to "Liste",
     "Poor" to "Schlecht",
     "Poor deep sleep" to "Wenig Tiefschlaf",
     "Poor recovery score from your wearable" to "Schlechter Erholungswert vom Wearable",
@@ -4520,12 +4523,12 @@ private fun deStrings2(): Map<String, String> = mapOf(
     "Wind" to "Wind",
     "Wind Speed" to "Windstärke",
     "Wind Speed (m/s)" to "Wind (m/s)",
-    "Wind speed" to "Windstärke",
-    "Wind speed high" to "Wind stark",
-    "Wind speed low" to "Wind schwach",
 )
 
 private fun deStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Windstärke",
+    "Wind speed high" to "Wind stark",
+    "Wind speed low" to "Wind schwach",
     "Window around migraine" to "Fenster um die Migräne",
     "Windy or gusty conditions" to "Windig oder böig",
     "Wine, beer, spirits" to "Wein, Bier, Spirituosen",

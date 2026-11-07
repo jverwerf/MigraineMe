@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -510,6 +510,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Comme traitement",
     "Add aura details" to "Détails de l'aura",
     "Add failed: %1\$s" to "Ajout raté : %1\$s",
+    "Add it to your calendar?" to "L’ajouter à ton calendrier ?",
     "Add locations to your migraines to spot hotspots" to "Ajoute des lieux à tes migraines pour repérer les points chauds",
     "Add medicine" to "Médicament",
     "Add medicines you've taken" to "Ajoute les médicaments pris",
@@ -523,6 +524,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Add time" to "Nouvelle heure",
     "Add to Frequent" to "Vers Fréquent",
     "Add to Pool" to "Vers la liste",
+    "Add to calendar" to "Ajouter au calendrier",
     "Add to frequent" to "Ajouter aux fréquents",
     "Add to list" to "Vers la liste",
     "Add to this migraine" to "Ajouter à la migraine",
@@ -691,6 +693,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Rendez-vous annulé",
     "Appointment confirmed" to "Rendez-vous confirmé",
     "Appointment time declined" to "Horaire refusé",
+    "Appointment with %1\$s" to "Rendez-vous avec %1\$s",
     "Appointments" to "Rendez-vous",
     "Are specific drinks worse?" to "Certaines boissons sont pires ?",
     "Are you sensitive to any of these?" to "Es-tu sensible à l'un d'eux ?",
@@ -1514,12 +1517,12 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
     "Ergots" to "Ergotamines",
     "Error" to "Erreur",
-    "Error: %1\$s" to "Erreur : %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Schémas établis qui apparaissent aussi dans les crises de ce rapport.",
-    "Estimate" to "Estimation",
 )
 
 private fun frStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Erreur : %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Schémas établis qui apparaissent aussi dans les crises de ce rapport.",
+    "Estimate" to "Estimation",
     "Euphoria" to "Euphorie",
     "Evaluating your triggers..." to "Évaluation de tes facteurs...",
     "Even a one-line reply genuinely helps shape what we build next." to "Même une réponse d'une ligne aide vraiment à décider ce qu'on construit ensuite.",
@@ -3017,12 +3020,12 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Pollens et qualité de l'air",
     "Pollen counts and air pollution." to "Taux de pollens et pollution de l'air.",
     "Pollen high" to "Pollen élevé",
-    "Pollen or hay fever season" to "Pollen ou saison du rhume des foins",
-    "Polyunsaturated fat" to "Graisses poly-insat.",
-    "Pool" to "Liste",
 )
 
 private fun frStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Pollen ou saison du rhume des foins",
+    "Polyunsaturated fat" to "Graisses poly-insat.",
+    "Pool" to "Liste",
     "Poor" to "Mauvais",
     "Poor deep sleep" to "Peu de profond",
     "Poor recovery score from your wearable" to "Mauvais score de récupération de ta montre",
@@ -4520,12 +4523,12 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Wind" to "Vent",
     "Wind Speed" to "Vitesse vent",
     "Wind Speed (m/s)" to "Vent (m/s)",
-    "Wind speed" to "Vitesse du vent",
-    "Wind speed high" to "Vent fort",
-    "Wind speed low" to "Vent faible",
 )
 
 private fun frStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Vitesse du vent",
+    "Wind speed high" to "Vent fort",
+    "Wind speed low" to "Vent faible",
     "Window around migraine" to "Fenêtre autour de la crise",
     "Windy or gusty conditions" to "Vent ou rafales",
     "Wine, beer, spirits" to "Vin, bière, spiritueux",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5129 entries.
+ * 5132 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -510,6 +510,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "치료로 추가",
     "Add aura details" to "조짐 상세 추가",
     "Add failed: %1\$s" to "실패: %1\$s",
+    "Add it to your calendar?" to "캘린더에 추가할까요?",
     "Add locations to your migraines to spot hotspots" to "편두통에 장소를 추가해 자주 겪는 곳을 찾아보세요",
     "Add medicine" to "약 추가",
     "Add medicines you've taken" to "복용한 약 추가",
@@ -523,6 +524,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Add time" to "시간 추가",
     "Add to Frequent" to "자주 쓰는 항목에 추가",
     "Add to Pool" to "목록에 추가",
+    "Add to calendar" to "캘린더에 추가",
     "Add to frequent" to "자주 쓰는 항목에 추가",
     "Add to list" to "목록에 추가",
     "Add to this migraine" to "이 편두통에 추가",
@@ -691,6 +693,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "예약이 취소되었습니다",
     "Appointment confirmed" to "예약이 확정되었습니다",
     "Appointment time declined" to "제안한 시간이 거절되었습니다",
+    "Appointment with %1\$s" to "%1\$s 님과의 예약",
     "Appointments" to "진료 예약",
     "Are specific drinks worse?" to "특히 더 나쁜 음료가 있나요?",
     "Are you sensitive to any of these?" to "이 중에 민감하게 반응하는 게 있나요?",
@@ -1514,12 +1517,12 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "에르고타민 (Cafergot)",
     "Ergots" to "에르고타민류",
     "Error" to "오류",
-    "Error: %1\$s" to "오류 %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "이 보고서의 발작에서도 나타난, 이미 확인된 패턴이에요.",
-    "Estimate" to "추정",
 )
 
 private fun koStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "오류 %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "이 보고서의 발작에서도 나타난, 이미 확인된 패턴이에요.",
+    "Estimate" to "추정",
     "Euphoria" to "행복감",
     "Evaluating your triggers..." to "유발 요인을 평가하는 중...",
     "Even a one-line reply genuinely helps shape what we build next." to "한 줄짜리 답변도 다음에 무엇을 만들지 정하는 데 정말 도움이 돼요.",
@@ -3017,12 +3020,12 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Pollen" to "꽃가루",
     "Pollen and air quality" to "꽃가루와 대기질",
     "Pollen counts and air pollution." to "꽃가루 수치와 대기 오염 정보예요.",
-    "Pollen high" to "꽃가루 높음",
-    "Pollen or hay fever season" to "꽃가루 또는 건초열 시즌",
-    "Polyunsaturated fat" to "다가불포화지방",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Pollen high" to "꽃가루 높음",
+    "Pollen or hay fever season" to "꽃가루 또는 건초열 시즌",
+    "Polyunsaturated fat" to "다가불포화지방",
     "Pool" to "목록",
     "Poor" to "나쁨",
     "Poor deep sleep" to "깊은 잠 부족",
@@ -4520,12 +4523,12 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Why your thresholds are set where they are" to "기준값이 이렇게 정해진 이유",
     "Wind" to "바람",
     "Wind Speed" to "풍속",
-    "Wind Speed (m/s)" to "풍속 (m/s)",
-    "Wind speed" to "풍속",
-    "Wind speed high" to "풍속 높음",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Wind Speed (m/s)" to "풍속 (m/s)",
+    "Wind speed" to "풍속",
+    "Wind speed high" to "풍속 높음",
     "Wind speed low" to "풍속 낮음",
     "Window around migraine" to "편두통 전후 시간대",
     "Windy or gusty conditions" to "바람이 불거나 돌풍이 부는 날씨",

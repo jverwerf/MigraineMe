@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -510,6 +510,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Als behandeling",
     "Add aura details" to "Aura-details",
     "Add failed: %1\$s" to "Mislukt: %1\$s",
+    "Add it to your calendar?" to "In je agenda zetten?",
     "Add locations to your migraines to spot hotspots" to "Voeg plekken toe aan je migraines om hotspots te zien",
     "Add medicine" to "Medicijn",
     "Add medicines you've taken" to "Noteer de medicijnen die je nam",
@@ -523,6 +524,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Add time" to "Tijd toevoegen",
     "Add to Frequent" to "Naar Vaak",
     "Add to Pool" to "Naar lijst",
+    "Add to calendar" to "Toevoegen aan agenda",
     "Add to frequent" to "Bij favorieten",
     "Add to list" to "Naar lijst",
     "Add to this migraine" to "Aan deze migraine",
@@ -691,6 +693,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Afspraak geannuleerd",
     "Appointment confirmed" to "Afspraak bevestigd",
     "Appointment time declined" to "Voorgestelde tijd afgewezen",
+    "Appointment with %1\$s" to "Afspraak met %1\$s",
     "Appointments" to "Afspraken",
     "Are specific drinks worse?" to "Zijn bepaalde drankjes erger?",
     "Are you sensitive to any of these?" to "Ben je gevoelig voor een van deze?",
@@ -1514,12 +1517,12 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamine (Cafergot)",
     "Ergots" to "Ergotaminen",
     "Error" to "Fout",
-    "Error: %1\$s" to "Fout: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Vaste patronen die ook in de aanvallen van dit rapport voorkwamen.",
-    "Estimate" to "Schatting",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Fout: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Vaste patronen die ook in de aanvallen van dit rapport voorkwamen.",
+    "Estimate" to "Schatting",
     "Euphoria" to "Euforie",
     "Evaluating your triggers..." to "Je triggers beoordelen...",
     "Even a one-line reply genuinely helps shape what we build next." to "Zelfs een antwoord van één regel helpt echt bepalen wat we hierna bouwen.",
@@ -3017,12 +3020,12 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Pollen en luchtkwaliteit",
     "Pollen counts and air pollution." to "Pollenwaarden en luchtvervuiling.",
     "Pollen high" to "Pollen hoog",
-    "Pollen or hay fever season" to "Pollen of hooikoortsseizoen",
-    "Polyunsaturated fat" to "Meerv. onverz. vet",
-    "Pool" to "Lijst",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Pollen of hooikoortsseizoen",
+    "Polyunsaturated fat" to "Meerv. onverz. vet",
+    "Pool" to "Lijst",
     "Poor" to "Slecht",
     "Poor deep sleep" to "Weinig diepe slaap",
     "Poor recovery score from your wearable" to "Slechte herstelscore van je wearable",
@@ -4520,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Wind" to "Wind",
     "Wind Speed" to "Windsnelheid",
     "Wind Speed (m/s)" to "Wind (m/s)",
-    "Wind speed" to "Windkracht",
-    "Wind speed high" to "Harde wind",
-    "Wind speed low" to "Weinig wind",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Windkracht",
+    "Wind speed high" to "Harde wind",
+    "Wind speed low" to "Weinig wind",
     "Window around migraine" to "Venster rond de migraine",
     "Windy or gusty conditions" to "Winderig of vlagerig",
     "Wine, beer, spirits" to "Wijn, bier, sterke drank",

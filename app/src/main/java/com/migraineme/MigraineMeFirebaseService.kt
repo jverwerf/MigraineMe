@@ -140,7 +140,10 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             "practitioner_appointment" -> {
                 showPractitionerAppointmentNotification(
                     title = message.notification?.title ?: message.data["title"],
-                    body = message.notification?.body ?: message.data["body"]
+                    body = message.notification?.body ?: message.data["body"],
+                    startsAt = message.data["starts_at"],
+                    endsAt = message.data["ends_at"],
+                    practitionerName = message.data["practitioner_name"],
                 )
             }
             "goal_suggestions" -> {
@@ -466,7 +469,13 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
     }
 
     /** The practitioner suggested, accepted, declined or cancelled a time. The server writes the copy. */
-    private fun showPractitionerAppointmentNotification(title: String?, body: String?) {
+    private fun showPractitionerAppointmentNotification(
+        title: String?,
+        body: String?,
+        startsAt: String? = null,
+        endsAt: String? = null,
+        practitionerName: String? = null,
+    ) {
         val channelId = "practitioner_appointment"
         val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         nm.createNotificationChannel(
@@ -483,16 +492,29 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             this, 5, intent,
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
-        val text = body.orEmpty()
-        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+        // A confirmed session, and the client connected their calendar in the app: offer to add it.
+        val calendarIntent = if (startsAt != null && CalendarService.hasReadPermission(this)) {
+            appointmentCalendarIntent(startsAt, endsAt, tSync("Appointment with %1\$s", practitionerName.orEmpty()))
+                ?.apply { flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK }
+        } else null
+        val text = body.orEmpty() + if (calendarIntent != null) " " + tSync("Add it to your calendar?") else ""
+        val builder = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title?.takeIf { it.isNotBlank() } ?: tSync("Appointments"))
             .setContentText(text)
             .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(8027, notification)
+        calendarIntent?.let {
+            builder.addAction(
+                0, tSync("Add to calendar"),
+                android.app.PendingIntent.getActivity(
+                    this, 6, it,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                )
+            )
+        }
+        nm.notify(8027, builder.build())
     }
 
     /**

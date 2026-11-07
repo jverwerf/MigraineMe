@@ -44,6 +44,17 @@ private fun whenText(iso: String?): String = runCatching {
 
 private fun instant(iso: String?) = runCatching { OffsetDateTime.parse(iso).toInstant() }.getOrNull()
 
+/** Opens the phone's calendar with the session filled in; the client presses save there. Needs no permission. */
+fun appointmentCalendarIntent(startIso: String?, endIso: String?, title: String): android.content.Intent? {
+    val start = instant(startIso) ?: return null
+    val end = instant(endIso) ?: start.plusSeconds(1800)
+    return android.content.Intent(android.content.Intent.ACTION_INSERT)
+        .setData(android.provider.CalendarContract.Events.CONTENT_URI)
+        .putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, start.toEpochMilli())
+        .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, end.toEpochMilli())
+        .putExtra(android.provider.CalendarContract.Events.TITLE, title)
+}
+
 /**
  * Appointments with one practitioner, inside their card on the sharing page:
  * what they suggested (accept or decline), what you suggested, then upcoming
@@ -94,10 +105,12 @@ fun PractitionerAppointments(
     val inSessions = sessions.map { it.id }.toSet()
     // Accepted times that are not in the practice software show up here too.
     val kept = rows.filter { it.status == "accepted" && it.scheduled_for != null && it.external_id !in inSessions }
-    val all = sessions.map { Triple(it.starts_at, it.type, it.id) } + kept.map { Triple(it.scheduled_for, null, it.id) }
+    val all = sessions.map { Triple(it.starts_at, it.type, it.ends_at) } + kept.map { Triple(it.scheduled_for, null, it.proposed_end) }
     val now = java.time.Instant.now()
     val upcoming = all.filter { instant(it.first)?.isAfter(now) == true }.sortedBy { instant(it.first) }
     val past = all.filter { instant(it.first)?.isAfter(now) == false }.sortedByDescending { instant(it.first) }.take(5)
+    // Only for someone who connected their calendar in the app.
+    val calendarConnected = CalendarService.hasReadPermission(context)
 
     Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(t("Appointments"), style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
@@ -131,7 +144,15 @@ fun PractitionerAppointments(
 
         if (upcoming.isNotEmpty()) {
             Text(t("Upcoming"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
-            upcoming.forEach { Text(whenText(it.first) + (it.second?.let { ty -> " · $ty" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Color.White) }
+            upcoming.forEach { s ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(whenText(s.first) + (s.second?.let { ty -> " · $ty" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Color.White, modifier = Modifier.weight(1f))
+                    if (calendarConnected) {
+                        val title = t("Appointment with %1\$s", practitionerName)
+                        TextButton(onClick = { appointmentCalendarIntent(s.first, s.third, title)?.let { context.startActivity(it) } }) { Text(t("Add to calendar")) }
+                    }
+                }
+            }
         }
         if (past.isNotEmpty()) {
             Text(t("Past"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)

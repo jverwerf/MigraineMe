@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5128 entries.
+ * 5131 entries.
  */
 internal val ES_STRINGS: Map<String, String> =
     esStrings0() + esStrings1() + esStrings2() + esStrings3()
@@ -510,6 +510,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Add as a treatment" to "Como tratamiento",
     "Add aura details" to "Detalles del aura",
     "Add failed: %1\$s" to "Error: %1\$s",
+    "Add it to your calendar?" to "¿Añadirla a tu calendario?",
     "Add locations to your migraines to spot hotspots" to "Añade lugares a tus migrañas para ver puntos calientes",
     "Add medicine" to "Medicina",
     "Add medicines you've taken" to "Añade las medicinas tomadas",
@@ -523,6 +524,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Add time" to "Añadir hora",
     "Add to Frequent" to "A frecuentes",
     "Add to Pool" to "A la lista",
+    "Add to calendar" to "Añadir al calendario",
     "Add to frequent" to "Añadir a frecuentes",
     "Add to list" to "A la lista",
     "Add to this migraine" to "Añadir a esta migraña",
@@ -691,6 +693,7 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Appointment cancelled" to "Cita cancelada",
     "Appointment confirmed" to "Cita confirmada",
     "Appointment time declined" to "Hora de cita rechazada",
+    "Appointment with %1\$s" to "Cita con %1\$s",
     "Appointments" to "Citas",
     "Are specific drinks worse?" to "¿Alguna bebida es peor?",
     "Are you sensitive to any of these?" to "¿Eres sensible a alguno de estos?",
@@ -1514,12 +1517,12 @@ private fun esStrings0(): Map<String, String> = mapOf(
     "Ergotamine (Cafergot)" to "Ergotamina (Cafergot)",
     "Ergots" to "Ergóticos",
     "Error" to "Error",
-    "Error: %1\$s" to "Error: %1\$s",
-    "Established patterns that also appeared in the attacks in this report." to "Patrones establecidos que también aparecieron en los ataques de este informe.",
-    "Estimate" to "Estimado",
 )
 
 private fun esStrings1(): Map<String, String> = mapOf(
+    "Error: %1\$s" to "Error: %1\$s",
+    "Established patterns that also appeared in the attacks in this report." to "Patrones establecidos que también aparecieron en los ataques de este informe.",
+    "Estimate" to "Estimado",
     "Euphoria" to "Euforia",
     "Evaluating your triggers..." to "Evaluando tus factores...",
     "Even a one-line reply genuinely helps shape what we build next." to "Incluso una respuesta de una línea ayuda de verdad a decidir qué construimos después.",
@@ -3017,12 +3020,12 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Pollen and air quality" to "Polen y calidad del aire",
     "Pollen counts and air pollution." to "Niveles de polen y contaminación del aire.",
     "Pollen high" to "Polen alto",
-    "Pollen or hay fever season" to "Polen o temporada de alergia",
-    "Polyunsaturated fat" to "Grasa poliinsaturada",
-    "Pool" to "Lista",
 )
 
 private fun esStrings2(): Map<String, String> = mapOf(
+    "Pollen or hay fever season" to "Polen o temporada de alergia",
+    "Polyunsaturated fat" to "Grasa poliinsaturada",
+    "Pool" to "Lista",
     "Poor" to "Malo",
     "Poor deep sleep" to "Poco profundo",
     "Poor recovery score from your wearable" to "Mala recuperación según tu wearable",
@@ -4520,12 +4523,12 @@ private fun esStrings2(): Map<String, String> = mapOf(
     "Wind" to "Viento",
     "Wind Speed" to "Vel. viento",
     "Wind Speed (m/s)" to "Viento (m/s)",
-    "Wind speed" to "Viento",
-    "Wind speed high" to "Viento fuerte",
-    "Wind speed low" to "Viento flojo",
 )
 
 private fun esStrings3(): Map<String, String> = mapOf(
+    "Wind speed" to "Viento",
+    "Wind speed high" to "Viento fuerte",
+    "Wind speed low" to "Viento flojo",
     "Window around migraine" to "Ventana de la migraña",
     "Windy or gusty conditions" to "Viento o rachas",
     "Wine, beer, spirits" to "Vino, cerveza, licores",

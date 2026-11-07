@@ -5422,5 +5422,8 @@
  "Appointment time declined": "Termin odrzucony",
  "Your practitioner could not do that time. You can suggest another.": "Twój specjalista nie może w tym terminie. Możesz zaproponować inny.",
  "Appointment cancelled": "Wizyta odwołana",
- "Your practitioner cancelled this appointment.": "Twój specjalista odwołał tę wizytę."
+ "Your practitioner cancelled this appointment.": "Twój specjalista odwołał tę wizytę.",
+ "Add to calendar": "Dodaj do kalendarza",
+ "Add it to your calendar?": "Dodać do kalendarza?",
+ "Appointment with %1$s": "Wizyta: %1$s"
 }

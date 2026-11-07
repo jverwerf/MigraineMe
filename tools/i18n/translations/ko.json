@@ -5127,5 +5127,8 @@
  "Appointment time declined": "제안한 시간이 거절되었습니다",
  "Your practitioner could not do that time. You can suggest another.": "담당 전문가가 그 시간에 어렵습니다. 다른 시간을 제안할 수 있습니다.",
  "Appointment cancelled": "예약이 취소되었습니다",
- "Your practitioner cancelled this appointment.": "담당 전문가가 이 예약을 취소했습니다."
+ "Your practitioner cancelled this appointment.": "담당 전문가가 이 예약을 취소했습니다.",
+ "Add to calendar": "캘린더에 추가",
+ "Add it to your calendar?": "캘린더에 추가할까요?",
+ "Appointment with %1$s": "%1$s 님과의 예약"
 }
