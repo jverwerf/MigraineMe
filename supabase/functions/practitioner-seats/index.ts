@@ -35,8 +35,20 @@ const PORTAL = "https://me-practitioner.com";
 const COMMISSION_PCT = 10;
 
 // The normal yearly price, the same in all five apps (App Store checked 2026-11-07).
-// No bulk discount (Jordy, 2026-11-07).
 const PRICES: Record<string, number> = { gbp: 5499, usd: 5599, eur: 6399 };
+// A little off per seat when buying more (Jordy, 2026-11-07). A quantity between two
+// sizes pays the rate of the size below it.
+const SEAT_TIERS: Record<number, Record<string, number>> = {
+  1: PRICES,
+  5: { gbp: 5299, usd: 5399, eur: 6199 },
+  10: { gbp: 4999, usd: 5099, eur: 5799 },
+  25: { gbp: 4799, usd: 4899, eur: 5599 },
+  50: { gbp: 4499, usd: 4599, eur: 5299 },
+};
+const seatUnit = (quantity: number, currency: string) => {
+  const size = Math.max(...Object.keys(SEAT_TIERS).map(Number).filter((n) => n <= quantity));
+  return SEAT_TIERS[size][currency];
+};
 // Film packages, monthly, on top of 2 free films; they stack. Prices by Jordy in GBP
 // (2026-11-07); USD and EUR follow the same ratio as the yearly subscription.
 const FILM_PACKS: Record<number, Record<string, number>> = {
@@ -103,7 +115,7 @@ async function ledger(op: string, a: Args): Promise<Args> {
       .order("status").order("created_at", { ascending: false });
     const now = Date.now();
     return {
-      ok: true, prices: PRICES,
+      ok: true, prices: PRICES, tiers: SEAT_TIERS,
       seats: (seats ?? []).map((s: Args) => ({ ...s, status: s.ends_at && new Date(s.ends_at).getTime() <= now ? "ended" : s.status })),
     };
   }
@@ -114,7 +126,7 @@ async function ledger(op: string, a: Args): Promise<Args> {
     if (!PRICES[currency]) return { error: "bad_currency" };
     const { data: order, error } = await db.from("practitioner_seat_orders").insert({
       owner_email: a.owner, owner_name: a.name ?? null, owner_lang: a.lang ?? null,
-      quantity, currency, unit_amount: PRICES[currency],
+      quantity, currency, unit_amount: seatUnit(quantity, currency),
     }).select("id").single();
     if (error) { console.error("seats: order insert", error.message); return { error: "order_failed" }; }
     const lang = String(a.lang ?? "");
@@ -126,7 +138,7 @@ async function ledger(op: string, a: Args): Promise<Args> {
       cancel_url: `${PORTAL}/#seats`,
       "line_items[0][quantity]": String(quantity),
       "line_items[0][price_data][currency]": currency,
-      "line_items[0][price_data][unit_amount]": String(PRICES[currency]),
+      "line_items[0][price_data][unit_amount]": String(seatUnit(quantity, currency)),
       "line_items[0][price_data][product_data][name]": "Client seat: one year of Premium in any Me app",
       "invoice_creation[enabled]": "true",
       // Stripe Tax: prices stay as shown, VAT is worked out of them and printed on the invoice.
@@ -187,13 +199,15 @@ async function ledger(op: string, a: Args): Promise<Args> {
           plan.cancel_at_period_end = !!s.body.cancel_at_period_end;
           const end = s.body.current_period_end ?? s.body.items?.data?.[0]?.current_period_end;
           plan.period_end = end ? new Date(end * 1000).toISOString() : null;
+          plan.currency = s.body.currency ?? null;
+          plan.amount = s.body.items?.data?.[0]?.price?.unit_amount ?? null;
           await db.from("practitioner_film_plans").update({
             stripe_subscription_id: plan.stripe_subscription_id, active: plan.active,
             cancel_at_period_end: plan.cancel_at_period_end, period_end: plan.period_end,
           }).eq("id", plan.id);
         } else console.error(`seats: subscription lookup failed ${plan.id}: ${s.status}`); // keeps the last known state
       }
-      if (plan.active) plans.push({ id: plan.id, films: plan.films, cancel_at_period_end: plan.cancel_at_period_end, period_end: plan.period_end });
+      if (plan.active) plans.push({ id: plan.id, films: plan.films, cancel_at_period_end: plan.cancel_at_period_end, period_end: plan.period_end, currency: plan.currency ?? null, amount: plan.amount ?? null });
     }
     return { ok: true, extra: plans.reduce((n, x) => n + x.films, 0), plans, packs: FILM_PACKS };
   }
@@ -230,6 +244,15 @@ async function ledger(op: string, a: Args): Promise<Args> {
     const { data: row } = await db.from("practitioner_film_plans").select("stripe_subscription_id")
       .eq("owner_email", a.owner).eq("id", String(a.plan_id ?? "")).maybeSingle();
     if (!row?.stripe_subscription_id) return { error: "no_plan" };
+    // The films must fit what is left once this package ends (2 free + other running packages).
+    const st = await ledger("film_status", { owner: a.owner });
+    const left = 2 + (st.plans as Args[]).filter((x) => x.id !== String(a.plan_id) && !x.cancel_at_period_end).reduce((n, x) => n + x.films, 0);
+    const { data: prs } = await db.from("practitioners").select("id").ilike("login_email", a.owner.replace(/[\\%_]/g, "\\$&"));
+    const ids = (prs ?? []).map((x: Args) => x.id);
+    const { count } = ids.length
+      ? await db.from("practitioner_exercises").select("id", { count: "exact", head: true }).in("practitioner_id", ids).neq("status", "archived")
+      : { count: 0 };
+    if ((count ?? 0) > left) return { error: "too_many_films", films: count, keep: left };
     const s = await stripe(`subscriptions/${row.stripe_subscription_id}`, new URLSearchParams({ cancel_at_period_end: "true" }));
     if (!s.ok) { console.error(`seats: film cancel failed ${s.status}`); return { error: "failed" }; }
     return { ok: true };
