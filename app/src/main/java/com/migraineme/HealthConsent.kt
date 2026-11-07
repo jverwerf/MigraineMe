@@ -129,6 +129,12 @@ fun HealthConsentGate(authVm: AuthViewModel, userId: String?, onNotNow: () -> Un
                     TextButton(onClick = { asking = false; onNotNow() }) { Text(t("Not now")) }
                     Button(
                         enabled = ticked && !busy,
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = AppTheme.AccentPurple,
+                            contentColor = androidx.compose.ui.graphics.Color.White,
+                            disabledContainerColor = AppTheme.AccentPurple.copy(alpha = 0.35f),
+                            disabledContentColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.65f),
+                        ),
                         onClick = {
                             scope.launch {
                                 busy = true
