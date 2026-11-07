@@ -1149,7 +1149,7 @@ fun MedicineStackedBarGraph(
 
 private fun monthDayLabel(iso: String): String = try {
     val d = LocalDate.parse(iso)
-    "${d.month.name.lowercase().replaceFirstChar { it.titlecase() }.take(3)} ${d.dayOfMonth}"
+    d.format(java.time.format.DateTimeFormatter.ofPattern(datePattern("MMM d", appLocale()), appLocale()))
 } catch (_: Exception) { "" }
 
 private fun dayLabel(iso: String): String = try {

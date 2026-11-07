@@ -188,7 +188,7 @@ private fun TriggerSymptomProfileCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BrainyRowIcon(trigger, size = 20.dp)
-                    Text(trigger, color = Color(0xFFF3EAFB),
+                    Text(prettyLabel(trigger), color = Color(0xFFF3EAFB),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
                 }
                 list.take(4).forEach { stat ->
