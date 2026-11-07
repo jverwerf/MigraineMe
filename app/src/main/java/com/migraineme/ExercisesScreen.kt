@@ -205,7 +205,7 @@ private fun ExerciseRoutineRow(
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
-                Text(
+                FitText(
                     t(routine.level) + " · " + t("%s min", routine.minutes),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall

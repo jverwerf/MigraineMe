@@ -587,8 +587,8 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
 
         // Was row
         Row {
-            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.width(36.dp))
+            FitText(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.width(36.dp), maxLines = 1)
             for (p in sorted) {
                 Text(p.fromValue?.let { prettyValue(it) } ?: "–", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
@@ -598,9 +598,9 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
 
         // New row
         Row {
-            Text(t("New"), color = Color(0xFF81C784),
+            FitText(t("New"), color = Color(0xFF81C784),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.width(36.dp))
+                modifier = Modifier.width(36.dp), maxLines = 1)
             for (p in sorted) {
                 val effectiveNew = if (p.accepted) p.toValue else p.fromValue
                 val changed = effectiveNew != p.fromValue
@@ -625,8 +625,8 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
     Column {
         // Header
         Row {
-            Text(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.width(36.dp))
+            FitText(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.width(36.dp), maxLines = 1)
             for (i in 0..6) {
                 Text("$i", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(36.dp), textAlign = TextAlign.Center)
@@ -635,8 +635,8 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
 
         // "Was" row
         Row {
-            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.width(36.dp))
+            FitText(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.width(36.dp), maxLines = 1)
             for (i in 0..6) {
                 val v = fromDays.getOrNull(i)
                 Text(
@@ -650,8 +650,8 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
 
         // "New" row
         Row {
-            Text(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.width(36.dp))
+            FitText(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.width(36.dp), maxLines = 1)
             for (i in 0..6) {
                 val newV = toDays.getOrElse(i) { 0.0 }
                 val oldV = fromDays.getOrNull(i)
@@ -709,19 +709,19 @@ private fun MenstrualDecayComparison(fromJson: String, toJson: String, accepted:
     val scroll = rememberScrollState()
     Column(modifier = Modifier.horizontalScroll(scroll)) {
         Row {
-            Text(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            FitText(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp), maxLines = 1)
             MENSTRUAL_LABELS.forEach { lbl ->
                 Text(lbl, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
             }
         }
         Row {
-            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            FitText(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp), maxLines = 1)
             fromVals.forEach { v ->
                 Text(formatDecayVal(v), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
             }
         }
         Row {
-            Text(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(32.dp))
+            FitText(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(32.dp), maxLines = 1)
             toVals.forEachIndexed { i, newV ->
                 val oldV = fromVals.getOrNull(i)
                 val effective = if (accepted) newV else (oldV ?: newV)

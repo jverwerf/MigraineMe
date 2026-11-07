@@ -2728,7 +2728,7 @@ internal fun ContextCard(
             BrainyBlobIcon(R.drawable.brainy_runner_small)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(t("Activities & Locations"), color = AppTheme.TitleColor,
+                FitText(t("Activities & Locations"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text(t("What you were doing when your migraines hit"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)

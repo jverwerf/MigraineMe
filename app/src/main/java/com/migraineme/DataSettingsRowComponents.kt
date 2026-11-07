@@ -386,7 +386,7 @@ fun PermissionSubRow(
             // user could work. The RN apps show the state and the action
             // instead — matched here.
             if (isGranted) {
-                Text(
+                FitText(
                     t("✓ Granted"),
                     color = Color(0xFF81C784),
                     style = MaterialTheme.typography.labelSmall

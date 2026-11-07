@@ -794,7 +794,7 @@ fun MonitorNutritionScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it; if (it.isBlank()) { searchResults = emptyList(); searchError = null } },
-                        placeholder = { Text(t("Search foods")) },
+                        placeholder = { FitText(t("Search foods"), maxLines = 1) },
                         leadingIcon = { Icon(Icons.Default.Search, null, tint = AppTheme.SubtleTextColor) },
                         trailingIcon = { if (isSearching) CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp) },
                         singleLine = true,
