@@ -106,6 +106,9 @@ verify_jwt = false
 [functions.recalc-risk-scores]
 verify_jwt = false
 
+[functions.practitioner-seats]
+verify_jwt = false
+
 [functions.redeem-promo]
 verify_jwt = false
 
