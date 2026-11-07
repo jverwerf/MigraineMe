@@ -5104,6 +5104,8 @@
  "Barcode": "Code-barres",
  "Photo": "Photo",
  "Weekly migraine days": "Jours de migraine/sem.",
- "Allow AI summaries": "Autoriser les résumés par IA",
- "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "Permet à %1$s de demander un résumé par IA de ce que vous partagez. Il est envoyé à OpenAI sans votre nom, mais peut inclure vos notes."
+ "Allow AI summaries": "Autoriser résumés IA",
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "Permet à %1$s de demander un résumé par IA de ce que vous partagez. Il est envoyé à OpenAI sans votre nom, mais peut inclure vos notes.",
+ "Auto-generated from predicted menstruation": "Généré automatiquement d'après tes prochaines règles prévues",
+ "Auto-generated from predicted ovulation": "Généré automatiquement d'après ton ovulation prévue"
 }

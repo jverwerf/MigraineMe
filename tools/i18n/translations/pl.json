@@ -5400,6 +5400,8 @@
  "Barcode": "Kod kreskowy",
  "Photo": "Zdjęcie",
  "Weekly migraine days": "Dni migreny w tygodniu",
- "Allow AI summaries": "Zezwól na podsumowania AI",
- "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "Pozwala %1$s poprosić o podsumowanie AI tego, co udostępniasz. Trafia do OpenAI bez Twojego imienia, ale może zawierać Twoje notatki."
+ "Allow AI summaries": "Włącz streszczenia AI",
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "Pozwala %1$s poprosić o podsumowanie AI tego, co udostępniasz. Trafia do OpenAI bez Twojego imienia, ale może zawierać Twoje notatki.",
+ "Auto-generated from predicted menstruation": "Utworzono automatycznie z przewidywanej miesiączki",
+ "Auto-generated from predicted ovulation": "Utworzono automatycznie z przewidywanej owulacji"
 }

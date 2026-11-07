@@ -5106,5 +5106,7 @@
  "Photo": "사진",
  "Weekly migraine days": "주간 편두통 일수",
  "Allow AI summaries": "AI 요약 허용",
- "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$s이(가) 공유한 내용의 AI 요약을 요청할 수 있어요. 이름 없이 OpenAI로 전송되지만 직접 쓴 메모가 포함될 수 있어요."
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$s이(가) 공유한 내용의 AI 요약을 요청할 수 있어요. 이름 없이 OpenAI로 전송되지만 직접 쓴 메모가 포함될 수 있어요.",
+ "Auto-generated from predicted menstruation": "예상 생리일 기준으로 자동 생성됨",
+ "Auto-generated from predicted ovulation": "예상 배란일 기준으로 자동 생성됨"
 }

@@ -5106,5 +5106,7 @@
  "Photo": "写真",
  "Weekly migraine days": "週の片頭痛日数",
  "Allow AI summaries": "AI要約を許可",
- "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$sが、共有内容のAI要約を依頼できるようにします。名前を除いてOpenAIに送信されますが、ご自身のメモが含まれる場合があります。"
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$sが、共有内容のAI要約を依頼できるようにします。名前を除いてOpenAIに送信されますが、ご自身のメモが含まれる場合があります。",
+ "Auto-generated from predicted menstruation": "予測された月経から自動作成",
+ "Auto-generated from predicted ovulation": "予測された排卵日から自動作成"
 }

@@ -5106,6 +5106,8 @@
  "Barcode": "Barkod",
  "Photo": "Fotoğraf",
  "Weekly migraine days": "Haftalık migren günü",
- "Allow AI summaries": "Yapay zekâ özetlerine izin ver",
- "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$s, paylaştıklarının yapay zekâ özetini isteyebilir. Adın olmadan OpenAI'a gönderilir ama yazdığın notları içerebilir."
+ "Allow AI summaries": "Yapay zekâ özetleri",
+ "Lets %1$s ask for an AI summary of what you share. It goes to OpenAI without your name, but can include notes you wrote.": "%1$s, paylaştıklarının yapay zekâ özetini isteyebilir. Adın olmadan OpenAI'a gönderilir ama yazdığın notları içerebilir.",
+ "Auto-generated from predicted menstruation": "Tahmini adetten otomatik oluşturuldu",
+ "Auto-generated from predicted ovulation": "Tahmini yumurtlamadan otomatik oluşturuldu"
 }

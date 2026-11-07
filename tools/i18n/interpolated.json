@@ -296,7 +296,7 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:685",
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:712",
     "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
