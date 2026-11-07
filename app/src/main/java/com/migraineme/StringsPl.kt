@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5395 entries.
+ * 5398 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -1004,6 +1004,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "Zły sen wywołuje atak",
     "Band worn on the calf that delivers TENS-style stimulation." to "Opaska noszona na łydce, która zapewnia stymulację w stylu TENS.",
     "Bar / pub" to "Bar / pub",
+    "Barcode" to "Kod kreskowy",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "Kodu kreskowego %s nie ma w bazie Open Food Facts. Spróbuj wyszukać po nazwie.",
     "Barometric pressure" to "Ciśnienie barometryczne",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "Ciśnienie atmosferyczne, wilgotność i temperatura. Spadek ciśnienia (dzień przed burzą) to jeden z najlepiej zbadanych wyzwalaczy pogodowych — wiele osób z migreną regularnie ma atak 12–24 godz. przed przejściem frontu. Znaczenie mają też upalne, wilgotne dni i nagłe skoki temperatury.\n\nWykorzystaj tę kartę do planowania: jeśli prognoza zapowiada gwałtowny spadek ciśnienia, potraktuj to jak każde inne okno wysokiego ryzyka — wyśpij się, pij dużo wody i pomyśl o zapewnieniu sobie ulgi z wyprzedzeniem.",
@@ -1516,10 +1517,10 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Digestive" to "Trawienne",
     "Digital wellness correlation" to "Korelacja z cyfrowym dobrostanem",
     "Dihydroergotamine (DHE)" to "Dihydroergotamina (DHE)",
-    "Dinner" to "Kolacja",
 )
 
 private fun plStrings1(): Map<String, String> = mapOf(
+    "Dinner" to "Kolacja",
     "Directions" to "Trasa",
     "Disable Battery Optimization" to "Wyłącz optymalizację baterii",
     "Discard" to "Odrzuć",
@@ -2692,7 +2693,6 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Czas w miesiącu",
     "Monthly Frequency" to "Częstość miesięczna",
     "Monthly migraine days" to "Dni migreny w miesiącu",
-    "Weekly migraine days" to "Dni migreny w tygodniu",
     "Mood" to "Nastrój",
     "Mood change" to "Zmiana nastroju",
     "Mood changes" to "Zmiany nastroju",
@@ -3020,10 +3020,10 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Once a day" to "Raz dziennie",
     "Once a day, %s days a week" to "Raz dziennie, %s dni w tygodniu",
     "Once a day, %s days a week|few" to "Raz dziennie, %s dni w tygodniu",
-    "Once a day, %s days a week|one" to "Raz dziennie, %s dzień w tygodniu",
 )
 
 private fun plStrings2(): Map<String, String> = mapOf(
+    "Once a day, %s days a week|one" to "Raz dziennie, %s dzień w tygodniu",
     "Once a week the AI proposes changes, like moving your gauge lines. Tick what you agree with." to "Raz w tygodniu AI proponuje zmiany, np. przesunięcie linii na wskaźnikach. Zaznacz te, na które się zgadzasz.",
     "Once a week, alongside your recalibration, MigraineMe looks at your data and suggests goals that could help, like water, sleep or heart-rate training. Your practitioner can set goals too. Switch this off to hide goals everywhere." to "Raz w tygodniu, razem z rekalibracją, MigraineMe analizuje twoje dane i podpowiada cele, które mogą pomóc, np. picie wody, sen albo trening tętna. Cele może też ustawiać twój specjalista. Wyłącz, aby ukryć cele wszędzie.",
     "Once an attack has started. A dim, quiet room, sound low, and a cold pack wrapped in a cloth." to "Gdy atak już się rozpoczął. Przyciemniony, cichy pokój, przyciszone dźwięki i zimny kompres owinięty w ściereczkę.",
@@ -3195,6 +3195,7 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Phosphorus" to "Fosfor",
     "Phosphorus high" to "Fosfor wysoki",
     "Phosphorus low" to "Fosfor niski",
+    "Photo" to "Zdjęcie",
     "Photograph your meal" to "Zrób zdjęcie posiłku",
     "Physical" to "Ciało",
     "Physical Health" to "Ciało",
@@ -4522,11 +4523,11 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Wake time" to "Godzina pobudki",
     "Wake time early" to "Wczesna pobudka",
     "Wake time late" to "Późna pora wstawania",
-    "Wake-ups and restlessness" to "Wybudzenia i niepokój",
-    "Walk" to "Spacer",
 )
 
 private fun plStrings3(): Map<String, String> = mapOf(
+    "Wake-ups and restlessness" to "Wybudzenia i niepokój",
+    "Walk" to "Spacer",
     "Walking" to "Spacerowanie",
     "Warm compress" to "Ciepły kompres",
     "Warned & it happened" to "Ostrzeżenie trafne",
@@ -4604,6 +4605,7 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "Cotygodniowe cele i podsumowania AI z twoich danych",
     "Weekly Frequency" to "Razy w tygodniu",
     "Weekly goal review" to "Podsumowanie celów",
+    "Weekly migraine days" to "Dni migreny w tygodniu",
     "Weekly review and goal ideas" to "Przegląd tygodnia i pomysły na cele",
     "Weekly review notifications" to "Powiadomienia o podsumowaniu tygodnia",
     "Weight" to "Waga",

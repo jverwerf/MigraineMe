@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5101 entries.
+ * 5104 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -805,6 +805,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "Kötü uyku atak tetikler",
     "Band worn on the calf that delivers TENS-style stimulation." to "Baldıra takılan, TENS tarzı uyarı veren bant.",
     "Bar / pub" to "Bar / pub",
+    "Barcode" to "Barkod",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "%s barkodu Open Food Facts veritabanında yok. Onun yerine ada göre aramayı dene.",
     "Barometric pressure" to "Barometrik basınç",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "Hava basıncı, nem ve sıcaklık. Düşen basınç (fırtınadan önceki gün) en iyi incelenmiş hava tetikleyicilerinden biridir; birçok migren hastası, cephe geçmeden 12-24 saat önce düzenli olarak atak geçirir. Sıcak, nemli günler ve ani sıcaklık değişimleri de önemlidir.\n\nBu kartı planlama için kullan: Tahminde keskin bir basınç düşüşü görürsen bunu diğer yüksek riskli dönemler gibi ele al; iyi uyu, bol su iç ve önceden rahatlama sağlamayı düşün.",
@@ -1516,10 +1517,10 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Akşam Kontrolü — %1\$s / %2\$s",
     "Evening check-in" to "Akşam kontrolü",
     "Evening check-in by voice" to "Sesle akşam kontrolü",
-    "Evening check-in reminders" to "Akşam kontrolü hatırlatıcıları",
 )
 
 private fun trStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "Akşam kontrolü hatırlatıcıları",
     "Every 1-2 months" to "1-2 ayda bir",
     "Every Monday\nit *learns* you." to "Her pazartesi\nseni *öğrenir.*",
     "Every Monday it *learns.*" to "Her pazartesi *öğrenir.*",
@@ -2459,7 +2460,6 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Aylık süre",
     "Monthly Frequency" to "Aylık sıklık",
     "Monthly migraine days" to "Aylık migren günleri",
-    "Weekly migraine days" to "Haftalık migren günleri",
     "Mood" to "Ruh hali",
     "Mood change" to "Ruh hali değişimi",
     "Mood changes" to "Ruh hali değişimleri",
@@ -2951,6 +2951,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "Fosfor",
     "Phosphorus high" to "Fosfor yüksek",
     "Phosphorus low" to "Fosfor düşük",
+    "Photo" to "Fotoğraf",
     "Photograph your meal" to "Yemeğinin fotoğrafını çek",
     "Physical" to "Fiziksel",
     "Physical Health" to "Fiziksel Sağlık",
@@ -3019,11 +3020,11 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Postdrome" to "Postdrom",
     "Postdrome (%s)" to "Postdrom (%s)",
     "Postdrome (after attack)" to "Postdrom (atak sonrası)",
-    "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Buradaki gönderileri başka yetişkinler yazıyor. Böyle kalması için girmeden önce lütfen yaşını onayla.",
-    "Posture and deep neck" to "Duruş ve derin boyun",
 )
 
 private fun trStrings2(): Map<String, String> = mapOf(
+    "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Buradaki gönderileri başka yetişkinler yazıyor. Böyle kalması için girmeden önce lütfen yaşını onayla.",
+    "Posture and deep neck" to "Duruş ve derin boyun",
     "Potassium" to "Potasyum",
     "Potassium high" to "Potasyum yüksek",
     "Potassium low" to "Potasyum düşük",
@@ -4340,6 +4341,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "Verilerinden haftalık yapay zekâ hedef önerisi ve incelemesi",
     "Weekly Frequency" to "Haftalık sıklık",
     "Weekly goal review" to "Haftalık hedef özeti",
+    "Weekly migraine days" to "Haftalık migren günü",
     "Weekly review and goal ideas" to "Haftalık özet ve hedef fikirleri",
     "Weekly review notifications" to "Haftalık değerlendirme bildirimleri",
     "Weight" to "Kilo",
@@ -4521,12 +4523,12 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Woke up" to "Uyanma",
     "Woke up time" to "Uyanma saati",
     "Word-finding trouble" to "Kelime bulma güçlüğü",
-    "Words" to "Kelimeler",
-    "Work" to "İş",
-    "Work pressure, anxiety, conflict" to "İş baskısı, kaygı, çatışma",
 )
 
 private fun trStrings3(): Map<String, String> = mapOf(
+    "Words" to "Kelimeler",
+    "Work" to "İş",
+    "Work pressure, anxiety, conflict" to "İş baskısı, kaygı, çatışma",
     "Work pressure, deadlines" to "İş baskısı, teslim tarihleri",
     "Worked out for you, not answered" to "Senin için hesaplandı, yanıtlanmadı",
     "Working" to "Çalışma",

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5100 entries.
+ * 5103 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -805,6 +805,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "睡眠不足が誘因になる",
     "Band worn on the calf that delivers TENS-style stimulation." to "ふくらはぎに巻いて、TENS式の刺激を与えるバンドです。",
     "Bar / pub" to "バー/居酒屋",
+    "Barcode" to "バーコード",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "バーコード%sはOpen Food Factsのデータベースにありません。名前で検索してください。",
     "Barometric pressure" to "気圧",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "気圧、湿度、気温です。気圧の低下(嵐の前日など)は、よく研究されている天候の誘因の一つで、前線が通過する12〜24時間前に発作が起きる片頭痛の方は少なくありません。蒸し暑い日や急な気温の変化も影響します。\n\nこのカードは予定を立てるのに使えます。気圧が大きく下がる予報が出ていたら、ほかのリスクの高い時間帯と同じように、しっかり眠り、水分をとり、先に緩和の備えをすることも考えてください。",
@@ -1516,10 +1517,10 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "夕方の記録 — %1\$s/%2\$s",
     "Evening check-in" to "夕方の記録",
     "Evening check-in by voice" to "音声で夕方の記録",
-    "Evening check-in reminders" to "夕方の記録のお知らせ",
 )
 
 private fun jaStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "夕方の記録のお知らせ",
     "Every 1-2 months" to "1〜2か月ごと",
     "Every Monday\nit *learns* you." to "毎週月曜日、\nあなたを*学びます。*",
     "Every Monday it *learns.*" to "毎週月曜日に*学びます。*",
@@ -2458,7 +2459,6 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "月間の継続時間",
     "Monthly Frequency" to "月あたりの回数",
     "Monthly migraine days" to "月の片頭痛日数",
-    "Weekly migraine days" to "週あたりの片頭痛日数",
     "Mood" to "気分",
     "Mood change" to "気分の変化",
     "Mood changes" to "気分の変化",
@@ -2950,6 +2950,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "リン",
     "Phosphorus high" to "リンが多い",
     "Phosphorus low" to "リンが少ない",
+    "Photo" to "写真",
     "Photograph your meal" to "食事を撮影",
     "Physical" to "身体",
     "Physical Health" to "からだの健康",
@@ -3019,11 +3020,11 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "後発症状(%s)",
     "Postdrome (after attack)" to "後発症状(発作の後)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "ここでの投稿は、他の成人が書いたものです。そのため、入る前に年齢を確認してください。",
-    "Posture and deep neck" to "姿勢と首の深部",
-    "Potassium" to "カリウム",
 )
 
 private fun jaStrings2(): Map<String, String> = mapOf(
+    "Posture and deep neck" to "姿勢と首の深部",
+    "Potassium" to "カリウム",
     "Potassium high" to "カリウムが高い",
     "Potassium low" to "カリウムが低い",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "片頭痛のうち、自分で対処できる部分のための実用的な道具です。光、音、睡眠、そして発作そのものに対応します。どれも、まず私たち自身のつらい日々で試したものです。",
@@ -4339,6 +4340,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "毎週、あなたのデータからAIが目標の提案と振り返りを行います",
     "Weekly Frequency" to "週あたりの回数",
     "Weekly goal review" to "目標の週間振り返り",
+    "Weekly migraine days" to "週の片頭痛日数",
     "Weekly review and goal ideas" to "週間の振り返りと目標のヒント",
     "Weekly review notifications" to "週間レビューの通知",
     "Weight" to "体重",
@@ -4521,12 +4523,12 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Woke up time" to "起床時刻",
     "Word-finding trouble" to "言葉が出にくい",
     "Words" to "言葉",
-    "Work" to "仕事",
-    "Work pressure, anxiety, conflict" to "仕事のプレッシャー、不安、対立",
-    "Work pressure, deadlines" to "仕事のプレッシャー、締め切り",
 )
 
 private fun jaStrings3(): Map<String, String> = mapOf(
+    "Work" to "仕事",
+    "Work pressure, anxiety, conflict" to "仕事のプレッシャー、不安、対立",
+    "Work pressure, deadlines" to "仕事のプレッシャー、締め切り",
     "Worked out for you, not answered" to "回答ではなく、計算した結果",
     "Working" to "仕事",
     "Working from home" to "在宅勤務",

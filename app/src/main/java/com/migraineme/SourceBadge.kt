@@ -71,12 +71,12 @@ fun sourceDisplayLabel(raw: String, context: android.content.Context? = null): S
     "whoop" -> "WHOOP"
     "oura" -> "Oura"
     "polar" -> "Polar"
-    "phone" -> "Phone"
+    "phone" -> tSync("Phone")
     "health_connect" -> "Health Connect"
-    "manual_usda" -> "Manual"
-    "barcode_off" -> "Barcode"
-    "photo_ai" -> "Photo"
-    else -> raw.replaceFirstChar { it.uppercase() }
+    "manual_usda" -> tSync("Manual")
+    "barcode_off" -> tSync("Barcode")
+    "photo_ai" -> tSync("Photo")
+    else -> prettyLabel(raw)
 }
 
 /**

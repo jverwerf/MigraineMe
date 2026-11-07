@@ -434,6 +434,20 @@
     "count": 11
   },
   {
+    "en": "Phone",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/DataSettingsRow.kt:303",
+      "app/src/main/java/com/migraineme/MentalConfigScreen.kt:216",
+      "app/src/main/java/com/migraineme/MentalConfigScreen.kt:191",
+      "app/src/main/java/com/migraineme/NutritionConfigScreen.kt:225",
+      "app/src/main/java/com/migraineme/NutritionConfigScreen.kt:181",
+      "... 6 more"
+    ],
+    "max_len": 14,
+    "count": 11
+  },
+  {
     "en": "Reliefs",
     "class": "hard",
     "sites": [
@@ -476,20 +490,6 @@
     "count": 10
   },
   {
-    "en": "Phone",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/DataSettingsRow.kt:303",
-      "app/src/main/java/com/migraineme/MentalConfigScreen.kt:216",
-      "app/src/main/java/com/migraineme/MentalConfigScreen.kt:191",
-      "app/src/main/java/com/migraineme/NutritionConfigScreen.kt:225",
-      "app/src/main/java/com/migraineme/NutritionConfigScreen.kt:181",
-      "... 5 more"
-    ],
-    "max_len": 14,
-    "count": 10
-  },
-  {
     "en": "Saving...",
     "class": "hard",
     "sites": [
@@ -497,7 +497,7 @@
       "app/src/main/java/com/migraineme/ManagePoolScreen.kt:555",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:637",
       "app/src/main/java/com/migraineme/MenstruationScreen.kt:651",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:916",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:953",
       "... 5 more"
     ],
     "max_len": 14,
@@ -1001,7 +1001,7 @@
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2212",
       "app/src/main/java/com/migraineme/MainActivity.kt:2676",
       "app/src/main/java/com/migraineme/ManageItemsScreen.kt:178",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:718",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:755",
       "... 1 more"
     ],
     "max_len": 15,
@@ -1290,7 +1290,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/AiSetupQuestions.kt:324",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1231",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1080",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1117",
       "app/src/main/java/com/migraineme/NotesScreen.kt:173",
       "app/src/main/java/com/migraineme/PaintThePictureScreen.kt:447"
     ],
@@ -1340,8 +1340,8 @@
     "en": "since %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:115",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:984",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:117",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1021",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:149",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:365",
       "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:382"
@@ -1535,7 +1535,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/HomeScreen.kt:611",
       "app/src/main/java/com/migraineme/InsightsSectionConfigScreen.kt:83",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:620",
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:657",
       "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:73"
     ],
     "max_len": 14,
@@ -2319,7 +2319,7 @@
     "sites": [
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1018",
       "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2595",
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1066"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1103"
     ],
     "max_len": 32,
     "count": 3
@@ -4791,6 +4791,16 @@
     "count": 2
   },
   {
+    "en": "Manual",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/JournalScreen.kt:463",
+      "app/src/main/java/com/migraineme/SourceBadge.kt:76"
+    ],
+    "max_len": 14,
+    "count": 2
+  },
+  {
     "en": "Menstruation Tracking",
     "class": "soft",
     "sites": [
@@ -6496,7 +6506,7 @@
     "en": "% MMD change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:558"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:595"
     ],
     "max_len": 15,
     "count": 1
@@ -6766,7 +6776,7 @@
     "en": "%1$s migraine days a month while on this.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:278"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:280"
     ],
     "max_len": 59,
     "count": 1
@@ -6973,7 +6983,7 @@
     "en": "%1$s weeks in · %2$s attacks tracked%3$s",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:299"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:301"
     ],
     "max_len": 58,
     "count": 1
@@ -7216,7 +7226,7 @@
     "en": "%s added",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:645"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:682"
     ],
     "max_len": 14,
     "count": 1
@@ -7990,7 +8000,7 @@
     "en": "+ note",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:726"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:763"
     ],
     "max_len": 14,
     "count": 1
@@ -8107,7 +8117,7 @@
     "en": "1 added",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:645"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:682"
     ],
     "max_len": 14,
     "count": 1
@@ -11200,6 +11210,15 @@
     "count": 1
   },
   {
+    "en": "Barcode",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/SourceBadge.kt:77"
+    ],
+    "max_len": 14,
+    "count": 1
+  },
+  {
     "en": "Barcode %s is not in the Open Food Facts database. Try searching by name instead.",
     "class": "soft",
     "sites": [
@@ -11419,7 +11438,7 @@
     "en": "Before this: %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:126"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:128"
     ],
     "max_len": 18,
     "count": 1
@@ -12931,7 +12950,7 @@
     "en": "Compared to other treatments",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:556"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:593"
     ],
     "max_len": 40,
     "count": 1
@@ -13408,7 +13427,7 @@
     "en": "Correlations during the window, not effects of the drug.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:676"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:713"
     ],
     "max_len": 81,
     "count": 1
@@ -13606,7 +13625,7 @@
     "en": "Customize 'What else changed'",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:936"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:973"
     ],
     "max_len": 42,
     "count": 1
@@ -14299,7 +14318,7 @@
     "en": "Describe the side effect",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1020"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1057"
     ],
     "max_len": 34,
     "count": 1
@@ -15055,7 +15074,7 @@
     "en": "Each metric is compared between the 4 weeks before the regimen started and the most recent 4 weeks. Pick the ones that matter to you.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:940"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:977"
     ],
     "max_len": 192,
     "count": 1
@@ -17341,7 +17360,7 @@
     "en": "Generating...",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:781"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:818"
     ],
     "max_len": 16,
     "count": 1
@@ -17665,7 +17684,7 @@
     "en": "Group regimens together (e.g. titration of the same drug) so the chart spans the journey.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:888"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:925"
     ],
     "max_len": 129,
     "count": 1
@@ -19240,7 +19259,7 @@
     "en": "It will move to Past. You can still see the data.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:221"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:223"
     ],
     "max_len": 71,
     "count": 1
@@ -19510,7 +19529,7 @@
     "en": "Last 4 weeks: %s days",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:290"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:292"
     ],
     "max_len": 31,
     "count": 1
@@ -19987,7 +20006,7 @@
     "en": "Link %s treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:878"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:915"
     ],
     "max_len": 21,
     "count": 1
@@ -20005,7 +20024,7 @@
     "en": "Link 1 treatment",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:878"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:915"
     ],
     "max_len": 19,
     "count": 1
@@ -20032,7 +20051,7 @@
     "en": "Link treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:883"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:920"
     ],
     "max_len": 18,
     "count": 1
@@ -20050,7 +20069,7 @@
     "en": "Link →",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:160"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:162"
     ],
     "max_len": 14,
     "count": 1
@@ -20059,7 +20078,7 @@
     "en": "Linked ✓",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:160"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:162"
     ],
     "max_len": 14,
     "count": 1
@@ -20689,7 +20708,7 @@
     "en": "MIGRAINE DAYS PER MONTH",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:255"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:257"
     ],
     "max_len": 33,
     "count": 1
@@ -20863,15 +20882,6 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
-    "count": 1
-  },
-  {
-    "en": "Manual",
-    "class": "hard",
-    "sites": [
-      "app/src/main/java/com/migraineme/JournalScreen.kt:463"
-    ],
-    "max_len": 14,
     "count": 1
   },
   {
@@ -21703,15 +21713,6 @@
     "count": 1
   },
   {
-    "en": "Monthly migraine days",
-    "class": "soft",
-    "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:364"
-    ],
-    "max_len": 31,
-    "count": 1
-  },
-  {
     "en": "Mood change",
     "class": "hard",
     "sites": [
@@ -22534,7 +22535,7 @@
     "en": "No data yet for the metrics you picked.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:627"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:664"
     ],
     "max_len": 56,
     "count": 1
@@ -22831,7 +22832,7 @@
     "en": "No other treatments to link to.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:896"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:933"
     ],
     "max_len": 44,
     "count": 1
@@ -23155,7 +23156,7 @@
     "en": "None logged yet for this regimen.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:733"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:770"
     ],
     "max_len": 47,
     "count": 1
@@ -23335,7 +23336,7 @@
     "en": "Note a side effect",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1054"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:1091"
     ],
     "max_len": 21,
     "count": 1
@@ -23461,7 +23462,7 @@
     "en": "Nothing was logged before this started, so there is nothing to compare it with.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:281"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:283"
     ],
     "max_len": 114,
     "count": 1
@@ -23947,7 +23948,7 @@
     "en": "Other treatments",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:906"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:943"
     ],
     "max_len": 19,
     "count": 1
@@ -24895,6 +24896,15 @@
       "pool:seeded-template"
     ],
     "max_len": 32,
+    "count": 1
+  },
+  {
+    "en": "Photo",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/SourceBadge.kt:78"
+    ],
+    "max_len": 14,
     "count": 1
   },
   {
@@ -26242,7 +26252,7 @@
     "en": "Regenerate",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:790"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:827"
     ],
     "max_len": 14,
     "count": 1
@@ -29365,7 +29375,7 @@
     "en": "Stop",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:163"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:165"
     ],
     "max_len": 14,
     "count": 1
@@ -29374,7 +29384,7 @@
     "en": "Stop now",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:237"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:239"
     ],
     "max_len": 14,
     "count": 1
@@ -29392,7 +29402,7 @@
     "en": "Stop this treatment?",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:220"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:222"
     ],
     "max_len": 23,
     "count": 1
@@ -29689,7 +29699,7 @@
     "en": "Suggested · same name",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:899"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:936"
     ],
     "max_len": 31,
     "count": 1
@@ -29734,7 +29744,7 @@
     "en": "Summary",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:776"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:813"
     ],
     "max_len": 14,
     "count": 1
@@ -30283,7 +30293,7 @@
     "en": "Tap regenerate to build your summary.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:781"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:818"
     ],
     "max_len": 53,
     "count": 1
@@ -30310,7 +30320,7 @@
     "en": "Tap the slider to pick what you want to see.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:626"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:663"
     ],
     "max_len": 63,
     "count": 1
@@ -32029,7 +32039,7 @@
     "en": "Trigger profile shift",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:507"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:544"
     ],
     "max_len": 31,
     "count": 1
@@ -32443,7 +32453,7 @@
     "en": "Unlink",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:877"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:914"
     ],
     "max_len": 14,
     "count": 1
@@ -34042,6 +34052,15 @@
     "count": 1
   },
   {
+    "en": "Weekly migraine days",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:374"
+    ],
+    "max_len": 23,
+    "count": 1
+  },
+  {
     "en": "Weekly review and goal ideas",
     "class": "soft",
     "sites": [
@@ -34351,7 +34370,7 @@
     "en": "What else changed",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:617"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:654"
     ],
     "max_len": 20,
     "count": 1
@@ -35791,7 +35810,7 @@
     "en": "You went from %1$s to %2$s migraine days a month, averaged since you started.",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:284"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:286"
     ],
     "max_len": 111,
     "count": 1
@@ -36655,7 +36674,7 @@
     "en": "active",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:586"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:623"
     ],
     "max_len": 14,
     "count": 1
@@ -37132,7 +37151,7 @@
     "en": "down",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:641"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:678"
     ],
     "max_len": 14,
     "count": 1
@@ -37141,7 +37160,7 @@
     "en": "down %s ranks",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:533"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:570"
     ],
     "max_len": 16,
     "count": 1
@@ -37150,7 +37169,7 @@
     "en": "down 1 rank",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:533"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:570"
     ],
     "max_len": 14,
     "count": 1
@@ -37321,7 +37340,7 @@
     "en": "enough data to trust this",
     "class": "soft",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:298"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:300"
     ],
     "max_len": 36,
     "count": 1
@@ -37483,7 +37502,7 @@
     "en": "gone",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:527"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:564"
     ],
     "max_len": 14,
     "count": 1
@@ -37672,7 +37691,7 @@
     "en": "last %s wks",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:366"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:376"
     ],
     "max_len": 14,
     "count": 1
@@ -37825,7 +37844,7 @@
     "en": "mean duration",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:468"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:505"
     ],
     "max_len": 16,
     "count": 1
@@ -37834,7 +37853,7 @@
     "en": "mean severity",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:467"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:504"
     ],
     "max_len": 16,
     "count": 1
@@ -38014,7 +38033,7 @@
     "en": "new",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:526"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:563"
     ],
     "max_len": 14,
     "count": 1
@@ -38041,7 +38060,7 @@
     "en": "no change",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:532"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:569"
     ],
     "max_len": 14,
     "count": 1
@@ -38590,7 +38609,7 @@
     "en": "stable",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:642"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:679"
     ],
     "max_len": 14,
     "count": 1
@@ -38644,7 +38663,7 @@
     "en": "still in 8-week ramp",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:298"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:300"
     ],
     "max_len": 23,
     "count": 1
@@ -38959,7 +38978,7 @@
     "en": "up",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:640"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:677"
     ],
     "max_len": 14,
     "count": 1
@@ -38968,7 +38987,7 @@
     "en": "up %s ranks",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:534"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:571"
     ],
     "max_len": 14,
     "count": 1
@@ -38977,7 +38996,7 @@
     "en": "up 1 rank",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:534"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:571"
     ],
     "max_len": 14,
     "count": 1
@@ -39067,7 +39086,7 @@
     "en": "was %s",
     "class": "hard",
     "sites": [
-      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:493"
+      "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:530"
     ],
     "max_len": 14,
     "count": 1

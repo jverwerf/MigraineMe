@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5100 entries.
+ * 5103 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -805,6 +805,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "睡不好會誘發",
     "Band worn on the calf that delivers TENS-style stimulation." to "戴在小腿上、提供 TENS 式刺激的束帶。",
     "Bar / pub" to "酒吧 / 酒館",
+    "Barcode" to "條碼",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "Open Food Facts 資料庫中沒有條碼 %s。試試改用名稱搜尋。",
     "Barometric pressure" to "氣壓",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "氣壓、濕度與溫度。氣壓下降（暴風雨前一天）是研究最多的天氣誘因之一，許多偏頭痛患者總在鋒面通過前 12-24 小時發作。炎熱潮濕的日子與氣溫驟變也有影響。\n\n你可以用這張卡片做規劃：如果預報顯示氣壓大幅下降，就把它當作其他高風險時段來看待：睡好一點、多喝水，並考慮預先緩解。",
@@ -1516,10 +1517,10 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "晚間記錄 — %1\$s／%2\$s",
     "Evening check-in" to "晚間記錄",
     "Evening check-in by voice" to "用語音進行晚間記錄",
-    "Evening check-in reminders" to "晚間記錄提醒",
 )
 
 private fun zhStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "晚間記錄提醒",
     "Every 1-2 months" to "每 1-2 個月",
     "Every Monday\nit *learns* you." to "每週一\n它都會*更了解*你。",
     "Every Monday it *learns.*" to "每週一它都會*學習。*",
@@ -2458,7 +2459,6 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "每月持續時間",
     "Monthly Frequency" to "每月頻率",
     "Monthly migraine days" to "每月偏頭痛天數",
-    "Weekly migraine days" to "每週偏頭痛天數",
     "Mood" to "情緒",
     "Mood change" to "情緒變化",
     "Mood changes" to "情緒變化",
@@ -2950,6 +2950,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "磷",
     "Phosphorus high" to "磷偏高",
     "Phosphorus low" to "磷偏低",
+    "Photo" to "照片",
     "Photograph your meal" to "拍下你的餐點",
     "Physical" to "身體",
     "Physical Health" to "身體健康",
@@ -3019,11 +3020,11 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "後期症狀（%s）",
     "Postdrome (after attack)" to "後期症狀（發作後）",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "這裡的貼文由其他成年人撰寫。為了維持這樣的環境，進入前請先確認你的年齡。",
-    "Posture and deep neck" to "姿勢與頸部深層肌群",
-    "Potassium" to "鉀",
 )
 
 private fun zhStrings2(): Map<String, String> = mapOf(
+    "Posture and deep neck" to "姿勢與頸部深層肌群",
+    "Potassium" to "鉀",
     "Potassium high" to "鉀偏高",
     "Potassium low" to "鉀偏低",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "針對偏頭痛中你能著力的部分，提供實用好物：光線、噪音、睡眠，以及發作本身。每一樣都先陪我們自己度過了難熬的日子。",
@@ -4339,6 +4340,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "根據你的資料提供每週 AI 目標建議與回顧",
     "Weekly Frequency" to "每週次數",
     "Weekly goal review" to "每週目標回顧",
+    "Weekly migraine days" to "每週偏頭痛天數",
     "Weekly review and goal ideas" to "每週回顧與目標建議",
     "Weekly review notifications" to "每週回顧通知",
     "Weight" to "體重",
@@ -4521,12 +4523,12 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Woke up time" to "起床時間",
     "Word-finding trouble" to "找字困難",
     "Words" to "找字",
-    "Work" to "工作",
-    "Work pressure, anxiety, conflict" to "工作壓力、焦慮、衝突",
-    "Work pressure, deadlines" to "工作壓力、截止期限",
 )
 
 private fun zhStrings3(): Map<String, String> = mapOf(
+    "Work" to "工作",
+    "Work pressure, anxiety, conflict" to "工作壓力、焦慮、衝突",
+    "Work pressure, deadlines" to "工作壓力、截止期限",
     "Worked out for you, not answered" to "為你計算而得,非你回答",
     "Working" to "工作",
     "Working from home" to "在家工作",

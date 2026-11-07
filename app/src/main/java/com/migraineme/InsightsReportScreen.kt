@@ -1928,7 +1928,7 @@ private fun DetailMigraineSelector(
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: t("Migraine"), color = Color.White,
+            Text(sel?.label?.let { prettyLabel(it) } ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             if (sel != null) {
                 Text(df.format(sel.start) + " • " + tf.format(sel.start),

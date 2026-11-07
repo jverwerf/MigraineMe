@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5099 entries.
+ * 5102 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -805,6 +805,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "Slecht slapen triggert",
     "Band worn on the calf that delivers TENS-style stimulation." to "Band om de kuit die prikkelt zoals TENS.",
     "Bar / pub" to "Bar / kroeg",
+    "Barcode" to "Barcode",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "Streepjescode %s staat niet in Open Food Facts. Zoek liever op naam.",
     "Barometric pressure" to "Luchtdruk",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "Luchtdruk, vochtigheid en temperatuur. Dalende druk (de dag voor een storm) is een van de best onderzochte weertriggers: veel mensen met migraine krijgen 12-24 uur voor een front een aanval. Warme, vochtige dagen en plotselinge temperatuurwisselingen tellen ook mee.\n\nGebruik deze kaart om te plannen: zie je een scherpe drukdaling in de verwachting, behandel het als elk ander risicovenster: slaap goed, drink genoeg en overweeg alvast verlichting.",
@@ -1516,10 +1517,10 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Avondcheck — %1\$s van %2\$s",
     "Evening check-in" to "Avondcheck",
     "Evening check-in by voice" to "Avondcheck met je stem",
-    "Evening check-in reminders" to "Herinnering avondcheck",
 )
 
 private fun nlStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "Herinnering avondcheck",
     "Every 1-2 months" to "Elke 1-2 maanden",
     "Every Monday\nit *learns* you." to "Elke maandag\n*leert* het jou.",
     "Every Monday it *learns.*" to "Elke maandag *leert* het.",
@@ -2457,7 +2458,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Duur per maand",
     "Monthly Frequency" to "Keer per maand",
     "Monthly migraine days" to "Migrainedagen per maand",
-    "Weekly migraine days" to "Migrainedagen per week",
     "Mood" to "Stemming",
     "Mood change" to "Stemmingswisseling",
     "Mood changes" to "Stemming",
@@ -2949,6 +2949,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "Fosfor",
     "Phosphorus high" to "Fosfor hoog",
     "Phosphorus low" to "Fosfor laag",
+    "Photo" to "Foto",
     "Photograph your meal" to "Fotografeer je maaltijd",
     "Physical" to "Lichaam",
     "Physical Health" to "Lichaam",
@@ -3019,11 +3020,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Postdrome (after attack)" to "Nawee (erna)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "Berichten hier zijn geschreven door andere volwassenen. Bevestig je leeftijd voordat je verder gaat.",
     "Posture and deep neck" to "Houding en diepe nekspieren",
-    "Potassium" to "Kalium",
-    "Potassium high" to "Kalium hoog",
 )
 
 private fun nlStrings2(): Map<String, String> = mapOf(
+    "Potassium" to "Kalium",
+    "Potassium high" to "Kalium hoog",
     "Potassium low" to "Kalium laag",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Praktische spullen voor de kanten van migraine waar je iets aan kunt doen: licht, geluid, slaap en de aanval zelf. Alles is eerst door onze eigen slechte dagen gegaan.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Praktijken bij jou in de buurt. Ze horen niet bij MigraineMe en zien je dagboek niet.",
@@ -4338,6 +4339,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "Wekelijkse AI-doelideeën en overzichten uit je eigen data",
     "Weekly Frequency" to "Keer per week",
     "Weekly goal review" to "Weekoverzicht doelen",
+    "Weekly migraine days" to "Migrainedagen per week",
     "Weekly review and goal ideas" to "Weekoverzicht en doelideeën",
     "Weekly review notifications" to "Meldingen weekoverzicht",
     "Weight" to "Gewicht",
@@ -4521,12 +4523,12 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Word-finding trouble" to "Woordvindproblemen",
     "Words" to "Woorden",
     "Work" to "Werk",
-    "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",
-    "Work pressure, deadlines" to "Werkdruk, deadlines",
-    "Worked out for you, not answered" to "Voor je berekend, niet beantwoord",
 )
 
 private fun nlStrings3(): Map<String, String> = mapOf(
+    "Work pressure, anxiety, conflict" to "Werkdruk, angst, conflict",
+    "Work pressure, deadlines" to "Werkdruk, deadlines",
+    "Worked out for you, not answered" to "Voor je berekend, niet beantwoord",
     "Working" to "Werken",
     "Working from home" to "Thuiswerken",
     "Working well" to "Werkt goed",

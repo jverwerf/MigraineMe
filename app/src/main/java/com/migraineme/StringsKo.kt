@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5100 entries.
+ * 5103 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -805,6 +805,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "수면 부족이 발작을 유발해요",
     "Band worn on the calf that delivers TENS-style stimulation." to "종아리에 착용해 TENS 방식 자극을 주는 밴드예요.",
     "Bar / pub" to "바 / 펍",
+    "Barcode" to "바코드",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "바코드 %s은(는) Open Food Facts 데이터베이스에 없어요. 이름으로 검색해 보세요.",
     "Barometric pressure" to "기압",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "기압, 습도, 기온이에요. 기압 하락(폭풍 전날)은 가장 많이 연구된 날씨 유발 요인 중 하나예요. 편두통이 있는 많은 분이 기압 전선이 지나가기 12~24시간 전에 발작을 겪어요. 덥고 습한 날과 갑작스러운 기온 변화도 영향을 줘요.\n\n이 카드를 계획에 활용해 보세요. 기압이 크게 떨어질 것으로 예보되면 다른 위험 시기와 똑같이 대비하세요. 충분히 자고, 수분을 충분히 섭취하고, 미리 완화 방법을 준비해 두는 것을 고려해 보세요.",
@@ -1516,10 +1517,10 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "저녁 체크인 — %2\$s 중 %1\$s",
     "Evening check-in" to "저녁 체크인",
     "Evening check-in by voice" to "음성으로 저녁 체크인",
-    "Evening check-in reminders" to "저녁 체크인 알림",
 )
 
 private fun koStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "저녁 체크인 알림",
     "Every 1-2 months" to "1~2개월마다",
     "Every Monday\nit *learns* you." to "매주 월요일,\n당신을 *알아가요.*",
     "Every Monday it *learns.*" to "매주 월요일 *배워요.*",
@@ -2458,7 +2459,6 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "월간 지속 시간",
     "Monthly Frequency" to "월간 빈도",
     "Monthly migraine days" to "월간 편두통 일수",
-    "Weekly migraine days" to "주간 편두통 일수",
     "Mood" to "기분",
     "Mood change" to "기분 변화",
     "Mood changes" to "기분 변화",
@@ -2950,6 +2950,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "인",
     "Phosphorus high" to "인 높음",
     "Phosphorus low" to "인 낮음",
+    "Photo" to "사진",
     "Photograph your meal" to "식사 사진 찍기",
     "Physical" to "신체",
     "Physical Health" to "신체 건강",
@@ -3019,11 +3020,11 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Postdrome (%s)" to "후기 증상(%s)",
     "Postdrome (after attack)" to "후기 증상 (발작 후)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "이곳의 글은 다른 성인들이 작성해요. 계속 그렇게 유지하려면 입장 전에 나이를 확인해 주세요.",
-    "Posture and deep neck" to "자세와 깊은 목 근육",
-    "Potassium" to "칼륨",
 )
 
 private fun koStrings2(): Map<String, String> = mapOf(
+    "Posture and deep neck" to "자세와 깊은 목 근육",
+    "Potassium" to "칼륨",
     "Potassium high" to "칼륨 높음",
     "Potassium low" to "칼륨 낮음",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "빛, 소음, 수면, 발작 자체처럼 편두통에서 직접 대처할 수 있는 부분을 위한 실용적인 도구 모음이에요. 모두 저희가 힘든 날에 먼저 직접 써 본 것들이에요.",
@@ -4339,6 +4340,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "내 데이터로 만든 주간 AI 목표 제안과 돌아보기",
     "Weekly Frequency" to "주간 빈도",
     "Weekly goal review" to "주간 목표 점검",
+    "Weekly migraine days" to "주간 편두통 일수",
     "Weekly review and goal ideas" to "주간 점검과 목표 아이디어",
     "Weekly review notifications" to "주간 리뷰 알림",
     "Weight" to "체중",
@@ -4521,12 +4523,12 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Woke up time" to "일어난 시간",
     "Word-finding trouble" to "단어 찾기 어려움",
     "Words" to "단어",
-    "Work" to "업무",
-    "Work pressure, anxiety, conflict" to "업무 압박, 불안, 갈등",
-    "Work pressure, deadlines" to "업무 압박, 마감",
 )
 
 private fun koStrings3(): Map<String, String> = mapOf(
+    "Work" to "업무",
+    "Work pressure, anxiety, conflict" to "업무 압박, 불안, 갈등",
+    "Work pressure, deadlines" to "업무 압박, 마감",
     "Worked out for you, not answered" to "직접 답한 게 아니라 계산한 결과",
     "Working" to "업무",
     "Working from home" to "재택근무",

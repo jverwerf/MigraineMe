@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5099 entries.
+ * 5102 entries.
  */
 internal val IT_STRINGS: Map<String, String> =
     itStrings0() + itStrings1() + itStrings2() + itStrings3()
@@ -805,6 +805,7 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Bad sleep sets one off" to "Dormire male la scatena",
     "Band worn on the calf that delivers TENS-style stimulation." to "Fascia da mettere sul polpaccio che dà una stimolazione tipo TENS.",
     "Bar / pub" to "Bar / pub",
+    "Barcode" to "Codice a barre",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "Il codice %s non è in Open Food Facts. Prova a cercarlo per nome.",
     "Barometric pressure" to "Pressione aria",
     "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief." to "Pressione, umidità e temperatura. La pressione che scende (il giorno prima di un temporale) è uno dei fattori meteo più studiati: molte persone con emicrania hanno l'attacco 12-24 h prima del passaggio di un fronte. Contano anche le giornate calde e umide e gli sbalzi improvvisi di temperatura.\n\nUsa questa scheda per pianificare: se vedi un forte calo di pressione in arrivo, trattalo come ogni finestra ad alto rischio: dormi bene, bevi e valuta un sollievo preventivo.",
@@ -1516,10 +1517,10 @@ private fun itStrings0(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Check serale — %1\$s di %2\$s",
     "Evening check-in" to "Punto serale",
     "Evening check-in by voice" to "Punto serale a voce",
-    "Evening check-in reminders" to "Promemoria del punto serale",
 )
 
 private fun itStrings1(): Map<String, String> = mapOf(
+    "Evening check-in reminders" to "Promemoria del punto serale",
     "Every 1-2 months" to "Ogni 1-2 mesi",
     "Every Monday\nit *learns* you." to "Ogni lunedì\nti *impara.*",
     "Every Monday it *learns.*" to "Ogni lunedì *impara.*",
@@ -2457,7 +2458,6 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Monthly Duration" to "Durata al mese",
     "Monthly Frequency" to "Volte al mese",
     "Monthly migraine days" to "Giorni con emicrania al mese",
-    "Weekly migraine days" to "Giorni di emicrania a settimana",
     "Mood" to "Umore",
     "Mood change" to "Cambio d'umore",
     "Mood changes" to "Umore vario",
@@ -2949,6 +2949,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Phosphorus" to "Fosforo",
     "Phosphorus high" to "Fosforo alto",
     "Phosphorus low" to "Fosforo basso",
+    "Photo" to "Foto",
     "Photograph your meal" to "Fotografa il pasto",
     "Physical" to "Corpo",
     "Physical Health" to "Corpo",
@@ -3019,11 +3020,11 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Postdrome (after attack)" to "Postdromo (dopo)",
     "Posts here are written by other adults. To keep it that way, please confirm your age before you go in." to "I post qui sono scritti da altri adulti. Per mantenerlo così, conferma la tua età prima di entrare.",
     "Posture and deep neck" to "Postura e collo profondo",
-    "Potassium" to "Potassio",
-    "Potassium high" to "Potassio alto",
 )
 
 private fun itStrings2(): Map<String, String> = mapOf(
+    "Potassium" to "Potassio",
+    "Potassium high" to "Potassio alto",
     "Potassium low" to "Potassio basso",
     "Practical kit for the parts of migraine you can do something about: light, noise, sleep and the attack itself. Every one of them has been through our own bad days first." to "Materiale pratico per gli aspetti dell'emicrania su cui si può agire: luce, rumore, sonno e l'attacco stesso. Ognuno è passato prima dalle nostre giornate storte.",
     "Practices we found near you. Not part of MigraineMe, and they cannot see your diary." to "Studi vicino a te. Non fanno parte di MigraineMe e non vedono il tuo diario.",
@@ -4338,6 +4339,7 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Weekly AI goal suggestions and reviews from your own data" to "Obiettivi suggeriti dall'IA e revisioni dai tuoi dati",
     "Weekly Frequency" to "Volte a settimana",
     "Weekly goal review" to "Revisione obiettivi",
+    "Weekly migraine days" to "Giorni emicrania/sett.",
     "Weekly review and goal ideas" to "Revisione settimanale e idee",
     "Weekly review notifications" to "Notifiche revisione settimanale",
     "Weight" to "Peso",
@@ -4521,12 +4523,12 @@ private fun itStrings2(): Map<String, String> = mapOf(
     "Word-finding trouble" to "Difficoltà a trovare le parole",
     "Words" to "Parole",
     "Work" to "Lavoro",
-    "Work pressure, anxiety, conflict" to "Pressione al lavoro, ansia, conflitti",
-    "Work pressure, deadlines" to "Pressione e scadenze",
-    "Worked out for you, not answered" to "Calcolato per te, non risposto",
 )
 
 private fun itStrings3(): Map<String, String> = mapOf(
+    "Work pressure, anxiety, conflict" to "Pressione al lavoro, ansia, conflitti",
+    "Work pressure, deadlines" to "Pressione e scadenze",
+    "Worked out for you, not answered" to "Calcolato per te, non risposto",
     "Working" to "Lavorare",
     "Working from home" to "Lavoro da casa",
     "Working well" to "Funziona bene",
