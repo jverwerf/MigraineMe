@@ -13,6 +13,8 @@
 //   respond   accept or decline what the client suggested
 //   cancel    withdraw a suggestion, or cancel an accepted session
 //   pending   the client's suggestions waiting on this practitioner, all clients
+//   calendar  every suggested or confirmed time in a range, so the calendar works
+//             without any practice software
 // Client actions, always the caller's own rows:
 //   mine            requests and sessions across their practitioners
 //   client_suggest  suggest a time to a linked practitioner
@@ -360,6 +362,12 @@ serve(async (req) => {
       if (!l || l.status !== "active") throw new UserError("That client is not connected to you.", 403);
       return l as { id: string; user_id: string; practitioner_id: string };
     };
+    const linksByPair = async (ids: string[]) => {
+      const { data } = await db.from("practitioner_clients").select("id,practitioner_id,user_id,status").in("practitioner_id", ids).eq("status", "active");
+      const out: Record<string, string> = {};
+      for (const l of data || []) out[l.practitioner_id + "|" + l.user_id] = l.id;
+      return out;
+    };
     const mineRow = async () => {
       const { data } = await db.from("practitioner_appointment_requests").select(COLS).eq("id", String(body.id || "")).in("practitioner_id", myIds).limit(1);
       if (!data?.[0]) throw new UserError("That request was not found.", 404);
@@ -429,9 +437,30 @@ serve(async (req) => {
         return json({ request: done });
       }
       case "pending": {
-        const { data: rows } = await db.from("practitioner_appointment_requests").select("id,practitioner_id,user_id,proposed_start,kind,proposed_by").in("practitioner_id", myIds).eq("status", "requested").eq("proposed_by", "client");
+        const { data: rows } = await db.from("practitioner_appointment_requests").select("id,practitioner_id,user_id,status,proposed_start,kind,proposed_by").in("practitioner_id", myIds).eq("status", "requested").eq("proposed_by", "client");
         await expireOld((rows || []) as any[]);
-        return json({ requests: (rows || []).filter((r: any) => r.status !== "expired") });
+        const open = (rows || []).filter((r: any) => r.status !== "expired");
+        const linkOf = await linksByPair(myIds);
+        return json({ requests: open.map((r: any) => ({ ...r, link_id: linkOf[r.practitioner_id + "|" + r.user_id] || null })) });
+      }
+      case "calendar": {
+        const fromD = new Date(String(body.from || "")), toD = new Date(String(body.to || ""));
+        if (isNaN(fromD.getTime()) || isNaN(toD.getTime())) throw new UserError("Pick a date range.");
+        if (toD.getTime() - fromD.getTime() > 50 * DAY_MS) throw new UserError("That range is too long.");
+        const { data: rows } = await db.from("practitioner_appointment_requests").select(COLS).in("practitioner_id", myIds).in("status", ["requested", "accepted"]);
+        await expireOld((rows || []) as any[]);
+        const linkOf = await linksByPair(myIds);
+        const out = (rows || []).filter((r: any) => r.status !== "expired").map((r: any) => {
+          const at = r.status === "accepted" ? r.scheduled_for : r.proposed_start;
+          if (!at) return null;
+          const t = Date.parse(at);
+          if (t < fromD.getTime() || t >= toD.getTime()) return null;
+          return {
+            request_id: r.id, starts_at: at, ends_at: r.proposed_end || new Date(t + 30 * 60000).toISOString(), status: r.status,
+            proposed_by: r.proposed_by, message: r.message, external_id: r.external_id, link_id: linkOf[r.practitioner_id + "|" + r.user_id] || null,
+          };
+        }).filter(Boolean);
+        return json({ appointments: out });
       }
     }
     throw new UserError("Unknown action");
