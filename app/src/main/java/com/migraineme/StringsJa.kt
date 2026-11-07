@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5110 entries.
+ * 5129 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -89,6 +89,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "緩和 %1\$s(%3\$sを使った発作%2\$s回)、使わなかった場合は%4\$s(%5\$s回)",
     "%1\$s relief%2\$s added" to "緩和を%1\$s件追加しました",
     "%1\$s starts at" to "%1\$sの開始:",
+    "%1\$s suggested %2\$s" to "%1\$sさんが%2\$sを提案しました",
     "%1\$s suggested changes to your profile. Tap to review." to "%1\$s件のプロフィール変更の提案があります。タップして確認してください。",
     "%1\$s symptom%2\$s selected" to "症状を%1\$s件選択中",
     "%1\$s things" to "%1\$s件",
@@ -687,6 +688,9 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "設定を適用",
     "Applying configuration..." to "設定を適用しています...",
     "Applying..." to "適用中...",
+    "Appointment cancelled" to "予約がキャンセルされました",
+    "Appointment confirmed" to "予約が確定しました",
+    "Appointment time declined" to "提案した日時は辞退されました",
     "Appointments" to "予約",
     "Are specific drinks worse?" to "特に悪い飲み物はありますか?",
     "Are you sensitive to any of these?" to "次のうち、敏感なものはありますか?",
@@ -714,6 +718,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "神経調節デバイスの使用を記録した2時間後に、その様子を尋ねます",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "ふだんの言葉で聞けます。天気は関係したか、前回は何が効いたかなど。答えはあなた自身の記録をもとにします。",
     "Ask questions about your health data" to "健康データについて質問できます",
+    "Asked for an appointment" to "予約を依頼しました",
     "Aspartame" to "アスパルテーム",
     "Aspartame exposure" to "アスパルテームの摂取",
     "Aspartame exposure high" to "アスパルテームの摂取が多い",
@@ -1265,6 +1270,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "減衰曲線",
     "Decay weights saved" to "減衰の重みを保存しました",
     "Decay: %1\$s" to "減衰: %1\$s",
+    "Decline" to "辞退する",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "深い %1\$s · レム %2\$s · 浅い %3\$s",
     "Deep Sleep" to "深い睡眠",
     "Deep breathing" to "深呼吸",
@@ -1511,15 +1517,15 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "失敗:%1\$s",
     "Established patterns that also appeared in the attacks in this report." to "このレポートの発作にも見られた、確立されたパターンです。",
     "Estimate" to "推定",
+)
+
+private fun jaStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "多幸感",
     "Evaluating your triggers..." to "誘因を評価しています...",
     "Even a one-line reply genuinely helps shape what we build next." to "一行だけの返信でも、今後の開発の参考に本当に役立ちます。",
     "Evening" to "夕方",
     "Evening Check-in" to "夕方の記録",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "夕方の記録の通知は、システム設定でオフになっています。スイッチをタップすると設定を開きます。",
-)
-
-private fun jaStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "夕方の記録 — %1\$s/%2\$s",
     "Evening check-in" to "夕方の記録",
     "Evening check-in by voice" to "音声で夕方の記録",
@@ -2542,6 +2548,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "New / recent" to "新しい・最近",
     "New Discussion" to "新しい話題",
     "New Insights" to "新着インサイト",
+    "New appointment time" to "新しい予約の日時",
     "New articles matching your triggers" to "誘因に関する新着記事",
     "New discussion" to "新しい話題",
     "New goal" to "新しい目標",
@@ -2968,9 +2975,11 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "身体活動とホルモンの誘因",
     "Physical health tracking is disabled" to "身体の記録はオフになっています",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "モニターカードのリスクスコアの下に表示する指標を3つ選んでください。各カテゴリで設定したお気に入りから選べます。",
+    "Pick a date" to "日付を選ぶ",
     "Pick a medicine or category to chart" to "グラフにする薬または分類を選択",
     "Pick a metric" to "指標を選択",
     "Pick a metric first." to "先に指標を選択",
+    "Pick a time" to "時刻を選ぶ",
     "Pick an exercise" to "運動を選択",
     "Pick an export file" to "書き出しファイルを選択",
     "Pick an icon" to "アイコンを選択",
@@ -3011,6 +3020,9 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Pollen high" to "花粉が多い",
     "Pollen or hay fever season" to "花粉または花粉症の季節",
     "Polyunsaturated fat" to "多価不飽和脂肪酸",
+)
+
+private fun jaStrings2(): Map<String, String> = mapOf(
     "Pool" to "一覧",
     "Poor" to "悪い",
     "Poor deep sleep" to "深い睡眠が少ない",
@@ -3020,9 +3032,6 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "「項目の管理」を開いて、自分に関係のないものをオフにしましょう(影響のないカフェインや、一度も経験しない標準の症状など)。不要な項目が減るほど、ゲージはより正確で確かなものになります。",
     "Population default decay curve." to "母集団の標準的な減衰曲線です。",
     "Population default thresholds for {0} active triggers." to "有効な誘因{0}件の、母集団の標準しきい値です。",
-)
-
-private fun jaStrings2(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "母集団の標準設定です。調整に使える回答がなかったため、リスクゲージと減衰曲線は、一般的な片頭痛のある一般的な人向けに設定されています。記録を続けると、あなたに合わせて調整されます。",
     "Portion" to "分量",
     "Portion is a guess" to "量は推定です",
@@ -3394,6 +3403,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "片頭痛に関わる神経へ、弱い電気または磁気の信号を送ります。",
     "Send link" to "リンクを送信",
     "Send request" to "リクエスト送信",
+    "Send suggestion" to "提案を送信",
     "Sending…" to "送信中…",
     "Sensitivity" to "敏感さ",
     "Sensitivity to light" to "光に敏感",
@@ -3700,6 +3710,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Sugar" to "糖分",
     "Sugar high" to "糖分が多い",
     "Sugar low" to "糖分が少ない",
+    "Suggest a time" to "日時を提案",
     "Suggested" to "おすすめ",
     "Suggested for you" to "おすすめ",
     "Suggested · same name" to "候補 · 同じ名前",
@@ -4162,6 +4173,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "回復が普段より低い",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "片頭痛のある女性の最大60%が、月経周期に関連した発作を報告しています。特にエストロゲンが急に低下する、出血の2日前から出血後3日目までに多く見られます。\n\n最後の月経日と周期の長さを設定すると、MigraineMeが今後の該当期間をすべて推定します。\n\nこの予測は「menstruation_predicted」という要素としてリスクスコアに直接反映されます。予測日の前後に対称な重みが付くため、ゲージには予想されるリスクの高い期間が表示されます。\n\nモニターの月経カードには、次の月経の予測日、あと何日か、周期の長さが表示されます。",
     "Up to a week" to "最長1週間",
+    "Upcoming" to "今後の予約",
     "Update %s — everything here is added to it" to "%sを更新します — ここでの内容はすべて追加されます",
     "Update Log" to "記録を更新",
     "Update password" to "パスワードを変更",
@@ -4263,6 +4275,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOPは心拍数を共有しないため、この目標は自動で入力されません。Garmin、Oura、Polar、Health Connectのいずれかを接続してください。",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "WHOOP連携は現在、招待制です。アクセスをリクエストしていただければ、お客様のアカウントで有効にします。",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP、Oura、Polar、Garmin",
+    "Waiting for an answer" to "返信待ち",
     "Wake Time" to "起床時刻",
     "Wake time" to "起床時刻",
     "Wake time early" to "早く目が覚めた",
@@ -4510,6 +4523,9 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Wind Speed (m/s)" to "風速（m/s）",
     "Wind speed" to "風速",
     "Wind speed high" to "風が強い",
+)
+
+private fun jaStrings3(): Map<String, String> = mapOf(
     "Wind speed low" to "風が弱い",
     "Window around migraine" to "片頭痛の前後の期間",
     "Windy or gusty conditions" to "風が強い、または突風のある天気",
@@ -4517,15 +4533,13 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Wine, dried fruit" to "ワイン、ドライフルーツ",
     "Winter" to "冬",
     "With %1\$s: %2\$s · Without: %3\$s" to "%1\$sあり: %2\$s · なし: %3\$s",
+    "Withdraw" to "取り下げる",
     "Within %s" to "%s以内",
     "Within 2-3 days" to "2~3日以内",
     "Within hours" to "数時間以内",
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "いつもの範囲内：14日間の平均から標準偏差2つ分以内です。",
     "Within {0}" to "{0}以内",
     "Without a subscription, imported data only goes into your journal." to "購読していない場合、取り込んだデータは日記にのみ保存されます。",
-)
-
-private fun jaStrings3(): Map<String, String> = mapOf(
     "Without aura" to "前兆なし",
     "Woke Up" to "起床",
     "Woke up" to "起床",
@@ -4601,6 +4615,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "緩和を%1\$sと評価（%2\$s）",
     "You said" to "あなたの回答",
     "You skipped this" to "スキップしました",
+    "You suggested %1\$s" to "%1\$sを提案しました",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "始めてからの平均で、片頭痛の日数は月%1\$s日から%2\$s日になりました。",
     "You'll be taken to Settings where you can grant this permission." to "設定画面に移動します。そこでこの権限を許可できます。",
     "You'll need to sign in again to access your migraine data." to "片頭痛のデータを見るには、もう一度ログインが必要です。",
@@ -4673,6 +4688,10 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "睡眠、HRV、安静時心拍数、ストレス、歩数、天気、発作、誘因、予兆、薬、緩和、前兆の詳細など、あなたの健康データを読み取れる専用のAIアシスタントです。ふだんの言葉で何でも質問してください。一般的なアドバイスではなく、あなたのデータから実際に読み取れることをもとに答えます。\n\n治療や薬について気になることも、ここで質問できます。データを確認して、考えるヒントをお伝えします。\n\nおすすめの質問例：「前回の片頭痛の誘因は何でしたか？」「最近の睡眠はどうですか？」「発作時に使う薬は本当に効いていますか？」「前兆はたいていどこに現れますか？」「医師に相談したほうがよい予防的な治療はありますか？」\n\nご注意：アシスタントはパターンを見つけ、考えるヒントを提案できますが、医師ではないため処方はできません。治療についての判断は、神経内科の医師やかかりつけ医にご相談ください。",
     "Your personalised model" to "あなた専用のモデル",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "あなたの投稿はモデレーションシステムにより報告され、現在確認中です。誤りだった場合は、まもなく元に戻ります。",
+    "Your practitioner accepted the time you suggested." to "担当の専門家があなたの提案した日時を承諾しました。",
+    "Your practitioner cancelled this appointment." to "担当の専門家がこの予約をキャンセルしました。",
+    "Your practitioner could not do that time. You can suggest another." to "担当の専門家はその日時の都合がつきません。別の日時を提案できます。",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "担当の専門家が日時を提案しました。アプリを開いて承諾または辞退してください。",
     "Your predicted period date gets a single trigger. The risk curve controls " to "予測した生理日には誘因が1つ付きます。リスク曲線が決めるのは",
     "Your profile has learned something new" to "プロフィールに新しい学習結果があります",
     "Your recalibration" to "あなたの再調整",

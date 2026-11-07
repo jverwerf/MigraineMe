@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5109 entries.
+ * 5128 entries.
  */
 internal val FR_STRINGS: Map<String, String> =
     frStrings0() + frStrings1() + frStrings2() + frStrings3()
@@ -89,6 +89,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "%1\$s de soulagement sur %2\$s crises avec %3\$s, contre %4\$s sur %5\$s sans",
     "%1\$s relief%2\$s added" to "%1\$s soulagement%2\$s",
     "%1\$s starts at" to "%1\$s commence à",
+    "%1\$s suggested %2\$s" to "%1\$s propose %2\$s",
     "%1\$s suggested changes to your profile. Tap to review." to "%1\$s changements suggérés pour ton profil. Appuie pour les consulter.",
     "%1\$s symptom%2\$s selected" to "%1\$s symptôme%2\$s choisi%2\$s",
     "%1\$s things" to "%1\$s points",
@@ -687,6 +688,9 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "Appliquer",
     "Applying configuration..." to "Application des réglages...",
     "Applying..." to "Application...",
+    "Appointment cancelled" to "Rendez-vous annulé",
+    "Appointment confirmed" to "Rendez-vous confirmé",
+    "Appointment time declined" to "Horaire refusé",
     "Appointments" to "Rendez-vous",
     "Are specific drinks worse?" to "Certaines boissons sont pires ?",
     "Are you sensitive to any of these?" to "Es-tu sensible à l'un d'eux ?",
@@ -714,6 +718,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Demande 2 h après la saisie comment la séance s'est passée",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Demande simplement : la météo a-t-elle joué, qu'est-ce qui a aidé la dernière fois. Il répond à partir de tes propres entrées.",
     "Ask questions about your health data" to "Pose des questions sur tes données",
+    "Asked for an appointment" to "Rendez-vous demandé",
     "Aspartame" to "Aspartame",
     "Aspartame exposure" to "Exposition à l'aspartame",
     "Aspartame exposure high" to "Beaucoup d'aspartame",
@@ -1265,6 +1270,7 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "Courbes",
     "Decay weights saved" to "Poids enregistrés",
     "Decay: %1\$s" to "Courbe : %1\$s",
+    "Decline" to "Refuser",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "Profond %1\$s · REM %2\$s · Léger %3\$s",
     "Deep Sleep" to "Sommeil lent",
     "Deep breathing" to "Respiration profonde",
@@ -1511,15 +1517,15 @@ private fun frStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Erreur : %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Schémas établis qui apparaissent aussi dans les crises de ce rapport.",
     "Estimate" to "Estimation",
+)
+
+private fun frStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "Euphorie",
     "Evaluating your triggers..." to "Évaluation de tes facteurs...",
     "Even a one-line reply genuinely helps shape what we build next." to "Même une réponse d'une ligne aide vraiment à décider ce qu'on construit ensuite.",
     "Evening" to "Soir",
     "Evening Check-in" to "Bilan du soir",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Les alertes du point du soir sont désactivées dans le système. Touche pour ouvrir les réglages.",
-)
-
-private fun frStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Bilan du soir — %1\$s sur %2\$s",
     "Evening check-in" to "Point du soir",
     "Evening check-in by voice" to "Point du soir à la voix",
@@ -2541,6 +2547,7 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "New / recent" to "Nouveau/récent",
     "New Discussion" to "Discussion",
     "New Insights" to "Analyses",
+    "New appointment time" to "Nouvel horaire de rendez-vous",
     "New articles matching your triggers" to "Nouveaux articles liés à tes facteurs",
     "New discussion" to "Discussion",
     "New goal" to "Nouvel objectif",
@@ -2967,9 +2974,11 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Facteurs physiques et hormonaux",
     "Physical health tracking is disabled" to "Le corps est désactivé",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Choisis 3 mesures sous le risque sur ta carte Moniteur. Elles viennent de tes favoris par catégorie.",
+    "Pick a date" to "Choisir une date",
     "Pick a medicine or category to chart" to "Choisis un médicament ou une catégorie",
     "Pick a metric" to "Choix de mesure",
     "Pick a metric first." to "D'abord une mesure.",
+    "Pick a time" to "Choisir une heure",
     "Pick an exercise" to "Choisis un exercice",
     "Pick an export file" to "Choisir un fichier",
     "Pick an icon" to "Choisir l'icône",
@@ -3011,6 +3020,9 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Pollen or hay fever season" to "Pollen ou saison du rhume des foins",
     "Polyunsaturated fat" to "Graisses poly-insat.",
     "Pool" to "Liste",
+)
+
+private fun frStrings2(): Map<String, String> = mapOf(
     "Poor" to "Mauvais",
     "Poor deep sleep" to "Peu de profond",
     "Poor recovery score from your wearable" to "Mauvais score de récupération de ta montre",
@@ -3020,9 +3032,6 @@ private fun frStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Courbe par défaut (population).",
     "Population default thresholds for {0} active triggers." to "Seuils par défaut (population) pour {0} facteurs actifs.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Réglages de population. Sans réponses pour calibrer, ta jauge de risque et ses courbes sont réglées pour une personne ordinaire avec des migraines ordinaires. Elles s'ajustent à toi au fil de tes notes.",
-)
-
-private fun frStrings2(): Map<String, String> = mapOf(
     "Portion" to "Portion",
     "Portion is a guess" to "Portion estimée",
     "Post" to "Publier",
@@ -3393,6 +3402,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "Envoient un petit signal électrique ou magnétique à un nerf impliqué dans la migraine.",
     "Send link" to "Envoyer",
     "Send request" to "Envoyer",
+    "Send suggestion" to "Envoyer la proposition",
     "Sending…" to "Envoi…",
     "Sensitivity" to "Sensibilité",
     "Sensitivity to light" to "Sensible à la lumière",
@@ -3699,6 +3709,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Sugar" to "Sucres",
     "Sugar high" to "Sucre élevé",
     "Sugar low" to "Sucre faible",
+    "Suggest a time" to "Proposer un horaire",
     "Suggested" to "Suggéré",
     "Suggested for you" to "Suggérés pour toi",
     "Suggested · same name" to "Suggéré · même nom",
@@ -4161,6 +4172,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "Récupération très basse",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "Jusqu'à 60 % des femmes migraineuses rapportent des crises liées au cycle, surtout dans les 2 jours avant et les 3 premiers jours des règles, quand l'œstrogène chute brutalement.\n\nIndique la date de tes dernières règles et la longueur de ton cycle : MigraineMe estime chaque fenêtre à venir.\n\nLa prédiction entre directement dans ton score comme facteur « menstruation_predicted », avec un poids symétrique autour de la date prévue, pour que la jauge reflète cette fenêtre plus à risque.\n\nLa carte Menstruation dans Monitor affiche tes prochaines règles prévues, les jours restants et la longueur du cycle.",
     "Up to a week" to "Jusqu'à 1 sem.",
+    "Upcoming" to "À venir",
     "Update %s — everything here is added to it" to "Mettre à jour %s — tout ceci s'y ajoute",
     "Update Log" to "Mettre à jour",
     "Update password" to "Nouveau mot passe",
@@ -4262,6 +4274,7 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP ne partage pas le pouls, donc cet objectif ne peut pas se remplir seul. Connecte Garmin, Oura, Polar ou Health Connect.",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "L'intégration WHOOP est sur invitation. Demande l'accès et on l'activera sur ton compte.",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
+    "Waiting for an answer" to "En attente de réponse",
     "Wake Time" to "Réveil",
     "Wake time" to "Réveil",
     "Wake time early" to "Réveil tôt",
@@ -4510,12 +4523,16 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Wind speed" to "Vitesse du vent",
     "Wind speed high" to "Vent fort",
     "Wind speed low" to "Vent faible",
+)
+
+private fun frStrings3(): Map<String, String> = mapOf(
     "Window around migraine" to "Fenêtre autour de la crise",
     "Windy or gusty conditions" to "Vent ou rafales",
     "Wine, beer, spirits" to "Vin, bière, spiritueux",
     "Wine, dried fruit" to "Vin, fruits secs",
     "Winter" to "Hiver",
     "With %1\$s: %2\$s · Without: %3\$s" to "Avec %1\$s : %2\$s · Sans : %3\$s",
+    "Withdraw" to "Retirer",
     "Within %s" to "Sous %s",
     "Within 2-3 days" to "Sous 2-3 jours",
     "Within hours" to "En heures",
@@ -4523,9 +4540,6 @@ private fun frStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Sous {0}",
     "Without a subscription, imported data only goes into your journal." to "Sans abonnement, les données importées vont seulement dans votre journal.",
     "Without aura" to "Sans aura",
-)
-
-private fun frStrings3(): Map<String, String> = mapOf(
     "Woke Up" to "Réveil",
     "Woke up" to "Réveil",
     "Woke up time" to "Heure de réveil",
@@ -4600,6 +4614,7 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "Soulagement noté %1\$s, sur %2\$s",
     "You said" to "Tu as dit",
     "You skipped this" to "Passé",
+    "You suggested %1\$s" to "Tu as proposé %1\$s",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "Tu es passé de %1\$s à %2\$s jours de migraine par mois, en moyenne depuis le début.",
     "You'll be taken to Settings where you can grant this permission." to "Tu seras emmené dans Réglages pour accorder cette permission.",
     "You'll need to sign in again to access your migraine data." to "Tu devras te reconnecter pour retrouver tes données.",
@@ -4672,6 +4687,10 @@ private fun frStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Ton assistant IA personnel, avec accès en lecture à tes données de santé : sommeil, HRV, pouls au repos, stress, pas, météo, crises, facteurs, prodromes, médicaments, soulagements et détail de l'aura. Pose-lui n'importe quoi avec tes mots ; il répond à partir de ce qu'il voit vraiment dans tes données, pas avec des conseils tout faits.\n\nUne question sur un traitement ou un médicament ? Tu peux la poser ici aussi. Nous regardons tes données et te donnons de quoi réfléchir.\n\nDe bonnes questions à essayer : \"Qu'est-ce qui a déclenché ma dernière migraine ?\", \"Comment j'ai dormi ces derniers temps ?\", \"Mon traitement de crise marche-t-il vraiment ?\", \"Où mon aura apparaît-elle d'habitude ?\", \"Y a-t-il des traitements de fond à demander ?\"\n\nÀ savoir : l'assistant repère des tendances et propose des pistes, mais ce n'est pas un médecin et il ne peut rien prescrire. Pour les vraies décisions de traitement, parle à ton neurologue ou à ton médecin traitant.",
     "Your personalised model" to "Ton modèle perso",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Notre modération a signalé ton message et l'examine. Si c'est une erreur, il reviendra vite.",
+    "Your practitioner accepted the time you suggested." to "Ton praticien a accepté l'horaire que tu as proposé.",
+    "Your practitioner cancelled this appointment." to "Ton praticien a annulé ce rendez-vous.",
+    "Your practitioner could not do that time. You can suggest another." to "Ton praticien n'est pas disponible à cet horaire. Tu peux en proposer un autre.",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "Ton praticien a proposé un horaire. Ouvre l'app pour accepter ou refuser.",
     "Your predicted period date gets a single trigger. The risk curve controls " to "Ton jour de règles prévu reçoit un seul facteur. La courbe règle ",
     "Your profile has learned something new" to "Ton profil a appris du nouveau",
     "Your recalibration" to "Ton recalibrage",

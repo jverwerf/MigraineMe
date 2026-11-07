@@ -258,6 +258,7 @@ fun PractitionerPanel(
                         onChange = { editing = link },
                         onRevoke = { confirmRevoke = link },
                         aiAllowed = aiOverride[link.id] ?: link.ai_summary_allowed,
+                        token = { authVm.getValidAccessToken(context) },
                         onAiChange = { on ->
                             aiOverride[link.id] = on
                             scope.launch {
@@ -452,6 +453,7 @@ private fun ActiveCard(
     onRevoke: () -> Unit,
     aiAllowed: Boolean = link.ai_summary_allowed,
     onAiChange: (Boolean) -> Unit = {},
+    token: suspend () -> String? = { null },
 ) {
     val p = link.practitioners
     val name = p?.display_name ?: t("Practitioner")
@@ -524,6 +526,8 @@ private fun ActiveCard(
                 }
                 Switch(checked = aiAllowed, onCheckedChange = onAiChange)
             }
+
+            PractitionerAppointments(practitionerId = link.practitioner_id, practitionerName = name, token = token)
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onChange, modifier = Modifier.weight(1f)) { Text(t("Change")) }

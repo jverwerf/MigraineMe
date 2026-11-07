@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5110 entries.
+ * 5129 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -89,6 +89,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "使用%3\$s的 %2\$s 次發作緩解 %1\$s，未使用的 %5\$s 次為 %4\$s",
     "%1\$s relief%2\$s added" to "已新增 %1\$s 項緩解方式%2\$s",
     "%1\$s starts at" to "%1\$s 開始時間",
+    "%1\$s suggested %2\$s" to "%1\$s 建議 %2\$s",
     "%1\$s suggested changes to your profile. Tap to review." to "有 %1\$s 項個人資料變更建議，點一下查看。",
     "%1\$s symptom%2\$s selected" to "已選 %1\$s 項症狀%2\$s",
     "%1\$s things" to "%1\$s 項",
@@ -687,6 +688,9 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "套用設定",
     "Applying configuration..." to "正在套用設定...",
     "Applying..." to "套用中...",
+    "Appointment cancelled" to "預約已取消",
+    "Appointment confirmed" to "預約已確認",
+    "Appointment time declined" to "建議的時間已被婉拒",
     "Appointments" to "預約",
     "Are specific drinks worse?" to "特定飲料會更糟嗎?",
     "Are you sensitive to any of these?" to "你對下列任何一項會敏感嗎?",
@@ -714,6 +718,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "記錄神經調節裝置療程 2 小時後,詢問療程進行得如何",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "直接用白話問:天氣是不是誘因、上次什麼有幫助。答案來自你自己的紀錄。",
     "Ask questions about your health data" to "詢問關於你健康資料的問題",
+    "Asked for an appointment" to "已提出預約",
     "Aspartame" to "阿斯巴甜",
     "Aspartame exposure" to "阿斯巴甜攝取",
     "Aspartame exposure high" to "阿斯巴甜攝取量高",
@@ -1265,6 +1270,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "衰減曲線",
     "Decay weights saved" to "衰減權重已儲存",
     "Decay: %1\$s" to "衰減：%1\$s",
+    "Decline" to "婉拒",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "深層 %1\$s · REM %2\$s · 淺層 %3\$s",
     "Deep Sleep" to "深層睡眠",
     "Deep breathing" to "深呼吸",
@@ -1511,15 +1517,15 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "錯誤:%1\$s",
     "Established patterns that also appeared in the attacks in this report." to "同時也出現在本報告各次發作中的既有規律。",
     "Estimate" to "估計值",
+)
+
+private fun zhStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "欣快感",
     "Evaluating your triggers..." to "正在評估你的誘因⋯⋯",
     "Even a one-line reply genuinely helps shape what we build next." to "哪怕只回覆一行，也能真正幫助我們決定接下來要做什麼。",
     "Evening" to "晚上",
     "Evening Check-in" to "晚間記錄",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "系統設定中已關閉晚間記錄通知。點一下開關即可開啟設定。",
-)
-
-private fun zhStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "晚間記錄 — %1\$s／%2\$s",
     "Evening check-in" to "晚間記錄",
     "Evening check-in by voice" to "用語音進行晚間記錄",
@@ -2542,6 +2548,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "New / recent" to "新 / 近期",
     "New Discussion" to "新增討論",
     "New Insights" to "新洞察",
+    "New appointment time" to "新的預約時間",
     "New articles matching your triggers" to "符合你誘因的新文章",
     "New discussion" to "新增討論",
     "New goal" to "新目標",
@@ -2968,9 +2975,11 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "身體活動與荷爾蒙誘因",
     "Physical health tracking is disabled" to "身體健康追蹤已停用",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "選擇 3 項指標,顯示在監測卡片的風險分數下方。這些指標來自你在各類別中設定的最愛項目。",
+    "Pick a date" to "選擇日期",
     "Pick a medicine or category to chart" to "選擇要繪製圖表的藥物或類別",
     "Pick a metric" to "選擇指標",
     "Pick a metric first." to "請先選擇指標。",
+    "Pick a time" to "選擇時間",
     "Pick an exercise" to "選擇練習",
     "Pick an export file" to "選擇匯出檔案",
     "Pick an icon" to "選擇圖示",
@@ -3011,6 +3020,9 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Pollen high" to "花粉偏高",
     "Pollen or hay fever season" to "花粉或花粉症季節",
     "Polyunsaturated fat" to "多元不飽和脂肪",
+)
+
+private fun zhStrings2(): Map<String, String> = mapOf(
     "Pool" to "清單",
     "Poor" to "差",
     "Poor deep sleep" to "深層睡眠不足",
@@ -3020,9 +3032,6 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "到「管理項目」看看,把對你來說沒用的項目關掉(例如不受影響的咖啡因,或你從未出現過的預設症狀)。雜訊越少,指標就越準確、越貼近真實。",
     "Population default decay curve." to "族群預設衰減曲線。",
     "Population default thresholds for {0} active triggers." to "{0} 個啟用中誘因的族群預設閾值。",
-)
-
-private fun zhStrings2(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "預設為一般族群數值。目前沒有可用來校準的回答,所以你的風險指標與其衰減曲線,是依一般偏頭痛患者來設定的。隨著你持續記錄,它們會逐漸調整成適合你。",
     "Portion" to "份量",
     "Portion is a guess" to "份量為估計值",
@@ -3394,6 +3403,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "對與偏頭痛有關的神經發送微弱的電或磁訊號。",
     "Send link" to "傳送連結",
     "Send request" to "傳送請求",
+    "Send suggestion" to "送出建議",
     "Sending…" to "傳送中…",
     "Sensitivity" to "敏感度",
     "Sensitivity to light" to "對光線敏感",
@@ -3700,6 +3710,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Sugar" to "糖分",
     "Sugar high" to "高糖",
     "Sugar low" to "低糖",
+    "Suggest a time" to "建議時間",
     "Suggested" to "建議",
     "Suggested for you" to "為你推薦",
     "Suggested · same name" to "建議 · 同名",
@@ -4162,6 +4173,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "恢復狀況異常偏低",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "高達 60% 的偏頭痛女性表示發作與週期有關，最常發生在雌激素急劇下降的月經前 2 天和月經的前 3 天。\n\n設定你上次的經期日期和週期長度，MigraineMe 就會估算之後每一個時段。\n\n這項預測會以「menstruation_predicted」因子的形式直接納入你的風險分數，並以預測日期為中心給予對稱的權重，讓儀表反映預期的高風險時段。\n\n監測頁面上的月經卡片會顯示你下次預測的經期、距離的天數和週期長度。",
     "Up to a week" to "最長一週",
+    "Upcoming" to "即將到來",
     "Update %s — everything here is added to it" to "更新%s — 這裡的所有內容都會加入其中",
     "Update Log" to "更新紀錄",
     "Update password" to "更新密碼",
@@ -4263,6 +4275,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP 不會分享心率,所以這個目標無法自動填入。請連接 Garmin、Oura、Polar 或 Health Connect。",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "WHOOP 整合目前僅限受邀使用。請申請存取權限,我們會為你的帳號開通。",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
+    "Waiting for an answer" to "等待回覆",
     "Wake Time" to "起床時間",
     "Wake time" to "起床時間",
     "Wake time early" to "太早醒來",
@@ -4510,6 +4523,9 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Wind Speed (m/s)" to "風速(m/s)",
     "Wind speed" to "風速",
     "Wind speed high" to "風速偏高",
+)
+
+private fun zhStrings3(): Map<String, String> = mapOf(
     "Wind speed low" to "風速偏低",
     "Window around migraine" to "偏頭痛前後時段",
     "Windy or gusty conditions" to "有風或陣風",
@@ -4517,15 +4533,13 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Wine, dried fruit" to "葡萄酒、乾果",
     "Winter" to "冬季",
     "With %1\$s: %2\$s · Without: %3\$s" to "使用%1\$s:%2\$s · 未使用:%3\$s",
+    "Withdraw" to "撤回",
     "Within %s" to "%s內",
     "Within 2-3 days" to "2-3 天內",
     "Within hours" to "數小時內",
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "在你的正常範圍內:與 14 天平均值相差不超過 2 個標準差。",
     "Within {0}" to "{0} 內",
     "Without a subscription, imported data only goes into your journal." to "沒有訂閱的話,匯入的資料只會存入你的日記。",
-)
-
-private fun zhStrings3(): Map<String, String> = mapOf(
     "Without aura" to "無預兆",
     "Woke Up" to "醒來",
     "Woke up" to "醒來",
@@ -4601,6 +4615,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "你將緩解程度評為%1\$s,時間範圍為%2\$s",
     "You said" to "你說過",
     "You skipped this" to "你跳過了這項",
+    "You suggested %1\$s" to "你建議了 %1\$s",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "自開始使用以來,你平均每月的偏頭痛天數從 %1\$s 天變為 %2\$s 天。",
     "You'll be taken to Settings where you can grant this permission." to "你將前往設定頁面,可以在那裡授予此權限。",
     "You'll need to sign in again to access your migraine data." to "你需要重新登入,才能存取你的偏頭痛資料。",
@@ -4673,6 +4688,10 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "你的個人 AI 助理,可讀取你的健康資料:睡眠、HRV、靜止心率、壓力、步數、天氣、發作、誘因、前驅症狀、藥物、緩解方式和預兆細節。你可以用平常說話的方式問它任何問題,它會根據在你的資料中實際看到的內容回答,而不是給你一般性的建議。\n\n想了解某種治療或藥物嗎?也可以在這裡詢問。我們會查看你的資料,給你一些可以思考的方向。\n\n可以試試這些問題:「我上一次偏頭痛是什麼誘發的?」、「我最近睡得怎麼樣?」、「我的急救藥物真的有效嗎?」、「我的預兆通常出現在哪裡?」、「有哪些預防性治療可以向醫師詢問?」\n\n提醒:這個助理可以找出規律並提供可思考的方向,但它不是醫師,也無法開立處方。若要做出實際的治療決定,請諮詢你的神經科醫師或家庭醫師。",
     "Your personalised model" to "你的個人化模型",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "你的貼文已被我們的審核系統標記，目前正在審查中。如果這是誤判，很快就會恢復。",
+    "Your practitioner accepted the time you suggested." to "你的醫療人員已接受你建議的時間。",
+    "Your practitioner cancelled this appointment." to "你的醫療人員已取消此預約。",
+    "Your practitioner could not do that time. You can suggest another." to "你的醫療人員在該時間無法安排。你可以建議其他時間。",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "你的醫療人員建議了一個時間。請開啟 App 接受或婉拒。",
     "Your predicted period date gets a single trigger. The risk curve controls " to "你預測的經期日期會產生一個誘因。風險曲線控制",
     "Your profile has learned something new" to "你的個人檔案學到了新東西",
     "Your recalibration" to "你的重新校準",

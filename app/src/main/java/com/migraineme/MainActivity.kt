@@ -556,6 +556,7 @@ class MainActivity : ComponentActivity() {
         "daily_gauge" -> Routes.HOME
         "ongoing_migraine", "trigger_alert" -> Routes.JOURNAL
         "practitioner_goal" -> Routes.MONITOR
+        "practitioner_appointment" -> Routes.PRACTITIONERS
         // Weekly goal review + suggestions: the Goals page (Monitor > Goals).
         "goal_suggestions" -> if (MonitorCardConfig.GOALS_ENABLED) Routes.MONITOR_GOALS else null
         else -> null

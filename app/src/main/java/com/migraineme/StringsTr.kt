@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5111 entries.
+ * 5130 entries.
  */
 internal val TR_STRINGS: Map<String, String> =
     trStrings0() + trStrings1() + trStrings2() + trStrings3()
@@ -89,6 +89,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "%3\$s ile %2\$s atakta %1\$s rahatlama, onsuz %5\$s atakta %4\$s",
     "%1\$s relief%2\$s added" to "%1\$s rahatlama eklendi",
     "%1\$s starts at" to "%1\$s başlangıcı",
+    "%1\$s suggested %2\$s" to "%1\$s, %2\$s önerdi",
     "%1\$s suggested changes to your profile. Tap to review." to "%1\$s profilin için değişiklik önerdi. İncelemek için dokun.",
     "%1\$s symptom%2\$s selected" to "%1\$s belirti seçildi",
     "%1\$s things" to "%1\$s madde",
@@ -687,6 +688,9 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "Ayarları uygula",
     "Applying configuration..." to "Ayarlar uygulanıyor...",
     "Applying..." to "Uygulanıyor...",
+    "Appointment cancelled" to "Randevu iptal edildi",
+    "Appointment confirmed" to "Randevu onaylandı",
+    "Appointment time declined" to "Randevu saati reddedildi",
     "Appointments" to "Randevular",
     "Are specific drinks worse?" to "Bazı içecekler daha mı kötü?",
     "Are you sensitive to any of these?" to "Bunlardan herhangi birine duyarlı mısın?",
@@ -714,6 +718,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Kaydettikten 2 saat sonra nöromodülasyon cihazı seansının nasıl geçtiğini sor",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Sade sözlerle sor: hava etkili miydi, geçen sefer ne işe yaradı. Yanıtı kendi kayıtlarından verir.",
     "Ask questions about your health data" to "Sağlık verilerin hakkında soru sor",
+    "Asked for an appointment" to "Randevu istendi",
     "Aspartame" to "Aspartam",
     "Aspartame exposure" to "Aspartam maruziyeti",
     "Aspartame exposure high" to "Yüksek aspartam maruziyeti",
@@ -1265,6 +1270,7 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "Azalma eğrileri",
     "Decay weights saved" to "Ağırlıklar kaydedildi",
     "Decay: %1\$s" to "Azalma: %1\$s",
+    "Decline" to "Reddet",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "Derin %1\$s · REM %2\$s · Hafif %3\$s",
     "Deep Sleep" to "Derin Uyku",
     "Deep breathing" to "Derin nefes alma",
@@ -1511,15 +1517,15 @@ private fun trStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Hata: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Bu rapordaki ataklarda da görülen yerleşik örüntüler.",
     "Estimate" to "Tahmin",
+)
+
+private fun trStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "Öfori",
     "Evaluating your triggers..." to "Tetikleyicilerin değerlendiriliyor...",
     "Even a one-line reply genuinely helps shape what we build next." to "Tek satırlık bir yanıt bile sıradaki geliştirmelerimizi şekillendirmeye gerçekten yardımcı olur.",
     "Evening" to "Akşam",
     "Evening Check-in" to "Akşam Kontrolü",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Akşam Kontrolü bildirimleri sistem ayarlarında kapalı. Ayarları açmak için anahtara dokun.",
-)
-
-private fun trStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Akşam Kontrolü — %1\$s / %2\$s",
     "Evening check-in" to "Akşam kontrolü",
     "Evening check-in by voice" to "Sesle akşam kontrolü",
@@ -2543,6 +2549,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "New / recent" to "Yeni / yakın zamanlı",
     "New Discussion" to "Yeni tartışma",
     "New Insights" to "Yeni içgörüler",
+    "New appointment time" to "Yeni randevu saati",
     "New articles matching your triggers" to "Tetikleyicilerine uyan yeni makaleler",
     "New discussion" to "Yeni tartışma",
     "New goal" to "Yeni hedef",
@@ -2969,9 +2976,11 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Fiziksel ve hormonal tetikleyiciler",
     "Physical health tracking is disabled" to "Fiziksel sağlık takibi kapalı",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Monitör kartında risk skorunun altında gösterilecek 3 ölçüm seç. Bunlar her kategoride belirlediğin favorilerden gelir.",
+    "Pick a date" to "Tarih seç",
     "Pick a medicine or category to chart" to "Grafik için bir ilaç ya da kategori seç",
     "Pick a metric" to "Ölçüm seç",
     "Pick a metric first." to "Önce bir ölçüm seç.",
+    "Pick a time" to "Saat seç",
     "Pick an exercise" to "Bir egzersiz seç",
     "Pick an export file" to "Aktarım dosyası seç",
     "Pick an icon" to "Simge seç",
@@ -3011,6 +3020,9 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Pollen counts and air pollution." to "Polen değerleri ve hava kirliliği.",
     "Pollen high" to "Polen yüksek",
     "Pollen or hay fever season" to "Polen veya saman nezlesi mevsimi",
+)
+
+private fun trStrings2(): Map<String, String> = mapOf(
     "Polyunsaturated fat" to "Çoklu doymamış yağ",
     "Pool" to "Liste",
     "Poor" to "Kötü",
@@ -3020,9 +3032,6 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Poor sleep efficiency" to "Düşük uyku verimliliği",
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "Öğeleri Yönet bölümüne uğra ve sana gereksiz gelen her şeyi kapat (etkilemiyorsa kafein ya da hiç yaşamadığın varsayılan bir belirti). Daha az gürültü = daha net, daha dürüst bir gösterge.",
     "Population default decay curve." to "Nüfus varsayılanı azalma eğrisi.",
-)
-
-private fun trStrings2(): Map<String, String> = mapOf(
     "Population default thresholds for {0} active triggers." to "{0} etkin tetikleyici için nüfus varsayılan eşikleri.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Nüfus varsayılanları. Kalibre edecek yanıt olmadığı için risk göstergen ve azalma eğrileri, sıradan migreni olan sıradan biri için ayarlandı. Kayıt tuttukça sana göre ayarlanır.",
     "Portion" to "Porsiyon",
@@ -3395,6 +3404,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "Migrenle ilgili bir sinire küçük bir elektriksel veya manyetik sinyal gönderir.",
     "Send link" to "Link gönder",
     "Send request" to "Talep gönder",
+    "Send suggestion" to "Öneriyi gönder",
     "Sending…" to "Gönderiliyor…",
     "Sensitivity" to "Hassasiyet",
     "Sensitivity to light" to "Işığa duyarlılık",
@@ -3701,6 +3711,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Sugar" to "Şeker",
     "Sugar high" to "Yüksek şeker",
     "Sugar low" to "Düşük şeker",
+    "Suggest a time" to "Saat öner",
     "Suggested" to "Önerilen",
     "Suggested for you" to "Sana önerilenler",
     "Suggested · same name" to "Öneri · aynı ad",
@@ -4163,6 +4174,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "Olağandışı düşük form",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "Migreni olan kadınların %60'a kadarı döngüyle bağlantılı atak yaşadığını bildiriyor. Bu ataklar en çok, östrojen sert düştüğünde, adetten önceki 2 günde ve kanamanın ilk 3 gününde görülüyor.\n\nSon adet tarihini ve döngü uzunluğunu gir, MigraineMe yaklaşan tüm dönemleri tahmin etsin.\n\nBu tahmin, tahmin edilen tarih etrafında simetrik bir ağırlıkla \"menstruation_predicted\" etkeni olarak doğrudan risk puanına eklenir. Böylece gösterge, beklenen yüksek riskli dönemi yansıtır.\n\nMonitor'daki Adet kartı, tahmin edilen sonraki adet tarihini, kalan günleri ve döngü uzunluğunu gösterir.",
     "Up to a week" to "En fazla bir hafta",
+    "Upcoming" to "Yaklaşan",
     "Update %s — everything here is added to it" to "%s güncelle: buradakilerin hepsi ona eklenir",
     "Update Log" to "Kaydı güncelle",
     "Update password" to "Şifreyi değiştir",
@@ -4264,6 +4276,7 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP kalp atış hızını paylaşmıyor, bu yüzden bu hedef kendiliğinden dolamaz. Garmin, Oura, Polar veya Health Connect'i bağla.",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "WHOOP entegrasyonu şu an yalnızca davetle açık. Erişim iste, hesabın için etkinleştirelim.",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
+    "Waiting for an answer" to "Yanıt bekleniyor",
     "Wake Time" to "Uyanma",
     "Wake time" to "Uyanma saati",
     "Wake time early" to "Erken uyandın",
@@ -4510,6 +4523,9 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Wind Speed" to "Rüzgâr hızı",
     "Wind Speed (m/s)" to "Rüzgâr hızı (m/s)",
     "Wind speed" to "Rüzgar hızı",
+)
+
+private fun trStrings3(): Map<String, String> = mapOf(
     "Wind speed high" to "Rüzgâr hızı yüksek",
     "Wind speed low" to "Rüzgâr hızı düşük",
     "Window around migraine" to "Migren çevresi aralık",
@@ -4518,14 +4534,12 @@ private fun trStrings2(): Map<String, String> = mapOf(
     "Wine, dried fruit" to "Şarap, kuru meyve",
     "Winter" to "Kış",
     "With %1\$s: %2\$s · Without: %3\$s" to "%1\$s ile: %2\$s · Onsuz: %3\$s",
+    "Withdraw" to "Geri çek",
     "Within %s" to "%s içinde",
     "Within 2-3 days" to "2-3 gün içinde",
     "Within hours" to "Saatler içinde",
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "Olağan aralığında: 14 günlük ortalamandan en fazla 2 standart sapma uzakta.",
     "Within {0}" to "{0} içinde",
-)
-
-private fun trStrings3(): Map<String, String> = mapOf(
     "Without a subscription, imported data only goes into your journal." to "Abonelik olmadan, içe aktarılan veriler yalnızca günlüğüne eklenir.",
     "Without aura" to "Aurasız",
     "Woke Up" to "Uyandın",
@@ -4602,6 +4616,7 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "Rahatlamayı %1\$s olarak puanladın, süre: %2\$s",
     "You said" to "Sen dedin",
     "You skipped this" to "Bunu atladın",
+    "You suggested %1\$s" to "%1\$s önerdin",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "Başladığından beri ortalama olarak ayda %1\$s olan migren günlerin %2\$s oldu.",
     "You'll be taken to Settings where you can grant this permission." to "Bu izni verebileceğin Ayarlar'a yönlendirileceksin.",
     "You'll need to sign in again to access your migraine data." to "Migren verilerine ulaşmak için yeniden giriş yapman gerekecek.",
@@ -4674,6 +4689,10 @@ private fun trStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Sağlık verilerine okuma erişimi olan kişisel yapay zeka asistanın: uyku, HRV, dinlenme kalp atış hızı, stres, adım, hava durumu, atak, tetikleyici, prodrom, ilaç, rahatlama ve aura ayrıntıları. Ona istediğini sade bir dille sor; genel tavsiyeler vermez, verilerinde gerçekten gördüklerine göre cevap verir.\n\nBir tedavi ya da ilaç mı merak ediyorsun? Onu da buradan sorabilirsin. Verilerine bakar, sana düşünecek bir şeyler veririz.\n\nDenemek için güzel sorular: \"Son migrenimi ne tetikledi?\", \"Son zamanlarda uykum nasıl?\", \"Acil durum ilacım gerçekten işe yarıyor mu?\", \"Aurayı genelde nerede hissediyorum?\", \"Doktoruma sorabileceğim koruyucu tedaviler var mı?\"\n\nUnutma: Asistan örüntüleri fark edip düşünebileceğin şeyler önerebilir, ama doktor değildir ve ilaç yazamaz. Gerçek tedavi kararları için nöroloğunla veya aile hekiminle konuş.",
     "Your personalised model" to "Sana özel modelin",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Gönderin moderasyon sistemimiz tarafından işaretlendi ve şu anda inceleniyor. Bir hata olduysa kısa süre içinde geri yüklenecek.",
+    "Your practitioner accepted the time you suggested." to "Uzmanın önerdiğin saati kabul etti.",
+    "Your practitioner cancelled this appointment." to "Uzmanın bu randevuyu iptal etti.",
+    "Your practitioner could not do that time. You can suggest another." to "Uzmanın o saatte müsait değil. Başka bir saat önerebilirsin.",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "Uzmanın bir saat önerdi. Kabul etmek veya reddetmek için uygulamayı aç.",
     "Your predicted period date gets a single trigger. The risk curve controls " to "Tahmin edilen regl günün tek bir tetikleyici alır. Risk eğrisi şunu ayarlar: ",
     "Your profile has learned something new" to "Profilin yeni bir şey öğrendi",
     "Your recalibration" to "Yeniden kalibrasyon",

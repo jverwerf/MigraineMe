@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5110 entries.
+ * 5129 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -89,6 +89,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "%3\$s 사용 시 발작 %2\$s번에서 완화 %1\$s, 사용하지 않은 %5\$s번에서는 %4\$s",
     "%1\$s relief%2\$s added" to "완화 방법 %1\$s개%2\$s 추가됨",
     "%1\$s starts at" to "%1\$s 시작 시각",
+    "%1\$s suggested %2\$s" to "%1\$s님이 %2\$s을(를) 제안했습니다",
     "%1\$s suggested changes to your profile. Tap to review." to "프로필 변경 제안이 %1\$s개 있어요. 탭하여 확인하세요.",
     "%1\$s symptom%2\$s selected" to "증상 %1\$s개%2\$s 선택됨",
     "%1\$s things" to "%1\$s개",
@@ -687,6 +688,9 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "설정 적용",
     "Applying configuration..." to "설정을 적용하는 중...",
     "Applying..." to "적용 중...",
+    "Appointment cancelled" to "예약이 취소되었습니다",
+    "Appointment confirmed" to "예약이 확정되었습니다",
+    "Appointment time declined" to "제안한 시간이 거절되었습니다",
     "Appointments" to "진료 예약",
     "Are specific drinks worse?" to "특히 더 나쁜 음료가 있나요?",
     "Are you sensitive to any of these?" to "이 중에 민감하게 반응하는 게 있나요?",
@@ -714,6 +718,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "신경조절 기기 세션을 기록하고 2시간 뒤에 어땠는지 물어봐요",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "편하게 물어보세요. 날씨가 영향을 줬는지, 지난번엔 무엇이 도움이 됐는지요. 답변은 내 기록을 바탕으로 해요.",
     "Ask questions about your health data" to "건강 데이터에 대해 질문하기",
+    "Asked for an appointment" to "예약을 요청했습니다",
     "Aspartame" to "아스파탐",
     "Aspartame exposure" to "아스파탐 노출",
     "Aspartame exposure high" to "아스파탐 노출 많음",
@@ -1265,6 +1270,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "감소 곡선",
     "Decay weights saved" to "감쇠 가중치 저장됨",
     "Decay: %1\$s" to "감소: %1\$s",
+    "Decline" to "거절",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "깊은 %1\$s · REM %2\$s · 얕은 %3\$s",
     "Deep Sleep" to "깊은 잠",
     "Deep breathing" to "심호흡",
@@ -1511,15 +1517,15 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "오류 %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "이 보고서의 발작에서도 나타난, 이미 확인된 패턴이에요.",
     "Estimate" to "추정",
+)
+
+private fun koStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "행복감",
     "Evaluating your triggers..." to "유발 요인을 평가하는 중...",
     "Even a one-line reply genuinely helps shape what we build next." to "한 줄짜리 답변도 다음에 무엇을 만들지 정하는 데 정말 도움이 돼요.",
     "Evening" to "저녁",
     "Evening Check-in" to "저녁 체크인",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "저녁 체크인 알림이 시스템 설정에서 꺼져 있어요. 스위치를 눌러 설정을 열어 보세요.",
-)
-
-private fun koStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "저녁 체크인 — %2\$s 중 %1\$s",
     "Evening check-in" to "저녁 체크인",
     "Evening check-in by voice" to "음성으로 저녁 체크인",
@@ -2542,6 +2548,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "New / recent" to "신규/최근",
     "New Discussion" to "새 토론",
     "New Insights" to "새 인사이트",
+    "New appointment time" to "새 예약 시간",
     "New articles matching your triggers" to "내 유발 요인과 관련된 새 글",
     "New discussion" to "새 토론",
     "New goal" to "새 목표",
@@ -2968,9 +2975,11 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "신체 활동 및 호르몬 유발 요인",
     "Physical health tracking is disabled" to "신체 건강 추적이 꺼져 있어요",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "모니터 카드의 위험 점수 아래에 표시할 지표 3개를 골라요. 카테고리별로 설정한 즐겨찾기에서 가져온 지표예요.",
+    "Pick a date" to "날짜 선택",
     "Pick a medicine or category to chart" to "차트로 볼 약이나 카테고리를 골라요",
     "Pick a metric" to "지표 선택",
     "Pick a metric first." to "먼저 지표를 골라요.",
+    "Pick a time" to "시간 선택",
     "Pick an exercise" to "운동 선택",
     "Pick an export file" to "내보내기 파일 선택",
     "Pick an icon" to "아이콘 선택",
@@ -3011,6 +3020,9 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Pollen high" to "꽃가루 높음",
     "Pollen or hay fever season" to "꽃가루 또는 건초열 시즌",
     "Polyunsaturated fat" to "다가불포화지방",
+)
+
+private fun koStrings2(): Map<String, String> = mapOf(
     "Pool" to "목록",
     "Poor" to "나쁨",
     "Poor deep sleep" to "깊은 잠 부족",
@@ -3020,9 +3032,6 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Pop into Manage Items and turn off anything that's noise for you (caffeine if it doesn't affect you, or any default symptom you never experience). Less noise = a sharper, more honest gauge." to "항목 관리에 들어가서 나에게 필요 없는 항목은 꺼 보세요. 예를 들어 영향이 없는 카페인이나 한 번도 겪지 않은 기본 증상이 있어요. 불필요한 항목이 줄면 게이지가 더 정확하고 솔직해져요.",
     "Population default decay curve." to "일반 인구 기준 기본 감소 곡선이에요.",
     "Population default thresholds for {0} active triggers." to "활성 유발 요인 {0}개의 일반 인구 기준 임계값이에요.",
-)
-
-private fun koStrings2(): Map<String, String> = mapOf(
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "일반 인구 기준값이에요. 보정에 쓸 답변이 없어서, 위험도 게이지와 감소 곡선이 일반적인 편두통을 가진 평범한 사람에 맞춰져 있어요. 기록할수록 나에게 맞게 조정돼요.",
     "Portion" to "분량",
     "Portion is a guess" to "섭취량은 추정치",
@@ -3394,6 +3403,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "편두통과 관련된 신경에 약한 전기 또는 자기 신호를 보내요.",
     "Send link" to "링크 보내기",
     "Send request" to "요청 보내기",
+    "Send suggestion" to "제안 보내기",
     "Sending…" to "보내는 중…",
     "Sensitivity" to "민감도",
     "Sensitivity to light" to "빛에 민감함",
@@ -3700,6 +3710,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Sugar" to "설탕",
     "Sugar high" to "당분 많음",
     "Sugar low" to "당분 적음",
+    "Suggest a time" to "시간 제안",
     "Suggested" to "추천",
     "Suggested for you" to "추천 항목",
     "Suggested · same name" to "추천 · 같은 이름",
@@ -4162,6 +4173,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "평소보다 낮은 회복",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "편두통이 있는 여성의 최대 60%가 월경 주기와 관련된 발작을 겪는다고 해요. 에스트로겐이 급격히 떨어지는 월경 2일 전과 월경 첫 3일 동안 가장 흔해요.\n\n마지막 월경일과 주기 길이를 설정하면 MigraineMe가 앞으로의 모든 해당 시기를 예측해요.\n\n이 예측은 \"menstruation_predicted\" 요인으로 위험 점수에 바로 반영되고, 예측일 전후에 대칭으로 가중치가 적용돼요. 그래서 게이지에 위험이 더 높을 것으로 예상되는 시기가 나타나요.\n\n모니터의 월경 카드에는 다음 월경 예정일, 남은 일수, 주기 길이가 표시돼요.",
     "Up to a week" to "최대 1주",
+    "Upcoming" to "예정",
     "Update %s — everything here is added to it" to "%s 기록 업데이트 — 여기 내용이 모두 추가돼요",
     "Update Log" to "기록 업데이트",
     "Update password" to "비밀번호 변경",
@@ -4263,6 +4275,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP은 심박수를 공유하지 않아서 이 목표를 자동으로 채울 수 없어요. Garmin, Oura, Polar 또는 Health Connect를 연결해 주세요.",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "WHOOP 연동은 현재 초대 전용이에요. 접근을 요청하시면 계정에서 사용할 수 있도록 설정해 드릴게요.",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
+    "Waiting for an answer" to "답변 대기 중",
     "Wake Time" to "기상 시간",
     "Wake time" to "기상 시간",
     "Wake time early" to "일찍 일어남",
@@ -4510,6 +4523,9 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Wind Speed (m/s)" to "풍속 (m/s)",
     "Wind speed" to "풍속",
     "Wind speed high" to "풍속 높음",
+)
+
+private fun koStrings3(): Map<String, String> = mapOf(
     "Wind speed low" to "풍속 낮음",
     "Window around migraine" to "편두통 전후 시간대",
     "Windy or gusty conditions" to "바람이 불거나 돌풍이 부는 날씨",
@@ -4517,15 +4533,13 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Wine, dried fruit" to "와인, 말린 과일",
     "Winter" to "겨울",
     "With %1\$s: %2\$s · Without: %3\$s" to "%1\$s 있음: %2\$s · 없음: %3\$s",
+    "Withdraw" to "철회",
     "Within %s" to "%s 이내",
     "Within 2-3 days" to "2~3일 이내",
     "Within hours" to "몇 시간 이내",
     "Within your usual range: no more than 2 standard deviations from your 14-day average." to "평소 범위 안: 14일 평균에서 표준편차 2배 이내예요.",
     "Within {0}" to "{0} 이내",
     "Without a subscription, imported data only goes into your journal." to "구독하지 않으면 가져온 데이터는 일기에만 저장돼요.",
-)
-
-private fun koStrings3(): Map<String, String> = mapOf(
     "Without aura" to "조짐 없음",
     "Woke Up" to "일어남",
     "Woke up" to "기상",
@@ -4601,6 +4615,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "완화 평가: %1\$s (%2\$s 동안)",
     "You said" to "내 답변",
     "You skipped this" to "건너뛰었어요",
+    "You suggested %1\$s" to "%1\$s을(를) 제안했습니다",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "한 달 편두통 일수가 시작 이후 평균 %1\$s일에서 %2\$s일로 바뀌었어요.",
     "You'll be taken to Settings where you can grant this permission." to "설정으로 이동해요. 거기서 이 권한을 허용할 수 있어요.",
     "You'll need to sign in again to access your migraine data." to "편두통 데이터를 보려면 다시 로그인해야 해요.",
@@ -4673,6 +4688,10 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "건강 데이터를 읽을 수 있는 나만의 AI 도우미예요. 수면, HRV, 안정 시 심박수, 스트레스, 걸음 수, 날씨, 발작, 유발 요인, 전구 증상, 약, 완화, 조짐 상세 기록을 볼 수 있어요. 궁금한 건 편하게 말로 물어보세요. 일반적인 조언이 아니라 실제 데이터에서 보이는 내용을 바탕으로 답해 드려요.\n\n치료나 약이 궁금하세요? 여기서 물어봐도 돼요. 데이터를 살펴보고 생각해 볼 만한 점을 알려 드려요.\n\n이렇게 물어보세요: \"마지막 편두통의 유발 요인은 무엇이었나요?\", \"요즘 수면은 어땠나요?\", \"발작 때 먹는 약이 실제로 잘 듣나요?\", \"조짐은 주로 어디에 나타나나요?\", \"의사에게 물어볼 만한 예방 치료가 있나요?\"\n\n참고해 주세요: 도우미는 패턴을 찾고 고려해 볼 점을 제안할 수 있지만, 의사가 아니며 처방은 할 수 없어요. 실제 치료 결정은 신경과 전문의나 주치의와 상의하세요.",
     "Your personalised model" to "나에게 맞춘 모델",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "게시물이 검수 시스템에 신고되어 현재 검토 중이에요. 잘못된 신고라면 곧 복구돼요.",
+    "Your practitioner accepted the time you suggested." to "담당 전문가가 제안하신 시간을 수락했습니다.",
+    "Your practitioner cancelled this appointment." to "담당 전문가가 이 예약을 취소했습니다.",
+    "Your practitioner could not do that time. You can suggest another." to "담당 전문가가 그 시간에 어렵습니다. 다른 시간을 제안할 수 있습니다.",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "담당 전문가가 시간을 제안했습니다. 앱을 열어 수락하거나 거절하세요.",
     "Your predicted period date gets a single trigger. The risk curve controls " to "예상 생리 예정일에는 유발 요인이 하나만 설정돼요. 위험 곡선이 조절하는 건 ",
     "Your profile has learned something new" to "내 프로필이 새로운 사실을 알게 됐어요",
     "Your recalibration" to "나의 재보정",

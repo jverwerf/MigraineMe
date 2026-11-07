@@ -2500,6 +2500,70 @@
    "sites": [
     "build-report-html/render.ts (restored from the committed _shared/translations/*.ts, which held these by hand)"
    ]
+  },
+  {
+   "en": "New appointment time",
+   "class": "hard",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Your practitioner suggested a time. Open the app to accept or decline.",
+   "class": "hard",
+   "max_len": 110,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Appointment confirmed",
+   "class": "hard",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Your practitioner accepted the time you suggested.",
+   "class": "hard",
+   "max_len": 90,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Appointment time declined",
+   "class": "hard",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Your practitioner could not do that time. You can suggest another.",
+   "class": "hard",
+   "max_len": 106,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Appointment cancelled",
+   "class": "hard",
+   "max_len": 80,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
+  },
+  {
+   "en": "Your practitioner cancelled this appointment.",
+   "class": "hard",
+   "max_len": 85,
+   "sites": [
+    "supabase/functions/appointments/index.ts (push)"
+   ]
   }
  ]
 }

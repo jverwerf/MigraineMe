@@ -137,6 +137,12 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     body = message.notification?.body ?: message.data["body"]
                 )
             }
+            "practitioner_appointment" -> {
+                showPractitionerAppointmentNotification(
+                    title = message.notification?.title ?: message.data["title"],
+                    body = message.notification?.body ?: message.data["body"]
+                )
+            }
             "goal_suggestions" -> {
                 if (!MonitorCardConfig.GOALS_ENABLED) return   // goals hidden this release
                 Log.d(TAG, "Weekly goal review ready")
@@ -457,6 +463,36 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             .build()
 
         nm.notify(8024, notification)
+    }
+
+    /** The practitioner suggested, accepted, declined or cancelled a time. The server writes the copy. */
+    private fun showPractitionerAppointmentNotification(title: String?, body: String?) {
+        val channelId = "practitioner_appointment"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        nm.createNotificationChannel(
+            android.app.NotificationChannel(
+                channelId, tSync("Appointments"),
+                android.app.NotificationManager.IMPORTANCE_DEFAULT
+            )
+        )
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.PRACTITIONERS)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 5, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        val text = body.orEmpty()
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title?.takeIf { it.isNotBlank() } ?: tSync("Appointments"))
+            .setContentText(text)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(8027, notification)
     }
 
     /**

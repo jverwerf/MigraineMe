@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5109 entries.
+ * 5128 entries.
  */
 internal val NL_STRINGS: Map<String, String> =
     nlStrings0() + nlStrings1() + nlStrings2() + nlStrings3()
@@ -89,6 +89,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without" to "%1\$s verlichting bij %2\$s aanvallen met %3\$s, tegenover %4\$s bij %5\$s zonder",
     "%1\$s relief%2\$s added" to "Verlichting erbij: %1\$s",
     "%1\$s starts at" to "%1\$s begint om",
+    "%1\$s suggested %2\$s" to "%1\$s stelt %2\$s voor",
     "%1\$s suggested changes to your profile. Tap to review." to "%1\$s voorgestelde wijzigingen voor je profiel. Tik om te bekijken.",
     "%1\$s symptom%2\$s selected" to "Klachten gekozen: %1\$s",
     "%1\$s things" to "%1\$s punten",
@@ -687,6 +688,9 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Apply Configuration" to "Toepassen",
     "Applying configuration..." to "Instellingen toepassen...",
     "Applying..." to "Toepassen...",
+    "Appointment cancelled" to "Afspraak geannuleerd",
+    "Appointment confirmed" to "Afspraak bevestigd",
+    "Appointment time declined" to "Voorgestelde tijd afgewezen",
     "Appointments" to "Afspraken",
     "Are specific drinks worse?" to "Zijn bepaalde drankjes erger?",
     "Are you sensitive to any of these?" to "Ben je gevoelig voor een van deze?",
@@ -714,6 +718,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Ask how a neuromodulation device session went, 2 hours after you log it" to "Vraagt 2 uur na je notitie hoe de sessie ging",
     "Ask in plain words: was weather a factor, what helped last time. It answers from your own logs." to "Vraag het gewoon: was het weer een factor, wat hielp de vorige keer. Het antwoordt uit je eigen logs.",
     "Ask questions about your health data" to "Stel vragen over je gezondheidsdata",
+    "Asked for an appointment" to "Afspraak aangevraagd",
     "Aspartame" to "Aspartaam",
     "Aspartame exposure" to "Blootstelling aan aspartaam",
     "Aspartame exposure high" to "Veel aspartaam",
@@ -1265,6 +1270,7 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Decay curves" to "Afbouwcurves",
     "Decay weights saved" to "Gewichten opgeslagen",
     "Decay: %1\$s" to "Afbouw: %1\$s",
+    "Decline" to "Afwijzen",
     "Deep %1\$s · REM %2\$s · Light %3\$s" to "Diep %1\$s · REM %2\$s · Licht %3\$s",
     "Deep Sleep" to "Diepe slaap",
     "Deep breathing" to "Diep ademhalen",
@@ -1511,15 +1517,15 @@ private fun nlStrings0(): Map<String, String> = mapOf(
     "Error: %1\$s" to "Fout: %1\$s",
     "Established patterns that also appeared in the attacks in this report." to "Vaste patronen die ook in de aanvallen van dit rapport voorkwamen.",
     "Estimate" to "Schatting",
+)
+
+private fun nlStrings1(): Map<String, String> = mapOf(
     "Euphoria" to "Euforie",
     "Evaluating your triggers..." to "Je triggers beoordelen...",
     "Even a one-line reply genuinely helps shape what we build next." to "Zelfs een antwoord van één regel helpt echt bepalen wat we hierna bouwen.",
     "Evening" to "Avond",
     "Evening Check-in" to "Avondcheck",
     "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings." to "Meldingen voor de avondcheck staan uit in het systeem. Tik om de instellingen te openen.",
-)
-
-private fun nlStrings1(): Map<String, String> = mapOf(
     "Evening Check-in — %1\$s of %2\$s" to "Avondcheck — %1\$s van %2\$s",
     "Evening check-in" to "Avondcheck",
     "Evening check-in by voice" to "Avondcheck met je stem",
@@ -2541,6 +2547,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "New / recent" to "Nieuw / recent",
     "New Discussion" to "Nieuw gesprek",
     "New Insights" to "Inzichten",
+    "New appointment time" to "Nieuwe tijd voor een afspraak",
     "New articles matching your triggers" to "Nieuwe artikelen bij je triggers",
     "New discussion" to "Nieuw gesprek",
     "New goal" to "Nieuw doel",
@@ -2967,9 +2974,11 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Physical activity and hormonal triggers" to "Triggers uit beweging en hormonen",
     "Physical health tracking is disabled" to "Lichaam staat uit",
     "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category." to "Kies 3 waarden onder het risico op je Monitorkaart. Ze komen uit je favorieten per categorie.",
+    "Pick a date" to "Kies een datum",
     "Pick a medicine or category to chart" to "Kies een medicijn of categorie",
     "Pick a metric" to "Kies een waarde",
     "Pick a metric first." to "Kies eerst een waarde.",
+    "Pick a time" to "Kies een tijd",
     "Pick an exercise" to "Kies een oefening",
     "Pick an export file" to "Kies een exportbestand",
     "Pick an icon" to "Kies een icoon",
@@ -3011,6 +3020,9 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Pollen or hay fever season" to "Pollen of hooikoortsseizoen",
     "Polyunsaturated fat" to "Meerv. onverz. vet",
     "Pool" to "Lijst",
+)
+
+private fun nlStrings2(): Map<String, String> = mapOf(
     "Poor" to "Slecht",
     "Poor deep sleep" to "Weinig diepe slaap",
     "Poor recovery score from your wearable" to "Slechte herstelscore van je wearable",
@@ -3020,9 +3032,6 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Population default decay curve." to "Standaard afbouwcurve (populatie).",
     "Population default thresholds for {0} active triggers." to "Standaarddrempels (populatie) voor {0} actieve triggers.",
     "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log." to "Populatiestandaard. Er waren geen antwoorden om op te kalibreren, dus je risicometer en afbouwcurves staan ingesteld op een gemiddeld persoon met gemiddelde migraine. Ze worden op jou afgestemd terwijl je logt.",
-)
-
-private fun nlStrings2(): Map<String, String> = mapOf(
     "Portion" to "Portie",
     "Portion is a guess" to "Portie geschat",
     "Post" to "Plaatsen",
@@ -3393,6 +3402,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Send a small electrical or magnetic signal to a nerve involved in migraine." to "Stuurt een klein elektrisch of magnetisch signaal naar een zenuw die bij migraine betrokken is.",
     "Send link" to "Link sturen",
     "Send request" to "Verzoek sturen",
+    "Send suggestion" to "Voorstel versturen",
     "Sending…" to "Versturen…",
     "Sensitivity" to "Gevoeligheid",
     "Sensitivity to light" to "Gevoelig voor licht",
@@ -3699,6 +3709,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Sugar" to "Suiker",
     "Sugar high" to "Suiker hoog",
     "Sugar low" to "Suiker laag",
+    "Suggest a time" to "Tijd voorstellen",
     "Suggested" to "Voorstel",
     "Suggested for you" to "Voorgesteld voor jou",
     "Suggested · same name" to "Voorstel · zelfde naam",
@@ -4161,6 +4172,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Unusually low recovery" to "Opvallend weinig herstel",
     "Up to 60% of women with migraine report cycle-linked attacks, most commonly in the 2 days before and the first 3 days of bleeding when oestrogen falls sharply.\n\nSet your last period date and cycle length and MigraineMe estimates every upcoming window.\n\nThe prediction feeds straight into your risk score as a \"menstruation_predicted\" factor with a symmetric weight around the predicted date, so the gauge reflects the expected higher-risk window.\n\nThe Menstruation card on Monitor shows your next predicted period, days until, and cycle length." to "Tot 60% van de vrouwen met migraine meldt aanvallen die met de cyclus meelopen, meestal in de 2 dagen ervoor en de eerste 3 dagen van de bloeding, als oestrogeen scherp daalt.\n\nZet de datum van je laatste menstruatie en je cycluslengte erin, dan schat MigraineMe elk komend venster.\n\nDe voorspelling gaat rechtstreeks je risicoscore in als factor \"menstruation_predicted\", met symmetrisch gewicht rond de verwachte datum, zodat de meter het verwachte risicovenster laat zien.\n\nDe menstruatiekaart op Monitor toont je volgende verwachte menstruatie, de dagen tot dan en je cycluslengte.",
     "Up to a week" to "Tot een week",
+    "Upcoming" to "Gepland",
     "Update %s — everything here is added to it" to "%s bijwerken — alles hier komt erbij",
     "Update Log" to "Bijwerken",
     "Update password" to "Wachtwoord nieuw",
@@ -4262,6 +4274,7 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "WHOOP does not share heart rate, so this goal cannot fill in by itself. Connect Garmin, Oura, Polar or Health Connect." to "WHOOP deelt geen hartslag, dus dit doel vult zichzelf niet in. Koppel Garmin, Oura, Polar of Health Connect.",
     "WHOOP integration is currently invite-only. Request access and we’ll enable it for your account." to "De WHOOP-koppeling is nu alleen op uitnodiging. Vraag toegang aan, dan zetten we hem aan voor je account.",
     "WHOOP, Oura, Polar, Garmin" to "WHOOP, Oura, Polar, Garmin",
+    "Waiting for an answer" to "Wacht op antwoord",
     "Wake Time" to "Wakker om",
     "Wake time" to "Wektijd",
     "Wake time early" to "Vroeg wakker",
@@ -4510,12 +4523,16 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Wind speed" to "Windkracht",
     "Wind speed high" to "Harde wind",
     "Wind speed low" to "Weinig wind",
+)
+
+private fun nlStrings3(): Map<String, String> = mapOf(
     "Window around migraine" to "Venster rond de migraine",
     "Windy or gusty conditions" to "Winderig of vlagerig",
     "Wine, beer, spirits" to "Wijn, bier, sterke drank",
     "Wine, dried fruit" to "Wijn, gedroogd fruit",
     "Winter" to "Winter",
     "With %1\$s: %2\$s · Without: %3\$s" to "Met %1\$s: %2\$s · Zonder: %3\$s",
+    "Withdraw" to "Intrekken",
     "Within %s" to "Binnen %s",
     "Within 2-3 days" to "Binnen 2-3 dagen",
     "Within hours" to "Binnen uren",
@@ -4523,9 +4540,6 @@ private fun nlStrings2(): Map<String, String> = mapOf(
     "Within {0}" to "Binnen {0}",
     "Without a subscription, imported data only goes into your journal." to "Zonder abonnement komt geïmporteerde data alleen in je dagboek.",
     "Without aura" to "Zonder aura",
-)
-
-private fun nlStrings3(): Map<String, String> = mapOf(
     "Woke Up" to "Wakker",
     "Woke up" to "Wakker",
     "Woke up time" to "Wektijd",
@@ -4600,6 +4614,7 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "You rated it %1\$s relief, over %2\$s" to "Verlichting beoordeeld als %1\$s, over %2\$s",
     "You said" to "Jij zei",
     "You skipped this" to "Overgeslagen",
+    "You suggested %1\$s" to "Jij stelde %1\$s voor",
     "You went from %1\$s to %2\$s migraine days a month, averaged since you started." to "Je ging van %1\$s naar %2\$s migrainedagen per maand, gemiddeld sinds je begon.",
     "You'll be taken to Settings where you can grant this permission." to "Je gaat naar Instellingen, waar je dit recht kunt geven.",
     "You'll need to sign in again to access your migraine data." to "Je moet opnieuw inloggen om bij je gegevens te komen.",
@@ -4672,6 +4687,10 @@ private fun nlStrings3(): Map<String, String> = mapOf(
     "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP." to "Je eigen AI-assistent met leestoegang tot je gezondheidsgegevens: slaap, HRV, rusthartslag, stress, stappen, weer, aanvallen, triggers, prodromen, medicijnen, verlichting en auradetails. Vraag hem alles in gewone taal; hij antwoordt vanuit wat hij echt in je gegevens ziet, niet met algemeen advies.\n\nVragen over een behandeling of medicijn? Die kun je hier ook stellen. Wij kijken in je gegevens en geven je iets om over na te denken.\n\nGoede vragen om te proberen: \"Wat lokte mijn laatste migraine uit?\", \"Hoe sliep ik de laatste tijd?\", \"Werkt mijn noodmedicatie echt?\", \"Waar zit mijn aura meestal?\", \"Zijn er preventieve behandelingen waar ik naar zou moeten vragen?\"\n\nLet op: de assistent ziet patronen en noemt dingen om te overwegen, maar hij is geen arts en kan niets voorschrijven. Voor echte keuzes over behandeling ga je naar je neuroloog of huisarts.",
     "Your personalised model" to "Je eigen model",
     "Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly." to "Onze moderatie heeft je bericht gemarkeerd en bekijkt het nu. Was dit een vergissing, dan komt het snel terug.",
+    "Your practitioner accepted the time you suggested." to "Je behandelaar heeft de voorgestelde tijd geaccepteerd.",
+    "Your practitioner cancelled this appointment." to "Je behandelaar heeft deze afspraak geannuleerd.",
+    "Your practitioner could not do that time. You can suggest another." to "Je behandelaar kan niet op die tijd. Je kunt een andere voorstellen.",
+    "Your practitioner suggested a time. Open the app to accept or decline." to "Je behandelaar heeft een tijd voorgesteld. Open de app om te accepteren of af te wijzen.",
     "Your predicted period date gets a single trigger. The risk curve controls " to "Je verwachte menstruatiedag krijgt één trigger. De risicocurve bepaalt ",
     "Your profile has learned something new" to "Je profiel heeft iets nieuws geleerd",
     "Your recalibration" to "Je ijking",

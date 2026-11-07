@@ -23,6 +23,8 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.add
@@ -865,6 +867,74 @@ object SupabasePractitionerService {
             setBody(body)
         }
         logConsent(accessToken, link.id, "revoked", link.granted, emptySet())
+    }
+
+    // ---- two-way appointment suggestions (the appointments edge function) ----
+
+    @Serializable
+    data class AppointmentRequest(
+        val id: String,
+        val practitioner_id: String,
+        val kind: String = "initial",
+        val proposed_by: String = "client",
+        val status: String = "requested",
+        val message: String? = null,
+        val proposed_start: String? = null,
+        val scheduled_for: String? = null,
+        val external_id: String? = null,
+    )
+
+    @Serializable
+    data class AppointmentSession(
+        val id: String,
+        val practitioner_id: String,
+        val starts_at: String? = null,
+        val type: String? = null,
+    )
+
+    @Serializable
+    data class MyAppointments(
+        val requests: List<AppointmentRequest> = emptyList(),
+        val sessions: List<AppointmentSession> = emptyList(),
+    )
+
+    private suspend fun appointmentsCall(accessToken: String, body: JsonObject): String {
+        val res: HttpResponse = client.post("$baseUrl/functions/v1/appointments") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }
+        val text = res.bodyAsText()
+        if (!res.status.isSuccess()) {
+            val why = runCatching {
+                Json.parseToJsonElement(text).jsonObject["error"]?.jsonPrimitive?.content
+            }.getOrNull()
+            throw IllegalStateException(why ?: "Something went wrong.")
+        }
+        return text
+    }
+
+    suspend fun myAppointmentsWithSessions(accessToken: String): MyAppointments =
+        Json { ignoreUnknownKeys = true }.decodeFromString(
+            MyAppointments.serializer(),
+            appointmentsCall(accessToken, buildJsonObject { put("action", "mine") }),
+        )
+
+    suspend fun suggestAppointment(accessToken: String, practitionerId: String, startIso: String) {
+        appointmentsCall(accessToken, buildJsonObject {
+            put("action", "client_suggest"); put("practitioner_id", practitionerId); put("start", startIso)
+        })
+    }
+
+    suspend fun respondToAppointment(accessToken: String, id: String, accept: Boolean) {
+        appointmentsCall(accessToken, buildJsonObject {
+            put("action", "client_respond"); put("id", id); put("accept", accept)
+        })
+    }
+
+    suspend fun withdrawAppointment(accessToken: String, id: String) {
+        appointmentsCall(accessToken, buildJsonObject { put("action", "client_cancel"); put("id", id) })
     }
 
     /** Ask for a first appointment. No money passes through this; it is a
