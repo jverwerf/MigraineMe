@@ -485,7 +485,9 @@ serve(async (req) => {
         const ownCliniko = (u: unknown): boolean => {
           try {
             const x = new URL(String(u || ""));
-            return !!clinikoHost && x.host.toLowerCase() === clinikoHost && x.pathname.startsWith("/bookings");
+            const host = x.host.toLowerCase();
+            // A connection saved without its web address still matches any Cliniko booking link.
+            return (clinikoHost ? host === clinikoHost : host.endsWith(".cliniko.com")) && x.pathname.startsWith("/bookings");
           } catch { return false; }
         };
         let shown: string | null = null, live: string | null = choice === "cliniko" ? clinikoUrl : null;
