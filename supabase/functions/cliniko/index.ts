@@ -296,9 +296,13 @@ serve(async (req) => {
       }
 
       case "calendar": {
-        // The Calendar plugin: the connected person's own sessions for the next two weeks.
+        // The Calendar plugin: the connected person's own sessions in the range on screen (up to about 7 weeks).
         const integ = await needInteg();
-        const from = new Date().toISOString(), to = new Date(Date.now() + 14 * 864e5).toISOString();
+        const parsed = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d; };
+        const fromD = parsed(body.from) || new Date();
+        const toD = parsed(body.to) || new Date(fromD.getTime() + 14 * 864e5);
+        if (toD.getTime() - fromD.getTime() > 50 * 864e5) throw new UserError("That range is too long.", 400);
+        const from = fromD.toISOString(), to = toD.toISOString();
         const [cliUser, pracs, types] = await Promise.all([
           ck(integ, "/user").catch(() => null),
           ck(integ, "/practitioners?per_page=100").catch(() => null),
@@ -308,8 +312,14 @@ serve(async (req) => {
         const own = (pracs?.practitioners || []).find((p: any) => idFromLink(p.user) === String(cliUser?.id));
         const q = [`starts_at:>=${from}`, `starts_at:<=${to}`, ...(own ? [`practitioner_id:=${own.id}`] : [])]
           .map((x) => "q[]=" + encodeURIComponent(x)).join("&");
-        const appts = await ck(integ, `/individual_appointments?per_page=100&sort=starts_at:asc&${q}`);
-        const out = (appts?.individual_appointments || []).filter((a: any) => !a.cancelled_at).map((a: any) => ({
+        const all: any[] = [];
+        for (let page = 1; page <= 5; page++) {
+          const res = await ck(integ, `/individual_appointments?per_page=100&page=${page}&sort=starts_at:asc&${q}`);
+          const got = res?.individual_appointments || [];
+          all.push(...got);
+          if (got.length < 100) break;
+        }
+        const out = all.filter((a: any) => !a.cancelled_at).map((a: any) => ({
           id: String(a.id), starts_at: a.starts_at, ends_at: a.ends_at, patient: a.patient_name || null,
           type: typeName[idFromLink(a.appointment_type) || ""] || null,
         }));
