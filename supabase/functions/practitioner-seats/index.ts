@@ -129,6 +129,12 @@ async function ledger(op: string, a: Args): Promise<Args> {
       "line_items[0][price_data][unit_amount]": String(PRICES[currency]),
       "line_items[0][price_data][product_data][name]": "Client seat: one year of Premium in any Me app",
       "invoice_creation[enabled]": "true",
+      // Stripe Tax: prices stay as shown, VAT is worked out of them and printed on the invoice.
+      "automatic_tax[enabled]": "true",
+      "tax_id_collection[enabled]": "true",
+      "billing_address_collection": "required",
+      "line_items[0][price_data][tax_behavior]": "inclusive",
+      "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
       "metadata[seat_order_id]": order.id,
       "locale": CHECKOUT_LOCALES.has(lang) ? (lang === "zh" ? "zh-TW" : lang) : "auto",
     });
@@ -208,6 +214,12 @@ async function ledger(op: string, a: Args): Promise<Args> {
       "line_items[0][price_data][recurring][interval]": "month",
       "line_items[0][price_data][product_data][name]": `Me Practitioner: ${films} more films`,
       "metadata[film_plan_owner]": a.owner,
+      // Stripe Tax: prices stay as shown, VAT is worked out of them and printed on the invoice.
+      "automatic_tax[enabled]": "true",
+      "tax_id_collection[enabled]": "true",
+      "billing_address_collection": "required",
+      "line_items[0][price_data][tax_behavior]": "inclusive",
+      "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
       "locale": CHECKOUT_LOCALES.has(lang) ? (lang === "zh" ? "zh-TW" : lang) : "auto",
     }));
     if (!s.ok) { console.error(`seats: film checkout failed ${s.status}: ${JSON.stringify(s.body).slice(0, 300)}`); return { error: "payment_unavailable" }; }
