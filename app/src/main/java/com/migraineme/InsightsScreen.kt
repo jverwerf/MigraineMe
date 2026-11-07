@@ -2059,7 +2059,7 @@ internal fun TopPatternsCard(
                     Column(Modifier.weight(1f)) {
                         Text(t("Patterns"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("Each factor made a migraine this many times likelier"),
+                        FitText(t("Each factor made a migraine this many times likelier"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     SortChipMenu(sortMode,
@@ -2295,7 +2295,7 @@ private fun PatternTile(
                     if (stat.avgSeverity != null) Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
                     val durText = if (hrs >= 24f) t("~%sd duration", String.format("%.0f", hrs / 24))
                         else t("~%sh duration", String.format("%.0f", hrs))
-                    Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
+                    FitText(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -2806,7 +2806,7 @@ internal fun ContextCard(
                             Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
                             val durText = if (hrs >= 24f) t("~%sd avg duration", String.format("%.0f", hrs / 24f))
                                 else t("~%sh avg duration", String.format("%.0f", hrs))
-                            Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
+                            FitText(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

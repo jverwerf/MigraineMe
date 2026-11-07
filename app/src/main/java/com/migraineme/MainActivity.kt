@@ -3516,17 +3516,20 @@ private fun BottomBar(
 @Composable
 private fun NavLabel(text: String) {
     val start = 12.sp
+    // The floor is 8sp on screen whatever the system font size, or a long word falls off the bar.
+    val floor = 8.sp / androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
     var size by remember(text) { mutableStateOf(start) }
     var settled by remember(text) { mutableStateOf(false) }
     Text(
         text,
         fontSize = size,
+        letterSpacing = 0.sp,
         maxLines = 1,
         softWrap = false,
         overflow = TextOverflow.Clip,
         modifier = Modifier.drawWithContent { if (settled) drawContent() },
         onTextLayout = { result ->
-            if (result.didOverflowWidth && size > 8.sp) size = size * 0.92f else settled = true
+            if (result.didOverflowWidth && size > floor) size = size * 0.92f else settled = true
         },
     )
 }

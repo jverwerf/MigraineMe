@@ -350,7 +350,7 @@ fun AiSetupResultsScreen(
                             }
                         }
                         Spacer(Modifier.height(4.dp))
-                        Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
+                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
                             values.forEachIndexed { i, v ->
                                 val frac = (v / maxVal).toFloat().coerceIn(0f, 1f)
                                 val barHeight = (frac * 30).dp.coerceAtLeast(3.dp)
@@ -486,7 +486,7 @@ fun AiSetupResultsScreen(
                         Spacer(Modifier.height(6.dp))
                         val labels = listOf("-7", "-6", "-5", "-4", "-3", "-2", "-1", "T0", "+1", "+2", "+3", "+4", "+5", "+6", "+7")
                         val maxVal = mc.decayCurve.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
-                        Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(1.dp), verticalAlignment = Alignment.Bottom) {
+                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(1.dp), verticalAlignment = Alignment.Bottom) {
                             mc.decayCurve.forEachIndexed { i, v ->
                                 val frac = (v / maxVal).toFloat().coerceIn(0f, 1f)
                                 val barColor = when { i < 7 -> Color(0xFFFFB74D); i == 7 -> Color(0xFFE57373); else -> Color(0xFF81C784) }

@@ -11,9 +11,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,8 +51,13 @@ internal fun FitText(
     val base = fontSize.takeIf { it.isSpecified } ?: style.fontSize.takeIf { it.isSpecified } ?: 14.sp
     var scale by remember(text, base) { mutableStateOf(1f) }
     var settled by remember(text, base) { mutableStateOf(false) }
-    val floor = if (maxLines == 1) MIN_SCALE_ONE_LINE else MIN_SCALE
+    // With a large system font the floor is relative to the normal size, not the enlarged one:
+    // a whole word at the normal size beats a split word at the enlarged size.
+    val floor = if (maxLines == 1) MIN_SCALE_ONE_LINE else MIN_SCALE / LocalDensity.current.fontScale.coerceAtLeast(1f)
+    // The app has its own language, and hyphenating German with the phone's English rules gives "Au-genschmerz-en".
+    val locale = LocaleList(rememberAppLocale().toLanguageTag())
     val fitted = style.copy(
+        localeList = locale,
         hyphens = if (scale <= floor) Hyphens.Auto else style.hyphens,
         fontSize = base * scale,
         lineHeight = if (style.lineHeight.isSpecified) style.lineHeight * scale else style.lineHeight,

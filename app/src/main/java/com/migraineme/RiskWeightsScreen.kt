@@ -233,7 +233,7 @@ fun RiskWeightsScreen(
                     OutlinedButton(
                         onClick = { resetDefaults() }, modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = AppTheme.BaseCardSolid, contentColor = Color.White)
-                    ) { Text(t("Reset Defaults")) }
+                    ) { FitText(t("Reset Defaults"), textAlign = TextAlign.Center) }
                     Button(
                         onClick = { save() }, modifier = Modifier.weight(1f), enabled = !saving,
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
@@ -335,7 +335,7 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
             Spacer(Modifier.height(12.dp))
 
             // Bar chart
-            Row(Modifier.fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 80.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
                 values.forEachIndexed { i, v ->
                     val frac = (v / maxVal).toFloat().coerceIn(0f, 1f)
                     val barHeight = (frac * 56).dp.coerceAtLeast(4.dp)

@@ -489,7 +489,7 @@ private fun MDecayCurveCard(
         val maxVal = numeric.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
 
         Row(
-            Modifier.fillMaxWidth().height(80.dp),
+            Modifier.fillMaxWidth().heightIn(min = 80.dp),
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             verticalAlignment = Alignment.Bottom
         ) {
@@ -636,7 +636,7 @@ private fun MDecayCurveCard(
                 },
                 modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-            ) { Text(t("Reset Defaults")) }
+            ) { FitText(t("Reset Defaults"), textAlign = TextAlign.Center) }
             Button(
                 onClick = { onSave() },
                 modifier = Modifier.weight(1f), enabled = !saving,

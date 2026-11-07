@@ -589,7 +589,7 @@ private fun SplitHalf(
 
         Spacer(Modifier.height(10.dp))
 
-        Text(
+        FitText(
             title,
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)

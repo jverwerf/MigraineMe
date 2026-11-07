@@ -392,7 +392,7 @@ fun PermissionSubRow(
                     style = MaterialTheme.typography.labelSmall
                 )
             } else {
-                Text(
+                FitText(
                     t("Allow"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
