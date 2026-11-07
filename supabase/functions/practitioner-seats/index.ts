@@ -37,6 +37,14 @@ const COMMISSION_PCT = 10;
 // The normal yearly price, the same in all five apps (App Store checked 2026-11-07).
 // No bulk discount (Jordy, 2026-11-07).
 const PRICES: Record<string, number> = { gbp: 5499, usd: 5599, eur: 6399 };
+// Film packages, monthly, on top of 2 free films; they stack. Prices by Jordy in GBP
+// (2026-11-07); USD and EUR follow the same ratio as the yearly subscription.
+const FILM_PACKS: Record<number, Record<string, number>> = {
+  5: { gbp: 500, usd: 500, eur: 600 },
+  10: { gbp: 800, usd: 800, eur: 900 },
+  25: { gbp: 1500, usd: 1500, eur: 1700 },
+  50: { gbp: 2500, usd: 2500, eur: 2900 },
+};
 const CHECKOUT_LOCALES = new Set(["de", "es", "fr", "it", "nl", "pt", "ja", "ko", "tr", "pl", "zh"]);
 
 const CORS = {
@@ -156,6 +164,63 @@ async function ledger(op: string, a: Args): Promise<Args> {
       name = o?.[0]?.owner_name ?? null;
     }
     return { result: row?.result, ends_at: row?.seat_ends_at, owner: row?.seat_owner, owner_name: name };
+  }
+  if (op === "film_status") {
+    const { data: rows } = await db.from("practitioner_film_plans").select("*").eq("owner_email", a.owner).order("created_at");
+    const plans: Args[] = [];
+    for (const plan of rows ?? []) {
+      if (STRIPE_KEY && !plan.stripe_subscription_id && plan.stripe_session_id) {
+        const s = await stripe(`checkout/sessions/${plan.stripe_session_id}`);
+        if (s.ok && s.body.subscription) plan.stripe_subscription_id = s.body.subscription;
+        else if (s.ok && s.body.status === "expired") { await db.from("practitioner_film_plans").delete().eq("id", plan.id); continue; }
+      }
+      if (STRIPE_KEY && plan.stripe_subscription_id) {
+        const s = await stripe(`subscriptions/${plan.stripe_subscription_id}`);
+        if (s.ok) {
+          plan.active = ["active", "trialing", "past_due"].includes(s.body.status);
+          plan.cancel_at_period_end = !!s.body.cancel_at_period_end;
+          const end = s.body.current_period_end ?? s.body.items?.data?.[0]?.current_period_end;
+          plan.period_end = end ? new Date(end * 1000).toISOString() : null;
+          await db.from("practitioner_film_plans").update({
+            stripe_subscription_id: plan.stripe_subscription_id, active: plan.active,
+            cancel_at_period_end: plan.cancel_at_period_end, period_end: plan.period_end,
+          }).eq("id", plan.id);
+        } else console.error(`seats: subscription lookup failed ${plan.id}: ${s.status}`); // keeps the last known state
+      }
+      if (plan.active) plans.push({ id: plan.id, films: plan.films, cancel_at_period_end: plan.cancel_at_period_end, period_end: plan.period_end });
+    }
+    return { ok: true, extra: plans.reduce((n, x) => n + x.films, 0), plans, packs: FILM_PACKS };
+  }
+  if (op === "film_checkout") {
+    if (!STRIPE_KEY) return { error: "payment_unavailable" };
+    const currency = String(a.currency ?? "").toLowerCase(), films = Number(a.films);
+    const price = FILM_PACKS[films]?.[currency];
+    if (!price) return { error: "bad_package" };
+    const lang = String(a.lang ?? "");
+    const s = await stripe("checkout/sessions", new URLSearchParams({
+      mode: "subscription",
+      customer_email: a.owner,
+      success_url: `${PORTAL}/#videos`,
+      cancel_url: `${PORTAL}/#videos`,
+      "line_items[0][quantity]": "1",
+      "line_items[0][price_data][currency]": currency,
+      "line_items[0][price_data][unit_amount]": String(price),
+      "line_items[0][price_data][recurring][interval]": "month",
+      "line_items[0][price_data][product_data][name]": `Me Practitioner: ${films} more films`,
+      "metadata[film_plan_owner]": a.owner,
+      "locale": CHECKOUT_LOCALES.has(lang) ? (lang === "zh" ? "zh-TW" : lang) : "auto",
+    }));
+    if (!s.ok) { console.error(`seats: film checkout failed ${s.status}: ${JSON.stringify(s.body).slice(0, 300)}`); return { error: "payment_unavailable" }; }
+    await db.from("practitioner_film_plans").insert({ owner_email: a.owner, films, stripe_session_id: s.body.id });
+    return { ok: true, url: s.body.url };
+  }
+  if (op === "film_cancel") {
+    const { data: row } = await db.from("practitioner_film_plans").select("stripe_subscription_id")
+      .eq("owner_email", a.owner).eq("id", String(a.plan_id ?? "")).maybeSingle();
+    if (!row?.stripe_subscription_id) return { error: "no_plan" };
+    const s = await stripe(`subscriptions/${row.stripe_subscription_id}`, new URLSearchParams({ cancel_at_period_end: "true" }));
+    if (!s.ok) { console.error(`seats: film cancel failed ${s.status}`); return { error: "failed" }; }
+    return { ok: true };
   }
   return { error: "unknown_op" };
 }
@@ -322,6 +387,13 @@ serve(async (req: Request) => {
     }
     if (action === "checkout" || action === "label") {
       const r = await ledger(action, { ...body, owner, name: pr.display_name });
+      return json(r, r.error === "payment_unavailable" ? 503 : r.error ? 400 : 200);
+    }
+    if (action === "film_status" || action === "film_checkout" || action === "film_cancel") {
+      const r = await ledger(action, { ...body, owner });
+      if (action === "film_status" && !r.error) {
+        await db.from("practitioners").update({ extra_films: r.extra ?? 0 }).ilike("login_email", likeEmail(owner));
+      }
       return json(r, r.error === "payment_unavailable" ? 503 : r.error ? 400 : 200);
     }
     return json({ error: "unknown_action" }, 400);
