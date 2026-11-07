@@ -2089,7 +2089,7 @@ private fun itStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Anche i progressi vanno via.",
     "Jaw or face pain" to "Dolore a mascella o viso",
     "Jet lag" to "Jet lag",
-    "Join Google Meet" to "Partecipa su Google Meet",
+    "Join %1\$s" to "Partecipa su %1\$s",
     "Journal" to "Diario",
     "Journal only" to "Solo diario",
     "Journal only. Subscribe to count it in insights." to "Solo diario. Abbonati per contarlo negli insight.",

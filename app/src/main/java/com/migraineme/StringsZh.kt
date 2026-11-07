@@ -2090,7 +2090,7 @@ private fun zhStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "進度也會一併移除。",
     "Jaw or face pain" to "下顎或臉部疼痛",
     "Jet lag" to "時差",
-    "Join Google Meet" to "加入 Google Meet",
+    "Join %1\$s" to "加入 %1\$s",
     "Journal" to "日誌",
     "Journal only" to "僅限日誌",
     "Journal only. Subscribe to count it in insights." to "僅供日誌使用。訂閱後才會納入洞察。",

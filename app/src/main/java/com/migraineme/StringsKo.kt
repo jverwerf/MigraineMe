@@ -2090,7 +2090,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "진행 기록도 함께 사라져요.",
     "Jaw or face pain" to "턱 또는 얼굴 통증",
     "Jet lag" to "시차증",
-    "Join Google Meet" to "Google Meet 참여",
+    "Join %1\$s" to "%1\$s 참여",
     "Journal" to "일지",
     "Journal only" to "일기만",
     "Journal only. Subscribe to count it in insights." to "일지에만 기록돼요. 구독하면 인사이트에 반영돼요.",

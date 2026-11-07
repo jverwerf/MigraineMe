@@ -2090,7 +2090,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "経過も一緒に消えます。",
     "Jaw or face pain" to "あごや顔の痛み",
     "Jet lag" to "時差ぼけ",
-    "Join Google Meet" to "Google Meetに参加",
+    "Join %1\$s" to "%1\$sに参加",
     "Journal" to "日誌",
     "Journal only" to "日記のみ",
     "Journal only. Subscribe to count it in insights." to "記録のみです。購読するとインサイトに反映されます。",

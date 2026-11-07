@@ -2089,7 +2089,7 @@ private fun nlStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "De voortgang gaat mee.",
     "Jaw or face pain" to "Kaak- of gezichtspijn",
     "Jet lag" to "Jetlag",
-    "Join Google Meet" to "Deelnemen via Google Meet",
+    "Join %1\$s" to "Deelnemen via %1\$s",
     "Journal" to "Dagboek",
     "Journal only" to "Alleen dagboek",
     "Journal only. Subscribe to count it in insights." to "Alleen dagboek. Abonneer om het mee te tellen.",

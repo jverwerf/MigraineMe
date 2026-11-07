@@ -2089,7 +2089,7 @@ private fun deStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Sein Verlauf geht mit.",
     "Jaw or face pain" to "Kiefer- oder Gesichtsschmerz",
     "Jet lag" to "Jetlag",
-    "Join Google Meet" to "Google Meet beitreten",
+    "Join %1\$s" to "%1\$s beitreten",
     "Journal" to "Journal",
     "Journal only" to "Nur Tagebuch",
     "Journal only. Subscribe to count it in insights." to "Nur Tagebuch. Mit Abo zählt es in Insights.",

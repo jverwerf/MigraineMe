@@ -2090,7 +2090,7 @@ private fun trStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "İlerlemesi de onunla gider.",
     "Jaw or face pain" to "Çene veya yüz ağrısı",
     "Jet lag" to "Jet lag",
-    "Join Google Meet" to "Google Meet’e katıl",
+    "Join %1\$s" to "%1\$s görüşmesine katıl",
     "Journal" to "Günlük",
     "Journal only" to "Sadece günlük",
     "Journal only. Subscribe to count it in insights." to "Yalnızca günlükte. İçgörülerde sayılması için abone ol.",

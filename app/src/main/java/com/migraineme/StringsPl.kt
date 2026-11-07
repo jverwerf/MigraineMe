@@ -2314,7 +2314,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Postęp znika razem z nim.",
     "Jaw or face pain" to "Ból szczęki lub twarzy",
     "Jet lag" to "Jet lag",
-    "Join Google Meet" to "Dołącz do Google Meet",
+    "Join %1\$s" to "Dołącz: %1\$s",
     "Journal" to "Dziennik",
     "Journal only" to "Tylko dziennik",
     "Journal only. Subscribe to count it in insights." to "Tylko dziennik. Subskrypcja pozwoli uwzględnić to we wnioskach.",

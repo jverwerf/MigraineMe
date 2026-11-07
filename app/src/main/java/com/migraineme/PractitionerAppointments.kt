@@ -42,6 +42,15 @@ private fun whenText(iso: String?): String = runCatching {
         .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT))
 }.getOrDefault(iso.orEmpty())
 
+/** The service in a practitioner's saved video call link, for the button. */
+private fun videoCallName(url: String): String = when {
+    url.contains("meet.google.com", true) -> "Google Meet"
+    url.contains("teams.microsoft.com", true) || url.contains("teams.live.com", true) -> "Microsoft Teams"
+    url.contains("zoom.us", true) -> "Zoom"
+    url.contains("webex.com", true) -> "Webex"
+    else -> ""
+}
+
 private fun instant(iso: String?) = runCatching { OffsetDateTime.parse(iso).toInstant() }.getOrNull()
 
 /** Opens the phone's calendar with the session filled in; the client presses save there. Needs no permission. */
@@ -150,7 +159,7 @@ fun PractitionerAppointments(
                 Text(whenText(s.first) + (s.second?.let { ty -> " · $ty" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Color.White)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (meetUrl != null) {
-                        TextButton(onClick = { runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(meetUrl))) } }) { Text(t("Join Google Meet")) }
+                        TextButton(onClick = { runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(meetUrl))) } }) { Text(t("Join %1\$s", videoCallName(meetUrl))) }
                     }
                     if (calendarConnected) {
                         val title = t("Appointment with %1\$s", practitionerName)

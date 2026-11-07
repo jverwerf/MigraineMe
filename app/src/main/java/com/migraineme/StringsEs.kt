@@ -2089,7 +2089,7 @@ private fun esStrings1(): Map<String, String> = mapOf(
     "Its progress goes with it." to "Su progreso se va con ella.",
     "Jaw or face pain" to "Dolor de mandíbula o cara",
     "Jet lag" to "Jet lag",
-    "Join Google Meet" to "Unirse a Google Meet",
+    "Join %1\$s" to "Unirse a %1\$s",
     "Journal" to "Diario",
     "Journal only" to "Solo diario",
     "Journal only. Subscribe to count it in insights." to "Solo diario. Suscríbete para contarlo en Insights.",
