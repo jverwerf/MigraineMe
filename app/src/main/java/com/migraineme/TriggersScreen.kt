@@ -525,16 +525,16 @@ private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Bo
  * ──────────────────────────────────────────────── */
 
 private fun formatTriggerTime(iso: String?): String {
-    if (iso.isNullOrBlank()) return "Not set"
+    if (iso.isNullOrBlank()) return tSync("Not set")
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
         val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime()
             ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
             ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
-            ?: return "Not set"
+            ?: return tSync("Not set")
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) {
-        "Not set"
+        tSync("Not set")
     }
 }
 

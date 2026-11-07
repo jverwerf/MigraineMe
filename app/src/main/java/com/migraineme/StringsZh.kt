@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5104 entries.
  */
 internal val ZH_STRINGS: Map<String, String> =
     zhStrings0() + zhStrings1() + zhStrings2() + zhStrings3()
@@ -148,7 +148,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "%s days active" to "活躍%s天",
     "%s days ago" to "%s天前",
     "%s days before" to "提前%s天",
-    "%s days before onset" to "發作前%s天",
+    "%s days before onset" to "發作前 %s 天",
     "%s days left on trial" to "試用剩餘%s天",
     "%s days left — subscribe to keep your insights" to "剩餘%s天——訂閱即可保留你的洞察",
     "%s days of Premium remaining — subscribe to keep access" to "Premium 剩餘%s天——訂閱即可繼續使用",
@@ -1184,7 +1184,7 @@ private fun zhStrings0(): Map<String, String> = mapOf(
     "Current: %s" to "目前:%s",
     "Custom" to "自訂",
     "Custom range…" to "自訂範圍…",
-    "Custom: %1\$s – %2\$s" to "%1\$s – %2\$s",
+    "Custom: %1\$s – %2\$s" to "自訂：%1\$s–%2\$s",
     "Customise every trigger, prodrome, threshold and weight to fit you." to "自訂每個誘因、前驅症狀、閾值和權重,打造最適合你的設定。",
     "Customize" to "自訂",
     "Customize 'What else changed'" to "自訂「還有哪些變化」",
@@ -4062,7 +4062,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "Try Again" to "再試一次",
     "Try Premium free\nfor 14 days" to "免費試用 Premium\n14 天",
     "Try again" to "再試一次",
-    "Try the barcode scanner on something in your kitchen, or search a food to see how tyramine, alcohol, gluten and histamine get flagged when any of them are present." to "用條碼掃描試試廚房裡的東西，或搜尋一種食物，看看含有酪胺、酒精、麩質和組織胺時會如何標示。",
+    "Try the barcode scanner on something in your kitchen, or search a food to see how tyramine, alcohol, gluten and histamine get flagged when any of them are present." to "試著掃描你廚房裡某樣東西的條碼，或搜尋一種食物，看看當含有酪胺、酒精、麩質和組織胺時會如何被標示。",
     "Try the voice input on a real day. The AI is forgiving, you can ramble through \"tired, had wine and pasta, took ibuprofen at 4, felt better by 8\" and it'll log all four." to "在真實的一天試試語音輸入。AI 很能包容，你可以隨口說「很累、喝了酒、吃了義大利麵、4 點吃了布洛芬、8 點好多了」，它會把四項都記錄下來。",
     "Tue" to "週二",
     "Tummy pain" to "肚子痛",
@@ -4301,7 +4301,7 @@ private fun zhStrings2(): Map<String, String> = mapOf(
     "We matched some from your note — confirm or adjust" to "已從你的備註比對出部分內容，請確認或調整",
     "We read the file and show you what we found before anything is saved. You can change or remove any attack, and you can remove the whole import afterwards." to "我們會先讀取檔案，並在儲存任何內容前，讓你看到我們找到了什麼。你可以修改或移除任何一次發作，之後也可以移除整批匯入的資料。",
     "We sent a confirmation link to %s.\nClick it to activate your account, then sign in." to "我們已將確認連結寄到 %s。\n點一下連結啟用帳號，然後再登入。",
-    "We support Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch." to "我們支援 Oura、Polar 和 Garmin。連結你的裝置,即可自動匯入睡眠、恢復狀況、HRV、皮膚溫度等資料。\n\n使用 Garmin 時,配對碼可解鎖我們在 Garmin Connect IQ 商店中的配套 App,讓它能在你的手錶上執行。",
+    "We support Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch." to "使用 Garmin 時，配對碼可解鎖我們在 Garmin Connect IQ 商店中的配套 App，讓它能在你的手錶上執行。",
     "We test what we recommend." to "我們會測試所推薦的產品。",
     "We'd count this." to "這項會列入計算",
     "We'd leave this out." to "這項不會列入計算",
@@ -4771,6 +4771,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "data and evidence come first" to "資料與實證優先",
     "days a month" to "每月天數",
     "days migraine-free" to "天無偏頭痛",
+    "days per 4 weeks" to "天數/4週",
     "dehydration" to "脫水",
     "device" to "裝置",
     "dietitian" to "營養師",
@@ -4778,7 +4779,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "down" to "下降",
     "down %s ranks" to "下降%s名",
     "down 1 rank" to "下降1名",
-    "down from %s free last month" to "較上個月的 %s 減少",
+    "down from %s free last month" to "較上個月的 %s 天無偏頭痛減少",
     "down from %s last month" to "較上個月的 %s 減少",
     "drops below" to "降至低於",
     "drug" to "藥物",
@@ -4882,7 +4883,6 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "偏頭痛教練",
     "migraine days" to "偏頭痛天數",
     "migraine days/week" to "偏頭痛天數/週",
-    "days per 4 weeks" to "天數/4週",
     "migraine specialist" to "偏頭痛專科醫師",
     "migraines" to "偏頭痛",
     "mild" to "輕微",
@@ -5036,7 +5036,7 @@ private fun zhStrings3(): Map<String, String> = mapOf(
     "up" to "上",
     "up %s ranks" to "上升 %s 名",
     "up 1 rank" to "上升 1 名",
-    "up from %s free last month" to "比上個月的 %s 更多",
+    "up from %s free last month" to "高於上月的 %s 天無偏頭痛",
     "up from %s last month" to "比上個月的 %s 更多",
     "up. Below those, the most-used categories appear as their own D/W/M totals.\n\n" to "置頂。下方則以日／週／月總計分別顯示最常使用的類別。\n\n",
     "used in %s%% of migraines" to "用於 %s%% 的偏頭痛",

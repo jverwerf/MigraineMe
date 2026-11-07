@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5398 entries.
+ * 5399 entries.
  */
 internal val PL_STRINGS: Map<String, String> =
     plStrings0() + plStrings1() + plStrings2() + plStrings3()
@@ -933,7 +933,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Attack Log" to "Lista ataków",
     "Attack log" to "Lista ataków",
     "Attacks" to "Ataki",
-    "Attacks (%1\$s)" to "Ataków (%1\$s)",
+    "Attacks (%1\$s)" to "Ataki (%1\$s)",
     "Attacks (%1\$s)|few" to "Ataki (%1\$s)",
     "Attacks (%1\$s)|one" to "Atak (%1\$s)",
     "Attacks ended about %1\$s sooner, over %2\$s" to "Ataki kończyły się o około %1\$s wcześniej, w ciągu %2\$s",
@@ -1106,7 +1106,7 @@ private fun plStrings0(): Map<String, String> = mapOf(
     "Browse" to "Przeglądaj",
     "Browse all" to "Pokaż wszystko",
     "Browse all migraines" to "Wszystkie migreny",
-    "Browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "Przeglądaj artykuły lub dołącz do dyskusji. Aby dostać spersonalizowane rekomendacje, otwórz Zarządzanie elementami i zasubskrybuj jednego lub dwóch przewodników.",
+    "Browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "Przeglądaj artykuły lub dołącz do dyskusji. Aby dostać spersonalizowane rekomendacje, otwórz Zarządzaj elementami i zasubskrybuj jednego lub dwóch towarzyszy.",
     "Building your baseline" to "Budujemy twój punkt odniesienia",
     "Built by neuroscientists, with published work on stress, sleep and HRV. Most useful if stress or broken sleep are among your triggers." to "Stworzona przez neurobiologów, z publikacjami o stresie, śnie i HRV. Najbardziej przydatna, jeśli stres lub przerywany sen należą do twoich wyzwalaczy.",
     "Built for chronic pain generally. Migraine-specific evidence is thin, so treat it as an experiment." to "Stworzona z myślą o przewlekłym bólu w ogóle. Dowodów dotyczących migreny jest niewiele, więc potraktuj to jako eksperyment.",
@@ -1618,7 +1618,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Early warning detected" to "Wykryto wczesny sygnał",
     "Early warning signs" to "Wczesne sygnały",
     "Early warning signs before a migraine" to "Wczesne sygnały przed migreną",
-    "Eases eye strain and light sensitivity with heat and gentle pressure around the eyes, right when an attack is building." to "Łagodzi zmęczenie oczu i wrażliwość na światło dzięki cieple i delikatnemu uciskowi wokół oczu, dokładnie wtedy, gdy narasta atak.",
+    "Eases eye strain and light sensitivity with heat and gentle pressure around the eyes, right when an attack is building." to "Łagodzi zmęczenie oczu i wrażliwość na światło dzięki ciepłu i delikatnemu uciskowi wokół oczu, dokładnie wtedy, gdy narasta atak.",
     "Eases head and temple pressure with kneading and heat across the scalp, right where tension builds during an attack." to "Łagodzi ucisk głowy i skroni dzięki ugniataniu i ciepłu na skórze głowy, dokładnie tam, gdzie podczas ataku narasta napięcie.",
     "Eases neck tension, one of the most common migraine triggers, with kneading and heat before it escalates." to "Łagodzi napięcie karku, jeden z najczęstszych wyzwalaczy migreny, dzięki ugniataniu i ciepłu, zanim się nasili.",
     "Easy" to "Łatwe",
@@ -2054,7 +2054,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Headband that stimulates the trigeminal nerve on the forehead. Separate acute and prevention programmes." to "Opaska pobudzająca nerw trójdzielny na czole. Osobne programy na atak i na profilaktykę.",
     "Heads up for %1\$s" to "Uwaga na %1\$s",
     "Heads up for tomorrow" to "Uwaga na jutro",
-    "Headset that stimulates the trigeminal and occipital nerves at the same time." to "Zestaw słuchawkowy, który jednocześnie pobudza nerw trójdzielny i potyliczny.",
+    "Headset that stimulates the trigeminal and occipital nerves at the same time." to "Urządzenie noszone na głowie, które jednocześnie stymuluje nerw trójdzielny i nerwy potyliczne.",
     "Health Connect" to "Health Connect",
     "Health Connect doesn't store a recovery score. Computed locally: HRV vs your 7-day baseline (50%), resting HR vs baseline (25%, lower is better), sleep score (25%). Requires at least 7 days of HRV/RHR history." to "Health Connect nie przechowuje wyniku regeneracji. Obliczane lokalnie: HRV względem twojej 7-dniowej wartości bazowej (50%), tętno spoczynkowe względem wartości bazowej (25%, niższe jest lepsze), wynik snu (25%). Wymaga co najmniej 7 dni historii HRV i tętna spoczynkowego.",
     "Health Connect doesn't store a sleep score. Computed locally: 60% duration (best at 7–9h) + 40% efficiency." to "Health Connect nie zapisuje wyniku snu. Obliczany lokalnie: 60% czas trwania (najlepiej 7–9 godz.) + 40% efektywność.",
@@ -2520,7 +2520,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Lunch" to "Obiad",
     "M" to "M",
     "MIGRAINE DAYS PER MONTH" to "DNI Z MIGRENĄ NA MIESIĄC",
-    "MILD" to "ŁAGODNA",
+    "MILD" to "ŁAGODNY",
     "MODERATE" to "UMIARKOWANE",
     "MSG" to "MSG",
     "MSG exposure" to "Ekspozycja na MSG",
@@ -2608,7 +2608,7 @@ private fun plStrings1(): Map<String, String> = mapOf(
     "Migraine" to "Migrena",
     "Migraine\nhappened" to "Migrena\nwystąpiła",
     "Migraine Buddy: Records › export › All period." to "Migraine Buddy: Wpisy › eksport › Cały okres.",
-    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Records › export › All period. Apple Health: Profil › Eksportuj wszystkie dane zdrowotne, a potem wybierz export.xml.",
+    "Migraine Buddy: Records › export › All period. Apple Health: Profile › Export All Health Data, then pick export.xml." to "Migraine Buddy: Wpisy › eksport › Cały okres. Apple Health: Profil › Eksportuj wszystkie dane zdrowotne, potem wybierz export.xml.",
     "Migraine Profile" to "Profil migreny",
     "Migraine Timeline" to "Oś czasu",
     "Migraine after stress ends (weekends, holidays)" to "Migrena po ustąpieniu stresu (weekendy, urlopy)",
@@ -3867,7 +3867,7 @@ private fun plStrings2(): Map<String, String> = mapOf(
     "Start Free Trial" to "Wypróbuj za darmo",
     "Start Tour" to "Zacznij tour",
     "Start Tracking" to "Zaczynamy",
-    "Start a treatment the moment you begin a new medication, supplement, or lifestyle change. We compare it to a baseline and a working baseline so you can see what works for you and what doesn't." to "Rozpocznij terapię w chwili, gdy zaczynasz nowy lek, suplement lub zmianę stylu życia. Porównujemy ją z punktem wyjścia i bieżącym punktem odniesienia, żeby było widać, co u ciebie działa, a co nie.",
+    "Start a treatment the moment you begin a new medication, supplement, or lifestyle change. We compare it to a baseline and a working baseline so you can see what works for you and what doesn't." to "Rozpocznij leczenie w chwili, gdy zaczynasz nowy lek, suplement lub zmianę stylu życia. Porównamy je z punktem wyjścia i roboczym punktem wyjścia, żebyś zobaczył, co u ciebie działa, a co nie.",
     "Start date *" to "Data startu *",
     "Start logging migraines, triggers, medicines, and reliefs to see them here." to "Zacznij zapisywać migreny, wyzwalacze, leki i ulgę, aby zobaczyć je tutaj.",
     "Start now" to "Zacznij teraz",
@@ -5037,6 +5037,7 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "data and evidence come first" to "dane i dowody są najważniejsze",
     "days a month" to "dni w miesiącu",
     "days migraine-free" to "dni bez migreny",
+    "days per 4 weeks" to "dni/4 tygodnie",
     "dehydration" to "odwodnienie",
     "device" to "urządzenie",
     "dietitian" to "dietetyk",
@@ -5154,7 +5155,6 @@ private fun plStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "coach migrenowy",
     "migraine days" to "dni migreny",
     "migraine days/week" to "dni migreny/tydzień",
-    "days per 4 weeks" to "dni/4 tygodnie",
     "migraine specialist" to "specjalista od migreny",
     "migraines" to "migreny",
     "mild" to "lekki",

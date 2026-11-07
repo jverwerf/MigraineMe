@@ -79,7 +79,7 @@ fun EditTriggerScreen(
         ?: "None"
 
     fun formatIsoDdMmHm(iso: String?): String {
-        if (iso.isNullOrBlank()) return "Not set"
+        if (iso.isNullOrBlank()) return tSync("Not set")
         return try {
             val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
             val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.parse(iso)

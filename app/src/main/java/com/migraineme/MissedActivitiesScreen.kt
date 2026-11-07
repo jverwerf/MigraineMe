@@ -343,11 +343,11 @@ private fun MissedTimeDialog(title: String, initialIso: String? = null, onDismis
 }
 
 private fun formatMissedTime(iso: String?): String {
-    if (iso.isNullOrBlank()) return "Not set"
+    if (iso.isNullOrBlank()) return tSync("Not set")
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
         val ldt = odt?.atZoneSameInstant(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
-            ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return "Not set"
+            ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return tSync("Not set")
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { "Not set" }
 }

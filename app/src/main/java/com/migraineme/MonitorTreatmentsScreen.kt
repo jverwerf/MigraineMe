@@ -215,7 +215,7 @@ fun MonitorTreatmentsScreen(navController: NavController) {
             val l = lbById[r.id]
             items.add(TreatmentListRowItem(
                 id = r.id, isGroup = false,
-                displayName = r.name,
+                displayName = prettyLabel(r.name),
                 metaLine = soloMeta(r),
                 isActive = r.stopDate == null,
                 pctChange = l?.pctChangeMmd, rollingMmd = l?.rollingMmd,
@@ -231,7 +231,7 @@ fun MonitorTreatmentsScreen(navController: NavController) {
             val anyActive = members.any { it.stopDate == null }
             val ge = groupEffById[gid]
             val names = members.map { it.name }.distinct()
-            val displayName = if (names.size == 1) names.first() else names.joinToString(" + ")
+            val displayName = if (names.size == 1) prettyLabel(names.first()) else names.joinToString(" + ") { prettyLabel(it) }
             items.add(TreatmentListRowItem(
                 id = "group:$gid", isGroup = true,
                 displayName = displayName,

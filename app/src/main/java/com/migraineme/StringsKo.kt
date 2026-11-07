@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5104 entries.
  */
 internal val KO_STRINGS: Map<String, String> =
     koStrings0() + koStrings1() + koStrings2() + koStrings3()
@@ -751,7 +751,7 @@ private fun koStrings0(): Map<String, String> = mapOf(
     "Aura duration" to "조짐 지속 시간",
     "Aura moment" to "조짐 시점",
     "Auto" to "자동",
-    "Auto-Captured Data — Less Logging, More Tracking" to "자동 기록 데이터 — 기록은 줄이고, 추적은 늘려요",
+    "Auto-Captured Data — Less Logging, More Tracking" to "자동 수집 데이터 — 기록은 줄이고, 추적은 늘려요",
     "Auto-detect" to "자동 감지",
     "Auto-detect workouts and yoga" to "운동과 요가 자동 감지",
     "Auto-detected" to "자동 감지",
@@ -1831,7 +1831,7 @@ private fun koStrings1(): Map<String, String> = mapOf(
     "Hard to ignore, it got in the way" to "무시하기 어렵고 방해가 됐어요",
     "Has contraception affected your migraines?" to "피임이 편두통에 영향을 주었나요?",
     "Have a diary, spreadsheet or export from another app?" to "다른 앱의 일기, 스프레드시트, 내보내기 파일이 있나요?",
-    "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "가이드를 먼저 살펴본 다음 글을 둘러보거나 토론에 참여해 보세요. 맞춤 추천을 받으려면 항목 관리를 열어 동반자를 한두 개 구독하세요.",
+    "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "안내를 살펴보고 글을 둘러보거나 토론에 참여해 보세요. 맞춤 추천을 받으려면 항목 관리를 열고 도우미를 한두 개 구독하세요.",
     "Have a promo code?" to "쿠폰 코드가 있나요?",
     "Have they been getting better, worse, or the same?" to "더 좋아지고 있나요, 나빠지고 있나요, 비슷한가요?",
     "Headache" to "두통",
@@ -3571,7 +3571,7 @@ private fun koStrings2(): Map<String, String> = mapOf(
     "Sodium high" to "나트륨 높음",
     "Sodium low" to "나트륨 낮음",
     "Soft" to "부드럽게",
-    "Some effect" to "약간 효과",
+    "Some effect" to "약간의 효과",
     "Some foods could not be added" to "추가하지 못한 음식이 있어요",
     "Some help" to "약간 도움",
     "Some links here earn us a commission." to "여기 있는 일부 링크는 수수료를 받아요.",
@@ -4735,9 +4735,9 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "auto" to "자동",
     "average (n = {0}) · shortest {1}m · longest {2}m" to "평균 (n = {0}) · 최단 {1}분 · 최장 {2}분",
     "avg %s" to "평균 %s",
-    "avg %shrs" to "평균%s시간",
+    "avg %shrs" to "평균 %s시간",
     "avg /10" to "평균 /10",
-    "avg duration ~%sh" to "평균 지속 ~%s시간",
+    "avg duration ~%sh" to "평균 약 %s시간",
     "avg peak" to "평균 최고치",
     "avg sev this week" to "이번 주 평균 강도",
     "avg severity" to "평균 강도",
@@ -4771,6 +4771,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "data and evidence come first" to "데이터와 근거 우선",
     "days a month" to "한 달 중 일수",
     "days migraine-free" to "편두통 없는 날",
+    "days per 4 weeks" to "일수/4주",
     "dehydration" to "탈수",
     "device" to "기기",
     "dietitian" to "영양사",
@@ -4778,7 +4779,7 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "down" to "하락",
     "down %s ranks" to "%s단계 하락",
     "down 1 rank" to "1단계 하락",
-    "down from %s free last month" to "지난달 없는 날 %s에서 감소",
+    "down from %s free last month" to "지난달 무편두통 %s에서 감소",
     "down from %s last month" to "지난달 %s에서 감소",
     "drops below" to "아래로 떨어짐",
     "drug" to "약",
@@ -4882,7 +4883,6 @@ private fun koStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "편두통 코치",
     "migraine days" to "편두통 일수",
     "migraine days/week" to "편두통 일수/주",
-    "days per 4 weeks" to "일수/4주",
     "migraine specialist" to "편두통 전문의",
     "migraines" to "편두통",
     "mild" to "가벼움",

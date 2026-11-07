@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 5103 entries.
+ * 5104 entries.
  */
 internal val JA_STRINGS: Map<String, String> =
     jaStrings0() + jaStrings1() + jaStrings2() + jaStrings3()
@@ -96,8 +96,8 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "%1\$s this month · %2\$s" to "今月%1\$s · %2\$s",
     "%1\$s times a day, %2\$s days a week" to "1日%1\$s回、週%2\$s日",
     "%1\$s trigger%2\$s selected" to "誘因を%1\$s件選択中",
-    "%1\$s turns up about %2\$s times as often around your attacks." to "%1\$sは、発作の前後に通常の約%2\$s倍多く現れます。",
-    "%1\$s turns up about %2\$s times as often on pre-migraine days as on normal days." to "%1\$sは、片頭痛の前の日に通常の日の約%2\$s倍多く現れます。",
+    "%1\$s turns up about %2\$s times as often around your attacks." to "%1\$sは、発作の前後に約%2\$s倍の頻度で現れます。",
+    "%1\$s turns up about %2\$s times as often on pre-migraine days as on normal days." to "%1\$sは、片頭痛の前の日には、ふだんの日に比べて約%2\$s倍の頻度で現れます。",
     "%1\$s vs %2\$s on normal days" to "通常の日は%2\$s、今回%1\$s",
     "%1\$s was logged in %2\$s of your attacks." to "%1\$sは、発作の%2\$sで記録されました。",
     "%1\$s was logged in %2\$s of your flare days." to "%1\$sは、症状のある日の%2\$sで記録されました。",
@@ -180,7 +180,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "%s metrics" to "指標%s件",
     "%s migraine" to "%s片頭痛",
     "%s migraine days" to "片頭痛%s日",
-    "%s migraines" to "%s片頭痛",
+    "%s migraines" to "片頭痛%s回",
     "%s migraines logged" to "片頭痛%s件記録",
     "%s migraines rated" to "片頭痛%s件評価",
     "%s migraines with end time" to "終了時刻ありの片頭痛%s件",
@@ -907,7 +907,7 @@ private fun jaStrings0(): Map<String, String> = mapOf(
     "Browse" to "見てみる",
     "Browse all" to "すべて見る",
     "Browse all migraines" to "片頭痛をすべて見る",
-    "Browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "記事を読んだり、ディスカッションに参加したりできます。あなたに合ったおすすめを表示するには、「項目の管理」を開いて、ガイドを1つか2つ購読してください。",
+    "Browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "記事を読んだり、ディスカッションに参加したりできます。あなたに合ったおすすめを受け取るには、「項目の管理」を開いて、コンパニオンを1つか2つ購読してください。",
     "Building your baseline" to "基準値を作成中",
     "Built by neuroscientists, with published work on stress, sleep and HRV. Most useful if stress or broken sleep are among your triggers." to "神経科学者が開発し、ストレス・睡眠・HRVに関する論文も発表しています。ストレスや睡眠の乱れが誘因に含まれる方に特に役立ちます。",
     "Built for chronic pain generally. Migraine-specific evidence is thin, so treat it as an experiment." to "慢性の痛み全般向けに作られています。片頭痛に特化した根拠は少ないため、試しに使ってみるという位置づけです。",
@@ -1831,7 +1831,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Hard to ignore, it got in the way" to "無視しにくく、支障がありました",
     "Has contraception affected your migraines?" to "避妊は片頭痛に影響しましたか?",
     "Have a diary, spreadsheet or export from another app?" to "他のアプリの日記、表計算、エクスポートデータをお持ちですか?",
-    "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "まず「案内」を見てから、記事を読んだり、ディスカッションに参加したりしてみましょう。あなたに合ったおすすめを表示するには、「項目の管理」を開いて、サポート役を1つか2つ登録してください。",
+    "Have a look at Guidance, then browse the articles or jump into a discussion. To get personalised recommendations, open Manage Items and subscribe to a companion or two." to "まず「サポート」を見てから、記事を読んだり、ディスカッションに参加したりしてみましょう。あなたに合ったおすすめを受け取るには、「項目の管理」を開いて、コンパニオンを1つか2つ購読してください。",
     "Have a promo code?" to "コードをお持ちですか？",
     "Have they been getting better, worse, or the same?" to "良くなっていますか、悪くなっていますか、変わりませんか?",
     "Headache" to "頭痛",
@@ -1861,7 +1861,7 @@ private fun jaStrings1(): Map<String, String> = mapOf(
     "Heart rate, HRV and breathing" to "心拍数、HRV、呼吸",
     "Heart, movement and body measurements" to "心臓・動き・身体測定値",
     "HeartMath" to "HeartMath",
-    "Heat and cold" to "暑さと寒さ",
+    "Heat and cold" to "温熱と冷却",
     "Heat pack" to "温熱パック",
     "Heat waves, high temperatures" to "熱波、高温",
     "Heated eye massager with hot and cold compress and gentle vibration, for eye strain and light sensitivity." to "温冷圧迫とやさしい振動がついた温熱アイマッサージ器です。目の疲れや光への過敏さに使えます。",
@@ -3734,7 +3734,7 @@ private fun jaStrings2(): Map<String, String> = mapOf(
     "Take any medicine?" to "薬を飲みましたか?",
     "Take the Full Tour" to "案内をすべて見る",
     "Take the Tour" to "案内を見る",
-    "Take the full tour" to "使い方をすべて見る",
+    "Take the full tour" to "ツアーをすべて見る",
     "Take the tour" to "使い方を見る",
     "Takeaways, instant noodles, stock cubes" to "持ち帰り料理、インスタント麺、固形スープの素",
     "Taken within %1\$s (your median delay): peak %2\$s · later: peak %3\$s" to "%1\$s以内に服用(あなたの中央値):ピーク %2\$s · それ以降:ピーク %3\$s",
@@ -4771,6 +4771,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "data and evidence come first" to "データと根拠を第一に",
     "days a month" to "月あたりの日数",
     "days migraine-free" to "片頭痛のない日",
+    "days per 4 weeks" to "日数/4週間",
     "dehydration" to "脱水",
     "device" to "機器",
     "dietitian" to "栄養士",
@@ -4778,7 +4779,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "down" to "下降",
     "down %s ranks" to "%s位下降",
     "down 1 rank" to "1位下降",
-    "down from %s free last month" to "先月の無料%sより減少",
+    "down from %s free last month" to "先月の片頭痛なし%sより減少",
     "down from %s last month" to "先月の%sより減少",
     "drops below" to "下回る",
     "drug" to "薬",
@@ -4882,7 +4883,6 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "migraine coach" to "片頭痛の助言",
     "migraine days" to "片頭痛の日",
     "migraine days/week" to "片頭痛の日数/週",
-    "days per 4 weeks" to "日数/4週間",
     "migraine specialist" to "片頭痛の専門医",
     "migraines" to "片頭痛",
     "mild" to "軽度",
@@ -5036,7 +5036,7 @@ private fun jaStrings3(): Map<String, String> = mapOf(
     "up" to "上",
     "up %s ranks" to "%s位上昇",
     "up 1 rank" to "1位上昇",
-    "up from %s free last month" to "先月の無料%sから増加",
+    "up from %s free last month" to "先月の片頭痛なし%sから増加",
     "up from %s last month" to "先月の%sから増加",
     "up. Below those, the most-used categories appear as their own D/W/M totals.\n\n" to "が上に表示されます。その下に、よく使うカテゴリが日・週・月の合計で別々に表示されます。\n\n",
     "used in %s%% of migraines" to "片頭痛の%s%%で使用",
