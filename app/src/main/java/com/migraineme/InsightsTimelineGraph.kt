@@ -311,7 +311,7 @@ private fun CoreCanvas(
         }
         popup?.let { hit -> val offX = (hit.x - 120f).roundToInt().coerceAtLeast(0); val offY = (hit.y - 70f).roundToInt().coerceAtLeast(0)
             Card(Modifier.offset { IntOffset(offX, offY) }, colors = CardDefaults.cardColors(containerColor = PopupBg), shape = RoundedCornerShape(10.dp), elevation = CardDefaults.cardElevation(8.dp)) {
-                Text(hit.label, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
+                Text(prettyLabel(hit.label), Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
     }
 }
 
